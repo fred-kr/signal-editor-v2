@@ -7,15 +7,11 @@ import polars as pl
 import scipy.interpolate
 import scipy.signal
 
-from ... import type_defs as _t
+from .. import type_defs as _t
 
 
 def _mad_value(sig: pl.Series | pl.Expr) -> float:
-    mad = abs(sig - sig.median()).median()
-    if isinstance(mad, (float, int)):
-        return float(mad)
-    else:
-        raise ValueError("MAD value is not a float")
+    return abs(sig - sig.median()).median()
 
 
 def _scale_mad[T: (pl.Expr, pl.Series)](sig: T, constant: float = 1.4826) -> T:
@@ -155,13 +151,15 @@ def filter_signal(
 
 
 def signal_rate(
-    peaks: npt.NDArray[np.intp], sampling_rate: int, desired_length: int | None = None
+    peaks: npt.NDArray[np.intp] | pl.Series, sampling_rate: int, desired_length: int | None = None
 ) -> npt.NDArray[np.float_]:
+    if isinstance(peaks, pl.Series):
+        peaks = peaks.to_numpy()
     period = np.ediff1d(peaks, to_begin=0) / sampling_rate
     period[0] = np.mean(period[1:10])
 
     if desired_length is not None:
-        x_new = np.arange(desired_length)
+        x_new = np.arange(desired_length, dtype=np.int32)
         period = scipy.interpolate.PchipInterpolator(peaks, period, extrapolate=True)(x_new)
         first_index = np.searchsorted(x_new, peaks[0])
         last_index = np.searchsorted(x_new, peaks[-1])
@@ -179,17 +177,26 @@ def rolling_rate(
     df: pl.DataFrame,
     grp_col: str,
     temperature_col: str,
-    every: int = 4000,
-    period: int = 24000,
-    offset: int = 0,
-    sampling_rate: int = 400,
+    sampling_rate: int,
+    sec_new_window_every: int = 10,
+    sec_window_length: int = 60,
+    sec_start_at: int = 0,
 ) -> pl.DataFrame:
+    every = sec_new_window_every * sampling_rate
+    period = sec_window_length * sampling_rate
+    offset = sec_start_at * sampling_rate
     remove_row_count = period // every
+
+    if grp_col not in df.columns or temperature_col not in df.columns:
+        raise ValueError(f"Columns '{grp_col}' and '{temperature_col}' must exist in the dataframe")
+    if df.get_column(grp_col).dtype not in pl.INTEGER_DTYPES:
+        raise ValueError(f"Column '{grp_col}' must be of integer type")
     return (
         df.sort(grp_col)
         .with_columns(pl.col(grp_col).cast(pl.Int64))
-        .group_by_dynamic(
+        .groupby_dynamic(
             pl.col(grp_col),
+            include_boundaries=True,
             every=f"{every}i",
             period=f"{period}i",
             offset=f"{offset}i",
@@ -198,6 +205,46 @@ def rolling_rate(
             pl.count().alias("n_peaks"),
             pl.mean(temperature_col).round(1).suffix("_mean"),
         )[:-remove_row_count]
-        .group_by(pl.col(f"{temperature_col}_mean"))
-        .agg(pl.mean("n_peaks").suffix("_mean"))
     )
+
+
+def mean_bpm_per_temperature(
+    df: pl.DataFrame,
+    grp_col: str,
+    temperature_col: str,
+    sampling_rate: int,
+    sec_new_window_every: int = 10,
+    sec_window_length: int = 60,
+    sec_start_at: int = 0,
+) -> pl.DataFrame:
+    # every = sec_new_window_every * sampling_rate
+    # period = sec_window_length * sampling_rate
+    # offset = sec_start_at * sampling_rate
+    # remove_row_count = period // every
+    # if grp_col not in df.columns or temperature_col not in df.columns:
+    #     raise ValueError(f"Columns '{grp_col}' and '{temperature_col}' must exist in the dataframe")
+    # if df.get_column(grp_col).dtype not in pl.INTEGER_DTYPES:
+    #     raise ValueError(f"Column '{grp_col}' must be of integer type")
+    # return (
+    #     df.sort(grp_col)
+    #     .with_columns(pl.col(grp_col).cast(pl.Int64))
+    #     .group_by_dynamic(
+    #         pl.col(grp_col),
+    #         every=f"{every}i",
+    #         period=f"{period}i",
+    #         offset=f"{offset}i",
+    #     )
+    #     .agg(
+    #         pl.count().alias("n_peaks"),
+    #         pl.mean(temperature_col).round(1).suffix("_mean"),
+    #     )[:-remove_row_count]
+    rr = rolling_rate(
+        df,
+        grp_col,
+        temperature_col,
+        sampling_rate,
+        sec_new_window_every,
+        sec_window_length,
+        sec_start_at,
+    )
+    return rr.group_by(pl.col(f"{temperature_col}_mean")).agg(pl.mean("n_peaks").suffix("_mean"))
