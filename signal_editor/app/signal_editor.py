@@ -1,8 +1,8 @@
 from PySide6 import QtCore
 
+from .controllers.data_controller import DataController
 from .controllers.plot_controller import PlotController
 
-from .controllers.data_controller import DataController
 
 class StatusUpdater(QtCore.QObject):
     sig_update_status_msg = QtCore.Signal(str)
@@ -15,7 +15,6 @@ class StatusUpdater(QtCore.QObject):
 
 
 class SignalEditor(QtCore.QObject):
-
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
         self.data_controller = DataController(self)
@@ -27,6 +26,6 @@ class SignalEditor(QtCore.QObject):
         self.plot_controller.setParent(None)
         self.plot_controller = PlotController(self)
 
-        self.data_controller.reset()
+        # self.data_controller.reset()
         self.data_controller.setParent(None)
         self.data_controller = DataController(self)

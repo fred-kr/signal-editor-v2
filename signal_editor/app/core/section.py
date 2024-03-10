@@ -121,6 +121,7 @@ class SectionMetadata:
 
 class Section:
     _id_counter: int = 0
+    _base_created: bool = False
 
     @classmethod
     def _get_next_id(cls) -> int:
@@ -130,20 +131,25 @@ class Section:
     @classmethod
     def reset_id_counter(cls) -> None:
         cls._id_counter = 0
+        cls._base_created = False
 
     @classmethod
     def get_id_counter(cls) -> int:
         return cls._id_counter
 
     def __init__(
-        self, data: pl.DataFrame, set_active: bool = False, _is_base: bool = False
+        self, data: pl.DataFrame
     ) -> None:
         config = ConfigController().input_data
         self.signal_name = config.signal_column
         self.processed_signal_name = f"{self.signal_name}_{config.processed_signal_column_suffix}"
-        self.section_id = (
-            SectionID(f"Section_{self.signal_name}_000") if _is_base else self._generate_id()
-        )
+        
+        if not self.__class__._base_created:
+            self.section_id = SectionID(f"Section_{self.signal_name}_000")
+            self.__class__._base_created = True
+        else:
+            self.section_id = self._generate_id()
+            
         if "section_index" in data.columns:
             data.drop_in_place("section_index")
 
@@ -156,7 +162,6 @@ class Section:
         )
 
         self.sampling_rate = config.sampling_rate
-        self.active = set_active
         self.global_bounds: tuple[int, int] = (
             self.data.item(0, "index"),
             self.data.item(-1, "index"),
@@ -206,7 +211,7 @@ class Section:
         self._manual_peak_edits.sort_and_deduplicate()
         return self._manual_peak_edits
 
-    def _update_sampling_rate(self, sampling_rate: int) -> None:
+    def update_sampling_rate(self, sampling_rate: int) -> None:
         self.sampling_rate = sampling_rate
         with contextlib.suppress(Exception):
             peaks = self.peaks_local.to_numpy(zero_copy_only=True)

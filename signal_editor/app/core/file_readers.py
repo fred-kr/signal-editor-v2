@@ -1,3 +1,5 @@
+from ..controllers.data_controller import LoadedFileMetadata
+from .. import type_defs as _t
 import contextlib
 import datetime
 import re
@@ -7,22 +9,24 @@ from pathlib import Path
 import dateutil.parser as dt_parser
 import mne.io
 import polars as pl
-
+from dataclasses import dataclass, field
+from ..controllers.config_controller import ConfigController as Config
 
 class ReadFnReturn(t.TypedDict):
     data: pl.LazyFrame
     sampling_rate: int
     animal_id: str
-    date_measured: datetime.date
+    measured_date: datetime.date
     oxygen_condition: str
 
+    
 
 def parse_file_name(
     file_name: str,
     date_format: str | None = None,
     id_format: str | None = None,
     oxygen_format: str | None = None,
-) -> tuple[datetime.date, str, str]:
+) -> tuple[str, str, str]:
     """
     Parses a file name to extract the date, the ID, and the oxygen condition.
 
@@ -39,22 +43,22 @@ def parse_file_name(
 
     Returns
     -------
-    date
-        The date parsed from the file name. If no valid date is found, the date `2000-01-01` is returned.
+    str
+        The date as a string in ISO format (YYYY-MM-DD). If no valid date value is found in the file name, the string `unknown` is returned.
     str
         The ID parsed from the file name. If no valid ID is found, the string `unknown` is returned.
     str
         The oxygen condition parsed from the file name. If no valid oxygen condition is found, the string `unknown` is returned.
 
     """
-    date = datetime.date(2000, 1, 1)
+    date = "unknown"
     if date_format is None:
         with contextlib.suppress(ValueError, dt_parser.ParserError):
-            date = dt_parser.parse(file_name, fuzzy=True).date()
+            date = dt_parser.parse(file_name, yearfirst=True, fuzzy=True).date().isoformat()
     else:
         match = re.search(date_format, file_name)
         if match is not None:
-            date = dt_parser.parse(match.group()).date()
+            date = dt_parser.parse(match.group()).date().isoformat()
     animal_id = "unknown"
     if id_format is not None:
         match = re.search(id_format, file_name)
@@ -115,10 +119,10 @@ def infer_sampling_rate(
 
 
 def read_edf(
-    file_path: str,
+    file_path: Path,
     start: int = 0,
     stop: int | None = None,
-) -> ReadFnReturn:
+) -> tuple[pl.LazyFrame, _t.LoadedFileMetadataDict]:
     """
     Reads data from an EDF file into a polars DataFrame.
 
@@ -133,15 +137,14 @@ def read_edf(
 
     Returns
     -------
-    ReadFnReturn
-        A dictionary containing the data, the sampling rate, the animal ID, the date measured, and the oxygen condition.
+
 
     """
     raw_edf = mne.io.read_raw_edf(file_path)
     channel_names = t.cast(list[str], raw_edf.info.ch_names)
-    date_measured = t.cast(datetime.datetime, raw_edf.info["meas_date"])
+    measured_date = t.cast(datetime.datetime, raw_edf.info["meas_date"])
     sampling_rate = int(raw_edf.info["sfreq"])  # type: ignore
-    _, animal_id, oxygen_condition = parse_file_name(file_path)
+    _, animal_id, oxygen_condition = parse_file_name(file_path.name)
 
     rename_map = {
         "temp": "temperature",
@@ -167,24 +170,18 @@ def read_edf(
         .filter((pl.col("temperature") != 0) & (pl.col("hbr") != 0) & (pl.col("ventilation") != 0))
         .select("index", "time_s", *column_names)
     )
-    return ReadFnReturn(
-        data=lf,
-        sampling_rate=sampling_rate,
-        animal_id=animal_id,
-        date_measured=date_measured.date(),
-        oxygen_condition=oxygen_condition,
-    )
+    return lf, {"file_name": file_path.name, "file_format": file_path.suffix, "sampling_rate": sampling_rate, }
 
 
 def read_feather(
-    file_path: str | Path,
-    sampling_rate: int | None = None,
+    file_path: Path,
+    sampling_rate: int | t.Literal["use_config"] | None = None,
     time_column: str = "auto",
     time_unit: t.Literal["auto", "s", "ms"] = "auto",
     date_format: str | None = None,
     id_format: str | None = None,
     oxygen_format: str | None = None,
-) -> ReadFnReturn:
+) -> tuple[pl.LazyFrame, _t.LoadedFileMetadataDict]:
     """
     Reads data from a feather file into a polars DataFrame.
 
@@ -213,15 +210,20 @@ def read_feather(
     """
     lf = pl.scan_ipc(file_path)
     if sampling_rate is None:
-        sampling_rate = infer_sampling_rate(lf, time_column, time_unit)
+        try:
+            sampling_rate = infer_sampling_rate(lf, time_column, time_unit)
+        except ValueError:
+            sampling_rate = "use_config"
+    if sampling_rate == "use_config":
+        sampling_rate = Config().input_data.sampling_rate
+        
     date, animal_id, oxygen_condition = parse_file_name(
         str(file_path), date_format, id_format, oxygen_format
     )
-
-    return ReadFnReturn(
-        data=lf,
-        sampling_rate=sampling_rate,
-        animal_id=animal_id,
-        date_measured=date,
-        oxygen_condition=oxygen_condition,
-    )
+    metadata = {}
+    for param in {sampling_rate, date, animal_id, oxygen_condition}:
+        if param != 
+            metadata[str(param)] = param
+        
+        
+    return lf, {}

@@ -7,10 +7,10 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
-pyarrow = "^15.0.0"
+pyarrow = "^15.0.1"
 pyopengl-accelerate = "^3.1.7"
 wfdb = "^4.1.2"
-polars = "^0.20.8"
+polars = "^0.20.14"
 neurokit2 = "^0.2.7"
 pyopengl = "^3.1.7"
 mne = "^1.6.1"
@@ -19,11 +19,11 @@ qdarkstyle = "^3.2.3"
 pyside6 = "^6.6.2"
 numpy = "^1.26.4"
 scipy = "^1.12.0"
-xlsxwriter = "^3.1.9"
+xlsxwriter = "^3.2.0"
 xlsx2csv = "^0.8.2"
 pyinstaller = "^6.4.0"
-pyinstaller-hooks-contrib = "^2024.1"
-python-dateutil = "^2.8.2"
+pyinstaller-hooks-contrib = "^2024.2"
+python-dateutil = "^2.9.0.post0"
 qtconsole = "^5.5.1"
 attrs = "^23.2.0"
 tables = "^3.9.2"
@@ -32,17 +32,17 @@ numba = "^0.59.0"
 pyqtgraph = {git = "https://github.com/pyqtgraph/pyqtgraph.git", rev = "master"}
 statsmodels = "^0.14.1"
 ipykernel = "^6.29.3"
+superqt = "^0.6.2"
 
 [tool.poetry.group.dev.dependencies]
 sourcery = "^1.15.0"
-ruff = "^0.2.1"
-mypy = "^1.8.0"
+ruff = "^0.3.1"
+mypy = "^1.9.0"
 better-exceptions = "^0.3.3"
 pretty-errors = "^1.2.25"
 python-dotenv = "^1.0.1"
-pytest = "^8.0.0"
+pytest = "^8.0.2"
 hypothesis = {extras = ["numpy"], version = "^6.98.17"}
-black = "^24.2.0"
 
 [tool.mypy]
 python_version = "3.12"
@@ -74,7 +74,6 @@ ignore = ["E501"]
 select = ["E", "F", "B"]
 
 [tool.pytest.ini_options]
-pythonpath = "src"
 addopts = [
     "--import-mode=importlib",
 ]

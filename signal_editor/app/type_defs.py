@@ -3,9 +3,9 @@ import typing as t
 import numpy as np
 import numpy.typing as npt
 
-
 if t.TYPE_CHECKING:
     from PySide6 import QtCore, QtGui
+
     from .core.section import SectionID
 
 type FilterMethod = t.Literal[
@@ -291,7 +291,7 @@ class PeaksPanTompkins(t.TypedDict, total=False):
     correct_artifacts: bool
 
 
-class InputFileMetadataDict(t.TypedDict):
+class LoadedFileMetadataDict(t.TypedDict, total=False):
     file_name: str
     file_format: str
     name_signal_column: str
@@ -313,6 +313,7 @@ class ProcessingParametersDict(t.TypedDict):
 class ManualPeakEditsDict(t.TypedDict):
     added: list[int]
     removed: list[int]
+
 
 class SectionMetadataDict(t.TypedDict):
     signal_name: str
@@ -341,5 +342,8 @@ class DetailedSectionResultDict(t.TypedDict):
     rate_instantaneous: npt.NDArray[np.float64]
     rate_rolling_window: npt.NDArray[np.float64]
 
+
 class CompleteResultDict(t.TypedDict):
-    metadata: 
+    metadata: LoadedFileMetadataDict
+    global_dataframe: npt.NDArray[np.void]
+    section_results: dict["SectionID", DetailedSectionResultDict]

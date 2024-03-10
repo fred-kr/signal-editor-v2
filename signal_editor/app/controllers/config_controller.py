@@ -4,8 +4,15 @@ from pathlib import Path
 
 from PySide6 import QtCore
 
+from ..utils import exceptions_as_dialog
+
 from .. import type_defs as _t
 
+class ConfigError(Exception):
+    """
+    Base class for all config errors.
+    """
+    pass
 
 @dataclass(slots=True)
 class GeneralConfig:
@@ -14,6 +21,12 @@ class GeneralConfig:
     app_author: str = "Frederik Krämer"
     ui_theme: t.Literal["light", "dark"] = "light"
 
+@dataclass(slots=True)
+class MessageConfig:
+    level: t.Literal["all", "info", "warning", "error", "critial", "debug", "none"] = "all"
+    include_timestamp: bool = True
+    include_stack_trace: bool = False
+    
 
 @dataclass(slots=True)
 class PlotConfig:
@@ -32,6 +45,7 @@ class PlotConfig:
     min_peak_distance: int = 20
 
 
+
 @dataclass(slots=True)
 class InputDataConfig:
     signal_column: str = "signal"
@@ -41,6 +55,7 @@ class InputDataConfig:
     info_column_b: str | None = None
     sampling_rate: int = 400
     processed_signal_column_suffix: str = "processed"
+    measured_date_special_value: QtCore.QDate = QtCore.QDate(1970, 1, 1)
 
 
 @dataclass(slots=True)
@@ -59,7 +74,8 @@ class ConfigController(QtCore.QObject):
     _plot: PlotConfig = PlotConfig()
     _input_data: InputDataConfig = InputDataConfig()
     _dir_paths: DirPathConfig = DirPathConfig()
-    setting_changed = QtCore.Signal(str, object)
+    _messages: MessageConfig = MessageConfig()
+    sig_setting_changed = QtCore.Signal(str, object)
 
     def __new__(cls, parent: QtCore.QObject | None = None) -> "ConfigController":
         if cls._instance is None:
@@ -83,12 +99,19 @@ class ConfigController(QtCore.QObject):
     def dir_paths(self) -> DirPathConfig:
         return self._dir_paths
 
+    @property
+    def messages(self) -> MessageConfig:
+        return self._messages
+
     def set_option(
         self,
-        where: t.Literal["general", "plot", "input_data", "dir_paths"],
+        where: t.Literal["general", "plot", "input_data", "dir_paths", "messages"],
         attr_name: str,
         attr_value: t.Any,
     ) -> None:
+        sub_config = getattr(self, where)
+        if attr_name not in sub_config.__dataclass_fields__:
+            return
         match where:
             case "general":
                 setattr(self._general, attr_name, attr_value)
@@ -98,12 +121,21 @@ class ConfigController(QtCore.QObject):
                 setattr(self._input_data, attr_name, attr_value)
             case "dir_paths":
                 setattr(self._dir_paths, attr_name, attr_value)
+            case "messages":
+                setattr(self._messages, attr_name, attr_value)
 
-        self.setting_changed.emit(attr_name, attr_value)
+        self.sig_setting_changed.emit(attr_name, attr_value)
 
+    @exceptions_as_dialog(re_raise=False, include_traceback=False)
     def get_option(
-        self, where: t.Literal["general", "plot", "input_data", "dir_paths"], attr_name: str
+        self, where: t.Literal["general", "plot", "input_data", "dir_paths", "messages"], attr_name: str
     ) -> t.Any:
+        sub_config = getattr(self, where)
+        option = getattr(sub_config, attr_name, None)
+        if option is None:
+            raise ConfigError(f"Invalid config option: '{attr_name}' for '{where}'")
+        
+                
         match where:
             case "general":
                 return getattr(self._general, attr_name)
@@ -113,3 +145,5 @@ class ConfigController(QtCore.QObject):
                 return getattr(self._input_data, attr_name)
             case "dir_paths":
                 return getattr(self._dir_paths, attr_name)
+            case "messages":
+                return getattr(self._messages, attr_name)
