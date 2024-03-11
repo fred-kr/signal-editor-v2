@@ -1,3 +1,4 @@
+import datetime
 import typing as t
 
 import numpy as np
@@ -347,3 +348,10 @@ class CompleteResultDict(t.TypedDict):
     metadata: LoadedFileMetadataDict
     global_dataframe: npt.NDArray[np.void]
     section_results: dict["SectionID", DetailedSectionResultDict]
+
+
+class EDFHeaderDataDict(t.TypedDict):
+    sampling_rate: float
+    n_channels: int
+    channel_names: list[str]
+    measured_date: datetime.datetime

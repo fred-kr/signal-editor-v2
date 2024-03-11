@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 import polars as pl
 from PySide6 import QtCore
 
-from ..core.file_readers import LoadedFileData, read_edf
+from ..core.file_io import LoadedFileData, read_edf
 
 from .. import type_defs as _t
 from ..core.section import Section, SectionID
