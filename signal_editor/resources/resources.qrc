@@ -1,0 +1,22 @@
+<RCC>
+  <qresource prefix="icons">
+    <file alias="app_wave">fugue-icons/application-wave.png</file>
+    <file alias="processor">fugue-icons/processor-bit-064.png</file>
+    <file alias="no_access">fugue-icons/prohibition.png</file>
+    <file alias="properties">fugue-icons/property.png</file>
+    <file alias="properties_export">fugue-icons/property-export.png</file>
+    <file alias="properties_import">fugue-icons/property-import.png</file>
+    <file alias="edit_history">fugue-icons/clock-history.png</file>
+    <file alias="edit_redo">fugue-icons/arrow-return.png</file>
+    <file alias="edit_undo">fugue-icons/arrow-return-180-left.png</file>
+    <file alias="clear_history">fugue-icons/broom.png</file>
+    <file alias="app_file_export">fugue-icons/application-export.png</file>
+    <file alias="table_export">fugue-icons/table-export.png</file>
+    <file alias="view_result">fugue-icons/table--pencil.png</file>
+    <file alias="view_data">fugue-icons/document-table.png</file>
+    <file alias="file_import">fugue-icons/document-import.png</file>
+    <file alias="file_export">fugue-icons/document-export.png</file>
+    <file alias="table_import">fugue-icons/table-import.png</file>
+    <file alias="view_plots">fugue-icons/system-monitor--pencil.png</file>
+  </qresource>
+</RCC>

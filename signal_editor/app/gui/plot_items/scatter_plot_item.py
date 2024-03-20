@@ -7,13 +7,13 @@ from PySide6 import QtCore, QtGui
 from ... import type_defs as _t
 
 
-def _mk_pen(*args: _t.PenArgs, **kwargs: t.Unpack[_t.PenKwargs]) -> QtGui.QPen:
+def _mk_pen(*args: _t.PGPen, **kwargs: t.Unpack[_t.PGPenKwargs]) -> QtGui.QPen:
     if len(args) == 1 and isinstance(args[0], QtGui.QPen):
         return args[0]
     return pg.mkPen(*args, **kwargs)
 
 
-def _mk_brush(*args: _t.BrushArgs, **kwargs: t.Unpack[_t.BrushKwargs]) -> QtGui.QBrush:
+def _mk_brush(*args: _t.PGBrush, **kwargs: t.Unpack[_t.PGBrushKwargs]) -> QtGui.QBrush:
     if len(args) == 1 and isinstance(args[0], QtGui.QBrush):
         return args[0]
     return pg.mkBrush(*args, **kwargs)

@@ -26,49 +26,12 @@ type PeakDetectionMethod = t.Literal[
 type WFDBPeakDirection = t.Literal["up", "down", "both", "compare"]
 type OxygenCondition = t.Literal["normoxic", "hypoxic", "unknown"]
 
-type _SingleLetterColor = t.Literal["r", "g", "b", "c", "m", "y", "k", "w"]
-type _RGBColor = tuple[int, int, int]
-type _RGBAColor = tuple[int, int, int, int]
-type _GreyScaleColor = float
-type _IntColor = int
-type _IntHueColor = tuple[int, int]
-type _HexColor = str  # e.g. "#RGB", "#RGBA", "#RRGGBB", "#RRGGBBAA"
+type PGColor = "str | int | float | tuple[int, int, int] | tuple[int, int, int, int] | QtGui.QColor"
+type PGPen = "PGColor | QtGui.QPen | PGPenKwargs | None"
+type PGBrush = "PGColor | QtGui.QBrush | PGBrushKwargs | None"
 
-type ColorLike = (
-    _SingleLetterColor
-    | _RGBColor
-    | _RGBAColor
-    | _GreyScaleColor
-    | _IntColor
-    | _IntHueColor
-    | _HexColor
-    | QtGui.QColor
-)
-type PenArgs = ColorLike | QtGui.QPen | PenKwargs | None
-type BrushArgs = ColorLike | QtGui.QBrush | BrushKwargs | None
+type PGPointSymbols = 't.Literal["o","s","t","d","+","t1","t2","t3","p","h","star","x","arrow_up","arrow_right","arrow_down","arrow_left","crosshair"] | QtGui.QPainterPath'
 
-type PointSymbols = (
-    t.Literal[
-        "o",
-        "s",
-        "t",
-        "d",
-        "+",
-        "t1",
-        "t2",
-        "t3",
-        "p",
-        "h",
-        "star",
-        "x",
-        "arrow_up",
-        "arrow_right",
-        "arrow_down",
-        "arrow_left",
-        "crosshair",
-    ]
-    | QtGui.QPainterPath
-)
 
 type SciPySignalSmoothingKernels = t.Literal[
     "barthann",
@@ -110,8 +73,8 @@ type PeakDetectionMethodParameters = (
 )
 
 
-class PenKwargs(t.TypedDict, total=False):
-    color: ColorLike
+class PGPenKwargs(t.TypedDict, total=False):
+    color: PGColor
     width: float
     cosmetic: bool
     dash: t.Sequence[float] | None
@@ -119,8 +82,8 @@ class PenKwargs(t.TypedDict, total=False):
     hsv: tuple[float, float, float, float]
 
 
-class BrushKwargs(t.TypedDict, total=False):
-    color: ColorLike | None
+class PGBrushKwargs(t.TypedDict, total=False):
+    color: PGColor
 
 
 class SignalFilterParameters(t.TypedDict, total=False):
@@ -172,8 +135,8 @@ class SpotItemSetDataKwargs(t.TypedDict, total=False):
 class PGConfigOptions(t.TypedDict):
     useOpenGL: bool
     leftButtonPan: bool
-    foreground: ColorLike
-    background: ColorLike
+    foreground: PGColor
+    background: PGColor
     antialias: bool
     editorCommand: str | None
     exitCleanup: bool
@@ -190,15 +153,15 @@ class PlotDataItemKwargs(t.TypedDict, total=False):
     x: npt.NDArray[np.float_ | np.intp | np.uintp]
     y: npt.NDArray[np.float_ | np.intp | np.uintp]
     connect: t.Literal["all", "pairs", "finite", "auto"] | npt.NDArray[np.int32]
-    pen: PenArgs | QtGui.QPen | None
-    shadowPen: PenArgs | QtGui.QPen | None
+    pen: "PGPen | QtGui.QPen | None"
+    shadowPen: "PGPen | QtGui.QPen | None"
     fillLevel: float | None
     fillOutline: bool
-    fillBrush: BrushArgs | QtGui.QBrush | None
+    fillBrush: "PGBrush | QtGui.QBrush | None"
     stepMode: t.Literal["center", "left", "right"] | None
-    symbol: PointSymbols | list[PointSymbols] | None
-    symbolPen: PenArgs | QtGui.QPen | list[QtGui.QPen] | None
-    symbolBrush: BrushArgs | QtGui.QBrush | list[QtGui.QBrush] | None
+    symbol: PGPointSymbols | list[PGPointSymbols] | None
+    symbolPen: "PGPen | QtGui.QPen | list[QtGui.QPen] | None"
+    symbolBrush: "PGBrush | QtGui.QBrush | list[QtGui.QBrush] | None"
     symbolSize: float | list[float]
     pxMode: bool
     useCache: bool
@@ -223,15 +186,15 @@ class PlotDataItemOpts(t.TypedDict):
     phasemapMode: bool
     alphaHint: float
     alphaMode: bool
-    pen: PenArgs | QtGui.QPen | None
-    shadowPen: PenArgs | QtGui.QPen | None
+    pen: "PGPen | QtGui.QPen | None"
+    shadowPen: "PGPen | QtGui.QPen | None"
     fillLevel: float | None
     fillOutline: bool
-    fillBrush: BrushArgs | QtGui.QBrush | None
+    fillBrush: "PGBrush | QtGui.QBrush | None"
     stepMode: t.Literal["center", "left", "right"] | None
-    symbol: PointSymbols | list[PointSymbols] | None
-    symbolPen: PenArgs | QtGui.QPen | list[QtGui.QPen] | None
-    symbolBrush: BrushArgs | QtGui.QBrush | list[QtGui.QBrush] | None
+    symbol: PGPointSymbols | list[PGPointSymbols] | None
+    symbolPen: "PGPen | QtGui.QPen | list[QtGui.QPen] | None"
+    symbolBrush: "PGBrush | QtGui.QBrush | list[QtGui.QBrush] | None"
     symbolSize: float | list[float]
     pxMode: bool
     antialias: bool
@@ -292,14 +255,21 @@ class PeaksPanTompkins(t.TypedDict, total=False):
     correct_artifacts: bool
 
 
-class LoadedFileMetadataDict(t.TypedDict, total=False):
+class SelectedFileMetadataDict(t.TypedDict, total=False):
     file_name: str
     file_format: str
     name_signal_column: str
     sampling_rate: int
-    measured_date: t.Annotated[str, "yyyy-MM-dd"]
+    measured_date: str | datetime.datetime
     subject_id: str
-    oxygen_condition: OxygenCondition
+    oxygen_condition: str
+
+
+class MutableMetadataAttributes(t.TypedDict, total=False):
+    sampling_rate: int
+    measured_date: str | datetime.datetime
+    subject_id: str
+    oxygen_condition: str
 
 
 class ProcessingParametersDict(t.TypedDict):
@@ -345,13 +315,6 @@ class DetailedSectionResultDict(t.TypedDict):
 
 
 class CompleteResultDict(t.TypedDict):
-    metadata: LoadedFileMetadataDict
+    metadata: SelectedFileMetadataDict
     global_dataframe: npt.NDArray[np.void]
     section_results: dict["SectionID", DetailedSectionResultDict]
-
-
-class EDFHeaderDataDict(t.TypedDict):
-    sampling_rate: float
-    n_channels: int
-    channel_names: list[str]
-    measured_date: datetime.datetime

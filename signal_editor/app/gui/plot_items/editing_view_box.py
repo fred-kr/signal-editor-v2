@@ -4,6 +4,7 @@ import numpy as np
 import numpy.typing as npt
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
+from pyqtgraph.Point import Point
 
 if t.TYPE_CHECKING:
     from pyqtgraph.GraphicsScene import mouseEvents
@@ -115,14 +116,14 @@ class EditingViewBox(pg.ViewBox):
         x = s[0] if mouse_enabled[0] == 1 else None
         y = s[1] if mouse_enabled[1] == 1 else None
 
-        center = pg.Point(tr.map(ev.buttonDownPos(QtCore.Qt.MouseButton.RightButton)))
+        center = Point(tr.map(ev.buttonDownPos(QtCore.Qt.MouseButton.RightButton)))
         self._resetTarget()
         self.scaleBy(x=x, y=y, center=center)
         self.sigRangeChangedManually.emit(self.state["mouseEnabled"])
 
     def _on_left_mouse_drag(self, dif: t.Any, mask: npt.NDArray[np.float64]) -> None:
         tr = pg.invertQTransform(self.childGroup.transform())
-        tr = tr.map(dif * mask) - tr.map(pg.Point(0, 0))
+        tr = tr.map(dif * mask) - tr.map(Point(0, 0))
 
         x = tr.x() if mask[0] == 1 else None
         y = tr.y() if mask[1] == 1 else None
@@ -132,15 +133,15 @@ class EditingViewBox(pg.ViewBox):
             self.translateBy(x=x, y=y)
         self.sigRangeChangedManually.emit(self.state["mouseEnabled"])
 
-    def _on_left_mouse_drag_finished(self, ev: "mouseEvents.MouseDragEvent", pos: pg.Point) -> None:
+    def _on_left_mouse_drag_finished(self, ev: "mouseEvents.MouseDragEvent", pos: Point) -> None:
         self.rbScaleBox.hide()
-        ax = QtCore.QRectF(pg.Point(ev.buttonDownPos(ev.button())), pg.Point(pos))
+        ax = QtCore.QRectF(Point(ev.buttonDownPos(ev.button())), Point(pos))
         ax = self.childGroup.mapRectFromParent(ax)
         self.showAxRect(ax)
         self.axHistoryPointer += 1
         self.axHistory = self.axHistory[: self.axHistoryPointer] + [ax]
 
-    def updateSelectionBox(self, pos1: pg.Point, pos2: pg.Point) -> None:
+    def updateSelectionBox(self, pos1: Point, pos2: Point) -> None:
         rect = QtCore.QRectF(pos1, pos2)
         rect = self.childGroup.mapRectFromParent(rect)
         self.selection_box.setPos(rect.topLeft())

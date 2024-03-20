@@ -6,7 +6,7 @@ import pyqtgraph as pg
 from pyqtgraph.widgets.MatplotlibWidget import MatplotlibWidget
 from PySide6 import QtCore
 
-from ..gui.plot_items import CustomScatterPlotItem, PlotDataItem, TimeAxisItem
+from ..gui.plot_items import CustomScatterPlotItem, PlotDataItem
 from ..gui.plot_items.editing_view_box import EditingViewBox
 from .config_controller import ConfigController as Config
 
@@ -17,26 +17,42 @@ if t.TYPE_CHECKING:
 class PlotController(QtCore.QObject):
     sig_scatter_data_changed = QtCore.Signal(str, object)
 
-    def __init__(self, parent: QtCore.QObject | None = None) -> None:
+    def __init__(
+        self,
+        parent: QtCore.QObject | None,
+        graphics_layout_widget: pg.GraphicsLayoutWidget,
+        plt_mpl: MatplotlibWidget,
+    ) -> None:
         super().__init__(parent)
 
         self._regions: list[pg.LinearRegionItem] = []
-        self.setup_widgets()
-        self.setup_plot_items()
+        self.setup_plot_items(graphics_layout_widget, plt_mpl)
+        self.setup_plot_data_items()
 
-    def setup_widgets(self) -> None:
-        editing_vb = EditingViewBox(name="main_plot")
-        rate_vb = pg.ViewBox(name="rate_plot")
+    def setup_plot_items(
+        self, graphics_layout_widget: pg.GraphicsLayoutWidget, plt_mpl: MatplotlibWidget
+    ) -> None:
+        plt_editing = graphics_layout_widget.addPlot(
+            0,
+            0,
+            viewBox=EditingViewBox(name="plt_editing"),
+            axisItems={"top": pg.AxisItem(orientation="top")},
+        )
+        plt_rate = graphics_layout_widget.addPlot(
+            1,
+            0,
+            viewBox=pg.ViewBox(name="plt_rate"),
+            axisItems={"top": pg.AxisItem(orientation="top")},
+        )
+        editing_vb = plt_editing.getViewBox()
+        rate_vb = plt_rate.getViewBox()
         for vb in (editing_vb, rate_vb):
             vb.enableAutoRange("y")
             vb.setAutoVisible(y=True)
-        editing_vb.setXLink("rate_plot")
+            vb.setMouseEnabled(x=True, y=False)
+        editing_vb.setXLink("plt_rate")
 
-        editing_plt = pg.PlotItem(
-            viewBox=editing_vb, axisItems={"top": TimeAxisItem(orientation="top")}
-        )
-        rate_plt = pg.PlotItem(viewBox=rate_vb, axisItems={"top": TimeAxisItem(orientation="top")})
-        for plt in (editing_plt, rate_plt):
+        for plt in (plt_editing, plt_rate):
             plt.showGrid(x=False, y=True)
             plt.setClipToView(True)
             plt.addLegend(colCount=2)
@@ -45,16 +61,15 @@ class PlotController(QtCore.QObject):
             # ? Maybe better in main controller
             # plt.scene().sigMouseMoved.connect(self._on_mouse_moved)
 
-        self.pw_editing = pg.PlotWidget(plotItem=editing_plt)
-        self.pw_rate = pg.PlotWidget(plotItem=rate_plt)
-        self.pw_mpl = MatplotlibWidget()
+        self.plt_editing = plt_editing
+        self.plt_rate = plt_rate
+        self.plt_mpl = plt_mpl
 
-    def setup_plot_items(self) -> None:
+    def setup_plot_data_items(self) -> None:
         self.signal_curve = self._create_signal_curve()
         self.peak_scatter = self._create_peak_scatter()
         self.peak_scatter.setZValue(60)
-        self.mpl_fig = self.pw_mpl.fig
-        self.mpl_fig.tight_layout()
+        self.plt_mpl.fig.tight_layout()
 
         self.rate_curve = PlotDataItem()
 
@@ -68,8 +83,8 @@ class PlotController(QtCore.QObject):
         for line in self._region_selector.lines:
             line.addMarker("<|>", position=0.5, size=12)
 
-        self._temperature_label = pg.LabelItem("Temperature: - °C", parent=self.pw_editing.plotItem)
-        self._bpm_label = pg.LabelItem("HR: - bpm", parent=self.pw_rate.plotItem)
+        self._temperature_label = pg.LabelItem("Temperature: - °C", parent=self.plt_editing)
+        self._bpm_label = pg.LabelItem("HR: - bpm", parent=self.plt_rate)
 
     def _create_signal_curve(self) -> PlotDataItem:
         pdi = PlotDataItem(
@@ -105,31 +120,31 @@ class PlotController(QtCore.QObject):
 
     @QtCore.Slot(int)
     def reset_view_range(self, upper_bound: int) -> None:
-        self.pw_editing.plotItem.vb.setRange(xRange=(0, upper_bound), disableAutoRange=False)
-        self.pw_rate.plotItem.vb.setRange(xRange=(0, upper_bound), disableAutoRange=False)
+        self.plt_editing.vb.setRange(xRange=(0, upper_bound), disableAutoRange=False)
+        self.plt_rate.vb.setRange(xRange=(0, upper_bound), disableAutoRange=False)
 
     @QtCore.Slot(object)
     def set_view_limits(self, plt_data_item: PlotDataItem) -> None:
         if plt_data_item.xData is None or plt_data_item.xData.size == 0:
             return
         len_data = plt_data_item.xData.size
-        self.pw_editing.plotItem.vb.setLimits(
+        self.plt_editing.vb.setLimits(
             xMin=-0.25 * len_data, xMax=1.25 * len_data, maxYRange=1e5, minYRange=0.1
         )
-        self.pw_rate.plotItem.vb.setLimits(
+        self.plt_rate.vb.setLimits(
             xMin=-0.25 * len_data, xMax=1.25 * len_data, maxYRange=1e5, minYRange=0.1
         )
         self.reset_view_range(len_data)
 
     def reset(self) -> None:
-        self.pw_editing.plotItem.clear()
-        if self.pw_editing.plotItem.legend:
-            self.pw_editing.plotItem.legend.clear()
-        self.pw_rate.plotItem.clear()
-        if self.pw_rate.plotItem.legend:
-            self.pw_rate.plotItem.legend.clear()
+        self.plt_editing.clear()
+        if self.plt_editing.legend:
+            self.plt_editing.legend.clear()
+        self.plt_rate.clear()
+        if self.plt_rate.legend:
+            self.plt_rate.legend.clear()
 
-        self.pw_mpl.fig.clear()
+        self.plt_mpl.fig.clear()
 
         self.signal_curve.clear()
         self.peak_scatter.clear()
@@ -148,7 +163,7 @@ class PlotController(QtCore.QObject):
         self._bpm_label = None
 
         self.clear_regions()
-        self.setup_plot_items()
+        self.setup_plot_data_items()
 
     @QtCore.Slot(bool)
     def toggle_regions(self, visible: bool) -> None:
@@ -169,8 +184,8 @@ class PlotController(QtCore.QObject):
     def clear_regions(self) -> None:
         for region in self._regions:
             region.setParent(None)
-            if region in self.pw_editing.plotItem.items:
-                self.pw_editing.plotItem.removeItem(region)
+            if region in self.plt_editing.items:
+                self.plt_editing.removeItem(region)
         self._regions = []
 
     def show_region_selector(self, initial_region: tuple[float, float]) -> None:
@@ -178,8 +193,8 @@ class PlotController(QtCore.QObject):
             return
 
         self._region_selector.setRegion(initial_region)
-        if self._region_selector not in self.pw_editing.plotItem.items:
-            self.pw_editing.plotItem.addItem(self._region_selector)
+        if self._region_selector not in self.plt_editing.items:
+            self.plt_editing.addItem(self._region_selector)
 
         self._region_selector.setVisible(True)
 
@@ -200,19 +215,19 @@ class PlotController(QtCore.QObject):
             marked_region.setVisible(False)
         marked_region.setZValue(10)
         self._regions.append(marked_region)
-        self.pw_editing.plotItem.addItem(marked_region)
+        self.plt_editing.addItem(marked_region)
         self.hide_region_selector()
 
     def draw_signal(self, y_data: npt.NDArray[np.float_], clear: bool = True) -> None:
         if clear:
-            self.pw_editing.plotItem.clear()
-            self.pw_rate.plotItem.clear()
+            self.plt_editing.clear()
+            self.plt_rate.clear()
 
         self.signal_curve.setData(y_data)
 
     def draw_rate(self, y_data: npt.NDArray[np.float_], clear: bool = True) -> None:
         if clear:
-            self.pw_rate.plotItem.clear()
+            self.plt_rate.clear()
         self.rate_curve.setData(y_data)
 
     def draw_peaks(
@@ -293,7 +308,7 @@ class PlotController(QtCore.QObject):
 
     @QtCore.Slot()
     def _on_remove_selection(self) -> None:
-        vb: EditingViewBox = self.pw_editing.plotItem.vb
+        vb = t.cast(EditingViewBox, self.plt_editing.vb)
         if vb.mapped_selection_rect is None:
             return
 
@@ -314,7 +329,7 @@ class PlotController(QtCore.QObject):
         self.sig_scatter_data_changed.emit("n", sender)
 
     def get_selection_area(self) -> QtCore.QRectF | None:
-        return self.pw_editing.plotItem.vb.mapped_selection_rect
+        return self.plt_editing.vb.mapped_selection_rect
 
     def draw_rolling_rate(
         self,
@@ -326,7 +341,7 @@ class PlotController(QtCore.QObject):
         linewidth: int = 2,
         markersize: int = 12,
     ) -> None:
-        subplot = self.mpl_fig.add_subplot(111)
+        subplot = self.plt_mpl.fig.add_subplot(111)
         subplot.scatter(
             x,
             y,
@@ -338,5 +353,5 @@ class PlotController(QtCore.QObject):
         )
         subplot.set_xlabel("Temperature (°C)")
         subplot.set_ylabel("HR (bpm)")
-        self.mpl_fig.tight_layout()
-        self.pw_mpl.draw()
+        self.plt_mpl.fig.tight_layout()
+        self.plt_mpl.draw()

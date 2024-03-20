@@ -252,3 +252,4 @@ fabric.properties
 
 # User-specific
 project-structure.txt
+**/resources/**/*.png

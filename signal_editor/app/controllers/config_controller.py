@@ -1,52 +1,63 @@
+import datetime
 import typing as t
-from dataclasses import dataclass
 from pathlib import Path
+import sys
 
-from PySide6 import QtCore
-
-from ..utils import exceptions_as_dialog
+import attrs
+import pyqtgraph as pg
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from .. import type_defs as _t
+from ..utils import exceptions_as_dialog
+
 
 class ConfigError(Exception):
     """
     Base class for all config errors.
     """
+
     pass
 
-@dataclass(slots=True)
+
+@attrs.define
 class GeneralConfig:
     app_name: str = "Signal Editor"
     app_version: str = "0.1.0"
     app_author: str = "Frederik Krämer"
     ui_theme: t.Literal["light", "dark"] = "light"
 
-@dataclass(slots=True)
+
+@attrs.define
 class MessageConfig:
     level: t.Literal["all", "info", "warning", "error", "critial", "debug", "none"] = "all"
     include_timestamp: bool = True
     include_stack_trace: bool = False
-    
 
-@dataclass(slots=True)
+
+def _set_pg_config_option[T: _t.PGColor | bool](instance: "PlotConfig", attribute: t.Any, value: T) -> T:
+    if attribute.name in pg.CONFIG_OPTIONS:
+        pg.setConfigOption(attribute.name, value)
+    return value
+
+
+@attrs.define
 class PlotConfig:
-    use_open_gl: bool = True
-    show_regions: bool = True
-    show_grid: bool = True
-    foreground: _t.ColorLike = "d"
-    background: _t.ColorLike = "k"
-    signal_color: _t.ColorLike = "gray"
-    scatter_color: _t.ColorLike = "gold"
-    rate_color: _t.ColorLike = "seagreen"
-    region_color: _t.ColorLike = (100, 200, 150, 40)
+    use_open_gl: bool = attrs.field(default=True, on_setattr=_set_pg_config_option)
+    show_regions: bool = attrs.field(default=True)
+    show_grid: bool = attrs.field(default=True)
+    foreground: _t.PGColor = attrs.field(default="d", on_setattr=_set_pg_config_option)
+    background: _t.PGColor = attrs.field(default="k", on_setattr=_set_pg_config_option)
+    signal_color: _t.PGColor = attrs.field(default="gray")
+    scatter_color: _t.PGColor = attrs.field(default="gold")
+    rate_color: _t.PGColor = attrs.field(default="seagreen")
+    region_color: _t.PGColor = (100, 200, 150, 40)
     signal_line_click_tolerance: int = 70
     scatter_search_radius: int = 20
     rate_type: t.Literal["instantaneous", "rolling_window"] = "instantaneous"
     min_peak_distance: int = 20
 
 
-
-@dataclass(slots=True)
+@attrs.define
 class InputDataConfig:
     signal_column: str = "signal"
     index_column: str | None = "index"
@@ -55,13 +66,17 @@ class InputDataConfig:
     info_column_b: str | None = None
     sampling_rate: int = 400
     processed_signal_column_suffix: str = "processed"
-    measured_date_special_value: QtCore.QDate = QtCore.QDate(1970, 1, 1)
+    measured_date_special_value: datetime.datetime = datetime.datetime(1970, 1, 1)
 
 
-@dataclass(slots=True)
+def _convert_to_path(value: str | Path) -> Path:
+    return Path(value).resolve()
+
+    
+@attrs.define
 class DirPathConfig:
-    data_dir: Path = Path(".")
-    export_dir: Path = Path(".")
+    data_dir: Path = attrs.field(default=Path("."), converter=_convert_to_path)
+    export_dir: Path = attrs.field(default=Path("."), converter=_convert_to_path)
 
 
 class ConfigController(QtCore.QObject):
@@ -70,17 +85,19 @@ class ConfigController(QtCore.QObject):
     """
 
     _instance: "ConfigController | None" = None
+
     _general: GeneralConfig = GeneralConfig()
     _plot: PlotConfig = PlotConfig()
     _input_data: InputDataConfig = InputDataConfig()
     _dir_paths: DirPathConfig = DirPathConfig()
     _messages: MessageConfig = MessageConfig()
+    
     sig_setting_changed = QtCore.Signal(str, object)
 
     def __new__(cls, parent: QtCore.QObject | None = None) -> "ConfigController":
         if cls._instance is None:
             cls._instance = super(ConfigController, cls).__new__(cls)
-            super(ConfigController, cls._instance).__init__(parent)
+            # super(ConfigController, cls._instance).__init__(parent)
         return cls._instance
 
     @property
@@ -110,7 +127,7 @@ class ConfigController(QtCore.QObject):
         attr_value: t.Any,
     ) -> None:
         sub_config = getattr(self, where)
-        if attr_name not in sub_config.__dataclass_fields__:
+        if attr_name not in attrs.fields(sub_config):
             return
         match where:
             case "general":
@@ -128,14 +145,15 @@ class ConfigController(QtCore.QObject):
 
     @exceptions_as_dialog(re_raise=False, include_traceback=False)
     def get_option(
-        self, where: t.Literal["general", "plot", "input_data", "dir_paths", "messages"], attr_name: str
+        self,
+        where: t.Literal["general", "plot", "input_data", "dir_paths", "messages"],
+        attr_name: str,
     ) -> t.Any:
         sub_config = getattr(self, where)
         option = getattr(sub_config, attr_name, None)
         if option is None:
             raise ConfigError(f"Invalid config option: '{attr_name}' for '{where}'")
-        
-                
+
         match where:
             case "general":
                 return getattr(self._general, attr_name)

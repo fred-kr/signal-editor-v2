@@ -2,7 +2,7 @@ import functools
 import traceback
 import typing as t
 
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtGui
 
 
 def exceptions_as_dialog(
@@ -41,3 +41,7 @@ def exceptions_as_dialog(
         )
 
     return decorator
+
+
+p = QtGui.QPainterPath()
+p.lineTo

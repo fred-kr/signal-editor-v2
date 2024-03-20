@@ -1,8 +1,7 @@
 import contextlib
-import re
 import typing as t
-from dataclasses import dataclass, field
 
+import attrs
 import numpy as np
 import numpy.typing as npt
 import polars as pl
@@ -22,7 +21,7 @@ def _format_long_sequence(seq: t.Sequence[int | float]) -> str:
         return str(seq)
 
 
-@dataclass(slots=True)
+@attrs.define
 class ProcessingParameters:
     sampling_rate: int
     processing_pipeline: _t.PreprocessPipeline = "custom"
@@ -42,10 +41,10 @@ class ProcessingParameters:
         )
 
 
-@dataclass(slots=True)
+@attrs.define
 class ManualPeakEdits:
-    added: list[int] = field(default_factory=list)
-    removed: list[int] = field(default_factory=list)
+    added: list[int] = attrs.field(factory=list)
+    removed: list[int] = attrs.field(factory=list)
 
     def __repr__(self) -> str:
         return f"Added Peaks [{len(self.added)}]: {_format_long_sequence(self.added)}\nRemoved Peaks [{len(self.removed)}]: {_format_long_sequence(self.removed)}"
@@ -80,28 +79,26 @@ class ManualPeakEdits:
                 else:
                     self.removed.append(v)
 
-    def sort_and_deduplicate(self) -> None:
+    def sort_and_deduplicate(self) -> t.Self:
         self.added = sorted(set(self.added))
         self.removed = sorted(set(self.removed))
+        return self
 
     def get_joined(self) -> list[int]:
         return sorted(set(self.added + self.removed))
 
     def to_dict(self) -> _t.ManualPeakEditsDict:
-        self.sort_and_deduplicate()
-        return _t.ManualPeakEditsDict(added=self.added, removed=self.removed)
+        return _t.ManualPeakEditsDict(**attrs.asdict(self.sort_and_deduplicate()))
 
 
-class SectionID(str):
-    def __init__(self, value: str) -> None:
-        if not re.match(r"^Section_[a-zA-Z0-9]+_[0-9]{3}$", value):
-            raise ValueError(
-                f"The provided string ({value}) does not match the expected format 'Section_<signal_name>_000'."
-            )
-        super().__init__()
+@attrs.define
+class SectionID:
+    value: str = attrs.field(
+        validator=attrs.validators.matches_re(r"^Section_[a-zA-Z0-9]+_[0-9]{3}$")
+    )
 
 
-@dataclass(slots=True)
+@attrs.define
 class SectionMetadata:
     signal_name: str
     section_id: SectionID
@@ -137,19 +134,17 @@ class Section:
     def get_id_counter(cls) -> int:
         return cls._id_counter
 
-    def __init__(
-        self, data: pl.DataFrame
-    ) -> None:
+    def __init__(self, data: pl.DataFrame) -> None:
         config = ConfigController().input_data
         self.signal_name = config.signal_column
         self.processed_signal_name = f"{self.signal_name}_{config.processed_signal_column_suffix}"
-        
+
         if not self.__class__._base_created:
             self.section_id = SectionID(f"Section_{self.signal_name}_000")
             self.__class__._base_created = True
         else:
             self.section_id = self._generate_id()
-            
+
         if "section_index" in data.columns:
             data.drop_in_place("section_index")
 

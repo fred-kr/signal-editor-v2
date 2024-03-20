@@ -5,7 +5,8 @@ import typing as t
 import numpy as np
 import numpy.typing as npt
 import pyqtgraph as pg
-from pyqtgraph import GraphicsObject
+from pyqtgraph.graphicsItems.GraphicsObject import GraphicsObject
+from pyqtgraph.graphicsItems.PlotCurveItem import PlotCurveItem
 from pyqtgraph.graphicsItems.PlotDataItem import PlotDataset
 from PySide6 import QtCore
 
@@ -36,7 +37,7 @@ class PlotDataItem(GraphicsObject):
         self._datasetMapped: PlotDataset | None = None
         self._datasetDisplay: PlotDataset | None = None
 
-        self.curve = pg.PlotCurveItem()
+        self.curve = PlotCurveItem()
         self.scatter = CustomScatterPlotItem()
         self.curve.setParentItem(self)
         self.scatter.setParentItem(self)
@@ -194,7 +195,7 @@ class PlotDataItem(GraphicsObject):
         self.updateItems(styleUpdate=False)
         self.informViewBoundsChanged()
 
-    def setPen(self, *args: _t.PenArgs, **kwargs: t.Unpack[_t.PenKwargs]) -> None:
+    def setPen(self, *args: _t.PGPen, **kwargs: t.Unpack[_t.PGPenKwargs]) -> None:
         """
         Set the pen used to draw lines between points.
         """
@@ -202,7 +203,7 @@ class PlotDataItem(GraphicsObject):
         self.opts["pen"] = pen
         self.updateItems(styleUpdate=True)
 
-    def setShadowPen(self, *args: _t.PenArgs, **kwargs: t.Unpack[_t.PenKwargs]) -> None:
+    def setShadowPen(self, *args: _t.PGPen, **kwargs: t.Unpack[_t.PGPenKwargs]) -> None:
         """
         Set the shadow pen used to draw lines between points (this is for enhancing contrast or
         emphasizing data). This line is drawn behind the primary pen and should generally be assigned
@@ -212,7 +213,7 @@ class PlotDataItem(GraphicsObject):
         self.opts["shadowPen"] = pen
         self.updateItems(styleUpdate=True)
 
-    def setFillBrush(self, *args: _t.BrushArgs, **kwargs: t.Unpack[_t.BrushKwargs]) -> None:
+    def setFillBrush(self, *args: _t.PGBrush, **kwargs: t.Unpack[_t.PGBrushKwargs]) -> None:
         """
         Sets the `QtGui.QBrush` used to fill the area under the curve.
         """
@@ -220,7 +221,7 @@ class PlotDataItem(GraphicsObject):
         self.opts["fillBrush"] = brush
         self.updateItems(styleUpdate=True)
 
-    def setBrush(self, *args: _t.BrushArgs, **kwargs: t.Unpack[_t.BrushKwargs]) -> None:
+    def setBrush(self, *args: _t.PGBrush, **kwargs: t.Unpack[_t.PGBrushKwargs]) -> None:
         """
         Alias for `setFillBrush()`.
         """
@@ -236,13 +237,13 @@ class PlotDataItem(GraphicsObject):
         self.opts["fillLevel"] = level
         self.updateItems(styleUpdate=True)
 
-    def setSymbol(self, symbol: _t.PointSymbols | list[_t.PointSymbols] | None) -> None:
+    def setSymbol(self, symbol: _t.PGPointSymbols | list[_t.PGPointSymbols] | None) -> None:
         if self.opts["symbol"] == symbol:
             return
         self.opts["symbol"] = symbol
         self.updateItems(styleUpdate=True)
 
-    def setSymbolPen(self, *args: _t.PenArgs, **kwargs: t.Unpack[_t.PenKwargs]) -> None:
+    def setSymbolPen(self, *args: _t.PGPen, **kwargs: t.Unpack[_t.PGPenKwargs]) -> None:
         """
         Sets the pen used to draw symbols.
         """
@@ -252,7 +253,7 @@ class PlotDataItem(GraphicsObject):
         self.opts["symbolPen"] = pen
         self.updateItems(styleUpdate=True)
 
-    def setSymbolBrush(self, *args: _t.BrushArgs, **kwargs: t.Unpack[_t.BrushKwargs]) -> None:
+    def setSymbolBrush(self, *args: _t.PGBrush, **kwargs: t.Unpack[_t.PGBrushKwargs]) -> None:
         """
         Sets the brush used to fill symbols.
         """
@@ -322,17 +323,27 @@ class PlotDataItem(GraphicsObject):
         *args: npt.NDArray[np.float_ | np.intp | np.uintp] | None,
         **kwargs: t.Unpack[_t.PlotDataItemKwargs],
     ) -> None:
+        x = None
+        y = None
+        
         if args and len(args) == 1:
-            x = None
-            y = args[0]
+            data = args[0]
+            if not data:
+                pass
+            elif data.ndim == 1:
+                x = None
+                y = data
+            else:
+                x = data[:, 0]
+                y = data[:, 1]
         elif len(args) == 2:
             x = args[0]
             y = args[1]
-        else:
-            raise ValueError("Invalid number of arguments")
 
-        x = kwargs.get("x", x)
-        y = kwargs.get("y", y)
+        if "x" in kwargs:
+            x = kwargs["x"]
+        if "y" in kwargs:
+            y = kwargs["y"]
 
         yData = None if y is None or len(y) == 0 else y.view(np.ndarray)
         xData = None if x is None or len(x) == 0 else x.view(np.ndarray)
@@ -653,11 +664,10 @@ class PlotDataItem(GraphicsObject):
         self.curve.clear()
         self.scatter.clear()
 
-    def appendData(self, *args: t.Any, **kargs: t.Any) -> None:
-        ...
+    def appendData(self, *args: t.Any, **kargs: t.Any) -> None: ...
 
     @QtCore.Slot(object, object)
-    def curveClicked(self, curve: pg.PlotCurveItem, ev: "mouseEvents.MouseClickEvent") -> None:
+    def curveClicked(self, curve: PlotCurveItem, ev: "mouseEvents.MouseClickEvent") -> None:
         self.sigClicked.emit(self, ev)
 
     @QtCore.Slot(object, object, object)
