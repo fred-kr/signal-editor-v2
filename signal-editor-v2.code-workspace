@@ -17,6 +17,7 @@
 			"**/build": true,
 			"**/output": true,
 			"**/pickles": true,
+			"**/.idea": true,
 		},
 		"python.analysis.exclude": [
 			"**/__pycache__",

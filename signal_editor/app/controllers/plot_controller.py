@@ -1,14 +1,17 @@
+import enum
 import typing as t
 
 import numpy as np
 import numpy.typing as npt
 import pyqtgraph as pg
 from pyqtgraph.widgets.MatplotlibWidget import MatplotlibWidget
-from PySide6 import QtCore
+from PySide6 import QtCore, QtGui, QtWidgets
 
+from .. import type_defs as _t
 from ..gui.plot_items import CustomScatterPlotItem, PlotDataItem
 from ..gui.plot_items.editing_view_box import EditingViewBox
-from .config_controller import ConfigController as Config
+from ..gui.plot_items.time_axis_item import TimeAxisItem
+from .config_controller2 import ConfigController as Config
 
 if t.TYPE_CHECKING:
     from pyqtgraph.GraphicsScene import mouseEvents
@@ -16,6 +19,12 @@ if t.TYPE_CHECKING:
 
 class PlotController(QtCore.QObject):
     sig_scatter_data_changed = QtCore.Signal(str, object)
+
+    class _PLOT_AXES(enum.StrEnum):
+        LEFT = "left"
+        TOP = "top"
+        RIGHT = "right"
+        BOTTOM = "bottom"
 
     def __init__(
         self,
@@ -26,6 +35,7 @@ class PlotController(QtCore.QObject):
         super().__init__(parent)
 
         self._regions: list[pg.LinearRegionItem] = []
+        self._show_regions = False
         self.setup_plot_items(graphics_layout_widget, plt_mpl)
         self.setup_plot_data_items()
 
@@ -36,7 +46,7 @@ class PlotController(QtCore.QObject):
             0,
             0,
             viewBox=EditingViewBox(name="plt_editing"),
-            axisItems={"top": pg.AxisItem(orientation="top")},
+            axisItems={"top": TimeAxisItem(orientation="top")},
         )
         plt_rate = graphics_layout_widget.addPlot(
             1,
@@ -64,10 +74,17 @@ class PlotController(QtCore.QObject):
         self.plt_editing = plt_editing
         self.plt_rate = plt_rate
         self.plt_mpl = plt_mpl
+        bg_color = Config.instance().user.plot_background_color
+        fg_color = Config.instance().user.plot_foreground_color
+        self._graphics_layout_widget = graphics_layout_widget
+        self.change_plot_bg_color(bg_color)
+        self.change_plot_fg_color(fg_color)
 
     def setup_plot_data_items(self) -> None:
-        self.signal_curve = self._create_signal_curve()
-        self.peak_scatter = self._create_peak_scatter()
+        signal_color = Config.instance().user.plot_signal_color
+        scatter_color = Config.instance().user.plot_scatter_color
+        self.signal_curve = self._create_signal_curve(pen_color=signal_color)
+        self.peak_scatter = self._create_peak_scatter(brush_color=scatter_color)
         self.peak_scatter.setZValue(60)
         self.plt_mpl.fig.tight_layout()
 
@@ -86,9 +103,9 @@ class PlotController(QtCore.QObject):
         self._temperature_label = pg.LabelItem("Temperature: - °C", parent=self.plt_editing)
         self._bpm_label = pg.LabelItem("HR: - bpm", parent=self.plt_rate)
 
-    def _create_signal_curve(self) -> PlotDataItem:
+    def _create_signal_curve(self, pen_color: _t.PGColor = "lightgray") -> PlotDataItem:
         pdi = PlotDataItem(
-            pen="lightgray",
+            pen=pen_color,
             skipFiniteCheck=True,
             autoDownsample=True,
             name="Signal",
@@ -98,18 +115,23 @@ class PlotController(QtCore.QObject):
         pdi.sigPlotChanged.connect(self.set_view_limits)
         return pdi
 
-    def _create_peak_scatter(self) -> CustomScatterPlotItem:
+    def _create_peak_scatter(
+        self,
+        brush_color: _t.PGColor = "darkgoldenrod",
+        hover_pen: _t.PGColor = "black",
+        hover_brush: _t.PGColor = "red",
+    ) -> CustomScatterPlotItem:
         spi = CustomScatterPlotItem(
             pxMode=True,
             size=10,
             pen=None,
-            brush="darkgoldenrod",
+            brush=brush_color,
             useCache=True,
             name="Peaks",
             hoverable=True,
-            hoverPen="black",
+            hoverPen=hover_pen,
             hoverSymbol="x",
-            hoverBrush="red",
+            hoverBrush=hover_brush,
             hoverSize=15,
             tip=None,
         )
@@ -169,6 +191,7 @@ class PlotController(QtCore.QObject):
     def toggle_regions(self, visible: bool) -> None:
         for region in self._regions:
             region.setVisible(visible)
+        self._show_regions = visible
 
     def remove_region(
         self, region: pg.LinearRegionItem | None = None, bounds: tuple[float, float] | None = None
@@ -211,7 +234,7 @@ class PlotController(QtCore.QObject):
             pen=pg.mkPen(color=(r, g, b, 255), width=2, style=QtCore.Qt.PenStyle.DashLine),
             movable=False,
         )
-        if not Config().plot.show_regions:
+        if self._show_regions:
             marked_region.setVisible(False)
         marked_region.setZValue(10)
         self._regions.append(marked_region)
@@ -280,7 +303,7 @@ class PlotController(QtCore.QObject):
         y_data = self.signal_curve.yData
         if not x_data or not y_data:
             return
-        scatter_search_radius = Config().plot.scatter_search_radius
+        scatter_search_radius = Config.instance().user.plot_search_around_click_radius
 
         left_index = np.searchsorted(x_data, click_x - scatter_search_radius, side="left")
         right_index = np.searchsorted(x_data, click_x + scatter_search_radius, side="right")
@@ -355,3 +378,23 @@ class PlotController(QtCore.QObject):
         subplot.set_ylabel("HR (bpm)")
         self.plt_mpl.fig.tight_layout()
         self.plt_mpl.draw()
+
+    @QtCore.Slot(QtWidgets.QPushButton)
+    def change_plot_bg_color(self, button: pg.ColorButton | QtGui.QColor) -> None:
+        color = button if isinstance(button, QtGui.QColor) else button.color()
+        self._graphics_layout_widget.setBackground(color)
+
+    @QtCore.Slot(QtWidgets.QPushButton)
+    def change_plot_fg_color(self, button: pg.ColorButton | QtGui.QColor) -> None:
+        color = button if isinstance(button, QtGui.QColor) else button.color()
+
+        for ax in self._PLOT_AXES:
+            edit_axis = self.plt_editing.getAxis(ax)
+            rate_axis = self.plt_rate.getAxis(ax)
+
+            if edit_axis.isVisible():
+                edit_axis.setPen(color)
+                edit_axis.setTextPen(color)
+            if rate_axis.isVisible():
+                rate_axis.setPen(color)
+                rate_axis.setTextPen(color)

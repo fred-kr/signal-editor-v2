@@ -146,9 +146,7 @@ def _find_peaks_local_max(
     if sig.size == 0 or np.min(sig) == np.max(sig):
         return np.array([], dtype=np.int32)
 
-    max_vals: npt.NDArray[np.float64] = ndimage.maximum_filter1d(
-        sig, size=2 * search_radius + 1, mode="constant"
-    )
+    max_vals = ndimage.maximum_filter1d(sig, size=2 * search_radius + 1, mode="constant")
     return np.flatnonzero(sig == max_vals)
 
 
@@ -158,9 +156,7 @@ def _find_peaks_local_min(
     if sig.size == 0 or np.min(sig) == np.max(sig):
         return np.array([], dtype=np.int32)
 
-    min_vals: npt.NDArray[np.float64] = ndimage.minimum_filter1d(
-        sig, size=2 * search_radius + 1, mode="constant"
-    )
+    min_vals = ndimage.minimum_filter1d(sig, size=2 * search_radius + 1, mode="constant")
     return np.flatnonzero(sig == min_vals)
 
 

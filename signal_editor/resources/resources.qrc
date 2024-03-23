@@ -1,5 +1,13 @@
 <RCC>
   <qresource prefix="icons">
+    <file alias="navigation">fugue-icons/application-sidebar-list.png</file>
+    <file alias="terminal">fugue-icons/application-terminal.png</file>
+    <file alias="view_settings">fugue-icons/gear.png</file>
+    <file alias="app_monitor">fugue-icons/application-monitor.png</file>
+    <file alias="sys_monitor">fugue-icons/system-monitor.png</file>
+    <file alias="view_result">fugue-icons/chart--pencil.png</file>
+    <file alias="download_data">fugue-icons/drive-download.png</file>
+    <file alias="upload_data">fugue-icons/drive-upload.png</file>
     <file alias="app_wave">fugue-icons/application-wave.png</file>
     <file alias="processor">fugue-icons/processor-bit-064.png</file>
     <file alias="no_access">fugue-icons/prohibition.png</file>
@@ -12,11 +20,11 @@
     <file alias="clear_history">fugue-icons/broom.png</file>
     <file alias="app_file_export">fugue-icons/application-export.png</file>
     <file alias="table_export">fugue-icons/table-export.png</file>
-    <file alias="view_result">fugue-icons/table--pencil.png</file>
+    <file alias="table_edit">fugue-icons/table--pencil.png</file>
     <file alias="view_data">fugue-icons/document-table.png</file>
     <file alias="file_import">fugue-icons/document-import.png</file>
     <file alias="file_export">fugue-icons/document-export.png</file>
     <file alias="table_import">fugue-icons/table-import.png</file>
-    <file alias="view_plots">fugue-icons/system-monitor--pencil.png</file>
+    <file alias="view_app_monitor">fugue-icons/system-monitor--pencil.png</file>
   </qresource>
 </RCC>

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1659</width>
+    <width>1660</width>
     <height>937</height>
    </rect>
   </property>
@@ -36,7 +36,7 @@
     <item row="0" column="0">
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="stacked_page_import">
        <layout class="QGridLayout" name="gridLayout">
@@ -139,7 +139,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1659</width>
+     <width>1660</width>
      <height>22</height>
     </rect>
    </property>
@@ -156,16 +156,32 @@
     <addaction name="action_edit_undo"/>
     <addaction name="action_edit_redo"/>
    </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+    <addaction name="action_show_settings"/>
+   </widget>
+   <widget class="QMenu" name="menuView">
+    <property name="title">
+     <string>View</string>
+    </property>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuView"/>
+   <addaction name="menuSettings"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QToolBar" name="toolBarLeft">
+  <widget class="QToolBar" name="tool_bar_navigation">
    <property name="windowTitle">
-    <string>toolBarLeft</string>
+    <string>Navigation Toolbar</string>
    </property>
    <property name="movable">
     <bool>false</bool>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::LeftToolBarArea</set>
    </property>
    <property name="floatable">
     <bool>false</bool>
@@ -180,7 +196,24 @@
    <addaction name="action_show_edit_page"/>
    <addaction name="action_show_result_page"/>
    <addaction name="action_show_export_page"/>
-   <addaction name="action_show_test_page"/>
+   <addaction name="action_show_info_page"/>
+  </widget>
+  <widget class="QToolBar" name="tool_bar_editing">
+   <property name="windowTitle">
+    <string>Editing Toolbar</string>
+   </property>
+   <property name="movable">
+    <bool>true</bool>
+   </property>
+   <property name="allowedAreas">
+    <set>Qt::RightToolBarArea</set>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>RightToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
   </widget>
   <action name="action_load_file">
    <property name="icon">
@@ -192,9 +225,12 @@
    </property>
   </action>
   <action name="action_show_edit_page">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/view_plots</normaloff>:/icons/view_plots</iconset>
+     <normaloff>:/icons/app_wave</normaloff>:/icons/app_wave</iconset>
    </property>
    <property name="text">
     <string>Edit</string>
@@ -207,9 +243,12 @@
    </property>
   </action>
   <action name="action_show_import_page">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/table_import</normaloff>:/icons/table_import</iconset>
+     <normaloff>:/icons/table_edit</normaloff>:/icons/table_edit</iconset>
    </property>
    <property name="text">
     <string>Data Import</string>
@@ -222,6 +261,9 @@
    </property>
   </action>
   <action name="action_show_result_page">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
      <normaloff>:/icons/view_result</normaloff>:/icons/view_result</iconset>
@@ -237,9 +279,12 @@
    </property>
   </action>
   <action name="action_show_export_page">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/table_export</normaloff>:/icons/table_export</iconset>
+     <normaloff>:/icons/file_export</normaloff>:/icons/file_export</iconset>
    </property>
    <property name="text">
     <string>Export</string>
@@ -269,16 +314,37 @@
     <string>Redo</string>
    </property>
   </action>
-  <action name="action_show_test_page">
+  <action name="action_show_info_page">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/no_access</normaloff>:/icons/no_access</iconset>
+     <normaloff>:/icons/app_monitor</normaloff>:/icons/app_monitor</iconset>
    </property>
    <property name="text">
-    <string>Testing OpenGL</string>
+    <string>App Info</string>
+   </property>
+   <property name="toolTip">
+    <string>Status Information</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_show_settings">
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/icons/view_settings</normaloff>:/icons/view_settings</iconset>
+   </property>
+   <property name="text">
+    <string>Settings</string>
+   </property>
+   <property name="toolTip">
+    <string>Modify various settings</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::PreferencesRole</enum>
    </property>
   </action>
  </widget>
