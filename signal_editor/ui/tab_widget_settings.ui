@@ -20,7 +20,7 @@
    <enum>QTabWidget::Rounded</enum>
   </property>
   <property name="currentIndex">
-   <number>0</number>
+   <number>1</number>
   </property>
   <widget class="QWidget" name="tab_general">
    <attribute name="title">
@@ -28,7 +28,7 @@
    </attribute>
    <layout class="QGridLayout" name="gridLayout">
     <item row="0" column="0">
-     <widget class="TreeWidget" name="tree_widget_general">
+     <widget class="DataTreeWidget" name="tree_widget_general">
       <column>
        <property name="text">
         <string>Setting</string>
@@ -59,7 +59,7 @@
    </attribute>
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="0" column="0">
-     <widget class="TreeWidget" name="tree_widget_plots">
+     <widget class="DataTreeWidget" name="tree_widget_plots">
       <column>
        <property name="text">
         <string>Setting</string>
@@ -90,7 +90,7 @@
    </attribute>
    <layout class="QGridLayout" name="gridLayout_3">
     <item row="0" column="0">
-     <widget class="TreeWidget" name="tree_widget_files_dirs">
+     <widget class="DataTreeWidget" name="tree_widget_files_dirs">
       <column>
        <property name="text">
         <string>Setting</string>
@@ -118,7 +118,7 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>TreeWidget</class>
+   <class>DataTreeWidget</class>
    <extends>QTreeWidget</extends>
    <header>pyqtgraph</header>
   </customwidget>

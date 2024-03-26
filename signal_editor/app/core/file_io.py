@@ -340,7 +340,9 @@ def read_feather(
     """
 
     signal_column = (
-        Config().input_data.signal_column if signal_column == "use_config" else signal_column
+        Config.instance().session.signal_column_name
+        if signal_column == "use_config"
+        else signal_column
     )
     col_names = pl.scan_ipc(file_path).columns
     if isinstance(signal_column, int):

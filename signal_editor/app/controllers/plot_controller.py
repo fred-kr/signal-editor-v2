@@ -11,7 +11,7 @@ from .. import type_defs as _t
 from ..gui.plot_items import CustomScatterPlotItem, PlotDataItem
 from ..gui.plot_items.editing_view_box import EditingViewBox
 from ..gui.plot_items.time_axis_item import TimeAxisItem
-from .config_controller2 import ConfigController as Config
+from .config_controller import ConfigController as Config
 
 if t.TYPE_CHECKING:
     from pyqtgraph.GraphicsScene import mouseEvents
@@ -382,7 +382,9 @@ class PlotController(QtCore.QObject):
     @QtCore.Slot(QtWidgets.QPushButton)
     def change_plot_bg_color(self, button: pg.ColorButton | QtGui.QColor) -> None:
         color = button if isinstance(button, QtGui.QColor) else button.color()
-        self._graphics_layout_widget.setBackground(color)
+        self.plt_editing.setBackground(color)
+        self.plt_rate.setBackground(color)
+        Config.instance().user.plot_background_color = color
 
     @QtCore.Slot(QtWidgets.QPushButton)
     def change_plot_fg_color(self, button: pg.ColorButton | QtGui.QColor) -> None:
@@ -398,3 +400,5 @@ class PlotController(QtCore.QObject):
             if rate_axis.isVisible():
                 rate_axis.setPen(color)
                 rate_axis.setTextPen(color)
+
+        Config.instance().user.plot_foreground_color = color

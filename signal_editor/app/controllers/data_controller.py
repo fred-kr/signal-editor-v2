@@ -1,29 +1,18 @@
 import datetime
+import enum
 import typing as t
 from collections import OrderedDict
-from pathlib import Path
-import enum
 
 import attrs
 import polars as pl
 from PySide6 import QtCore
 
 from .. import type_defs as _t
-from ..core.file_io import read_edf
 from ..core.section import Section, SectionID
 from ..utils import exceptions_as_dialog
 from .config_controller import ConfigController as Config
 
-if t.TYPE_CHECKING:
-    from .config_controller import InputDataConfig
 
-class SupportedFileFormats(enum.Enum):
-    CSV = ".csv"
-    TXT = ".txt"
-    XLSX = ".xlsx"
-    FEATHER = ".feather"
-    EDF = ".edf"
-    
 class MissingDataError(Exception):
     """
     Raised if any function is called that requires data to be loaded, while no data is available.
@@ -53,7 +42,7 @@ def _epoch_to_unknown(
         )
     if isinstance(value, QtCore.QDateTime):
         py_date = t.cast(datetime.datetime, value.toPython())
-        if py_date == Config().input_data.measured_date_special_value or not value.isValid():
+        if py_date == Config.instance().user.general_unknown_date_value or not value.isValid():
             return "unknown"
         return py_date
     if isinstance(value, int):
@@ -116,12 +105,17 @@ class DataController(QtCore.QObject):
     sig_section_added = QtCore.Signal(str)
     sig_section_removed = QtCore.Signal(str)
 
-    FileFormats = SupportedFileFormats
+    class SupportedFileFormats(enum.StrEnum):
+        CSV = ".csv"
+        TXT = ".txt"
+        XLSX = ".xlsx"
+        FEATHER = ".feather"
+        EDF = ".edf"
 
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
 
-        data_config: "InputDataConfig" = Config().input_data
+        data_config = Config.instance().session
         self._sampling_rate: int = data_config.sampling_rate
 
         self._original_data: pl.LazyFrame | None = None
@@ -130,7 +124,7 @@ class DataController(QtCore.QObject):
         self._metadata = SelectedFileMetadata(
             file_name="",
             file_format="",
-            name_signal_column=data_config.signal_column,
+            name_signal_column=data_config.signal_column_name,
             sampling_rate=self._sampling_rate,
         )
 
@@ -159,9 +153,7 @@ class DataController(QtCore.QObject):
         for section in self._sections.values():
             section.update_sampling_rate(value)
 
-    @exceptions_as_dialog(
-        re_raise=True, include_traceback=False, additional_msg="Failed to get base section"
-    )
+    @exceptions_as_dialog(additional_msg="Failed to get base section")
     def get_base_section(self) -> Section:
         if self._original_data is None:
             raise MissingDataError("No data available. Select a valid file to load, and try again.")
@@ -176,9 +168,7 @@ class DataController(QtCore.QObject):
             self._active_section = self.get_base_section()
         return self._active_section
 
-    @exceptions_as_dialog(
-        re_raise=True, include_traceback=False, additional_msg="Failed to set active section"
-    )
+    @exceptions_as_dialog(additional_msg="Failed to set active section")
     @QtCore.Slot(str)
     def set_active_section(self, section_id: SectionID) -> None:
         if section_id not in self._sections:
@@ -207,7 +197,7 @@ class DataController(QtCore.QObject):
     @QtCore.Slot(QtCore.QDateTime)
     def set_measured_date(self, value: QtCore.QDateTime) -> None:
         py_date = t.cast(datetime.datetime, value.toPython())
-        if not value.isValid() or py_date == Config().input_data.measured_date_special_value:
+        if not value.isValid() or py_date == Config.instance().user.general_unknown_date_value:
             self._metadata.measured_date = "unknown"
         else:
             self._metadata.measured_date = py_date

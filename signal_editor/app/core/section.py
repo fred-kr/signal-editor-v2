@@ -8,7 +8,7 @@ import polars as pl
 import polars.selectors as ps
 
 from .. import type_defs as _t
-from ..controllers.config_controller import ConfigController
+from ..controllers.config_controller import ConfigController as Config
 from ..models.result_models import CompactSectionResult
 from .peak_detection import find_peaks
 from .processing import filter_elgendi, filter_neurokit2, filter_signal, scale_signal, signal_rate
@@ -135,8 +135,8 @@ class Section:
         return cls._id_counter
 
     def __init__(self, data: pl.DataFrame) -> None:
-        config = ConfigController().input_data
-        self.signal_name = config.signal_column
+        config = Config.instance().session
+        self.signal_name = config.signal_column_name
         self.processed_signal_name = f"{self.signal_name}_{config.processed_signal_column_suffix}"
 
         if not self.__class__._base_created:

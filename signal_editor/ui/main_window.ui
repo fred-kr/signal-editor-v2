@@ -148,6 +148,8 @@
      <string>File</string>
     </property>
     <addaction name="action_load_file"/>
+    <addaction name="separator"/>
+    <addaction name="action_show_metadata"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -217,7 +219,7 @@
   </widget>
   <action name="action_load_file">
    <property name="icon">
-    <iconset resource="../resources/resources.qrc">
+    <iconset>
      <normaloff>:/icons/file_import</normaloff>:/icons/file_import</iconset>
    </property>
    <property name="text">
@@ -229,7 +231,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/resources.qrc">
+    <iconset>
      <normaloff>:/icons/app_wave</normaloff>:/icons/app_wave</iconset>
    </property>
    <property name="text">
@@ -247,7 +249,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/resources.qrc">
+    <iconset>
      <normaloff>:/icons/table_edit</normaloff>:/icons/table_edit</iconset>
    </property>
    <property name="text">
@@ -265,7 +267,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/resources.qrc">
+    <iconset>
      <normaloff>:/icons/view_result</normaloff>:/icons/view_result</iconset>
    </property>
    <property name="text">
@@ -283,7 +285,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/resources.qrc">
+    <iconset>
      <normaloff>:/icons/file_export</normaloff>:/icons/file_export</iconset>
    </property>
    <property name="text">
@@ -298,7 +300,7 @@
   </action>
   <action name="action_edit_undo">
    <property name="icon">
-    <iconset resource="../resources/resources.qrc">
+    <iconset>
      <normaloff>:/icons/edit_undo</normaloff>:/icons/edit_undo</iconset>
    </property>
    <property name="text">
@@ -307,7 +309,7 @@
   </action>
   <action name="action_edit_redo">
    <property name="icon">
-    <iconset resource="../resources/resources.qrc">
+    <iconset>
      <normaloff>:/icons/edit_redo</normaloff>:/icons/edit_redo</iconset>
    </property>
    <property name="text">
@@ -319,7 +321,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../resources/resources.qrc">
+    <iconset>
      <normaloff>:/icons/app_monitor</normaloff>:/icons/app_monitor</iconset>
    </property>
    <property name="text">
@@ -334,7 +336,7 @@
   </action>
   <action name="action_show_settings">
    <property name="icon">
-    <iconset resource="../resources/resources.qrc">
+    <iconset>
      <normaloff>:/icons/view_settings</normaloff>:/icons/view_settings</iconset>
    </property>
    <property name="text">
@@ -345,6 +347,11 @@
    </property>
    <property name="menuRole">
     <enum>QAction::PreferencesRole</enum>
+   </property>
+  </action>
+  <action name="action_show_metadata">
+   <property name="text">
+    <string>Metadata</string>
    </property>
   </action>
  </widget>

@@ -108,7 +108,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         action_toggle_nav_toolbar.setText("Toggle Navigation Toolbar")
         self.menuView.addAction(action_toggle_nav_toolbar)
 
-
     def write_settings(self) -> None:
         settings = QtCore.QSettings()
         settings.beginGroup("MainWindow")
@@ -126,4 +125,5 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.write_settings()
+        self.settings_editor.close()
         return super().closeEvent(event)

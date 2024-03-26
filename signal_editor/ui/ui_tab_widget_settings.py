@@ -18,7 +18,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QGridLayout, QHeaderView, QSizePolicy,
     QTabWidget, QTreeWidgetItem, QWidget)
 
-from pyqtgraph import TreeWidget
+from pyqtgraph import DataTreeWidget
 
 class Ui_TabWidgetSettings(object):
     def setupUi(self, TabWidgetSettings):
@@ -31,7 +31,7 @@ class Ui_TabWidgetSettings(object):
         self.tab_general.setObjectName(u"tab_general")
         self.gridLayout = QGridLayout(self.tab_general)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.tree_widget_general = TreeWidget(self.tab_general)
+        self.tree_widget_general = DataTreeWidget(self.tab_general)
         self.tree_widget_general.setObjectName(u"tree_widget_general")
 
         self.gridLayout.addWidget(self.tree_widget_general, 0, 0, 1, 1)
@@ -41,7 +41,7 @@ class Ui_TabWidgetSettings(object):
         self.tab_plots.setObjectName(u"tab_plots")
         self.gridLayout_2 = QGridLayout(self.tab_plots)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.tree_widget_plots = TreeWidget(self.tab_plots)
+        self.tree_widget_plots = DataTreeWidget(self.tab_plots)
         self.tree_widget_plots.setObjectName(u"tree_widget_plots")
 
         self.gridLayout_2.addWidget(self.tree_widget_plots, 0, 0, 1, 1)
@@ -51,7 +51,7 @@ class Ui_TabWidgetSettings(object):
         self.tab_files_dirs.setObjectName(u"tab_files_dirs")
         self.gridLayout_3 = QGridLayout(self.tab_files_dirs)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.tree_widget_files_dirs = TreeWidget(self.tab_files_dirs)
+        self.tree_widget_files_dirs = DataTreeWidget(self.tab_files_dirs)
         self.tree_widget_files_dirs.setObjectName(u"tree_widget_files_dirs")
 
         self.gridLayout_3.addWidget(self.tree_widget_files_dirs, 0, 0, 1, 1)
@@ -60,7 +60,7 @@ class Ui_TabWidgetSettings(object):
 
         self.retranslateUi(TabWidgetSettings)
 
-        TabWidgetSettings.setCurrentIndex(0)
+        TabWidgetSettings.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(TabWidgetSettings)

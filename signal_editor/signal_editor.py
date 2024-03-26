@@ -1,9 +1,10 @@
 from PySide6 import QtCore, QtWidgets
 
+from .app.controllers.config_controller import ConfigController as Config
 from .app.controllers.data_controller import DataController
 from .app.controllers.plot_controller import PlotController
 from .app.gui.main_window import MainWindow
-from .app.controllers.config_controller2 import ConfigController as Config
+
 
 class StatusUpdater(QtCore.QObject):
     sig_update_status_msg = QtCore.Signal(str)
@@ -28,12 +29,24 @@ class SignalEditor(QtWidgets.QApplication):
             self.main_window.mpl_widget,
         )
         self.config_controller = Config.instance()
+        self.main_window.settings_editor.tree_widget_general.setData(
+            self.config_controller.user.to_dict(), hideRoot=True
+        )
+        self.main_window.settings_editor.tree_widget_plots.setData(
+            self.config_controller.session.to_dict(), hideRoot=True
+        )
+        self.main_window.btn_plot_bg_color.setColor(self.config_controller.user.plot_background_color)
+        self.main_window.btn_plot_fg_color.setColor(self.config_controller.user.plot_foreground_color)
         self.connect_qt_signals()
-    
+
     def connect_qt_signals(self) -> None:
-        self.main_window.btn_plot_bg_color.sigColorChanging.connect(self.plot_controller.change_plot_bg_color)
-        self.main_window.btn_plot_fg_color.sigColorChanging.connect(self.plot_controller.change_plot_fg_color)
-        
+        self.main_window.btn_plot_bg_color.sigColorChanging.connect(
+            self.plot_controller.change_plot_bg_color
+        )
+        self.main_window.btn_plot_fg_color.sigColorChanging.connect(
+            self.plot_controller.change_plot_fg_color
+        )
+
     def reset(self) -> None:
         self.plot_controller.reset()
         self.plot_controller.setParent(None)
