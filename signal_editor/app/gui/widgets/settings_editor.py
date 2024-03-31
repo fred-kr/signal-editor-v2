@@ -275,9 +275,10 @@ class SettingsTree(QtWidgets.QTreeWidget):
 
         self.setColumnCount(4)
         self.setHeaderLabels(("Setting", "Type", "Value", "Description"))
-        self.header().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
-        self.header().setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeMode.Stretch)
-        self.header().setSectionResizeMode(3, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        for col in range(self.columnCount()):
+            self.header().setSectionResizeMode(col, QtWidgets.QHeaderView.ResizeMode.Interactive)
+            if col in (1, 2):
+                self.resizeColumnToContents(col)
 
         self.settings: QtCore.QSettings | None = None
         self.refresh_timer = QtCore.QTimer()
@@ -423,9 +424,10 @@ class SettingsTree(QtWidgets.QTreeWidget):
             self.delete_item(parent, divider_index)
 
     def create_item(
-        self, text: str, parent: QtWidgets.QTreeWidgetItem | None, index: int
+        self, text: str, parent: QtWidgets.QTreeWidgetItem | None = None, index: int = 0
     ) -> QtWidgets.QTreeWidgetItem:
         after = self.child_at(parent, index - 1) if index != 0 else None
+
         if parent is not None:
             item = QtWidgets.QTreeWidgetItem(parent, after)  # pyright: ignore[reportCallIssue, reportArgumentType]
         else:
@@ -440,7 +442,25 @@ class SettingsTree(QtWidgets.QTreeWidget):
             item = parent.takeChild(index)
         else:
             item = self.takeTopLevelItem(index)
+        if self.settings is not None:
+            self.settings.remove(item.text(0))
         del item
+
+    @QtCore.Slot()
+    def delete_current_item(self) -> None:
+        sure = QtWidgets.QMessageBox.question(
+            self,
+            "Delete?",
+            "Are you sure you want to delete this item?",
+            QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
+        )
+        if sure != QtWidgets.QMessageBox.StandardButton.Yes:
+            return
+        item = self.currentItem()
+        if item.parent():
+            self.delete_item(item.parent(), item.parent().indexOfChild(item))
+        else:
+            self.delete_item(None, self.indexOfTopLevelItem(item))
 
     def child_at(
         self, parent: QtWidgets.QTreeWidgetItem | None, index: int
@@ -478,10 +498,8 @@ class SettingsDialog(QtWidgets.QDialog):
 
         self.settings_tree = SettingsTree(self)
         # Populate the settings tree with the application settings
-        self.settings_tree.set_settings_object(QtCore.QSettings())
-        self.settings_tree.set_auto_refresh(True)
-
-        # self.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
+        settings = QtCore.QSettings()
+        self.settings_tree.set_settings_object(settings)
 
         toolbar = QtWidgets.QToolBar()
 
@@ -494,7 +512,9 @@ class SettingsDialog(QtWidgets.QDialog):
         auto_refresh_action.toggled.connect(self.settings_tree.set_auto_refresh)
         toolbar.addAction(auto_refresh_action)
 
-        toolbar.addAction(QtGui.QIcon(":/icons/delete"), "Delete", self.settings_tree.delete_item)
+        delete_action = QtGui.QAction(QtGui.QIcon(":/icons/delete"), "Delete Selected", toolbar)
+        delete_action.triggered.connect(self.settings_tree.delete_current_item)
+        toolbar.addAction(delete_action)
 
         layout = QtWidgets.QVBoxLayout(self)
         layout.addWidget(toolbar)

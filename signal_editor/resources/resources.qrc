@@ -28,7 +28,8 @@
     <file alias="view_app_monitor">fugue-icons/system-monitor--pencil.png</file>
     <file alias="refresh">fugue-icons/arrow-circle-double-135.png</file>
     <file alias="auto_refresh">fugue-icons/arrow-repeat.png</file>
-    <file alias="delete">fugue-icons/cross.png</file>
+    <file alias="delete">fugue-icons/cross-button.png</file>
     <file alias="edit">fugue-icons/pencil.png</file>
+    <file alias="create">fugue-icons/plus-button.png</file>
   </qresource>
 </RCC>

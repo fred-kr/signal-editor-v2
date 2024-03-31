@@ -21,14 +21,6 @@ class StatusMessageDock(QtWidgets.QDockWidget, Ui_DockWidgetLogOutput):
         self.setVisible(False)
 
 
-# class SettingsDialog(QtWidgets.QTabWidget, Ui_TabWidgetSettings):
-#     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
-#         super().__init__(parent)
-#         self.setupUi(self)
-#         self.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
-#         self.setVisible(False)
-
-
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
@@ -88,7 +80,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             lambda index: self.tool_bar_editing.setVisible(index == 1)  # pyright: ignore[reportUnknownArgumentType, reportUnknownLambdaType]
         )
 
-        self.action_show_settings.triggered.connect(self.on_show_settings)
+        self.action_show_settings.triggered.connect(self.show_settings)
 
     def setup_menus(self) -> None:
         action_toggle_dock_session_properties = self.dock_session_properties.toggleViewAction()
@@ -128,7 +120,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         settings.endGroup()
 
     @QtCore.Slot()
-    def on_show_settings(self) -> None:
+    def show_settings(self) -> None:
         if self.settings_dialog is None:
             self.settings_dialog = SettingsDialog(self)
 
