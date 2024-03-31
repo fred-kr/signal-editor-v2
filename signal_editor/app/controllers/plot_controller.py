@@ -1,4 +1,3 @@
-import enum
 import typing as t
 
 import numpy as np
@@ -20,12 +19,6 @@ if t.TYPE_CHECKING:
 class PlotController(QtCore.QObject):
     sig_scatter_data_changed = QtCore.Signal(str, object)
 
-    class _PLOT_AXES(enum.StrEnum):
-        LEFT = "left"
-        TOP = "top"
-        RIGHT = "right"
-        BOTTOM = "bottom"
-
     def __init__(
         self,
         parent: QtCore.QObject | None,
@@ -34,6 +27,8 @@ class PlotController(QtCore.QObject):
     ) -> None:
         super().__init__(parent)
 
+        self._peak_search_radius_changed = False
+        self._line_click_width_changed = False
         self._regions: list[pg.LinearRegionItem] = []
         self._show_regions = False
         self.setup_plot_items(graphics_layout_widget, plt_mpl)
@@ -52,7 +47,7 @@ class PlotController(QtCore.QObject):
             1,
             0,
             viewBox=pg.ViewBox(name="plt_rate"),
-            axisItems={"top": pg.AxisItem(orientation="top")},
+            axisItems={"top": TimeAxisItem(orientation="top")},
         )
         editing_vb = plt_editing.getViewBox()
         rate_vb = plt_rate.getViewBox()
@@ -74,24 +69,22 @@ class PlotController(QtCore.QObject):
         self.plt_editing = plt_editing
         self.plt_rate = plt_rate
         self.plt_mpl = plt_mpl
-        bg_color = Config.instance().user.plot_background_color
-        fg_color = Config.instance().user.plot_foreground_color
+        user_conf = Config.instance().user
         self._graphics_layout_widget = graphics_layout_widget
-        self.change_plot_bg_color(bg_color)
-        self.change_plot_fg_color(fg_color)
+        self.change_plot_bg_color(user_conf.plot_background_color)
+        self.change_plot_fg_color(user_conf.plot_foreground_color)
 
     def setup_plot_data_items(self) -> None:
-        signal_color = Config.instance().user.plot_signal_color
-        scatter_color = Config.instance().user.plot_scatter_color
-        self.signal_curve = self._create_signal_curve(pen_color=signal_color)
-        self.peak_scatter = self._create_peak_scatter(brush_color=scatter_color)
+        user_conf = Config.instance().user
+        self.signal_curve = self._initialize_signal_curve(pen_color=user_conf.plot_signal_color)
+        self.peak_scatter = self._initialize_peak_scatter(brush_color=user_conf.plot_scatter_color)
         self.peak_scatter.setZValue(60)
         self.plt_mpl.fig.tight_layout()
 
         self.rate_curve = PlotDataItem()
 
         self._region_selector = pg.LinearRegionItem(
-            brush=(0, 200, 100, 75),
+            brush=user_conf.plot_region_color,
             pen=(255, 255, 255, 255),
             hoverBrush=(0, 200, 100, 30),
             hoverPen={"color": "gray", "width": 2},
@@ -100,10 +93,11 @@ class PlotController(QtCore.QObject):
         for line in self._region_selector.lines:
             line.addMarker("<|>", position=0.5, size=12)
 
-        self._temperature_label = pg.LabelItem("Temperature: - °C", parent=self.plt_editing)
-        self._bpm_label = pg.LabelItem("HR: - bpm", parent=self.plt_rate)
+        # TODO: Find a better way to convey this information
+        # self._temperature_label = pg.LabelItem("Temperature: - °C", parent=self.plt_editing)
+        # self._bpm_label = pg.LabelItem("HR: - bpm", parent=self.plt_rate)
 
-    def _create_signal_curve(self, pen_color: _t.PGColor = "lightgray") -> PlotDataItem:
+    def _initialize_signal_curve(self, pen_color: _t.PGColor = "lightgray") -> PlotDataItem:
         pdi = PlotDataItem(
             pen=pen_color,
             skipFiniteCheck=True,
@@ -115,7 +109,7 @@ class PlotController(QtCore.QObject):
         pdi.sigPlotChanged.connect(self.set_view_limits)
         return pdi
 
-    def _create_peak_scatter(
+    def _initialize_peak_scatter(
         self,
         brush_color: _t.PGColor = "darkgoldenrod",
         hover_pen: _t.PGColor = "black",
@@ -176,13 +170,13 @@ class PlotController(QtCore.QObject):
             self._region_selector.setParent(None)
         self._region_selector = None
 
-        if self._temperature_label is not None:
-            self._temperature_label.setParent(None)
-        self._temperature_label = None
+        # if self._temperature_label is not None:
+        #     self._temperature_label.setParent(None)
+        # self._temperature_label = None
 
-        if self._bpm_label is not None:
-            self._bpm_label.setParent(None)
-        self._bpm_label = None
+        # if self._bpm_label is not None:
+        #     self._bpm_label.setParent(None)
+        # self._bpm_label = None
 
         self.clear_regions()
         self.setup_plot_data_items()
@@ -352,7 +346,7 @@ class PlotController(QtCore.QObject):
         self.sig_scatter_data_changed.emit("n", sender)
 
     def get_selection_area(self) -> QtCore.QRectF | None:
-        return self.plt_editing.vb.mapped_selection_rect
+        return self.plt_editing.vb.mapped_selection_rect  # pyright: ignore[reportAttributeAccessIssue, reportUnknownVariableType]
 
     def draw_rolling_rate(
         self,
@@ -382,15 +376,14 @@ class PlotController(QtCore.QObject):
     @QtCore.Slot(QtWidgets.QPushButton)
     def change_plot_bg_color(self, button: pg.ColorButton | QtGui.QColor) -> None:
         color = button if isinstance(button, QtGui.QColor) else button.color()
-        self.plt_editing.setBackground(color)
-        self.plt_rate.setBackground(color)
+        self._graphics_layout_widget.setBackground(color)
         Config.instance().user.plot_background_color = color
 
     @QtCore.Slot(QtWidgets.QPushButton)
     def change_plot_fg_color(self, button: pg.ColorButton | QtGui.QColor) -> None:
         color = button if isinstance(button, QtGui.QColor) else button.color()
 
-        for ax in self._PLOT_AXES:
+        for ax in {"left", "top", "right", "bottom"}:
             edit_axis = self.plt_editing.getAxis(ax)
             rate_axis = self.plt_rate.getAxis(ax)
 

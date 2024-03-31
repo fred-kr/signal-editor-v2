@@ -254,3 +254,5 @@ fabric.properties
 project-structure.txt
 **/resources/**/*.png
 .ruff_cache/
+notes/
+NOTES.md

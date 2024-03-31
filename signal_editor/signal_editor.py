@@ -1,6 +1,5 @@
 from PySide6 import QtCore, QtWidgets
 
-from .app.controllers.config_controller import ConfigController as Config
 from .app.controllers.data_controller import DataController
 from .app.controllers.plot_controller import PlotController
 from .app.gui.main_window import MainWindow
@@ -28,16 +27,12 @@ class SignalEditor(QtWidgets.QApplication):
             self.main_window.pg_graphics_layout_widget,
             self.main_window.mpl_widget,
         )
-        self.config_controller = Config.instance()
-        self.main_window.settings_editor.tree_widget_general.setData(
-            self.config_controller.user.to_dict(), hideRoot=True
-        )
-        self.main_window.settings_editor.tree_widget_plots.setData(
-            self.config_controller.session.to_dict(), hideRoot=True
-        )
-        self.main_window.btn_plot_bg_color.setColor(self.config_controller.user.plot_background_color)
-        self.main_window.btn_plot_fg_color.setColor(self.config_controller.user.plot_foreground_color)
+        # self.config_controller = Config.instance()
+        # self.user_config_params = self.config_controller.user.to_pg_parameters()
+        # self.session_config_params = self.config_controller.session.to_pg_parameters()
+
         self.connect_qt_signals()
+        # self.apply_persisted_settings()
 
     def connect_qt_signals(self) -> None:
         self.main_window.btn_plot_bg_color.sigColorChanging.connect(
@@ -46,6 +41,14 @@ class SignalEditor(QtWidgets.QApplication):
         self.main_window.btn_plot_fg_color.sigColorChanging.connect(
             self.plot_controller.change_plot_fg_color
         )
+
+    # def apply_persisted_settings(self) -> None:
+    #     self.main_window.btn_plot_bg_color.setColor(
+    #         self.config_controller.user.plot_background_color
+    #     )
+    #     self.main_window.btn_plot_fg_color.setColor(
+    #         self.config_controller.user.plot_foreground_color
+    #     )
 
     def reset(self) -> None:
         self.plot_controller.reset()

@@ -26,5 +26,9 @@
     <file alias="file_export">fugue-icons/document-export.png</file>
     <file alias="table_import">fugue-icons/table-import.png</file>
     <file alias="view_app_monitor">fugue-icons/system-monitor--pencil.png</file>
+    <file alias="refresh">fugue-icons/arrow-circle-double-135.png</file>
+    <file alias="auto_refresh">fugue-icons/arrow-repeat.png</file>
+    <file alias="delete">fugue-icons/cross.png</file>
+    <file alias="edit">fugue-icons/pencil.png</file>
   </qresource>
 </RCC>

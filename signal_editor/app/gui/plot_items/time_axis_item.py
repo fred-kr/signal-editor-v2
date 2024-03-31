@@ -1,13 +1,7 @@
-import typing as t
-
-import pyqtgraph as pg
+from pyqtgraph import AxisItem
 
 
-class TimeAxisItem(pg.AxisItem):
-    def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
-        pg.AxisItem.__init__(self, *args, **kwargs)
-        self.setLabel("Time (hh:mm:ss)")
-
+class TimeAxisItem(AxisItem):
     def tickStrings(self, values: list[float], scale: float, spacing: float) -> list[str]:
         strings: list[str] = []
         for v in values:
