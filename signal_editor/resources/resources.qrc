@@ -31,5 +31,10 @@
     <file alias="delete">fugue-icons/cross-button.png</file>
     <file alias="edit">fugue-icons/pencil.png</file>
     <file alias="create">fugue-icons/plus-button.png</file>
+    <file alias="resource_monitor">fugue-icons/resource-monitor.png</file>
+    <file alias="restore_defaults">fugue-icons/arrow-circle-225-left.png</file>
+    <file alias="info_btn">fugue-icons/information-button.png</file>
+    <file alias="question_btn">fugue-icons/question-button.png</file>
+    <file alias="color">fugue-icons/color--pencil.png</file>
   </qresource>
 </RCC>

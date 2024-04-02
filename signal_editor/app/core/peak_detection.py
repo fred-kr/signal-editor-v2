@@ -4,10 +4,10 @@ import neurokit2 as nk
 import numpy as np
 import numpy.typing as npt
 import wfdb.processing as wp
+from PySide6 import QtCore
 from scipy import ndimage, signal
 
 from .. import type_defs as _t
-from ..controllers.config_controller import ConfigController as Config
 
 
 def _signal_smoothing_median(
@@ -169,7 +169,9 @@ def find_extrema(
         case "down":
             peaks = _find_peaks_local_min(sig, search_radius)
 
-    min_dist = Config.instance().user.edit_minimum_allowed_peak_distance
+    settings = QtCore.QSettings()
+
+    min_dist = settings.value("Editing/minimum_peak_distance")
     peak_diffs = np.diff(peaks)
     close_peaks = np.where(peak_diffs < min_dist)[0]
     while len(close_peaks) > 0:
@@ -272,7 +274,8 @@ def _handle_close_peaks(
     find_peak_func: t.Callable[..., np.intp],
 ) -> npt.NDArray[np.int32]:
     qrs_diffs = np.diff(qrs_locations)
-    min_dist = Config.instance().user.edit_minimum_allowed_peak_distance
+    settings = QtCore.QSettings()
+    min_dist = settings.value("Editing/minimum_peak_distance")
     close_indices = np.where(qrs_diffs <= min_dist)[0]
 
     if not close_indices.size:

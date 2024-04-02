@@ -1,4 +1,4 @@
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from .app.controllers.data_controller import DataController
 from .app.controllers.plot_controller import PlotController
@@ -27,28 +27,12 @@ class SignalEditor(QtWidgets.QApplication):
             self.main_window.pg_graphics_layout_widget,
             self.main_window.mpl_widget,
         )
-        # self.config_controller = Config.instance()
-        # self.user_config_params = self.config_controller.user.to_pg_parameters()
-        # self.session_config_params = self.config_controller.session.to_pg_parameters()
 
         self.connect_qt_signals()
-        # self.apply_persisted_settings()
 
     def connect_qt_signals(self) -> None:
-        self.main_window.btn_plot_bg_color.sigColorChanging.connect(
-            self.plot_controller.change_plot_bg_color
-        )
-        self.main_window.btn_plot_fg_color.sigColorChanging.connect(
-            self.plot_controller.change_plot_fg_color
-        )
-
-    # def apply_persisted_settings(self) -> None:
-    #     self.main_window.btn_plot_bg_color.setColor(
-    #         self.config_controller.user.plot_background_color
-    #     )
-    #     self.main_window.btn_plot_fg_color.setColor(
-    #         self.config_controller.user.plot_foreground_color
-    #     )
+        self.main_window.settings_editor.sig_setting_changed.connect(self._update_setting)
+        self.main_window.action_load_file.triggered.connect(self.read_file)
 
     def reset(self) -> None:
         self.plot_controller.reset()
@@ -62,3 +46,34 @@ class SignalEditor(QtWidgets.QApplication):
         # self.data_controller.reset()
         self.data_controller.setParent(None)
         self.data_controller = DataController(self)
+
+    @QtCore.Slot()
+    def read_file(self) -> None:
+        file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
+            self.main_window,
+            "Open File",
+            filter="Supported Files (*.csv *.txt *.xlsx *.feather *.edf)",
+        )
+        if not file_path:
+            return
+        self.data_controller.read_file(file_path)
+    @QtCore.Slot(str, object)
+    def _update_setting(self, name: str, value: QtGui.QColor | str | int | float | None) -> None:
+        if value is None:
+            return
+        match name:
+            case "background_color":
+                self.plot_controller.change_plot_bg_color(value)
+            case "foreground_color":
+                self.plot_controller.change_plot_fg_color(value)
+            case "point_color":
+                self.plot_controller.peak_scatter.setBrush(color=value)
+            case "signal_line_color":
+                self.plot_controller.signal_curve.setPen(color=value)
+            case "rate_line_color":
+                self.plot_controller.rate_curve.setPen(color=value)
+            case "section_marker_color":
+                for r in self.plot_controller.regions:
+                    r.setBrush(color=value)
+            case _:
+                pass

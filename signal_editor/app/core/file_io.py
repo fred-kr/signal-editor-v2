@@ -4,13 +4,13 @@ import re
 import typing as t
 from pathlib import Path
 
+from PySide6 import QtCore
 import dateutil.parser as dt_parser
 import mne.io
 import polars as pl
 import polars.selectors as cs
 
 from .. import type_defs as _t
-from ..controllers.config_controller import ConfigController as Config
 
 
 def parse_file_name(
@@ -266,7 +266,7 @@ def read_edf(
     sampling_rate = t.cast(float, raw_edf.info["sfreq"])
 
     out = pl.from_numpy(raw_edf.get_data(start=start, stop=stop), schema=channel_names).select(
-        pl.col(temperature_channel).cast(pl.Float32).round(1),
+        pl.col(temperature_channel).round(1),
         pl.col(data_channel),
     )
     if include_duration_column:
@@ -288,12 +288,13 @@ def read_feather(
     signal_column: str | int | t.Literal["use_config"] = "use_config",
     temperature_column: str | int = "temperature",
 ) -> pl.DataFrame:
-    signal_column = (
-        Config.instance().session.signal_column_name
-        if signal_column == "use_config"
-        else signal_column
-    )
+    settings = QtCore.QSettings()
+    if signal_column == "use_config":
+        signal_column = settings.value("Data/signal_column")
+
     col_names = pl.scan_ipc(file_path).columns
+    if signal_column not in col_names:
+        signal_column = col_names[0] if col_names[0] != "index" else col_names[1]
     if isinstance(signal_column, int):
         signal_column = col_names[signal_column]
     if isinstance(temperature_column, int):

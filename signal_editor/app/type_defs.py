@@ -7,7 +7,6 @@ import numpy.typing as npt
 if t.TYPE_CHECKING:
     from PySide6 import QtCore, QtGui
 
-    from .controllers.config_controller import UserConfig
     from .core.section import SectionID
 
 type FilterMethod = t.Literal[
@@ -319,30 +318,3 @@ class CompleteResultDict(t.TypedDict):
     metadata: SelectedFileMetadataDict
     global_dataframe: npt.NDArray[np.void]
     section_results: dict["SectionID", DetailedSectionResultDict]
-
-
-class UserConfigDict(t.TypedDict):
-    general_location_data_files: "QtCore.QDir | str"
-    general_location_export_files: "QtCore.QDir | str"
-    general_unknown_date_value: datetime.datetime
-    plot_background_color: "QtGui.QColor"
-    plot_foreground_color: "QtGui.QColor"
-    plot_scatter_color: "QtGui.QColor"
-    plot_signal_color: "QtGui.QColor"
-    plot_rate_color: "QtGui.QColor"
-    plot_region_color: "QtGui.QColor"
-    plot_signal_line_click_width: int
-    plot_search_around_click_radius: int
-    edit_minimum_allowed_peak_distance: int
-    edit_rate_computation_method: "UserConfig.RATE_METHODS"
-
-
-class SessionConfigDict(t.TypedDict):
-    sampling_rate: int
-    show_sections_in_overview_plot: bool
-    signal_column_name: str
-    index_column_name: str
-    timestamp_column_name: str
-    info_column_name_A: str
-    info_column_name_B: str
-    processed_signal_column_suffix: str

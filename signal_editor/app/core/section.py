@@ -6,9 +6,9 @@ import numpy as np
 import numpy.typing as npt
 import polars as pl
 import polars.selectors as ps
+from PySide6 import QtCore
 
 from .. import type_defs as _t
-from ..controllers.config_controller import ConfigController as Config
 from ..models.result_models import CompactSectionResult
 from .peak_detection import find_peaks
 from .processing import filter_elgendi, filter_neurokit2, filter_signal, scale_signal, signal_rate
@@ -134,10 +134,9 @@ class Section:
     def get_id_counter(cls) -> int:
         return cls._id_counter
 
-    def __init__(self, data: pl.DataFrame) -> None:
-        config = Config.instance().session
-        self.signal_name = config.signal_column_name
-        self.processed_signal_name = f"{self.signal_name}_{config.processed_signal_column_suffix}"
+    def __init__(self, data: pl.DataFrame, signal_name: str | None = None) -> None:
+        self.signal_name = signal_name or data.columns[-1]
+        self.processed_signal_name = f"{self.signal_name}_processed"
 
         if not self.__class__._base_created:
             self.section_id = SectionID(f"Section_{self.signal_name}_000")
@@ -156,7 +155,9 @@ class Section:
             .collect()
         )
 
-        self.sampling_rate = config.sampling_rate
+        settings = QtCore.QSettings()
+
+        self.sampling_rate = t.cast(int, settings.value("Data/sampling_rate"))
         self.global_bounds: tuple[int, int] = (
             self.data.item(0, "index"),
             self.data.item(-1, "index"),

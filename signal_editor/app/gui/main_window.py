@@ -1,10 +1,11 @@
-import pyqtgraph as pg
+import typing as t
+
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from ...ui.ui_dock_session_properties import Ui_DockWidgetSessionProperties
 from ...ui.ui_dock_status_log import Ui_DockWidgetLogOutput
 from ...ui.ui_main_window import Ui_MainWindow
-from .widgets.settings_editor import SettingsDialog
+from .widgets.settings_editor import SettingsEditor
 
 
 class SessionPropertiesDock(QtWidgets.QDockWidget, Ui_DockWidgetSessionProperties):
@@ -35,19 +36,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, dock_status_log)
         self.dock_status_log = dock_status_log
 
-        self.settings_dialog: SettingsDialog | None = None
+        self.settings_editor = SettingsEditor(self)
 
         self.stackedWidget.setCurrentIndex(0)
         self.action_show_import_page.setChecked(True)
 
-        self.btn_plot_bg_color = pg.ColorButton()
-        self.btn_plot_bg_color.setToolTip("Change the plots background color")
-
-        self.btn_plot_fg_color = pg.ColorButton()
-        self.btn_plot_fg_color.setToolTip("Change the plots foreground color")
-
-        self.tool_bar_editing.addWidget(self.btn_plot_bg_color)
-        self.tool_bar_editing.addWidget(self.btn_plot_fg_color)
         self.tool_bar_editing.setVisible(False)
 
         self.read_settings()
@@ -121,16 +114,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @QtCore.Slot()
     def show_settings(self) -> None:
-        if self.settings_dialog is None:
-            self.settings_dialog = SettingsDialog(self)
+        self.settings_editor.open()
+        settings = QtCore.QSettings()
+        initial_setting_state = {k: settings.value(k) for k in settings.allKeys()}
+        self.settings_editor.rejected.connect(lambda: self._restore_settings(initial_setting_state))
+        self.settings_editor.settings_tree.set_settings_object(settings)
 
-        if self.settings_dialog.exec():
-            settings = QtCore.QSettings()
-            self.settings_dialog.settings_tree.set_settings_object(settings)
+    @QtCore.Slot(object)
+    def _restore_settings(self, initial_setting_state: dict[str, t.Any]) -> None:
+        settings = QtCore.QSettings()
+        for k, v in initial_setting_state.items():
+            if v != settings.value(k):
+                settings.setValue(k, v)
+        settings.sync()
 
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.write_settings()
-        if self.settings_dialog is not None:
-            self.settings_dialog.close()
+        self.settings_editor.done(QtWidgets.QDialog.DialogCode.Rejected)
         return super().closeEvent(event)

@@ -2,15 +2,15 @@ import datetime
 import enum
 import typing as t
 from collections import OrderedDict
+from pathlib import Path
 
 import attrs
 import polars as pl
 from PySide6 import QtCore
 
 from .. import type_defs as _t
+from ..core.file_io import read_edf
 from ..core.section import Section, SectionID
-from ..utils import exceptions_as_dialog
-from .config_controller import ConfigController as Config
 
 
 class MissingDataError(Exception):
@@ -41,10 +41,9 @@ def _epoch_to_unknown(
             else value
         )
     if isinstance(value, QtCore.QDateTime):
-        py_date = t.cast(datetime.datetime, value.toPython())
-        if py_date == Config.instance().user.general_unknown_date_value or not value.isValid():
+        if value == QtCore.QDateTime(1970, 1, 1, 0, 0, 0, 0) or not value.isValid():
             return "unknown"
-        return py_date
+        return t.cast(datetime.datetime, value.toPython())
     if isinstance(value, int):
         if value == 0:
             return "unknown"
@@ -115,8 +114,8 @@ class DataController(QtCore.QObject):
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
 
-        data_config = Config.instance().session
-        self._sampling_rate: int = data_config.sampling_rate
+        settings = QtCore.QSettings()
+        self._sampling_rate = t.cast(int, settings.value("Data/sampling_rate"))
 
         self._original_data: pl.LazyFrame | None = None
         self._working_data: pl.DataFrame | None = None
@@ -124,7 +123,7 @@ class DataController(QtCore.QObject):
         self._metadata = SelectedFileMetadata(
             file_name="",
             file_format="",
-            name_signal_column=data_config.signal_column_name,
+            name_signal_column="",
             sampling_rate=self._sampling_rate,
         )
 
@@ -153,7 +152,6 @@ class DataController(QtCore.QObject):
         for section in self._sections.values():
             section.update_sampling_rate(value)
 
-    @exceptions_as_dialog(additional_msg="Failed to get base section")
     def get_base_section(self) -> Section:
         if self._original_data is None:
             raise MissingDataError("No data available. Select a valid file to load, and try again.")
@@ -168,7 +166,6 @@ class DataController(QtCore.QObject):
             self._active_section = self.get_base_section()
         return self._active_section
 
-    @exceptions_as_dialog(additional_msg="Failed to set active section")
     @QtCore.Slot(str)
     def set_active_section(self, section_id: SectionID) -> None:
         if section_id not in self._sections:
@@ -196,11 +193,10 @@ class DataController(QtCore.QObject):
 
     @QtCore.Slot(QtCore.QDateTime)
     def set_measured_date(self, value: QtCore.QDateTime) -> None:
-        py_date = t.cast(datetime.datetime, value.toPython())
-        if not value.isValid() or py_date == Config.instance().user.general_unknown_date_value:
+        if not value.isValid() or value == QtCore.QDateTime(1970, 1, 1, 0, 0, 0, 0):
             self._metadata.measured_date = "unknown"
         else:
-            self._metadata.measured_date = py_date
+            self._metadata.measured_date = t.cast(datetime.datetime, value.toPython())
 
     @QtCore.Slot(str)
     def set_subject_id(self, value: str) -> None:
@@ -210,46 +206,38 @@ class DataController(QtCore.QObject):
     def set_oxygen_condition(self, value: _t.OxygenCondition) -> None:
         self._metadata.oxygen_condition = value
 
-    # @QtCore.Slot(str)
-    # def _get_selected_file_info(self, file_path: str | Path) -> None:
-    #     file_path = Path(file_path)
-    #     file_type = file_path.suffix
-    #     if file_type == ".edf":
-    #         file_info = read_edf_info(file_path)
-    #     elif file_type == ".feather":
-    #         file_info = read_feather_info(file_path)
-    #     else:
-    #         raise NotImplementedError(f"Cant get file info for file type: {file_type}")
-    #     self.sig_new_data_file_selected.emit(file_info)
+    def read_file(self, file_path: Path | str, **kwargs: t.Any) -> None:
+        file_path = Path(file_path)
+        if not file_path.is_file():
+            raise FileNotFoundError(
+                f"Path: {file_path} \n\nNo file exists at the specified path. Please check the path and try again."
+            )
+        # TODO: Maybe find a better way of determining the file format than using the file extension
+        suffix = file_path.suffix
+        if suffix not in self.SupportedFileFormats:
+            raise ValueError(
+                f"Unsupported file format: {suffix}. Allowed formats: {', '.join(self.SupportedFileFormats._member_names_)}"
+            )
 
-    # @exceptions_as_dialog(re_raise=False)
-    # def read_file(self, file_path: Path, **kwargs: t.Any) -> None:
-    #     if not file_path.is_file():
-    #         raise FileNotFoundError(
-    #             f"Path: {file_path} \n\nNo file exists at the specified path. Please check the path and try again."
-    #         )
-    #     # TODO: Maybe find a better way of determining the file format than using the file extension
-    #     suffix = file_path.suffix
-    #     if suffix not in self.FileFormats:
-    #         raise ValueError(f"Unsupported file format: {suffix}. Allowed formats: {', '.join(self.FileFormats._member_names_)}")
+        match suffix:
+            case ".csv":
+                self._original_data = pl.scan_csv(file_path, try_parse_dates=True)
+            case ".txt":
+                self._original_data = pl.scan_csv(file_path, separator="\t", try_parse_dates=True)
+            case ".xlsx":
+                self._original_data = pl.read_excel(file_path).lazy()
+            case ".feather":
+                self._original_data = pl.scan_ipc(file_path)
+            case ".edf":  # FIXME: This does not work
+                data_channel = kwargs.get("edf_data_channel", "hbr")
+                temperature_channel = kwargs.get("edf_temperature_channel", "temperature")
+                if not data_channel or not temperature_channel:
+                    raise ValueError(
+                        "Reading EDF files requires specifying the names for the data and temperature channels."
+                    )
+                edf_data = read_edf(file_path, data_channel, temperature_channel)
+                self._original_data = edf_data.lazy()
+            case _:
+                raise NotImplementedError(f"Cant read file type: {suffix}")
 
-    #     data_config = Config().input_data
-
-    #     match suffix:
-    #         case ".csv":
-    #             self._original_data = pl.scan_csv(file_path, try_parse_dates=True)
-    #         case ".txt":
-    #             self._original_data = pl.scan_csv(file_path, separator="\t", try_parse_dates=True)
-    #         case ".xlsx":
-    #             self._original_data = pl.read_excel(file_path).lazy()
-    #         case ".feather":
-    #             self._original_data = pl.scan_ipc(file_path)
-    #         case ".edf":
-    #             data_channel = kwargs.get("edf_data_channel")
-    #             temperature_channel = kwargs.get("edf_temperature_channel")
-    #             if not data_channel or not temperature_channel:
-    #                 raise ValueError(
-    #                     "Reading EDF files requires specifying the names for the data and temperature channels."
-    #                 )
-    #             edf_data = read_edf(file_path, data_channel, temperature_channel)
-    #             self._original_data = edf_data
+        print(self._original_data.fetch(10))

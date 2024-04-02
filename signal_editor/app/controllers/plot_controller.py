@@ -10,7 +10,6 @@ from .. import type_defs as _t
 from ..gui.plot_items import CustomScatterPlotItem, PlotDataItem
 from ..gui.plot_items.editing_view_box import EditingViewBox
 from ..gui.plot_items.time_axis_item import TimeAxisItem
-from .config_controller import ConfigController as Config
 
 if t.TYPE_CHECKING:
     from pyqtgraph.GraphicsScene import mouseEvents
@@ -29,7 +28,7 @@ class PlotController(QtCore.QObject):
 
         self._peak_search_radius_changed = False
         self._line_click_width_changed = False
-        self._regions: list[pg.LinearRegionItem] = []
+        self.regions: list[pg.LinearRegionItem] = []
         self._show_regions = False
         self.setup_plot_items(graphics_layout_widget, plt_mpl)
         self.setup_plot_data_items()
@@ -69,22 +68,22 @@ class PlotController(QtCore.QObject):
         self.plt_editing = plt_editing
         self.plt_rate = plt_rate
         self.plt_mpl = plt_mpl
-        user_conf = Config.instance().user
+        settings = QtCore.QSettings()
         self._graphics_layout_widget = graphics_layout_widget
-        self.change_plot_bg_color(user_conf.plot_background_color)
-        self.change_plot_fg_color(user_conf.plot_foreground_color)
+        self.change_plot_bg_color(settings.value("Plot/background_color"))
+        self.change_plot_fg_color(settings.value("Plot/foreground_color"))
 
     def setup_plot_data_items(self) -> None:
-        user_conf = Config.instance().user
-        self.signal_curve = self._initialize_signal_curve(pen_color=user_conf.plot_signal_color)
-        self.peak_scatter = self._initialize_peak_scatter(brush_color=user_conf.plot_scatter_color)
+        settings = QtCore.QSettings()
+        self.signal_curve = self._initialize_signal_curve(pen_color=settings.value("Plot/signal_line_color"))
+        self.peak_scatter = self._initialize_peak_scatter(brush_color=settings.value("Plot/point_color"))
         self.peak_scatter.setZValue(60)
         self.plt_mpl.fig.tight_layout()
 
         self.rate_curve = PlotDataItem()
 
         self._region_selector = pg.LinearRegionItem(
-            brush=user_conf.plot_region_color,
+            brush=settings.value("Plot/section_marker_color"),
             pen=(255, 255, 255, 255),
             hoverBrush=(0, 200, 100, 30),
             hoverPen={"color": "gray", "width": 2},
@@ -183,7 +182,7 @@ class PlotController(QtCore.QObject):
 
     @QtCore.Slot(bool)
     def toggle_regions(self, visible: bool) -> None:
-        for region in self._regions:
+        for region in self.regions:
             region.setVisible(visible)
         self._show_regions = visible
 
@@ -191,19 +190,19 @@ class PlotController(QtCore.QObject):
         self, region: pg.LinearRegionItem | None = None, bounds: tuple[float, float] | None = None
     ) -> None:
         if region is not None:
-            self._regions.remove(region)
+            self.regions.remove(region)
         if bounds is not None:
-            self._regions = [r for r in self._regions if r.getRegion() != bounds]
+            self.regions = [r for r in self.regions if r.getRegion() != bounds]
         if self._region_selector is not None:
             self._region_selector.setParent(None)
         self._region_selector = None
 
     def clear_regions(self) -> None:
-        for region in self._regions:
+        for region in self.regions:
             region.setParent(None)
             if region in self.plt_editing.items:
                 self.plt_editing.removeItem(region)
-        self._regions = []
+        self.regions = []
 
     def show_region_selector(self, initial_region: tuple[float, float]) -> None:
         if not self._region_selector:
@@ -231,7 +230,7 @@ class PlotController(QtCore.QObject):
         if self._show_regions:
             marked_region.setVisible(False)
         marked_region.setZValue(10)
-        self._regions.append(marked_region)
+        self.regions.append(marked_region)
         self.plt_editing.addItem(marked_region)
         self.hide_region_selector()
 
@@ -297,7 +296,8 @@ class PlotController(QtCore.QObject):
         y_data = self.signal_curve.yData
         if not x_data or not y_data:
             return
-        scatter_search_radius = Config.instance().user.plot_search_around_click_radius
+        settings = QtCore.QSettings()
+        scatter_search_radius = t.cast(int, settings.value("Editing/search_around_click_radius"))
 
         left_index = np.searchsorted(x_data, click_x - scatter_search_radius, side="left")
         right_index = np.searchsorted(x_data, click_x + scatter_search_radius, side="right")
@@ -374,15 +374,11 @@ class PlotController(QtCore.QObject):
         self.plt_mpl.draw()
 
     @QtCore.Slot(QtWidgets.QPushButton)
-    def change_plot_bg_color(self, button: pg.ColorButton | QtGui.QColor) -> None:
-        color = button if isinstance(button, QtGui.QColor) else button.color()
+    def change_plot_bg_color(self, color: QtGui.QColor) -> None:
         self._graphics_layout_widget.setBackground(color)
-        Config.instance().user.plot_background_color = color
 
     @QtCore.Slot(QtWidgets.QPushButton)
-    def change_plot_fg_color(self, button: pg.ColorButton | QtGui.QColor) -> None:
-        color = button if isinstance(button, QtGui.QColor) else button.color()
-
+    def change_plot_fg_color(self, color: QtGui.QColor) -> None:
         for ax in {"left", "top", "right", "bottom"}:
             edit_axis = self.plt_editing.getAxis(ax)
             rate_axis = self.plt_rate.getAxis(ax)
@@ -393,5 +389,3 @@ class PlotController(QtCore.QObject):
             if rate_axis.isVisible():
                 rate_axis.setPen(color)
                 rate_axis.setTextPen(color)
-
-        Config.instance().user.plot_foreground_color = color
