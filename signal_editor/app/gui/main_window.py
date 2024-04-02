@@ -28,13 +28,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setupUi(self)
         self.tool_bar_navigation.setWindowIcon(QtGui.QIcon(":/icons/navigation"))
 
-        dock_session_properties = SessionPropertiesDock()
+        dock_session_properties = SessionPropertiesDock(self)
         self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, dock_session_properties)
         self.dock_session_properties = dock_session_properties
 
-        dock_status_log = StatusMessageDock()
+        dock_status_log = StatusMessageDock(self)
         self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, dock_status_log)
         self.dock_status_log = dock_status_log
+        self.text_status_log = dock_status_log.plain_text_edit_logging
 
         self.settings_editor = SettingsEditor(self)
 
@@ -118,6 +119,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         settings = QtCore.QSettings()
         initial_setting_state = {k: settings.value(k) for k in settings.allKeys()}
         self.settings_editor.rejected.connect(lambda: self._restore_settings(initial_setting_state))
+        self.settings_editor.accepted.connect(self.settings_editor.settings_tree.refresh)
         self.settings_editor.settings_tree.set_settings_object(settings)
 
     @QtCore.Slot(object)
@@ -126,7 +128,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for k, v in initial_setting_state.items():
             if v != settings.value(k):
                 settings.setValue(k, v)
-        settings.sync()
+        self.settings_editor.settings_tree.refresh()
 
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:

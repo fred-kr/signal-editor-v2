@@ -33,6 +33,7 @@ class SignalEditor(QtWidgets.QApplication):
     def connect_qt_signals(self) -> None:
         self.main_window.settings_editor.sig_setting_changed.connect(self._update_setting)
         self.main_window.action_load_file.triggered.connect(self.read_file)
+        self.main_window.settings_editor.finished.connect(self.apply_settings)
 
     def reset(self) -> None:
         self.plot_controller.reset()
@@ -57,15 +58,16 @@ class SignalEditor(QtWidgets.QApplication):
         if not file_path:
             return
         self.data_controller.read_file(file_path)
+
     @QtCore.Slot(str, object)
     def _update_setting(self, name: str, value: QtGui.QColor | str | int | float | None) -> None:
         if value is None:
             return
         match name:
             case "background_color":
-                self.plot_controller.change_plot_bg_color(value)
+                self.plot_controller.set_background_color(value)
             case "foreground_color":
-                self.plot_controller.change_plot_fg_color(value)
+                self.plot_controller.set_foreground_color(value)
             case "point_color":
                 self.plot_controller.peak_scatter.setBrush(color=value)
             case "signal_line_color":
@@ -77,3 +79,8 @@ class SignalEditor(QtWidgets.QApplication):
                     r.setBrush(color=value)
             case _:
                 pass
+
+    @QtCore.Slot()
+    def apply_settings(self) -> None:
+        self.plot_controller.apply_settings()
+        

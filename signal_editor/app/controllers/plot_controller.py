@@ -4,7 +4,7 @@ import numpy as np
 import numpy.typing as npt
 import pyqtgraph as pg
 from pyqtgraph.widgets.MatplotlibWidget import MatplotlibWidget
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui
 
 from .. import type_defs as _t
 from ..gui.plot_items import CustomScatterPlotItem, PlotDataItem
@@ -70,13 +70,17 @@ class PlotController(QtCore.QObject):
         self.plt_mpl = plt_mpl
         settings = QtCore.QSettings()
         self._graphics_layout_widget = graphics_layout_widget
-        self.change_plot_bg_color(settings.value("Plot/background_color"))
-        self.change_plot_fg_color(settings.value("Plot/foreground_color"))
+        self.set_background_color(settings.value("Plot/background_color"))
+        self.set_foreground_color(settings.value("Plot/foreground_color"))
 
     def setup_plot_data_items(self) -> None:
         settings = QtCore.QSettings()
-        self.signal_curve = self._initialize_signal_curve(pen_color=settings.value("Plot/signal_line_color"))
-        self.peak_scatter = self._initialize_peak_scatter(brush_color=settings.value("Plot/point_color"))
+        self.signal_curve = self._initialize_signal_curve(
+            pen_color=settings.value("Plot/signal_line_color")
+        )
+        self.peak_scatter = self._initialize_peak_scatter(
+            brush_color=settings.value("Plot/point_color")
+        )
         self.peak_scatter.setZValue(60)
         self.plt_mpl.fig.tight_layout()
 
@@ -373,12 +377,12 @@ class PlotController(QtCore.QObject):
         self.plt_mpl.fig.tight_layout()
         self.plt_mpl.draw()
 
-    @QtCore.Slot(QtWidgets.QPushButton)
-    def change_plot_bg_color(self, color: QtGui.QColor) -> None:
+    @QtCore.Slot(QtGui.QColor)
+    def set_background_color(self, color: QtGui.QColor) -> None:
         self._graphics_layout_widget.setBackground(color)
 
-    @QtCore.Slot(QtWidgets.QPushButton)
-    def change_plot_fg_color(self, color: QtGui.QColor) -> None:
+    @QtCore.Slot(QtGui.QColor)
+    def set_foreground_color(self, color: QtGui.QColor) -> None:
         for ax in {"left", "top", "right", "bottom"}:
             edit_axis = self.plt_editing.getAxis(ax)
             rate_axis = self.plt_rate.getAxis(ax)
@@ -389,3 +393,22 @@ class PlotController(QtCore.QObject):
             if rate_axis.isVisible():
                 rate_axis.setPen(color)
                 rate_axis.setTextPen(color)
+
+    def apply_settings(self) -> None:
+        settings = QtCore.QSettings()
+        settings.beginGroup("Plot")
+        bg_color = settings.value("background_color", type=QtGui.QColor)
+        fg_color = settings.value("foreground_color", type=QtGui.QColor)
+        point_color = settings.value("point_color", type=QtGui.QColor)
+        signal_line_color = settings.value("signal_line_color", type=QtGui.QColor)
+        rate_line_color = settings.value("rate_line_color", type=QtGui.QColor)
+        section_marker_color = settings.value("section_marker_color", type=QtGui.QColor)
+        settings.endGroup()
+
+        self.set_background_color(bg_color)
+        self.set_foreground_color(fg_color)
+        self.peak_scatter.setBrush(color=point_color)
+        self.signal_curve.setPen(color=signal_line_color)
+        self.rate_curve.setPen(color=rate_line_color)
+        for r in self.regions:
+            r.setBrush(color=section_marker_color)

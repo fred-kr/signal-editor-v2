@@ -35,6 +35,14 @@
     <file alias="restore_defaults">fugue-icons/arrow-circle-225-left.png</file>
     <file alias="info_btn">fugue-icons/information-button.png</file>
     <file alias="question_btn">fugue-icons/question-button.png</file>
-    <file alias="color">fugue-icons/color--pencil.png</file>
+    <file alias="color">fugue-icons/color.png</file>
+    <file alias="color_edit">fugue-icons/color--pencil.png</file>
+    <file alias="reset_all">fugue-icons/broom.png</file>
+    <file alias="category">fugue-icons/category.png</file>
+    <file alias="category_item">fugue-icons/category-item.png</file>
+    <file alias="expand_plus">fugue-icons/toggle-expand.png</file>
+    <file alias="expand_minus">fugue-icons/toggle.png</file>
+    <file alias="folder_import">fugue-icons/folder-import.png</file>
+    <file alias="folder_export">fugue-icons/folder-export.png</file>
   </qresource>
 </RCC>

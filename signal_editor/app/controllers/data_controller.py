@@ -240,4 +240,6 @@ class DataController(QtCore.QObject):
             case _:
                 raise NotImplementedError(f"Cant read file type: {suffix}")
 
+        self.sig_new_data_file_loaded.emit()
+
         print(self._original_data.fetch(10))
