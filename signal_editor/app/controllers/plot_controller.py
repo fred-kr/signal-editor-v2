@@ -84,7 +84,7 @@ class PlotController(QtCore.QObject):
         self.peak_scatter.setZValue(60)
         self.plt_mpl.fig.tight_layout()
 
-        self.rate_curve = PlotDataItem()
+        self.rate_curve = self._initialize_rate_curve(pen_color=settings.value("Plot/rate_line_color"))
 
         self._region_selector = pg.LinearRegionItem(
             brush=settings.value("Plot/section_marker_color"),
@@ -101,16 +101,16 @@ class PlotController(QtCore.QObject):
         # self._bpm_label = pg.LabelItem("HR: - bpm", parent=self.plt_rate)
 
     def _initialize_signal_curve(self, pen_color: _t.PGColor = "lightgray") -> PlotDataItem:
-        pdi = PlotDataItem(
+        signal = PlotDataItem(
             pen=pen_color,
             skipFiniteCheck=True,
             autoDownsample=True,
             name="Signal",
             clickable=True,
         )
-        pdi.sigClicked.connect(self._on_curve_clicked)
-        pdi.sigPlotChanged.connect(self.set_view_limits)
-        return pdi
+        signal.sigClicked.connect(self._on_curve_clicked)
+        signal.sigPlotChanged.connect(self.set_view_limits)
+        return signal
 
     def _initialize_peak_scatter(
         self,
@@ -118,7 +118,7 @@ class PlotController(QtCore.QObject):
         hover_pen: _t.PGColor = "black",
         hover_brush: _t.PGColor = "red",
     ) -> CustomScatterPlotItem:
-        spi = CustomScatterPlotItem(
+        scatter = CustomScatterPlotItem(
             pxMode=True,
             size=10,
             pen=None,
@@ -132,10 +132,18 @@ class PlotController(QtCore.QObject):
             hoverSize=15,
             tip=None,
         )
-        spi.setZValue(60)
-        spi.sigClicked.connect(self._on_scatter_clicked)
-        spi.sigPlotChanged.connect(self._on_scatter_changed)
-        return spi
+        scatter.setZValue(60)
+        scatter.sigClicked.connect(self._on_scatter_clicked)
+        scatter.sigPlotChanged.connect(self._on_scatter_changed)
+        return scatter
+
+    def _initialize_rate_curve(self, pen_color: _t.PGColor = "green") -> PlotDataItem:
+        return PlotDataItem(
+            pen=pen_color,
+            skipFiniteCheck=True,
+            autoDownsample=True,
+            name="Rate",
+        )
 
     @QtCore.Slot(int)
     def reset_view_range(self, upper_bound: int) -> None:
@@ -238,19 +246,19 @@ class PlotController(QtCore.QObject):
         self.plt_editing.addItem(marked_region)
         self.hide_region_selector()
 
-    def draw_signal(self, y_data: npt.NDArray[np.float_], clear: bool = True) -> None:
+    def set_signal_data(self, y_data: npt.NDArray[np.float_], clear: bool = True) -> None:
         if clear:
             self.plt_editing.clear()
             self.plt_rate.clear()
 
         self.signal_curve.setData(y_data)
 
-    def draw_rate(self, y_data: npt.NDArray[np.float_], clear: bool = True) -> None:
+    def set_rate_data(self, y_data: npt.NDArray[np.float_], clear: bool = True) -> None:
         if clear:
             self.plt_rate.clear()
         self.rate_curve.setData(y_data)
 
-    def draw_peaks(
+    def set_peak_data(
         self, x_data: npt.NDArray[np.intp | np.uintp], y_data: npt.NDArray[np.float_]
     ) -> None:
         self.peak_scatter.setData(x=x_data, y=y_data)

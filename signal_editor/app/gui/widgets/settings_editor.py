@@ -7,10 +7,16 @@ import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from ... import type_defs as _t
+from ...controllers.data_controller import TextFileSeparator
 
 
 def mkColor(*args: _t.PGColor) -> QtGui.QColor:
     return args[0] if isinstance(args[0], QtGui.QColor) else pg.mkColor(*args)
+
+
+class RateComputationMethod(enum.StrEnum):
+    Instantaneous = "instantaneous"
+    RollingWindow = "rolling_window"
 
 
 class TypeChecker:
@@ -264,11 +270,15 @@ class VariantDelegate(QtWidgets.QItemDelegate):
     @staticmethod
     def display_text(value: t.Any) -> str:
         if isinstance(value, str):
+            if value in {" ", "\t", ";", ",", "|"}:
+                return TextFileSeparator(value).name
+            if value in {"instantaneous", "rolling_window"}:
+                return RateComputationMethod(value).name
             return value
         if isinstance(value, QtCore.QDir):
             return value.canonicalPath()
         if isinstance(value, bool):
-            return "✓" if value else "☐"
+            return "True" if value else "False"
         if isinstance(value, QtCore.QByteArray):
             return "<Binary data>"
         if isinstance(value, (int, float)):
@@ -305,58 +315,61 @@ def get_app_dir() -> QtCore.QDir:
     return QtCore.QDir.current()
 
 
+_DEFAULT_VALUES: dict[
+    str,
+    _t.DefaultPlotSettings
+    | _t.DefaultEditingSettings
+    | _t.DefaultDataSettings
+    | _t.DefaultMiscSettings,
+] = {
+    "Plot": {
+        "background_color": pg.mkColor("black"),
+        "foreground_color": pg.mkColor("lightgray"),
+        "point_color": pg.mkColor("gold"),
+        "signal_line_color": pg.mkColor("coral"),
+        "rate_line_color": pg.mkColor("lightgreen"),
+        "section_marker_color": pg.mkColor((100, 200, 150, 40)),
+    },
+    "Editing": {
+        "click_width_signal_line": 70,
+        "search_around_click_radius": 20,
+        "minimum_peak_distance": 20,
+        "rate_computation_method": RateComputationMethod.Instantaneous,
+    },
+    "Data": {
+        "sampling_rate": 400,
+        "txt_file_separator_character": TextFileSeparator.Tab,
+        "try_parse_dates": False,
+    },
+    "Misc": {
+        "data_folder": get_app_dir().canonicalPath(),
+        "output_folder": get_app_dir().canonicalPath(),
+    },
+}
+
+_DESCRIPTIONS = {
+    # "Plot": "Settings related to the interactive plots",
+    "background_color": "The background color for the interactive plots",
+    "foreground_color": "The foreground (text, axis, etc) color for the interactive plots",
+    "point_color": "The fill color for the peak points in the upper plot",
+    "signal_line_color": "The color for the signal line in the upper plot",
+    "rate_line_color": "The color for the rate line in the lower plot",
+    "section_marker_color": "The color used to highlight the created sections in the upper plot",
+    # "Editing": "Settings related to the editing features",
+    "click_width_signal_line": "The area around the signal line in pixels that is considered to be a click on the line",
+    "search_around_click_radius": "The radius around the click in data coordinates to search for a potential peak",
+    "minimum_peak_distance": "Sets the minimum allowed distance between two peaks when using any of the peak detection algorithms",
+    "rate_computation_method": "Which method to use for computing the rate displayed in the lower plot on the editing page, either 'instantaneous' or 'rolling_window'",
+    # "Data": "Settings related to input data",
+    "sampling_rate": "The default sampling rate (in Hz) to use in cases where it can't be inferred or is not provided in the data itself (for example, EDF files usually have the sampling rate in the file header)",
+    "txt_file_separator_character": "The character used to separate columns if reading from a '.txt' file",
+    "try_parse_dates": "Whether to try parsing dates in the data if reading from a '.txt', '.csv', or '.xlsx' file",
+    "data_folder": "Which folder to open when selecting a data file",
+    "output_folder": "Which folder to save the output files to",
+}
+
+
 class SettingsTree(QtWidgets.QTreeWidget):
-    _DESCRIPTIONS = {
-        # "Plot": "Settings related to the interactive plots",
-        "background_color": "The background color for the interactive plots",
-        "foreground_color": "The foreground (text, axis, etc) color for the interactive plots",
-        "point_color": "The fill color for the peak points in the upper plot",
-        "signal_line_color": "The color for the signal line in the upper plot",
-        "rate_line_color": "The color for the rate line in the lower plot",
-        "section_marker_color": "The color used to highlight the created sections in the upper plot",
-        # "Editing": "Settings related to the editing features",
-        "click_width_signal_line": "The area around the signal line in pixels that is considered to be a click on the line",
-        "search_around_click_radius": "The radius around the click in data coordinates to search for a potential peak",
-        "minimum_peak_distance": "Sets the minimum allowed distance between two peaks when using any of the peak detection algorithms",
-        "rate_computation_method": "Which method to use for computing the rate displayed in the lower plot on the editing page, either 'instantaneous' or 'rolling_window'",
-        # "Data": "Settings related to input data",
-        "sampling_rate": "The sampling rate of the signal data in Hz",
-        "name_index_column": "Name of the index column in the input data if it exists, otherwise an index column with the name set in this field will be created when loading the data",
-        "name_signal_column": "Name of the column holding the signal data values. If empty, uses the first column not named 'index' in the input data.",
-        "data_folder": "Which folder to open when selecting a data file",
-        "output_folder": "Which folder to save the output files to",
-    }
-
-    class _RATE_METHODS(enum.StrEnum):
-        Instantaneous = "instantaneous"
-        RollingWindow = "rolling_window"
-
-    _DEFAULT_VALUES = {
-        "Plot": {
-            "background_color": pg.mkColor("black"),
-            "foreground_color": pg.mkColor("lightgray"),
-            "point_color": pg.mkColor("gold"),
-            "signal_line_color": pg.mkColor("coral"),
-            "rate_line_color": pg.mkColor("lightgreen"),
-            "section_marker_color": pg.mkColor((100, 200, 150, 40)),
-        },
-        "Editing": {
-            "click_width_signal_line": 70,
-            "search_around_click_radius": 20,
-            "minimum_peak_distance": 20,
-            "rate_computation_method": _RATE_METHODS.Instantaneous,
-        },
-        "Data": {
-            "sampling_rate": 400,
-            "name_index_column": "index",
-            "name_signal_column": "",
-        },
-        "Misc": {
-            "data_folder": get_app_dir(),
-            "output_folder": get_app_dir(),
-        },
-    }
-
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
 
@@ -369,6 +382,7 @@ class SettingsTree(QtWidgets.QTreeWidget):
         self.header().setStretchLastSection(True)
         self.header().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Interactive)
         self.setEditTriggers(QtWidgets.QTreeWidget.EditTrigger.NoEditTriggers)
+        self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
 
         self.settings: QtCore.QSettings | None = None
         self.refresh_timer = QtCore.QTimer()
@@ -429,7 +443,7 @@ class SettingsTree(QtWidgets.QTreeWidget):
         if sure != QtWidgets.QMessageBox.StandardButton.Yes:
             return
 
-        for grp, kvs in self._DEFAULT_VALUES.items():
+        for grp, kvs in _DEFAULT_VALUES.items():
             self.settings.remove(grp)
             self.settings.beginGroup(grp)
             for k, v in kvs.items():
@@ -558,7 +572,7 @@ class SettingsTree(QtWidgets.QTreeWidget):
                 child.setText(1, value.__class__.__name__)
             child.setText(2, VariantDelegate.display_text(value))
             child.setData(2, QtCore.Qt.ItemDataRole.UserRole, value)
-            child.setText(3, self._DESCRIPTIONS.get(key, ""))
+            child.setText(3, _DESCRIPTIONS.get(key, ""))
             if "color" in key or isinstance(value, QtGui.QColor):
                 with contextlib.suppress(Exception):
                     color = mkColor(value)  # pyright: ignore[reportArgumentType]
@@ -594,10 +608,12 @@ class SettingsTree(QtWidgets.QTreeWidget):
     def delete_item(self, parent: QtWidgets.QTreeWidgetItem | None, index: int) -> None:
         if parent is not None:
             item = parent.takeChild(index)
+            if self.settings is not None:
+                self.settings.remove(f"{parent.text(0)}/{item.text(0)}")
         else:
             item = self.takeTopLevelItem(index)
-        if self.settings is not None:
-            self.settings.remove(item.text(0))
+            if self.settings is not None:
+                self.settings.remove(item.text(0))
         del item
 
     @QtCore.Slot()
@@ -623,7 +639,7 @@ class SettingsTree(QtWidgets.QTreeWidget):
         if not item.parent():
             return
 
-        default_value = self._DEFAULT_VALUES[item.parent().text(0)][key]
+        default_value = _DEFAULT_VALUES[item.parent().text(0)][key]
         if isinstance(default_value, QtCore.QDir):
             default_value = default_value.canonicalPath()
         item.setData(2, QtCore.Qt.ItemDataRole.UserRole, default_value)
@@ -721,6 +737,17 @@ class SettingsEditor(QtWidgets.QDialog):
 
     def connect_signals(self) -> None:
         self.settings_tree.itemDoubleClicked.connect(self._on_edit_selected_item_value)
+        self.settings_tree.customContextMenuRequested.connect(self.show_context_menu)
+
+    @QtCore.Slot(QtCore.QPoint)
+    def show_context_menu(self, pos: QtCore.QPoint) -> None:
+        menu = QtWidgets.QMenu(self)
+        menu.addAction("Reset Selected", self.settings_tree.reset_current_item)
+        menu.addAction("Restore Defaults", self.settings_tree.restore_defaults)
+        if os.environ.get("DEBUG", "0") == "1":
+            menu.addAction("Delete Selected", self.settings_tree.delete_current_item)
+        menu.addAction("Refresh", self.settings_tree.refresh)
+        menu.exec(self.settings_tree.mapToGlobal(pos))
 
     @QtCore.Slot()
     def accept(self) -> None:
@@ -748,25 +775,29 @@ class SettingsEditor(QtWidgets.QDialog):
         )
         return val if ok else initial
 
-    def get_int(self, initial: int) -> int:
+    def get_int(
+        self, initial: int, min_allowed: int = -10_000_000, max_allowed: int = 10_000_000
+    ) -> int:
         val, ok = QtWidgets.QInputDialog.getInt(
             self,
             "Edit Item Value",
             "Enter new value:",
             initial,
-            -10_000_000,
-            10_000_000,
+            min_allowed,
+            max_allowed,
         )
         return val if ok else initial
 
-    def get_float(self, initial: float) -> float:
+    def get_float(
+        self, initial: float, min_allowed: float = -10e6, max_allowed: float = 10e6
+    ) -> float:
         val, ok = QtWidgets.QInputDialog.getDouble(
             self,
             "Edit Item Value",
             "Enter new value:",
             initial,
-            -10e6,
-            10e6,
+            min_allowed,
+            max_allowed,
         )
         return val if ok else initial
 
@@ -805,25 +836,59 @@ class SettingsEditor(QtWidgets.QDialog):
                     if ok and new_value:
                         item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
                         item.setText(2, new_value)
+                elif item.text(0) == "txt_file_separator_character":
+                    items = [TextFileSeparator(c).name for c in TextFileSeparator]
+                    current_value = TextFileSeparator(
+                        item.data(2, QtCore.Qt.ItemDataRole.UserRole)
+                    ).name
+                    new_value, ok = QtWidgets.QInputDialog.getItem(
+                        self,
+                        "Edit Item Value",
+                        "Select Character",
+                        items,
+                        items.index(current_value),
+                        False,
+                    )
+                    if ok and new_value:
+                        item.setData(
+                            2, QtCore.Qt.ItemDataRole.UserRole, TextFileSeparator[new_value].value
+                        )
+                        item.setText(2, new_value)
                 else:
                     new_value = self.get_text(item.data(2, QtCore.Qt.ItemDataRole.UserRole))
                     item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
                     item.setText(2, new_value)
             case "int":
-                new_value = self.get_int(item.data(2, QtCore.Qt.ItemDataRole.UserRole))
+                if item.text(0) in {
+                    "click_width_signal_line",
+                    "search_around_click_radius",
+                    "minimum_peak_distance",
+                }:
+                    new_value = self.get_int(
+                        item.data(2, QtCore.Qt.ItemDataRole.UserRole), 5, 10_000
+                    )
+                else:
+                    new_value = self.get_int(item.data(2, QtCore.Qt.ItemDataRole.UserRole))
                 item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
                 item.setText(2, str(new_value))
             case "float":
-                new_value = self.get_float(item.data(2, QtCore.Qt.ItemDataRole.UserRole))
+                if item.text(0) == "sampling_rate":
+                    new_value = self.get_float(
+                        item.data(2, QtCore.Qt.ItemDataRole.UserRole), 1, 100_000
+                    )
+                else:
+                    new_value = self.get_float(item.data(2, QtCore.Qt.ItemDataRole.UserRole))
+
                 item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
                 item.setText(2, str(new_value))
             case "bool":
+                options = ["True", "False"]
                 new_value, ok = QtWidgets.QInputDialog.getItem(
                     self,
                     "Edit Item Value",
                     "Select new value:",
-                    ["True", "False"],
-                    0,
+                    options,
+                    options.index(str(item.data(2, QtCore.Qt.ItemDataRole.UserRole))),
                     False,
                 )
                 if ok and new_value:

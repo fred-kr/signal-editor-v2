@@ -3,6 +3,7 @@ import typing as t
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from ...ui.ui_dock_session_properties import Ui_DockWidgetSessionProperties
+from ...ui.ui_dialog_metadata import Ui_MetadataDialog
 from ...ui.ui_dock_status_log import Ui_DockWidgetLogOutput
 from ...ui.ui_main_window import Ui_MainWindow
 from .widgets.settings_editor import SettingsEditor
@@ -21,6 +22,17 @@ class StatusMessageDock(QtWidgets.QDockWidget, Ui_DockWidgetLogOutput):
         self.setupUi(self)
         self.setVisible(False)
 
+        self.setWindowIcon(QtGui.QIcon(":/icons/sys_monitor"))
+
+
+class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
+    
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setupUi(self)
+
+        self.setWindowIcon(QtGui.QIcon(":/icons/properties"))
+
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
@@ -38,6 +50,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.text_status_log = dock_status_log.plain_text_edit_logging
 
         self.settings_editor = SettingsEditor(self)
+
+        self.metadata_dialog = MetadataDialog(self)
 
         self.stackedWidget.setCurrentIndex(0)
         self.action_show_import_page.setChecked(True)
@@ -103,6 +117,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         settings.setValue("geometry", self.saveGeometry())
         settings.setValue("state", self.saveState())
         settings.endGroup()
+        settings.sync()
 
     def read_settings(self) -> None:
         settings = QtCore.QSettings()

@@ -5,9 +5,13 @@ import numpy as np
 import numpy.typing as npt
 
 if t.TYPE_CHECKING:
+    import mne
     from PySide6 import QtCore, QtGui
 
+    from .controllers.data_controller import TextFileSeparator
     from .core.section import SectionID
+    from .gui.widgets.settings_editor import RateComputationMethod
+
 
 type FilterMethod = t.Literal[
     "butterworth",
@@ -71,6 +75,50 @@ type PeakDetectionMethodParameters = (
     | PeaksLocalMaxima
     | PeaksWFDBXQRS
 )
+type NamedInt = int  # See "mne.utils._bunch.NamedInt" for more info
+
+
+class DefaultPlotSettings(t.TypedDict):
+    background_color: "QtGui.QColor"
+    foreground_color: "QtGui.QColor"
+    point_color: "QtGui.QColor"
+    signal_line_color: "QtGui.QColor"
+    rate_line_color: "QtGui.QColor"
+    section_marker_color: "QtGui.QColor"
+
+
+class DefaultEditingSettings(t.TypedDict):
+    click_width_signal_line: int
+    search_around_click_radius: int
+    minimum_peak_distance: int
+    rate_computation_method: "RateComputationMethod"
+
+
+class DefaultDataSettings(t.TypedDict):
+    sampling_rate: float
+    txt_file_separator_character: "TextFileSeparator"
+    try_parse_dates: bool
+
+
+class DefaultMiscSettings(t.TypedDict):
+    data_folder: str
+    output_folder: str
+
+
+class DefaultAppSettings(t.TypedDict):
+    Plot: DefaultPlotSettings
+    Editing: DefaultEditingSettings
+    Data: DefaultDataSettings
+    Misc: DefaultMiscSettings
+
+
+class ReadFileKwargs(t.TypedDict, total=False):
+    columns: list[str]
+    index_col: str | int | None
+    try_parse_dates: bool
+    separator: "TextFileSeparator"
+    use_pyarrow: bool
+    has_header: bool
 
 
 class PGPenKwargs(t.TypedDict, total=False):
@@ -261,8 +309,6 @@ class SelectedFileMetadataDict(t.TypedDict, total=False):
     name_signal_column: str
     sampling_rate: int
     measured_date: str | datetime.datetime
-    subject_id: str
-    oxygen_condition: str
 
 
 class MutableMetadataAttributes(t.TypedDict, total=False):
@@ -312,6 +358,50 @@ class DetailedSectionResultDict(t.TypedDict):
     compact_result: CompactSectionResultDict
     rate_instantaneous: npt.NDArray[np.float64]
     rate_rolling_window: npt.NDArray[np.float64]
+
+
+##### Types for EDF files read with MNE-Python #####
+
+
+class EDFSubjectInfoDict(t.TypedDict, total=False):
+    id: int
+    his_id: str
+    last_name: str
+    first_name: str
+    middle_name: str
+    birthday: tuple[int]
+    sex: t.Literal[0, 1, 2]  # 0 = unknown, 1 = male, 2 = female
+    hand: t.Literal[1, 2, 3]  # 1 = right, 2 = left, 3 = ambidextrous
+    weight: float  # in kg
+    height: float  # in m
+
+
+class EDFChannelDict(t.TypedDict, total=False):
+    cal: float
+    logno: int
+    scanno: int
+    range: float
+    unit_mul: NamedInt
+    ch_name: str
+    unit: NamedInt
+    coord_frame: NamedInt
+    coil_type: NamedInt
+    kind: NamedInt
+    loc: npt.NDArray[np.float_]  # shape (12,)
+
+
+class EDFInfoDict(t.TypedDict, total=False):
+    highpass: float
+    lowpass: float
+    meas_date: datetime.datetime
+    subject_info: dict[str, str]
+    bads: list[str]
+    chs: list[EDFChannelDict]
+    custom_ref_applied: int
+    sfreq: float
+    dev_head_t: "mne.transforms.Transform"
+    ch_names: list[str]
+    nchan: int
 
 
 class CompleteResultDict(t.TypedDict):

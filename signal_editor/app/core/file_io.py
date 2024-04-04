@@ -4,11 +4,11 @@ import re
 import typing as t
 from pathlib import Path
 
-from PySide6 import QtCore
 import dateutil.parser as dt_parser
 import mne.io
 import polars as pl
 import polars.selectors as cs
+from PySide6 import QtCore
 
 from .. import type_defs as _t
 
@@ -294,7 +294,10 @@ def read_feather(
 
     col_names = pl.scan_ipc(file_path).columns
     if signal_column not in col_names:
-        signal_column = col_names[0] if col_names[0] != "index" else col_names[1]
+        try:
+            signal_column = col_names[0] if col_names[0] != "index" else col_names[1]
+        except IndexError as e:
+            raise ValueError("No valid signal column found.") from e
     if isinstance(signal_column, int):
         signal_column = col_names[signal_column]
     if isinstance(temperature_column, int):
