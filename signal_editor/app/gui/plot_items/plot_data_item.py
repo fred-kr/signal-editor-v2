@@ -330,7 +330,7 @@ class PlotDataItem(GraphicsObject):
         
         if args and len(args) == 1:
             data = args[0]
-            if not data:
+            if data is None:
                 pass
             elif data.ndim == 1:
                 x = None

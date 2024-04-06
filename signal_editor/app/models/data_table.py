@@ -143,7 +143,7 @@ class DataTableModel(QtCore.QAbstractTableModel):
         if role != QtCore.Qt.ItemDataRole.DisplayRole or self._df is None:
             return None
         if orientation != QtCore.Qt.Orientation.Horizontal:
-            return str(section)
+            return None
         name = self._df.columns[section]
         dtype = self._df.schema[name]
         return f"{name}\n---\n{dtype}"

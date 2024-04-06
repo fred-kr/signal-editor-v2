@@ -57,21 +57,34 @@ class SignalEditor(QtWidgets.QApplication):
 
     def connect_qt_signals(self) -> None:
         self.main_window.settings_editor.sig_setting_changed.connect(self._update_setting)
-        self.main_window.action_open_file.triggered.connect(self.select_file)
+        self.main_window.action_open_file.triggered.connect(self.open_file)
         self.main_window.action_edit_metadata.triggered.connect(self.show_metadata_dialog)
         self.main_window.settings_editor.finished.connect(self.apply_settings)
-        self.main_window.btn_load_data.clicked.connect(self.read_file)
+        self.main_window.btn_load_data.clicked.connect(self.read_data)
         self.main_window.metadata_dialog.sig_property_has_changed.connect(self.update_metadata)
+        self.main_window.btn_change_metadata_values.clicked.connect(self.show_metadata_dialog)
+        self.main_window.action_close_file.triggered.connect(self.close_file)
+        self.main_window.btn_close_file.clicked.connect(self.close_file)
 
     def _connect_data_controller_signals(self) -> None:
         self.data_controller.sig_non_ascii_in_file_name.connect(self.show_non_ascii_warning)
         self.data_controller.sig_user_input_required.connect(self.show_metadata_dialog)
         self.data_controller.sig_new_metadata.connect(self.update_metadata_read_only_tree)
+        self.data_controller.sig_new_data.connect(self.draw_signal)
 
     def _disconnect_data_controller_signals(self) -> None:
         self.data_controller.sig_non_ascii_in_file_name.disconnect(self.show_non_ascii_warning)
         self.data_controller.sig_user_input_required.disconnect(self.show_metadata_dialog)
         self.data_controller.sig_new_metadata.disconnect(self.update_metadata_read_only_tree)
+        self.data_controller.sig_new_data.disconnect(self.draw_signal)
+
+    @QtCore.Slot()
+    def draw_signal(self) -> None:
+        signal_column = self.data_controller.metadata.signal_column
+        signal_data = self.data_controller.base_df.get_column(signal_column).to_numpy(
+            zero_copy_only=True
+        )
+        self.plot_controller.signal_curve.setData(signal_data)
 
     @QtCore.Slot(dict)
     def update_metadata(self, metadata_dict: _t.MetadataUpdateDict) -> None:
@@ -128,8 +141,10 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.main_window.metadata_dialog.combo_box_signal_column.clear()
         self.main_window.metadata_dialog.combo_box_signal_column.addItems(columns)
+
         if len(columns) > 1:
-            self.main_window.metadata_dialog.combo_box_info_column.addItems(columns)
+            self.main_window.metadata_dialog.combo_box_info_column.clear()
+            self.main_window.metadata_dialog.combo_box_info_column.addItems([""] + columns)
         if "sampling_rate" not in required_fields:
             sampling_rate = metadata.sampling_rate
             self.main_window.metadata_dialog.dbl_spin_box_sampling_rate.setValue(sampling_rate)
@@ -151,7 +166,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.main_window.metadata_dialog.open()
 
     @QtCore.Slot()
-    def select_file(self) -> None:
+    def open_file(self) -> None:
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self.main_window,
             "Open File",
@@ -174,8 +189,27 @@ class SignalEditor(QtWidgets.QApplication):
         self.main_window.table_view_import_data.setModel(self.data_controller.base_df_model)
 
     @QtCore.Slot()
-    def read_file(self) -> None:
+    def read_data(self) -> None:
         self.data_controller.read_file()
+        for col in range(self.data_controller.base_df.width):
+            self.main_window.table_view_import_data.horizontalHeader().setSectionResizeMode(
+                col, QtWidgets.QHeaderView.ResizeMode.Stretch
+            )
+
+    @QtCore.Slot()
+    def close_file(self) -> None:
+        self.main_window.table_view_import_data.setModel(None)
+        self.main_window.data_tree_widget_import_metadata.clear()
+
+        with contextlib.suppress(Exception):
+            self._disconnect_data_controller_signals()
+            self.data_controller.setParent(None)
+
+        self.data_controller = DataController(self)
+        self._connect_data_controller_signals()
+
+        self.main_window.action_close_file.setEnabled(False)
+        self.main_window.action_edit_metadata.setEnabled(False)
 
     @QtCore.Slot(str, object)
     def _update_setting(self, name: str, value: QtGui.QColor | str | int | float | None) -> None:

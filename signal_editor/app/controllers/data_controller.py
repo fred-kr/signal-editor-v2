@@ -433,6 +433,18 @@ class DataController(QtCore.QObject):
         self._base_section: Section | None = None
 
     @property
+    def base_df(self) -> pl.DataFrame:
+        if self._base_df is None:
+            raise MissingDataError("No data available. Select a valid file to load, and try again.")
+        return self._base_df
+
+    @property
+    def working_df(self) -> pl.DataFrame:
+        if self._working_df is None:
+            raise MissingDataError("No data available. Select a valid file to load, and try again.")
+        return self._working_df
+    
+    @property
     def sections(self) -> SectionContainer:
         return self._sections
 
@@ -499,8 +511,7 @@ class DataController(QtCore.QObject):
             self.metadata.sampling_rate = metadata_dict["sampling_rate"]
         if metadata_dict["signal_column"] != "" and metadata_dict["signal_column_index"] != -1:
             self.metadata.signal_column = metadata_dict["signal_column"]
-        if metadata_dict["info_column"] != "" and metadata_dict["info_column_index"] != -1:
-            self.metadata.info_column = metadata_dict["info_column"]
+        self.metadata.info_column = metadata_dict["info_column"]
 
         self.base_df_model.set_metadata(self.metadata)
         self.sig_new_metadata.emit(self.metadata)

@@ -76,18 +76,20 @@ class PlotController(QtCore.QObject):
     def setup_plot_data_items(self) -> None:
         settings = QtCore.QSettings()
         self.signal_curve = self._initialize_signal_curve(
-            pen_color=settings.value("Plot/signal_line_color")
+            pen_color=settings.value("Plot/signal_line_color", type=QtGui.QColor)
         )
         self.peak_scatter = self._initialize_peak_scatter(
-            brush_color=settings.value("Plot/point_color")
+            brush_color=settings.value("Plot/point_color", type=QtGui.QColor)
         )
         self.peak_scatter.setZValue(60)
         self.plt_mpl.fig.tight_layout()
 
-        self.rate_curve = self._initialize_rate_curve(pen_color=settings.value("Plot/rate_line_color"))
+        self.rate_curve = self._initialize_rate_curve(
+            pen_color=settings.value("Plot/rate_line_color", type=QtGui.QColor)
+        )
 
         self._region_selector = pg.LinearRegionItem(
-            brush=settings.value("Plot/section_marker_color"),
+            brush=settings.value("Plot/section_marker_color", type=QtGui.QColor),
             pen=(255, 255, 255, 255),
             hoverBrush=(0, 200, 100, 30),
             hoverPen={"color": "gray", "width": 2},
@@ -96,12 +98,17 @@ class PlotController(QtCore.QObject):
         for line in self._region_selector.lines:
             line.addMarker("<|>", position=0.5, size=12)
 
+        self.plt_editing.addItem(self.signal_curve)
+        self.plt_editing.addItem(self.peak_scatter)
+        self.plt_rate.addItem(self.rate_curve)
+
         # TODO: Find a better way to convey this information
         # self._temperature_label = pg.LabelItem("Temperature: - °C", parent=self.plt_editing)
         # self._bpm_label = pg.LabelItem("HR: - bpm", parent=self.plt_rate)
 
     def _initialize_signal_curve(self, pen_color: _t.PGColor = "lightgray") -> PlotDataItem:
-        signal = PlotDataItem(
+        # TODO: Make this work with the custom PlotDataItem
+        signal = pg.PlotDataItem(
             pen=pen_color,
             skipFiniteCheck=True,
             autoDownsample=True,
