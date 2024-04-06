@@ -7,17 +7,17 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
-pyarrow = "^15.0.1"
+pyarrow = "^15.0.2"
 pyopengl-accelerate = "^3.1.7"
 wfdb = "^4.1.2"
-polars = "^0.20.15"
+polars = "^0.20.18"
 neurokit2 = "^0.2.7"
 pyopengl = "^3.1.7"
 mne = "^1.6.1"
-pywavelets = "^1.5.0"
+pywavelets = "^1.6.0"
 qdarkstyle = "^3.2.3"
 numpy = "^1.26.4"
-scipy = "^1.12.0"
+scipy = "^1.13.0"
 xlsxwriter = "^3.2.0"
 xlsx2csv = "^0.8.2"
 pyinstaller = "^6.5.0"
@@ -26,22 +26,22 @@ python-dateutil = "^2.9.0.post0"
 qtconsole = "^5.5.1"
 attrs = "^23.2.0"
 tables = "^3.9.2"
-numexpr = "^2.9.0"
-numba = "^0.59.0"
+numexpr = "^2.10.0"
+numba = "^0.59.1"
 pyqtgraph = {git = "https://github.com/pyqtgraph/pyqtgraph.git", rev = "master"}
 statsmodels = "^0.14.1"
-ipykernel = "^6.29.3"
-superqt = "^0.6.2"
-pyside6 = "^6.6.2"
+ipykernel = "^6.29.4"
+superqt = "^0.6.3"
+pyside6 = "^6.6.3"
 
 [tool.poetry.group.dev.dependencies]
-sourcery = "^1.15.0"
-ruff = "^0.3.3"
-mypy = "^1.9.0"
+sourcery = "^1.16.0"
+ruff = "^0.3.5"
+mypy = {extras = ["mypyc"], version = "^1.9.0"}
 python-dotenv = "^1.0.1"
 pytest = "^8.1.1"
-hypothesis = {extras = ["numpy"], version = "^6.99.6"}
-pyside6-examples = "^6.6.2"
+hypothesis = {extras = ["numpy"], version = "^6.100"}
+pyside6-examples = "^6.6.3"
 rich = {extras = ["jupyter"], version ="^13.7.1"}
 
 [tool.mypy]
@@ -55,7 +55,9 @@ strict_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 warn_no_return = true
-follow_imports = "silent"
+pretty = true
+follow_imports = "normal"
+disable_error_code = ["valid-type", "import-untyped"]
 plugins = [
     "numpy.typing.mypy_plugin",
 ]
@@ -82,6 +84,7 @@ addopts = [
 pythonVersion = "3.12"
 reportMissingTypeStubs = false
 reportUnknownMemberType = false
+stubPath = "E:\\dev-home\\.config\\mypy\\python-type-stubs\\stubs"
 
 [build-system]
 requires = ["poetry-core"]

@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'main_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.6.2
+## Created by: Qt User Interface Compiler version 6.6.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -16,13 +16,13 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplication, QColumnView,
-    QGridLayout, QHeaderView, QMainWindow, QMenu,
-    QMenuBar, QSizePolicy, QSplitter, QStackedWidget,
+from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplication, QGridLayout,
+    QHeaderView, QMainWindow, QMenu, QMenuBar,
+    QPushButton, QSizePolicy, QSplitter, QStackedWidget,
     QStatusBar, QTableView, QTableWidgetItem, QToolBar,
-    QWidget)
+    QTreeWidgetItem, QWidget)
 
-from pyqtgraph import (GraphicsLayoutWidget, TableWidget)
+from pyqtgraph import (DataTreeWidget, GraphicsLayoutWidget, TableWidget)
 from pyqtgraph.widgets.MatplotlibWidget import MatplotlibWidget
 from . import resources_rc
 
@@ -102,6 +102,29 @@ class Ui_MainWindow(object):
         self.stacked_page_import.setObjectName(u"stacked_page_import")
         self.gridLayout = QGridLayout(self.stacked_page_import)
         self.gridLayout.setObjectName(u"gridLayout")
+        self.data_tree_widget_import_metadata = DataTreeWidget(self.stacked_page_import)
+        __qtreewidgetitem = QTreeWidgetItem()
+        __qtreewidgetitem.setText(2, u"3");
+        __qtreewidgetitem.setText(1, u"2");
+        __qtreewidgetitem.setText(0, u"1");
+        self.data_tree_widget_import_metadata.setHeaderItem(__qtreewidgetitem)
+        self.data_tree_widget_import_metadata.setObjectName(u"data_tree_widget_import_metadata")
+        self.data_tree_widget_import_metadata.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
+        self.data_tree_widget_import_metadata.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.data_tree_widget_import_metadata.setColumnCount(3)
+
+        self.gridLayout.addWidget(self.data_tree_widget_import_metadata, 0, 0, 1, 1)
+
+        self.btn_load_data = QPushButton(self.stacked_page_import)
+        self.btn_load_data.setObjectName(u"btn_load_data")
+        self.btn_load_data.setMinimumSize(QSize(0, 50))
+        icon9 = QIcon()
+        icon9.addFile(u":/icons/table_import", QSize(), QIcon.Normal, QIcon.Off)
+        self.btn_load_data.setIcon(icon9)
+        self.btn_load_data.setIconSize(QSize(24, 24))
+
+        self.gridLayout.addWidget(self.btn_load_data, 1, 0, 1, 1)
+
         self.table_view_import_data = QTableView(self.stacked_page_import)
         self.table_view_import_data.setObjectName(u"table_view_import_data")
         self.table_view_import_data.horizontalHeader().setCascadingSectionResizes(True)
@@ -109,13 +132,7 @@ class Ui_MainWindow(object):
         self.table_view_import_data.verticalHeader().setVisible(False)
         self.table_view_import_data.verticalHeader().setHighlightSections(False)
 
-        self.gridLayout.addWidget(self.table_view_import_data, 0, 1, 1, 1)
-
-        self.column_view_import_metadata = QColumnView(self.stacked_page_import)
-        self.column_view_import_metadata.setObjectName(u"column_view_import_metadata")
-        self.column_view_import_metadata.setEditTriggers(QAbstractItemView.DoubleClicked|QAbstractItemView.EditKeyPressed|QAbstractItemView.SelectedClicked)
-
-        self.gridLayout.addWidget(self.column_view_import_metadata, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.table_view_import_data, 0, 1, 2, 1)
 
         self.stackedWidget.addWidget(self.stacked_page_import)
         self.stacked_page_edit = QWidget()
@@ -261,6 +278,10 @@ class Ui_MainWindow(object):
         self.action_show_settings.setToolTip(QCoreApplication.translate("MainWindow", u"Modify various settings", None))
 #endif // QT_CONFIG(tooltip)
         self.action_show_metadata.setText(QCoreApplication.translate("MainWindow", u"Metadata", None))
+#if QT_CONFIG(tooltip)
+        self.btn_load_data.setToolTip(QCoreApplication.translate("MainWindow", u"Load data from the selected file using the settings shown above", None))
+#endif // QT_CONFIG(tooltip)
+        self.btn_load_data.setText(QCoreApplication.translate("MainWindow", u" Load Data", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
         self.menuSettings.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))

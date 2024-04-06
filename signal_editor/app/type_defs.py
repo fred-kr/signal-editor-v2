@@ -4,78 +4,54 @@ import typing as t
 import numpy as np
 import numpy.typing as npt
 
+from . import enum_defs as _e
+
 if t.TYPE_CHECKING:
     import mne
     from PySide6 import QtCore, QtGui
 
-    from .controllers.data_controller import TextFileSeparator
+    from .controllers.data_controller import (
+        EDFFileMetadata,
+        ExcelFileMetadata,
+        FeatherFileMetadata,
+        TextFileMetadata,
+        TextFileSeparator,
+    )
     from .core.section import SectionID
     from .gui.widgets.settings_editor import RateComputationMethod
 
 
-type FilterMethod = t.Literal[
-    "butterworth",
-    "butterworth_ba",
-    "savgol",
-    "fir",
-    "bessel",
-    "powerline",
-    "None",
-]
-type PreprocessPipeline = t.Literal["custom", "ppg_elgendi", "ecg_neurokit2"]
-type StandardizeMethod = t.Literal["zscore", "mad", "minmax", "None"]
-type PeakDetectionMethod = t.Literal[
-    "ppg_elgendi", "local_maxima", "wfdb_xqrs", "local_minima", "ecg_neurokit2", "pan_tompkins"
-]
-type WFDBPeakDirection = t.Literal["up", "down", "both", "compare"]
-type OxygenCondition = t.Literal["normoxic", "hypoxic", "unknown"]
-
-type PGColor = "str | int | float | tuple[int, int, int] | tuple[int, int, int, int] | QtGui.QColor"
-type PGPen = "PGColor | QtGui.QPen | PGPenKwargs | None"
-type PGBrush = "PGColor | QtGui.QBrush | PGBrushKwargs | None"
-
-type PGPointSymbols = 't.Literal["o","s","t","d","+","t1","t2","t3","p","h","star","x","arrow_up","arrow_right","arrow_down","arrow_left","crosshair"] | QtGui.QPainterPath'
+PGColor = t.Union[str, int, float, tuple[int, int, int], tuple[int, int, int, int], "QtGui.QColor"]
 
 
-type SciPySignalSmoothingKernels = t.Literal[
-    "barthann",
-    "bartlett",
-    "blackman",
-    "blackmanharris",
-    "bohman",
-    "boxcar",
-    "chebwin",
-    "cosine",
-    "dpss",
-    "exponential",
-    "flattop",
-    "gaussian",
-    "general_cosine",
-    "general_gaussian",
-    "general_hamming",
-    "hamming",
-    "hann",
-    "kaiser",
-    "kaiser_bessel_derived",
-    "lanczos",
-    "nuttall",
-    "parzen",
-    "taylor",
-    "triangle",
-    "tukey",
-    "boxzen",
-    "median",
-]
+class PGPenKwargs(t.TypedDict, total=False):
+    color: PGColor
+    width: float
+    cosmetic: bool
+    dash: t.Sequence[float] | None
+    style: t.Union["QtCore.Qt.PenStyle", None]
+    hsv: tuple[float, float, float, float]
 
-type PeakDetectionMethodParameters = (
-    PeaksPPGElgendi
-    | PeaksECGNeuroKit2
-    | PeaksPanTompkins
-    | PeaksLocalMinima
-    | PeaksLocalMaxima
-    | PeaksWFDBXQRS
-)
+
+class PGBrushKwargs(t.TypedDict, total=False):
+    color: PGColor
+
+
+PGPen = t.Union[PGColor, "QtGui.QPen", PGPenKwargs, None]
+PGBrush = t.Union[PGColor, "QtGui.QBrush", PGBrushKwargs, None]
+
+PGPointSymbols = t.Union[_e.PointSymbols, "QtGui.QPainterPath"]
+
 type NamedInt = int  # See "mne.utils._bunch.NamedInt" for more info
+type Metadata = "TextFileMetadata | ExcelFileMetadata | EDFFileMetadata | FeatherFileMetadata"
+
+
+class MetadataUpdateDict(t.TypedDict):
+    sampling_rate: float
+    signal_column: str
+    info_column: str
+    signal_column_index: int
+    info_column_index: int
 
 
 class DefaultPlotSettings(t.TypedDict):
@@ -103,6 +79,7 @@ class DefaultDataSettings(t.TypedDict):
 class DefaultMiscSettings(t.TypedDict):
     data_folder: str
     output_folder: str
+    float_visual_precision: int
 
 
 class DefaultAppSettings(t.TypedDict):
@@ -121,30 +98,17 @@ class ReadFileKwargs(t.TypedDict, total=False):
     has_header: bool
 
 
-class PGPenKwargs(t.TypedDict, total=False):
-    color: PGColor
-    width: float
-    cosmetic: bool
-    dash: t.Sequence[float] | None
-    style: "QtCore.Qt.PenStyle | None"
-    hsv: tuple[float, float, float, float]
-
-
-class PGBrushKwargs(t.TypedDict, total=False):
-    color: PGColor
-
-
 class SignalFilterParameters(t.TypedDict, total=False):
     lowcut: float | None
     highcut: float | None
-    method: FilterMethod
+    method: _e.FilterMethod
     order: int
     window_size: int | t.Literal["default"]
     powerline: int | float
 
 
 class StandardizationParameters(t.TypedDict, total=False):
-    method: StandardizeMethod
+    method: _e.StandardizationMethod
     robust: bool
     window_size: int | None
 
@@ -201,15 +165,15 @@ class PlotDataItemKwargs(t.TypedDict, total=False):
     x: npt.NDArray[np.float_ | np.intp | np.uintp]
     y: npt.NDArray[np.float_ | np.intp | np.uintp]
     connect: t.Literal["all", "pairs", "finite", "auto"] | npt.NDArray[np.int32]
-    pen: "PGPen | QtGui.QPen | None"
-    shadowPen: "PGPen | QtGui.QPen | None"
+    pen: PGPen | None
+    shadowPen: PGPen | None
     fillLevel: float | None
     fillOutline: bool
-    fillBrush: "PGBrush | QtGui.QBrush | None"
+    fillBrush: PGBrush | None
     stepMode: t.Literal["center", "left", "right"] | None
     symbol: PGPointSymbols | list[PGPointSymbols] | None
-    symbolPen: "PGPen | QtGui.QPen | list[QtGui.QPen] | None"
-    symbolBrush: "PGBrush | QtGui.QBrush | list[QtGui.QBrush] | None"
+    symbolPen: t.Union[PGPen, list["QtGui.QPen"], None]
+    symbolBrush: t.Union[PGBrush, list["QtGui.QBrush"], None]
     symbolSize: float | list[float]
     pxMode: bool
     useCache: bool
@@ -234,15 +198,15 @@ class PlotDataItemOpts(t.TypedDict):
     phasemapMode: bool
     alphaHint: float
     alphaMode: bool
-    pen: "PGPen | QtGui.QPen | None"
-    shadowPen: "PGPen | QtGui.QPen | None"
+    pen: PGPen | None
+    shadowPen: PGPen | None
     fillLevel: float | None
     fillOutline: bool
-    fillBrush: "PGBrush | QtGui.QBrush | None"
+    fillBrush: PGBrush | None
     stepMode: t.Literal["center", "left", "right"] | None
     symbol: PGPointSymbols | list[PGPointSymbols] | None
-    symbolPen: "PGPen | QtGui.QPen | list[QtGui.QPen] | None"
-    symbolBrush: "PGBrush | QtGui.QBrush | list[QtGui.QBrush] | None"
+    symbolPen: t.Union[PGPen, list["QtGui.QPen"], None]
+    symbolBrush: t.Union[PGBrush, list["QtGui.QBrush"], None]
     symbolSize: float | list[float]
     pxMode: bool
     antialias: bool
@@ -262,7 +226,7 @@ class PlotDataItemOpts(t.TypedDict):
 class NKSignalFilterParams(t.TypedDict, total=False):
     lowcut: float | None
     highcut: float | None
-    method: FilterMethod
+    method: _e.FilterMethod
     order: int
     window_size: int | t.Literal["default"]
     powerline: int | float
@@ -287,7 +251,7 @@ class PeaksLocalMinima(t.TypedDict):
 
 class PeaksWFDBXQRS(t.TypedDict):
     search_radius: int
-    peak_dir: t.NotRequired[WFDBPeakDirection]
+    peak_dir: t.NotRequired[_e.WFDBPeakDirection]
 
 
 class PeaksECGNeuroKit2(t.TypedDict, total=False):
@@ -301,6 +265,16 @@ class PeaksECGNeuroKit2(t.TypedDict, total=False):
 
 class PeaksPanTompkins(t.TypedDict, total=False):
     correct_artifacts: bool
+
+
+PeakDetectionMethodParameters = t.Union[
+    PeaksPPGElgendi,
+    PeaksECGNeuroKit2,
+    PeaksPanTompkins,
+    PeaksLocalMinima,
+    PeaksLocalMaxima,
+    PeaksWFDBXQRS,
+]
 
 
 class SelectedFileMetadataDict(t.TypedDict, total=False):
@@ -320,10 +294,10 @@ class MutableMetadataAttributes(t.TypedDict, total=False):
 
 class ProcessingParametersDict(t.TypedDict):
     sampling_rate: int
-    processing_pipeline: PreprocessPipeline
+    processing_pipeline: _e.PreprocessPipeline
     filter_parameters: SignalFilterParameters | None
     standardization_parameters: StandardizationParameters | None
-    peak_detection_method: PeakDetectionMethod
+    peak_detection_method: _e.PeakDetectionMethod
     peak_detection_method_parameters: PeakDetectionMethodParameters
 
 

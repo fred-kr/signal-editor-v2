@@ -7,6 +7,7 @@ import wfdb.processing as wp
 from PySide6 import QtCore
 from scipy import ndimage, signal
 
+from .. import enum_defs as _e
 from .. import type_defs as _t
 
 
@@ -19,7 +20,7 @@ def _signal_smoothing_median(
 
 
 def _signal_smoothing(
-    sig: npt.NDArray[np.float_], kernel: _t.SciPySignalSmoothingKernels, size: int = 5
+    sig: npt.NDArray[np.float_], kernel: _e.SmoothingKernels, size: int = 5
 ) -> npt.NDArray[np.float64]:
     window: npt.NDArray[np.float64] = signal.get_window(kernel, size)
     w: npt.NDArray[np.float64] = window / window.sum()
@@ -33,7 +34,7 @@ def _signal_smoothing(
 def _signal_smooth(
     sig: npt.NDArray[np.float64],
     method: t.Literal["convolution", "loess"] = "convolution",
-    kernel: _t.SciPySignalSmoothingKernels = "boxzen",
+    kernel: _e.SmoothingKernels = _e.SmoothingKernels.BOXZEN,
     size: int = 10,
     alpha: float = 0.1,
 ) -> npt.NDArray[np.float64]:
@@ -49,7 +50,7 @@ def _signal_smooth(
             smoothed = ndimage.uniform_filter1d(sig, size=size, mode="nearest")
         elif kernel == "boxzen":
             x = ndimage.uniform_filter1d(sig, size=size, mode="nearest")
-            smoothed = _signal_smoothing(x, kernel="parzen", size=size)
+            smoothed = _signal_smoothing(x, kernel=_e.SmoothingKernels.PARZEN, size=size)
         elif kernel == "median":
             smoothed = _signal_smoothing_median(sig, size=size)
         else:
@@ -104,10 +105,14 @@ def _find_peaks_ppg_elgendi(
     sig_clipped_squared = np.clip(sig, 0, None) ** 2
 
     peakwindow_samples = np.rint(peakwindow * sampling_rate).astype(np.int32)
-    ma_peak = _signal_smooth(sig_clipped_squared, kernel="boxcar", size=peakwindow_samples)
+    ma_peak = _signal_smooth(
+        sig_clipped_squared, kernel=_e.SmoothingKernels.BOXCAR, size=peakwindow_samples
+    )
 
     beatwindow_samples = np.rint(beatwindow * sampling_rate).astype(np.int32)
-    ma_beat = _signal_smooth(sig_clipped_squared, kernel="boxcar", size=beatwindow_samples)
+    ma_beat = _signal_smooth(
+        sig_clipped_squared, kernel=_e.SmoothingKernels.BOXCAR, size=beatwindow_samples
+    )
 
     thr1 = ma_beat + beatoffset * np.mean(sig_clipped_squared)
 
@@ -208,16 +213,16 @@ def _adjust_peak_positions(
     sig: npt.NDArray[np.float64],
     peaks: npt.NDArray[np.int32],
     radius: int,
-    direction: _t.WFDBPeakDirection,
+    direction: _e.WFDBPeakDirection,
 ) -> npt.NDArray[np.int32]:
     match direction:
-        case "up":
+        case _e.WFDBPeakDirection.Up:
             return _shift_peaks(sig, peaks, radius, dir_is_up=True)
-        case "down":
+        case _e.WFDBPeakDirection.Down:
             return _shift_peaks(sig, peaks, radius, dir_is_up=False)
-        case "both":
+        case _e.WFDBPeakDirection.Both:
             return _shift_peaks(np.abs(sig), peaks, radius, dir_is_up=True)
-        case "compare":
+        case _e.WFDBPeakDirection.Compare:
             shifted_up = _shift_peaks(sig, peaks, radius, dir_is_up=True)
             shifted_down = _shift_peaks(sig, peaks, radius, dir_is_up=False)
 
@@ -310,7 +315,7 @@ def _find_peaks_xqrs(
     sig: npt.NDArray[np.float64],
     sampling_rate: int,
     radius: int,
-    peak_dir: _t.WFDBPeakDirection = "up",
+    peak_dir: _e.WFDBPeakDirection = _e.WFDBPeakDirection.Up,
 ) -> npt.NDArray[np.int32]:
     xqrs_out = wp.XQRS(sig, sampling_rate)
     xqrs_out.detect()
@@ -325,28 +330,23 @@ def _find_peaks_xqrs(
 def find_peaks(
     sig: npt.NDArray[np.float64],
     sampling_rate: int,
-    method: _t.PeakDetectionMethod,
-    method_parameters: _t.PeaksPPGElgendi
-    | _t.PeaksLocalMaxima
-    | _t.PeaksLocalMinima
-    | _t.PeaksWFDBXQRS
-    | _t.PeaksECGNeuroKit2
-    | _t.PeaksPanTompkins,
+    method: _e.PeakDetectionMethod,
+    method_parameters: _t.PeakDetectionMethodParameters,
 ) -> npt.NDArray[np.int32]:
     match method:
-        case "local_maxima":
+        case _e.PeakDetectionMethod.LocalMaxima:
             return find_extrema(
                 sig,
                 search_radius=method_parameters.get("search_radius", sampling_rate // 2),
                 direction="up",
             )
-        case "local_minima":
+        case _e.PeakDetectionMethod.LocalMinima:
             return find_extrema(
                 sig,
                 search_radius=method_parameters.get("search_radius", sampling_rate // 2),
                 direction="down",
             )
-        case "ppg_elgendi":
+        case _e.PeakDetectionMethod.PPGElgendi:
             return _find_peaks_ppg_elgendi(
                 sig,
                 sampling_rate,
@@ -355,14 +355,14 @@ def find_peaks(
                 beatoffset=method_parameters.get("beatoffset", 0.02),
                 mindelay=method_parameters.get("mindelay", 0.3),
             )
-        case "wfdb_xqrs":
+        case _e.PeakDetectionMethod.WFDBXQRS:
             return _find_peaks_xqrs(
                 sig,
                 sampling_rate,
                 radius=method_parameters.get("search_radius", sampling_rate // 2),
                 peak_dir=method_parameters.get("peak_dir", "up"),
             )
-        case "ecg_neurokit2" | "pan_tompkins":
+        case _e.PeakDetectionMethod.ECGNeuroKit2 | _e.PeakDetectionMethod.PanTompkins:
             return nk.ecg_peaks(
                 ecg_cleaned=sig, sampling_rate=sampling_rate, method=method, **method_parameters
             )[1]["ECG_R_Peaks"]

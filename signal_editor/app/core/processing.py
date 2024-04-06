@@ -6,7 +6,7 @@ import numpy.typing as npt
 import polars as pl
 import scipy.interpolate
 import scipy.signal
-from numba import njit
+import numba
 
 from .. import type_defs as _t
 
@@ -82,6 +82,7 @@ def scale_signal(
         return _scale_mad(sig) if robust else _scale_z(sig)
 
 
+@numba.njit
 def _signal_filter_powerline(
     sig: npt.NDArray[np.float64], sampling_rate: int, powerline: int = 50
 ) -> npt.NDArray[np.float64]:
@@ -123,9 +124,9 @@ def filter_signal(
     sampling_rate: int,
     **kwargs: t.Unpack[_t.SignalFilterParameters],
 ) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
-    method = kwargs["method"]
-    highcut = kwargs["highcut"]
-    lowcut = kwargs["lowcut"]
+    method = kwargs.get("method", "butterworth")
+    highcut = kwargs.get("highcut")
+    lowcut = kwargs.get("lowcut")
     if highcut == 0:
         kwargs["highcut"] = None
     if lowcut == 0:
@@ -152,8 +153,8 @@ def filter_signal(
 
 
 def signal_rate(
-    peaks: npt.NDArray[np.intp] | pl.Series, sampling_rate: int, desired_length: int | None = None
-) -> npt.NDArray[np.float_]:
+    peaks: npt.NDArray[np.int32] | pl.Series, sampling_rate: int, desired_length: int | None = None
+) -> npt.NDArray[np.float64]:
     if isinstance(peaks, pl.Series):
         peaks = peaks.to_numpy()
     period = np.ediff1d(peaks, to_begin=0) / sampling_rate

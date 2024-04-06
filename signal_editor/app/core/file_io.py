@@ -10,7 +10,7 @@ import polars as pl
 import polars.selectors as cs
 from PySide6 import QtCore
 
-from .. import type_defs as _t
+from .. import enum_defs as _e
 
 
 def parse_file_name(
@@ -18,7 +18,7 @@ def parse_file_name(
     date_format: str | None = None,
     id_format: str | None = None,
     oxygen_format: str | None = None,
-) -> tuple[datetime.datetime, str, _t.OxygenCondition]:
+) -> tuple[datetime.datetime, str, _e.OxygenCondition]:
     """
     Parses a file name to extract the date, the ID, and the oxygen condition.
 
@@ -57,15 +57,15 @@ def parse_file_name(
         if match is not None:
             animal_id = match.group()
 
-    oxygen_condition = "unknown"
+    oxygen_condition = _e.OxygenCondition.Unknown
     if oxygen_format is not None:
         match = re.search(oxygen_format, file_name, re.IGNORECASE)
         if match is not None:
-            oxygen_condition = match.group().lower()
-    if oxygen_condition not in {"normoxic", "hypoxic", "unknown"}:
-        oxygen_condition = "unknown"
+            oxygen_condition = _e.OxygenCondition(match.group().lower())
+    if oxygen_condition not in _e.OxygenCondition:
+        oxygen_condition = _e.OxygenCondition.Unknown
 
-    return date, animal_id, t.cast(_t.OxygenCondition, oxygen_condition)
+    return date, animal_id, oxygen_condition
 
 
 class MultipleValidTimeColumnsDetectedError(Exception):

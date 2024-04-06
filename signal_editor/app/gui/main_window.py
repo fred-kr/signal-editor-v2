@@ -2,8 +2,8 @@ import typing as t
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ...ui.ui_dock_session_properties import Ui_DockWidgetSessionProperties
 from ...ui.ui_dialog_metadata import Ui_MetadataDialog
+from ...ui.ui_dock_session_properties import Ui_DockWidgetSessionProperties
 from ...ui.ui_dock_status_log import Ui_DockWidgetLogOutput
 from ...ui.ui_main_window import Ui_MainWindow
 from .widgets.settings_editor import SettingsEditor
@@ -26,12 +26,26 @@ class StatusMessageDock(QtWidgets.QDockWidget, Ui_DockWidgetLogOutput):
 
 
 class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
-    
+    sig_property_has_changed = QtCore.Signal(dict)
+
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
 
         self.setWindowIcon(QtGui.QIcon(":/icons/properties"))
+
+    @QtCore.Slot()
+    def accept(self) -> None:
+        metadata_dict = {
+            "sampling_rate": self.dbl_spin_box_sampling_rate.value(),
+            "signal_column": self.combo_box_signal_column.currentText(),
+            "info_column": self.combo_box_info_column.currentText(),
+            "signal_column_index": self.combo_box_signal_column.currentIndex(),
+            "info_column_index": self.combo_box_info_column.currentIndex(),
+        }
+        self.sig_property_has_changed.emit(metadata_dict)
+
+        super().accept()
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):

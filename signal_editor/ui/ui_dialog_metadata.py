@@ -15,11 +15,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QAbstractButton, QAbstractItemView, QApplication, QComboBox,
-    QDialog, QDialogButtonBox, QDoubleSpinBox, QFormLayout,
-    QGridLayout, QHeaderView, QLabel, QLineEdit,
-    QScrollArea, QSizePolicy, QTreeWidgetItem, QVBoxLayout,
-    QWidget)
+from PySide6.QtWidgets import (QAbstractButton, QAbstractItemView, QAbstractScrollArea, QApplication,
+    QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox,
+    QFormLayout, QGridLayout, QHeaderView, QLabel,
+    QLineEdit, QScrollArea, QSizePolicy, QTreeWidgetItem,
+    QVBoxLayout, QWidget)
 
 from pyqtgraph import DataTreeWidget
 
@@ -108,11 +108,15 @@ class Ui_MetadataDialog(object):
 
         self.data_tree_widget_additional_info = DataTreeWidget(self.scrollAreaWidgetContents)
         __qtreewidgetitem = QTreeWidgetItem()
+        __qtreewidgetitem.setText(2, u"3");
+        __qtreewidgetitem.setText(1, u"2");
         __qtreewidgetitem.setText(0, u"1");
         self.data_tree_widget_additional_info.setHeaderItem(__qtreewidgetitem)
         self.data_tree_widget_additional_info.setObjectName(u"data_tree_widget_additional_info")
+        self.data_tree_widget_additional_info.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContentsOnFirstShow)
         self.data_tree_widget_additional_info.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.data_tree_widget_additional_info.setProperty("showDropIndicator", False)
+        self.data_tree_widget_additional_info.setColumnCount(3)
 
         self.formLayout.setWidget(5, QFormLayout.FieldRole, self.data_tree_widget_additional_info)
 

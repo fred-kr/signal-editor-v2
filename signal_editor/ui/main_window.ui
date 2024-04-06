@@ -40,7 +40,61 @@
       </property>
       <widget class="QWidget" name="stacked_page_import">
        <layout class="QGridLayout" name="gridLayout">
-        <item row="0" column="1">
+        <item row="0" column="0">
+         <widget class="DataTreeWidget" name="data_tree_widget_import_metadata">
+          <property name="sizeAdjustPolicy">
+           <enum>QAbstractScrollArea::AdjustToContents</enum>
+          </property>
+          <property name="editTriggers">
+           <set>QAbstractItemView::NoEditTriggers</set>
+          </property>
+          <property name="columnCount">
+           <number>3</number>
+          </property>
+          <column>
+           <property name="text">
+            <string notr="true">1</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string notr="true">2</string>
+           </property>
+          </column>
+          <column>
+           <property name="text">
+            <string notr="true">3</string>
+           </property>
+          </column>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="btn_load_data">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>50</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Load data from the selected file using the settings shown above</string>
+          </property>
+          <property name="text">
+           <string> Load Data</string>
+          </property>
+          <property name="icon">
+           <iconset resource="../resources/resources.qrc">
+            <normaloff>:/icons/table_import</normaloff>:/icons/table_import</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>24</width>
+            <height>24</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1" rowspan="2">
          <widget class="QTableView" name="table_view_import_data">
           <attribute name="horizontalHeaderCascadingSectionResizes">
            <bool>true</bool>
@@ -54,13 +108,6 @@
           <attribute name="verticalHeaderHighlightSections">
            <bool>false</bool>
           </attribute>
-         </widget>
-        </item>
-        <item row="0" column="0">
-         <widget class="QColumnView" name="column_view_import_metadata">
-          <property name="editTriggers">
-           <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
-          </property>
          </widget>
         </item>
        </layout>
@@ -219,7 +266,7 @@
   </widget>
   <action name="action_load_file">
    <property name="icon">
-    <iconset>
+    <iconset resource="../resources/resources.qrc">
      <normaloff>:/icons/file_import</normaloff>:/icons/file_import</iconset>
    </property>
    <property name="text">
@@ -231,7 +278,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../resources/resources.qrc">
      <normaloff>:/icons/app_wave</normaloff>:/icons/app_wave</iconset>
    </property>
    <property name="text">
@@ -249,7 +296,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../resources/resources.qrc">
      <normaloff>:/icons/table_edit</normaloff>:/icons/table_edit</iconset>
    </property>
    <property name="text">
@@ -267,7 +314,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../resources/resources.qrc">
      <normaloff>:/icons/view_result</normaloff>:/icons/view_result</iconset>
    </property>
    <property name="text">
@@ -285,7 +332,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../resources/resources.qrc">
      <normaloff>:/icons/file_export</normaloff>:/icons/file_export</iconset>
    </property>
    <property name="text">
@@ -300,7 +347,7 @@
   </action>
   <action name="action_edit_undo">
    <property name="icon">
-    <iconset>
+    <iconset resource="../resources/resources.qrc">
      <normaloff>:/icons/edit_undo</normaloff>:/icons/edit_undo</iconset>
    </property>
    <property name="text">
@@ -309,7 +356,7 @@
   </action>
   <action name="action_edit_redo">
    <property name="icon">
-    <iconset>
+    <iconset resource="../resources/resources.qrc">
      <normaloff>:/icons/edit_redo</normaloff>:/icons/edit_redo</iconset>
    </property>
    <property name="text">
@@ -321,7 +368,7 @@
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../resources/resources.qrc">
      <normaloff>:/icons/app_monitor</normaloff>:/icons/app_monitor</iconset>
    </property>
    <property name="text">
@@ -336,7 +383,7 @@
   </action>
   <action name="action_show_settings">
    <property name="icon">
-    <iconset>
+    <iconset resource="../resources/resources.qrc">
      <normaloff>:/icons/view_settings</normaloff>:/icons/view_settings</iconset>
    </property>
    <property name="text">
@@ -370,6 +417,11 @@
   <customwidget>
    <class>TableWidget</class>
    <extends>QTableWidget</extends>
+   <header>pyqtgraph</header>
+  </customwidget>
+  <customwidget>
+   <class>DataTreeWidget</class>
+   <extends>QTreeWidget</extends>
    <header>pyqtgraph</header>
   </customwidget>
  </customwidgets>

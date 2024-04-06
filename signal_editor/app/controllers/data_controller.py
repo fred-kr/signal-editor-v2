@@ -12,6 +12,7 @@ from PySide6 import QtCore
 from .. import type_defs as _t
 from ..core.file_io import detect_sampling_rate, read_edf
 from ..core.section import Section, SectionID
+from ..models.data_model import DataTableModel
 
 
 class TextFileSeparator(enum.StrEnum):
@@ -20,6 +21,15 @@ class TextFileSeparator(enum.StrEnum):
     Comma = ","
     Semicolon = ";"
     Pipe = "|"
+
+
+class FileFormat(enum.StrEnum):
+    CSV = ".csv"
+    TXT = ".txt"
+    TSV = ".tsv"
+    XLSX = ".xlsx"
+    FEATHER = ".feather"
+    EDF = ".edf"
 
 
 class MissingDataError(Exception):
@@ -56,41 +66,42 @@ def check_string_for_non_ascii(string: str) -> tuple[bool, list[tuple[str, int]]
     return bool(non_ascii_chars), non_ascii_chars
 
 
+# TODO: make user_input_required a list and only allow loading a file if user_input_required is empty (remove a flag whenever the required field is set)
 class FileMetadata(ABC):
     """
     Abstract base class for file metadata objects.
     """
 
-    def __init__(self, file_path: Path | str) -> None:
+    def __init__(self, file_path: Path | str, default_sampling_rate: int = 0) -> None:
         self.file_path = Path(file_path)
-        self._sampling_rate = t.cast(float, QtCore.QSettings().value("Data/sampling_rate", 0, type=float))
+        self._sampling_rate = default_sampling_rate
         self.user_input_required = False
         self.required_fields = []
 
     @property
     def file_name(self) -> str:
         """
-        The name of the file, including its extension.
+        The name of the file, including the file extension.
         """
         return self.file_path.name
 
     @property
-    def file_format(self) -> str:
+    def file_format(self) -> FileFormat:
         """
         The format of the file.
         """
-        return self.file_path.suffix
+        return FileFormat(self.file_path.suffix)
 
     @property
-    def sampling_rate(self) -> float:
+    def sampling_rate(self) -> int:
         """
-        The sampling rate of the data in the file.
+        The sampling rate in Hz (i.e. the number of samples per second).
         """
-        return self._sampling_rate
+        return int(self._sampling_rate)
 
     @sampling_rate.setter
-    def sampling_rate(self, sampling_rate: float) -> None:
-        self._sampling_rate = sampling_rate
+    def sampling_rate(self, sampling_rate: int | float) -> None:  # TODO: remove the float type
+        self._sampling_rate = int(sampling_rate)
 
     @property
     @abstractmethod
@@ -99,21 +110,29 @@ class FileMetadata(ABC):
         Any additional information about the file. This varies depending on the file format.
         """
 
+    @abstractmethod
+    def to_dict(self) -> dict[str, t.Any]:
+        """Convert the metadata object to a dictionary."""
+
 
 class TextFileMetadata(FileMetadata):
     """
     Metadata information about a file containing data in a tabular text format.
     """
 
-    _txt_separator = t.cast(str, QtCore.QSettings().value("Data/txt_file_separator_character", " "))
-    _reader_funcs = {
-        ".csv": functools.partial(pl.scan_csv, separator=TextFileSeparator.Comma),
-        ".txt": functools.partial(pl.scan_csv, separator=_txt_separator),
-        ".tsv": functools.partial(pl.scan_csv, separator=TextFileSeparator.Tab),
-    }
-
     def __init__(self, file_path: Path | str) -> None:
         super().__init__(file_path)
+        try:
+            self._txt_separator = TextFileSeparator(
+                QtCore.QSettings().value("Data/txt_file_separator_character", TextFileSeparator.Tab)
+            ).value
+        except Exception:
+            self._txt_separator = TextFileSeparator.Tab
+        self._reader_funcs = {
+            ".csv": functools.partial(pl.scan_csv, separator=TextFileSeparator.Comma),
+            ".txt": functools.partial(pl.scan_csv, separator=self._txt_separator),
+            ".tsv": functools.partial(pl.scan_csv, separator=TextFileSeparator.Tab),
+        }
         lf = self._reader_funcs[self.file_path.suffix](self.file_path)
         self._schema = lf.schema
         self._columns = lf.columns
@@ -121,9 +140,9 @@ class TextFileMetadata(FileMetadata):
             self._sampling_rate = detect_sampling_rate(lf)
         except Exception:
             self.user_input_required = True
-            self.required_fields.append(("sampling_rate", float))
+            self.required_fields.append("sampling_rate")
         self._signal_column: str | None = None
-        self.required_fields.append(("signal_column", str))
+        self.required_fields.append("signal_column")
         self._info_column: str | None = None
 
     @property
@@ -137,14 +156,14 @@ class TextFileMetadata(FileMetadata):
     @property
     def signal_column(self) -> str:
         if self._signal_column is None:
-            raise ValueError("Property not set")
+            raise ValueError("Signal column has not been set.")
         return self._signal_column
 
     @signal_column.setter
     def signal_column(self, value: str) -> None:
         if value not in self.column_names:
             raise ValueError(
-                f"Signal column '{value}' not found in the file. Available columns: {self.column_names}"
+                f"Signal column '{value}' not found. Available columns: {self.column_names}"
             )
         self._signal_column = value
 
@@ -156,9 +175,19 @@ class TextFileMetadata(FileMetadata):
     def info_column(self, value: str) -> None:
         if value not in self.column_names:
             raise ValueError(
-                f"Info column '{value}' not found in the file. Available columns: {self.column_names}"
+                f"Info column '{value}' not found. Available columns: {self.column_names}"
             )
         self._info_column = value
+
+    def to_dict(self) -> dict[str, t.Any]:
+        return {
+            "file_path": str(self.file_path),
+            "sampling_rate": self.sampling_rate,
+            "signal_column": self._signal_column,
+            "info_column": self.info_column,
+            "column_names": self.column_names,
+            "additional_info": self.additional_info,
+        }
 
 
 class FeatherFileMetadata(FileMetadata):
@@ -175,9 +204,9 @@ class FeatherFileMetadata(FileMetadata):
             self._sampling_rate = detect_sampling_rate(lf)
         except Exception:
             self.user_input_required = True
-            self.required_fields.append(("sampling_rate", float))
+            self.required_fields.append("sampling_rate")
         self._signal_column: str | None = None
-        self.required_fields.append(("signal_column", str))
+        self.required_fields.append("signal_column")
         self._info_column: str | None = None
 
     @property
@@ -214,6 +243,16 @@ class FeatherFileMetadata(FileMetadata):
             )
         self._info_column = value
 
+    def to_dict(self) -> dict[str, t.Any]:
+        return {
+            "file_path": str(self.file_path),
+            "sampling_rate": self.sampling_rate,
+            "signal_column": self._signal_column,
+            "info_column": self.info_column,
+            "column_names": self.column_names,
+            "additional_info": self.additional_info,
+        }
+
 
 class ExcelFileMetadata(FileMetadata):
     """
@@ -225,7 +264,7 @@ class ExcelFileMetadata(FileMetadata):
         self.user_input_required = True
         self._schema: t.OrderedDict[str, pl.DataType] | None = None
         self._columns: list[str] | None = None
-        self.required_fields.extend([("sampling_rate", float), ("column_names", list[str])])
+        self.required_fields.extend(["sampling_rate", "column_names", "signal_column"])
         self._signal_column: str | None = None
         self._info_column: str | None = None
 
@@ -275,6 +314,16 @@ class ExcelFileMetadata(FileMetadata):
             )
         self._info_column = value
 
+    def to_dict(self) -> dict[str, t.Any]:
+        return {
+            "file_path": str(self.file_path),
+            "sampling_rate": self.sampling_rate,
+            "signal_column": self._signal_column,
+            "info_column": self.info_column,
+            "column_names": self.column_names,
+            "additional_info": self._schema,
+        }
+
 
 class EDFFileMetadata(FileMetadata):
     """
@@ -293,6 +342,7 @@ class EDFFileMetadata(FileMetadata):
         if not self._sampling_rate:
             self.user_input_required = True
             self.required_fields.append("sampling_rate")
+        self.required_fields.append("signal_column")
         self._signal_channel: str | None = None
         self._info_channel: str | None = None
 
@@ -316,6 +366,8 @@ class EDFFileMetadata(FileMetadata):
             raise ValueError(
                 f"Channel '{value}' does not exist in the file. Available channels: {self._ch_names}"
             )
+        if "signal_column" in self.required_fields:
+            self.required_fields.remove("signal_column")
         self._signal_channel = value
 
     @property
@@ -330,6 +382,16 @@ class EDFFileMetadata(FileMetadata):
             )
         self._info_channel = value
 
+    def to_dict(self) -> dict[str, t.Any]:
+        return {
+            "file_path": str(self.file_path),
+            "sampling_rate": self.sampling_rate,
+            "signal_column": self._signal_channel,
+            "info_column": self.info_column,
+            "column_names": self.column_names,
+            "additional_info": self.additional_info,
+        }
+
 
 class SectionContainer(OrderedDict[SectionID, Section]):
     def __setitem__(self, key: SectionID, value: Section) -> None:
@@ -343,24 +405,23 @@ class SectionContainer(OrderedDict[SectionID, Section]):
 class DataController(QtCore.QObject):
     sig_non_ascii_in_file_name = QtCore.Signal(list, bool)
     sig_user_input_required = QtCore.Signal(list)
-    sig_new_data_file_selected = QtCore.Signal(dict)
-    sig_new_data_file_loaded = QtCore.Signal()
+    sig_new_metadata = QtCore.Signal(object)
+    sig_new_data = QtCore.Signal()
     sig_sampling_rate_changed = QtCore.Signal(int)
     sig_active_section_changed = QtCore.Signal(bool)
     sig_section_added = QtCore.Signal(str)
     sig_section_removed = QtCore.Signal(str)
 
-    SUPPORTED_FILE_FORMATS = frozenset(
-        [".edf", ".xlsx", ".xls", ".feather", ".csv", ".txt", ".tsv"]
-    )
+    SUPPORTED_FILE_FORMATS = frozenset([".edf", ".xlsx", ".feather", ".csv", ".txt", ".tsv"])
 
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
 
         settings = QtCore.QSettings()
-        self._sampling_rate = t.cast(int, settings.value("Data/sampling_rate"))
+        self._sampling_rate = int(settings.value("Data/sampling_rate"))  # type: ignore
 
         self._base_df: pl.DataFrame | None = None
+        self.base_df_model = DataTableModel(self)
         self._working_df: pl.DataFrame | None = None
 
         self._metadata: (
@@ -431,6 +492,20 @@ class DataController(QtCore.QObject):
             raise MissingDataError("No metadata available. Load a valid file to get metadata.")
         return self._metadata
 
+    @QtCore.Slot(dict)
+    def update_metadata(self, metadata_dict: _t.MetadataUpdateDict) -> None:
+        if self._metadata is None:
+            return
+        if metadata_dict["sampling_rate"] > 0:
+            self._metadata.sampling_rate = metadata_dict["sampling_rate"]
+        if metadata_dict["signal_column"] != "" and metadata_dict["signal_column_index"] != -1:
+            self._metadata.signal_column = metadata_dict["signal_column"]
+        if metadata_dict["info_column"] != "" and metadata_dict["info_column_index"] != -1:
+            self._metadata.info_column = metadata_dict["info_column"]
+
+        self.base_df_model.set_metadata(self._metadata)
+        self.sig_new_metadata.emit(self._metadata)
+
     @QtCore.Slot(str)
     def select_file(self, file_path: Path | str) -> None:
         file_path = Path(file_path)
@@ -468,23 +543,23 @@ class DataController(QtCore.QObject):
                 non_ascii_characters.append((i, (col_name, non_ascii_chars)))
 
         if show_non_ascii_warning:
-            self.sig_non_ascii_in_file_name.emit(non_ascii_characters, self._metadata.file_format == ".edf")
+            self.sig_non_ascii_in_file_name.emit(
+                non_ascii_characters, self._metadata.file_format == ".edf"
+            )
 
         if self.metadata.user_input_required:
             self.sig_user_input_required.emit(self.metadata.required_fields)
-        
+
+        self.base_df_model.set_metadata(self.metadata)
+        self.sig_new_metadata.emit(self.metadata)
 
     def read_file(self, **kwargs: t.Unpack[_t.ReadFileKwargs]) -> None:
         suffix = self.metadata.file_format
         file_path = self.metadata.file_path
-        try_parse_dates = kwargs.get("try_parse_dates", False)
-        separator = kwargs.get("separator")
-        if separator is None:
-            settings = QtCore.QSettings()
-            separator = t.cast(
-                TextFileSeparator,
-                settings.value("Data/txt_file_separator_character", TextFileSeparator.Tab),
-            )
+        settings = QtCore.QSettings()
+        try_parse_dates: bool = settings.value("Data/try_parse_dates", False, type=bool)
+        separator = TextFileSeparator(settings.value("Data/txt_file_separator_character", TextFileSeparator.Tab))
+        
         signal_col = self.metadata.signal_column
         info_col = self.metadata.info_column
         other_cols = kwargs.get("columns")
@@ -516,7 +591,7 @@ class DataController(QtCore.QObject):
                 self._base_df = pl.read_ipc(
                     file_path, columns=columns, use_pyarrow=kwargs.get("use_pyarrow", False)
                 )
-            case ".edf":  # FIXME: This does not work
+            case ".edf":
                 if info_col is None:
                     info_col = "temperature"
                 self._base_df = read_edf(
@@ -525,5 +600,5 @@ class DataController(QtCore.QObject):
             case _:
                 raise NotImplementedError(f"Cant read file type: {suffix}")
 
-        self.sig_new_data_file_loaded.emit()
-        print(self._base_df.head(10))
+        self.base_df_model.set_dataframe(self._base_df, signal_col, info_col=info_col)
+        self.sig_new_data.emit()

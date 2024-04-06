@@ -1,4 +1,5 @@
 import bisect
+import enum
 import math
 import typing as t
 
@@ -8,9 +9,10 @@ import pyqtgraph as pg
 from pyqtgraph.graphicsItems.GraphicsObject import GraphicsObject
 from pyqtgraph.graphicsItems.PlotCurveItem import PlotCurveItem
 from pyqtgraph.graphicsItems.PlotDataItem import PlotDataset
-from PySide6 import QtCore
+from PySide6 import QtCore, QtGui
 
 from ... import type_defs as _t
+from ...enum_defs import PointSymbols
 from .scatter_plot_item import CustomScatterPlotItem
 
 if t.TYPE_CHECKING:
@@ -18,7 +20,7 @@ if t.TYPE_CHECKING:
 
     from .editing_view_box import EditingViewBox
 
-
+    
 class PlotDataItem(GraphicsObject):
     sigPlotChanged: t.ClassVar[QtCore.Signal] = QtCore.Signal(object)
     sigClicked: t.ClassVar[QtCore.Signal] = QtCore.Signal(object, object)
@@ -237,7 +239,7 @@ class PlotDataItem(GraphicsObject):
         self.opts["fillLevel"] = level
         self.updateItems(styleUpdate=True)
 
-    def setSymbol(self, symbol: _t.PGPointSymbols | list[_t.PGPointSymbols] | None) -> None:
+    def setSymbol(self, symbol: PointSymbols | QtGui.QPainterPath | list[PointSymbols | QtGui.QPainterPath] | None) -> None:
         if self.opts["symbol"] == symbol:
             return
         self.opts["symbol"] = symbol

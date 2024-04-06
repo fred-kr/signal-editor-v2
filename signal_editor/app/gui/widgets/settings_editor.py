@@ -315,64 +315,58 @@ def get_app_dir() -> QtCore.QDir:
     return QtCore.QDir.current()
 
 
-_DEFAULT_VALUES: dict[
-    str,
-    _t.DefaultPlotSettings
-    | _t.DefaultEditingSettings
-    | _t.DefaultDataSettings
-    | _t.DefaultMiscSettings,
-] = {
-    "Plot": {
-        "background_color": pg.mkColor("black"),
-        "foreground_color": pg.mkColor("lightgray"),
-        "point_color": pg.mkColor("gold"),
-        "signal_line_color": pg.mkColor("coral"),
-        "rate_line_color": pg.mkColor("lightgreen"),
-        "section_marker_color": pg.mkColor((100, 200, 150, 40)),
-    },
-    "Editing": {
-        "click_width_signal_line": 70,
-        "search_around_click_radius": 20,
-        "minimum_peak_distance": 20,
-        "rate_computation_method": RateComputationMethod.Instantaneous,
-    },
-    "Data": {
-        "sampling_rate": 400,
-        "txt_file_separator_character": TextFileSeparator.Tab,
-        "try_parse_dates": False,
-    },
-    "Misc": {
-        "data_folder": get_app_dir().canonicalPath(),
-        "output_folder": get_app_dir().canonicalPath(),
-    },
-}
-
-_DESCRIPTIONS = {
-    # "Plot": "Settings related to the interactive plots",
-    "background_color": "The background color for the interactive plots",
-    "foreground_color": "The foreground (text, axis, etc) color for the interactive plots",
-    "point_color": "The fill color for the peak points in the upper plot",
-    "signal_line_color": "The color for the signal line in the upper plot",
-    "rate_line_color": "The color for the rate line in the lower plot",
-    "section_marker_color": "The color used to highlight the created sections in the upper plot",
-    # "Editing": "Settings related to the editing features",
-    "click_width_signal_line": "The area around the signal line in pixels that is considered to be a click on the line",
-    "search_around_click_radius": "The radius around the click in data coordinates to search for a potential peak",
-    "minimum_peak_distance": "Sets the minimum allowed distance between two peaks when using any of the peak detection algorithms",
-    "rate_computation_method": "Which method to use for computing the rate displayed in the lower plot on the editing page, either 'instantaneous' or 'rolling_window'",
-    # "Data": "Settings related to input data",
-    "sampling_rate": "The default sampling rate (in Hz) to use in cases where it can't be inferred or is not provided in the data itself (for example, EDF files usually have the sampling rate in the file header)",
-    "txt_file_separator_character": "The character used to separate columns if reading from a '.txt' file",
-    "try_parse_dates": "Whether to try parsing dates in the data if reading from a '.txt', '.csv', or '.xlsx' file",
-    "data_folder": "Which folder to open when selecting a data file",
-    "output_folder": "Which folder to save the output files to",
-}
-
-
 class SettingsTree(QtWidgets.QTreeWidget):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
 
+        self._DEFAULT_VALUES = _t.DefaultAppSettings(
+            Plot=_t.DefaultPlotSettings(
+                background_color=pg.mkColor("black"),
+                foreground_color=pg.mkColor("lightgray"),
+                point_color=pg.mkColor("gold"),
+                signal_line_color=pg.mkColor("coral"),
+                rate_line_color=pg.mkColor("lightgreen"),
+                section_marker_color=pg.mkColor((100, 200, 150, 40)),
+            ),
+            Editing=_t.DefaultEditingSettings(
+                click_width_signal_line=70,
+                search_around_click_radius=20,
+                minimum_peak_distance=20,
+                rate_computation_method=RateComputationMethod.Instantaneous,
+            ),
+            Data=_t.DefaultDataSettings(
+                sampling_rate=400,
+                txt_file_separator_character=TextFileSeparator.Tab,
+                try_parse_dates=False,
+            ),
+            Misc=_t.DefaultMiscSettings(
+                data_folder=get_app_dir().canonicalPath(),
+                output_folder=get_app_dir().canonicalPath(),
+                float_visual_precision=3,
+            ),
+        )
+        self._DESCRIPTIONS = {
+            # "Plot": "Settings related to the interactive plots",
+            "background_color": "The background color for the interactive plots",
+            "foreground_color": "The foreground (text, axis, etc) color for the interactive plots",
+            "point_color": "The fill color for the peak points in the upper plot",
+            "signal_line_color": "The color for the signal line in the upper plot",
+            "rate_line_color": "The color for the rate line in the lower plot",
+            "section_marker_color": "The color used to highlight the created sections in the upper plot",
+            # "Editing": "Settings related to the editing features",
+            "click_width_signal_line": "The area around the signal line in pixels that is considered to be a click on the line",
+            "search_around_click_radius": "The radius around the click in data coordinates to search for a potential peak",
+            "minimum_peak_distance": "Sets the minimum allowed distance between two peaks when using any of the peak detection algorithms",
+            "rate_computation_method": "Which method to use for computing the rate displayed in the lower plot on the editing page, either 'instantaneous' or 'rolling_window'",
+            # "Data": "Settings related to input data",
+            "sampling_rate": "The default sampling rate (in Hz) to use in cases where it can't be inferred or is not provided in the data itself (for example, EDF files usually have the sampling rate in the file header)",
+            "txt_file_separator_character": "The character used to separate columns if reading from a '.txt' file",
+            "try_parse_dates": "Whether to try parsing dates in the data if reading from a '.txt', '.csv', or '.xlsx' file",
+            # "Misc": "Settings that don't fit into any other category",
+            "data_folder": "Which folder to open when selecting a data file",
+            "output_folder": "Which folder to save the output files to",
+            "float_visual_precision": "How many digits to use for displaying floating point (decimal) values",
+        }
         self._type_checker = TypeChecker()
         self.setItemDelegate(VariantDelegate(self._type_checker, self))
 
@@ -419,10 +413,17 @@ class SettingsTree(QtWidgets.QTreeWidget):
         self.clear()
 
         if self.settings is not None:
+            # Check if all default values exist in the settings, if not add the missing ones
+            for group, default_values in self._DEFAULT_VALUES.items():
+                for setting_key, default_value in default_values.items():  # type: ignore
+                    setting_key = f"{group}/{setting_key}"
+                    if not self.settings.contains(setting_key):
+                        self.settings.setValue(setting_key, default_value)
             self.settings.setParent(self)
             self.refresh()
             if self.auto_refresh:
                 self.refresh_timer.start()
+
         else:
             self.refresh_timer.stop()
 
@@ -443,13 +444,13 @@ class SettingsTree(QtWidgets.QTreeWidget):
         if sure != QtWidgets.QMessageBox.StandardButton.Yes:
             return
 
-        for grp, kvs in _DEFAULT_VALUES.items():
+        for grp, kvs in self._DEFAULT_VALUES.items():
             self.settings.remove(grp)
             self.settings.beginGroup(grp)
-            for k, v in kvs.items():
+            for k, v in kvs.items():  # type: ignore
                 if isinstance(v, QtCore.QDir):
                     v = v.canonicalPath()
-                self.settings.setValue(k, v)
+                self.settings.setValue(k, v)  # type: ignore
             self.settings.endGroup()
 
         self.refresh()
@@ -572,7 +573,7 @@ class SettingsTree(QtWidgets.QTreeWidget):
                 child.setText(1, value.__class__.__name__)
             child.setText(2, VariantDelegate.display_text(value))
             child.setData(2, QtCore.Qt.ItemDataRole.UserRole, value)
-            child.setText(3, _DESCRIPTIONS.get(key, ""))
+            child.setText(3, self._DESCRIPTIONS.get(key, ""))
             if "color" in key or isinstance(value, QtGui.QColor):
                 with contextlib.suppress(Exception):
                     color = mkColor(value)  # pyright: ignore[reportArgumentType]
@@ -639,7 +640,7 @@ class SettingsTree(QtWidgets.QTreeWidget):
         if not item.parent():
             return
 
-        default_value = _DEFAULT_VALUES[item.parent().text(0)][key]
+        default_value = self._DEFAULT_VALUES[item.parent().text(0)][key]  # type: ignore
         if isinstance(default_value, QtCore.QDir):
             default_value = default_value.canonicalPath()
         item.setData(2, QtCore.Qt.ItemDataRole.UserRole, default_value)

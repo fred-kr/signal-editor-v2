@@ -23,7 +23,10 @@
 			"**/__pycache__",
 			".git",
 			".venv",
-			"**/tests/**"
+			"**/tests/**",
+			".mypy_cache/**",
+			".pytest_cache/**",
+			".ruff_cache/**",
 		],
 		"ruff.format.args": [
 			"--config=${workspaceFolder}/pyproject.toml"
@@ -36,6 +39,7 @@
 		],
 		"mypy-type-checker.importStrategy": "fromEnvironment",
 		"mypy-type-checker.preferDaemon": true,
-		"mypy-type-checker.reportingScope": "workspace"
+		"mypy-type-checker.reportingScope": "workspace",
+		"python.analysis.stubPath": "E:/dev-home/.config/mypy/python-type-stubs/stubs"
 	}
 }
