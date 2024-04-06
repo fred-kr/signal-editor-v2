@@ -2,6 +2,7 @@ import datetime
 import typing as t
 import warnings
 
+import numpy as np
 import polars as pl
 from PySide6 import QtCore
 
@@ -15,10 +16,12 @@ class DataTableModel(QtCore.QAbstractTableModel):
         self._metadata: _t.Metadata | None = None
         self._df: pl.DataFrame | None = None
         self._schema: t.OrderedDict[str, pl.DataType] | None = None
-        self._name_index_column: str | None = None
+        self._name_index_column: str = "index"
         self._name_signal_column: str | None = None
         self._name_info_column: str | None = None
-        self._float_precision = QtCore.QSettings().value("Misc/float_visual_precision", 3, type=int)
+        self._float_precision: int = QtCore.QSettings().value(
+            "Misc/float_visual_precision", 4, type=int
+        )
 
     @property
     def df(self) -> pl.DataFrame:
@@ -31,6 +34,12 @@ class DataTableModel(QtCore.QAbstractTableModel):
         metadata_dict = metadata.to_dict()
         self._name_signal_column = metadata_dict["signal_column"]
         self._name_info_column = metadata_dict["info_column"]
+
+    def set_float_precision(self, precision: int) -> None:
+        self._float_precision = precision
+        self.set_dataframe(
+            self.df, self._name_signal_column, self._name_index_column, self._name_info_column
+        )
 
     def set_dataframe(
         self,
@@ -50,10 +59,11 @@ class DataTableModel(QtCore.QAbstractTableModel):
             )
         self._name_signal_column = signal_col
         if index_col not in self._schema or not self._schema[index_col].is_integer():
-            warnings.warn(
-                f"Could not find index column '{index_col}' or the provided index column is not of type integer.\nCreating new index column with name 'index'",
-                stacklevel=2,
-            )
+            if index_col != "index":
+                warnings.warn(
+                    f"Could not find index column '{index_col}' or the provided index column is not of type integer.\nCreating new index column with name 'index'",
+                    stacklevel=2,
+                )
             self._name_index_column = "index"
             if self._name_index_column in self._df.columns:
                 self._df.drop_in_place(self._name_index_column)
@@ -99,13 +109,15 @@ class DataTableModel(QtCore.QAbstractTableModel):
         col_name = self._df.columns[col_idx]
 
         value = self._df.item(row_idx, col_idx)
-        value_type = self._df.schema[col_name]
-
         if role == QtCore.Qt.ItemDataRole.DisplayRole:
+            value_type = self._df.schema[col_name]
+
             if value_type.is_integer():
                 return f"{value:_}"
             elif value_type.is_float():
-                return f"{value:_.{self._float_precision}f}"
+                return np.format_float_positional(
+                    value, trim="0", precision=self._float_precision, fractional=True
+                )
             elif value_type.is_temporal():
                 if isinstance(value, datetime.timedelta):
                     return human_readable_timedelta(value)
@@ -117,11 +129,6 @@ class DataTableModel(QtCore.QAbstractTableModel):
                 return str(value)
         elif role == QtCore.Qt.ItemDataRole.UserRole:
             return value
-        elif role == QtCore.Qt.ItemDataRole.TextAlignmentRole:
-            if value_type.is_float() or value_type.is_integer():
-                return QtCore.Qt.AlignmentFlag.AlignRight
-            else:
-                return QtCore.Qt.AlignmentFlag.AlignLeft
         elif role == QtCore.Qt.ItemDataRole.ToolTipRole:
             return repr(value)
 

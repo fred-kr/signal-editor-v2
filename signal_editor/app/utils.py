@@ -1,5 +1,5 @@
 import datetime
-
+import math
 
 def human_readable_timedelta(
     time_delta: datetime.timedelta | None = None, seconds: int | None = None, microseconds: int | None = None
@@ -18,3 +18,8 @@ def human_readable_timedelta(
     day_str = f"{days}d " if days > 0 else ""
 
     return f"{day_str}{hours:02d}h {minutes:02d}m {seconds:02d}s {microseconds:06d}\u03bcs"
+
+
+
+def round_to_n(x: float, n: int) -> float:
+    return round(x, -int(math.floor(math.log10(x))) + (n - 1))

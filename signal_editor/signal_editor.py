@@ -57,21 +57,30 @@ class SignalEditor(QtWidgets.QApplication):
 
     def connect_qt_signals(self) -> None:
         self.main_window.settings_editor.sig_setting_changed.connect(self._update_setting)
-        self.main_window.action_load_file.triggered.connect(self.select_file)
-        self.main_window.action_show_metadata.triggered.connect(self.show_metadata_dialog)
+        self.main_window.action_open_file.triggered.connect(self.select_file)
+        self.main_window.action_edit_metadata.triggered.connect(self.show_metadata_dialog)
         self.main_window.settings_editor.finished.connect(self.apply_settings)
-        self.main_window.metadata_dialog.sig_property_has_changed.connect(
-            self.data_controller.update_metadata
-        )
         self.main_window.btn_load_data.clicked.connect(self.read_file)
-        
+        self.main_window.metadata_dialog.sig_property_has_changed.connect(self.update_metadata)
+
+    def _connect_data_controller_signals(self) -> None:
         self.data_controller.sig_non_ascii_in_file_name.connect(self.show_non_ascii_warning)
         self.data_controller.sig_user_input_required.connect(self.show_metadata_dialog)
         self.data_controller.sig_new_metadata.connect(self.update_metadata_read_only_tree)
 
+    def _disconnect_data_controller_signals(self) -> None:
+        self.data_controller.sig_non_ascii_in_file_name.disconnect(self.show_non_ascii_warning)
+        self.data_controller.sig_user_input_required.disconnect(self.show_metadata_dialog)
+        self.data_controller.sig_new_metadata.disconnect(self.update_metadata_read_only_tree)
+
+    @QtCore.Slot(dict)
+    def update_metadata(self, metadata_dict: _t.MetadataUpdateDict) -> None:
+        self.data_controller.update_metadata(metadata_dict)
+
     @QtCore.Slot(object)
     def update_metadata_read_only_tree(self, metadata: _t.Metadata) -> None:
-        self.main_window.data_tree_widget_import_metadata.setData(metadata.to_dict())
+        self.main_window.data_tree_widget_import_metadata.setData(metadata.to_dict(), hideRoot=True)
+        self.main_window.data_tree_widget_import_metadata.collapseAll()
 
     @QtCore.Slot(list, bool)
     def show_non_ascii_warning(
@@ -116,6 +125,8 @@ class SignalEditor(QtWidgets.QApplication):
         file_name = metadata.file_name
         file_type = metadata.file_format
         columns = metadata.column_names
+
+        self.main_window.metadata_dialog.combo_box_signal_column.clear()
         self.main_window.metadata_dialog.combo_box_signal_column.addItems(columns)
         if len(columns) > 1:
             self.main_window.metadata_dialog.combo_box_info_column.addItems(columns)
@@ -149,21 +160,23 @@ class SignalEditor(QtWidgets.QApplication):
         if not file_path:
             return
 
+        self.main_window.action_close_file.setEnabled(True)
+        self.main_window.action_edit_metadata.setEnabled(True)
+
         with contextlib.suppress(Exception):
-            self.data_controller.sig_non_ascii_in_file_name.disconnect(self.show_non_ascii_warning)
-            self.data_controller.sig_user_input_required.disconnect(self.show_metadata_dialog)
+            self._disconnect_data_controller_signals()
             self.data_controller.setParent(None)
 
         self.data_controller = DataController(self)
-        self.data_controller.sig_non_ascii_in_file_name.connect(self.show_non_ascii_warning)
-        self.data_controller.sig_user_input_required.connect(self.show_metadata_dialog)
+        self._connect_data_controller_signals()
+
         self.data_controller.select_file(file_path)
         self.main_window.table_view_import_data.setModel(self.data_controller.base_df_model)
 
     @QtCore.Slot()
     def read_file(self) -> None:
         self.data_controller.read_file()
-        
+
     @QtCore.Slot(str, object)
     def _update_setting(self, name: str, value: QtGui.QColor | str | int | float | None) -> None:
         if value is None:
@@ -182,6 +195,9 @@ class SignalEditor(QtWidgets.QApplication):
             case "section_marker_color":
                 for r in self.plot_controller.regions:
                     r.setBrush(color=value)
+            case "float_visual_precision":
+                if isinstance(value, int):
+                    self.data_controller.base_df_model.set_float_precision(value)
             case _:
                 pass
 

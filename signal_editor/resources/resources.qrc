@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="icons">
+    <file alias="folder-open">fugue-icons/folder-open.png</file>
+    <file alias="folder-close">fugue-icons/folder.png</file>
     <file alias="navigation">fugue-icons/application-sidebar-list.png</file>
     <file alias="terminal">fugue-icons/application-terminal.png</file>
     <file alias="view_settings">fugue-icons/gear.png</file>

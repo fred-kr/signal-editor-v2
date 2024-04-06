@@ -12,7 +12,7 @@ from PySide6 import QtCore
 from .. import type_defs as _t
 from ..core.file_io import detect_sampling_rate, read_edf
 from ..core.section import Section, SectionID
-from ..models.data_model import DataTableModel
+from ..models.data_table import DataTableModel
 
 
 class TextFileSeparator(enum.StrEnum):
@@ -492,19 +492,18 @@ class DataController(QtCore.QObject):
             raise MissingDataError("No metadata available. Load a valid file to get metadata.")
         return self._metadata
 
-    @QtCore.Slot(dict)
     def update_metadata(self, metadata_dict: _t.MetadataUpdateDict) -> None:
         if self._metadata is None:
             return
         if metadata_dict["sampling_rate"] > 0:
-            self._metadata.sampling_rate = metadata_dict["sampling_rate"]
+            self.metadata.sampling_rate = metadata_dict["sampling_rate"]
         if metadata_dict["signal_column"] != "" and metadata_dict["signal_column_index"] != -1:
-            self._metadata.signal_column = metadata_dict["signal_column"]
+            self.metadata.signal_column = metadata_dict["signal_column"]
         if metadata_dict["info_column"] != "" and metadata_dict["info_column_index"] != -1:
-            self._metadata.info_column = metadata_dict["info_column"]
+            self.metadata.info_column = metadata_dict["info_column"]
 
-        self.base_df_model.set_metadata(self._metadata)
-        self.sig_new_metadata.emit(self._metadata)
+        self.base_df_model.set_metadata(self.metadata)
+        self.sig_new_metadata.emit(self.metadata)
 
     @QtCore.Slot(str)
     def select_file(self, file_path: Path | str) -> None:
@@ -557,7 +556,6 @@ class DataController(QtCore.QObject):
         suffix = self.metadata.file_format
         file_path = self.metadata.file_path
         settings = QtCore.QSettings()
-        try_parse_dates: bool = settings.value("Data/try_parse_dates", False, type=bool)
         separator = TextFileSeparator(settings.value("Data/txt_file_separator_character", TextFileSeparator.Tab))
         
         signal_col = self.metadata.signal_column
@@ -571,26 +569,19 @@ class DataController(QtCore.QObject):
 
         match suffix:
             case ".csv":
-                self._base_df = pl.read_csv(
-                    file_path, columns=columns, try_parse_dates=try_parse_dates
-                )
+                self._base_df = pl.read_csv(file_path, columns=columns)
             case ".txt":
-                self._base_df = pl.read_csv(
-                    file_path, columns=columns, separator=separator, try_parse_dates=try_parse_dates
-                )
+                self._base_df = pl.read_csv(file_path, columns=columns, separator=separator)
             case ".tsv":
                 self._base_df = pl.read_csv(
                     file_path,
                     columns=columns,
                     separator=TextFileSeparator.Tab,
-                    try_parse_dates=try_parse_dates,
                 )
             case ".xlsx":
                 self._base_df = pl.read_excel(file_path)
             case ".feather":
-                self._base_df = pl.read_ipc(
-                    file_path, columns=columns, use_pyarrow=kwargs.get("use_pyarrow", False)
-                )
+                self._base_df = pl.read_ipc(file_path, columns=columns)
             case ".edf":
                 if info_col is None:
                     info_col = "temperature"

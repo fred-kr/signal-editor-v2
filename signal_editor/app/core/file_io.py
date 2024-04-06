@@ -246,8 +246,8 @@ def read_edf(
     stop: int | None = None,
 ) -> pl.DataFrame:
     raw_edf = mne.io.read_raw_edf(file_path, include=[data_channel, temperature_channel])
-    if rename_channel_mapping is None:
-        rename_channel_mapping = {}
+    if rename_channel_mapping is not None:
+        # rename_channel_mapping = {}
         for channel in t.cast(list[str], raw_edf.ch_names):
             if "hb" in channel.lower():
                 rename_channel_mapping[channel] = "heartbeat"
