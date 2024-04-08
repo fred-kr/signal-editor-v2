@@ -1,6 +1,22 @@
 import enum
 
+class TextFileSeparator(enum.StrEnum):
+    Tab = "\t"
+    Space = " "
+    Comma = ","
+    Semicolon = ";"
+    Pipe = "|"
 
+
+class FileFormat(enum.StrEnum):
+    CSV = ".csv"
+    TXT = ".txt"
+    TSV = ".tsv"
+    XLSX = ".xlsx"
+    FEATHER = ".feather"
+    EDF = ".edf"
+
+    
 class FilterMethod(enum.StrEnum):
     Butterworth = "butterworth"
     ButterworthLegacy = "butterworth_ba"

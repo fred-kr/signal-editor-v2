@@ -8,7 +8,6 @@ import dateutil.parser as dt_parser
 import mne.io
 import polars as pl
 import polars.selectors as cs
-from PySide6 import QtCore
 
 from .. import enum_defs as _e
 
@@ -241,14 +240,14 @@ def read_edf(
     temperature_channel: str,
     *,
     rename_channel_mapping: dict[str, str] | None = None,
-    include_duration_column: bool = True,
+    include_duration_column: bool = False,
     start: int = 0,
     stop: int | None = None,
 ) -> pl.DataFrame:
     raw_edf = mne.io.read_raw_edf(file_path, include=[data_channel, temperature_channel])
     if rename_channel_mapping is not None:
         # rename_channel_mapping = {}
-        for channel in t.cast(list[str], raw_edf.ch_names):
+        for channel in raw_edf.ch_names:
             if "hb" in channel.lower():
                 rename_channel_mapping[channel] = "heartbeat"
                 data_channel = "heartbeat"
@@ -260,10 +259,10 @@ def read_edf(
                 temperature_channel = "temperature"
 
         raw_edf.rename_channels(rename_channel_mapping)
-    channel_names = t.cast(list[str], raw_edf.ch_names)
-    measured_date = t.cast(datetime.datetime, raw_edf.info["meas_date"])
+    channel_names = raw_edf.ch_names
+    measured_date = raw_edf.info["meas_date"]
 
-    sampling_rate = t.cast(float, raw_edf.info["sfreq"])
+    sampling_rate = raw_edf.info["sfreq"]
 
     out = pl.from_numpy(raw_edf.get_data(start=start, stop=stop), schema=channel_names).select(
         pl.col(temperature_channel).round(1),
@@ -281,4 +280,3 @@ def read_edf(
     return out.filter(
         (pl.col(data_channel) != 0) & (pl.col(temperature_channel) != 0)
     ).with_row_index(offset=start)
-

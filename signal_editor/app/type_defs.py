@@ -80,6 +80,8 @@ class DefaultMiscSettings(t.TypedDict):
     data_folder: str
     output_folder: str
     float_visual_precision: int
+    last_signal_column_name: str | None
+    last_info_column_name: str | None
 
 
 class DefaultAppSettings(t.TypedDict):

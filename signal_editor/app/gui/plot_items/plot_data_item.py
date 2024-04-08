@@ -1,14 +1,13 @@
 import bisect
-import enum
 import math
 import typing as t
+import warnings
 
 import numpy as np
 import numpy.typing as npt
 import pyqtgraph as pg
 from pyqtgraph.graphicsItems.GraphicsObject import GraphicsObject
 from pyqtgraph.graphicsItems.PlotCurveItem import PlotCurveItem
-from pyqtgraph.graphicsItems.PlotDataItem import PlotDataset
 from PySide6 import QtCore, QtGui
 
 from ... import type_defs as _t
@@ -20,7 +19,136 @@ if t.TYPE_CHECKING:
 
     from .editing_view_box import EditingViewBox
 
-    
+
+class PlotDataset:
+    """
+    :orphan:
+    .. warning:: This class is intended for internal use. The interface may change without warning.
+
+    Holds collected information for a plotable dataset.
+    Numpy arrays containing x and y coordinates are available as ``dataset.x`` and ``dataset.y``.
+
+    After a search has been performed, typically during a call to :func:`dataRect() <pyqtgraph.PlotDataset.dataRect>`,
+    ``dataset.containsNonfinite`` is `True` if any coordinate values are nonfinite (e.g. NaN or inf) or `False` if all
+    values are finite. If no search has been performed yet, ``dataset.containsNonfinite`` is `None`.
+
+    For internal use in :class:`PlotDataItem <pyqtgraph.PlotDataItem>`, this class should not be instantiated when no data is available.
+    """
+
+    def __init__(
+        self,
+        x: npt.ArrayLike | None,
+        y: npt.ArrayLike | None,
+        xAllFinite: bool | None = None,
+        yAllFinite: bool | None = None,
+    ) -> None:
+        """
+        Parameters
+        ----------
+        x: array
+            x coordinates of data points.
+        y: array
+            y coordinates of data points.
+        """
+        super().__init__()
+        self.x: npt.ArrayLike | None = x
+        self.y: npt.ArrayLike | None = y
+        self.xAllFinite = xAllFinite
+        self.yAllFinite = yAllFinite
+        self._dataRect = None
+
+        if isinstance(x, np.ndarray) and x.dtype.kind in "iu":
+            self.xAllFinite = True
+        if isinstance(y, np.ndarray) and y.dtype.kind in "iu":
+            self.yAllFinite = True
+
+    @property
+    def containsNonfinite(self) -> bool | None:
+        if self.xAllFinite is None or self.yAllFinite is None:
+            # don't know for sure yet
+            return None
+        return not (self.xAllFinite and self.yAllFinite)
+
+    def _updateDataRect(self) -> None:
+        """
+        Finds bounds of plotable data and stores them as ``dataset._dataRect``,
+        stores information about the presence of nonfinite data points.
+        """
+        if self.y is None or self.x is None:
+            return None
+        xmin, xmax, self.xAllFinite = self._getArrayBounds(self.x, self.xAllFinite)
+        ymin, ymax, self.yAllFinite = self._getArrayBounds(self.y, self.yAllFinite)
+        self._dataRect = QtCore.QRectF(QtCore.QPointF(xmin, ymin), QtCore.QPointF(xmax, ymax))
+
+    def _getArrayBounds(
+        self, arr: npt.ArrayLike, all_finite: bool | np.bool_ | None
+    ) -> tuple[float, float, bool | np.bool_]:
+        # here all_finite could be [None, False, True]
+        if not all_finite:  # This may contain NaN values and infinites.
+            selection = np.isfinite(
+                arr
+            )  # We are looking for the bounds of the plottable data set. Infinite and Nan are ignored.
+            all_finite = (
+                selection.all()
+            )  # True if all values are finite, False if there are any non-finites
+            if not all_finite:
+                arr = arr[selection]
+        # here all_finite could be [False, True]
+
+        try:
+            amin = np.min(arr)  # find minimum of all finite values
+            amax = np.max(arr)  # find maximum of all finite values
+        except ValueError:  # is raised when there are no finite values
+            amin = np.nan
+            amax = np.nan
+        return amin, amax, all_finite
+
+    def dataRect(self) -> QtCore.QRectF | None:
+        """
+        Returns a bounding rectangle (as :class:`QtCore.QRectF`) for the finite subset of data.
+        If there is an active mapping function, such as logarithmic scaling, then bounds represent the mapped data.
+        Will return `None` if there is no data or if all values (`x` or `y`) are NaN.
+        """
+        if self._dataRect is None:
+            self._updateDataRect()
+        return self._dataRect
+
+    def applyLogMapping(self, logMode: tuple[bool, bool]) -> None:
+        """
+        Applies a logarithmic mapping transformation (base 10) if requested for the respective axis.
+        This replaces the internal data. Values of ``-inf`` resulting from zeros in the original dataset are
+        replaced by ``np.nan``.
+
+        Parameters
+        ----------
+        logmode: tuple or list of two bool
+            A `True` value requests log-scale mapping for the x and y axis (in this order).
+        """
+        if logMode[0]:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+                self.x = np.log10(self.x)
+            nonfinites = ~np.isfinite(self.x)
+            if nonfinites.any():
+                self.x[nonfinites] = np.nan  # set all non-finite values to NaN
+                all_x_finite = False
+            else:
+                all_x_finite = True
+            self.xAllFinite = all_x_finite
+
+        if logMode[1]:
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore", RuntimeWarning)
+                self.y = np.log10(self.y)
+            nonfinites = ~np.isfinite(self.y)
+            if nonfinites.any():
+                self.y[nonfinites] = np.nan  # set all non-finite values to NaN
+                all_y_finite = False
+            else:
+                all_y_finite = True
+            self.yAllFinite = all_y_finite
+
+
 class PlotDataItem(GraphicsObject):
     sigPlotChanged: t.ClassVar[QtCore.Signal] = QtCore.Signal(object)
     sigClicked: t.ClassVar[QtCore.Signal] = QtCore.Signal(object, object)
@@ -239,7 +367,10 @@ class PlotDataItem(GraphicsObject):
         self.opts["fillLevel"] = level
         self.updateItems(styleUpdate=True)
 
-    def setSymbol(self, symbol: PointSymbols | QtGui.QPainterPath | list[PointSymbols | QtGui.QPainterPath] | None) -> None:
+    def setSymbol(
+        self,
+        symbol: PointSymbols | QtGui.QPainterPath | list[PointSymbols | QtGui.QPainterPath] | None,
+    ) -> None:
         if self.opts["symbol"] == symbol:
             return
         self.opts["symbol"] = symbol
@@ -327,7 +458,7 @@ class PlotDataItem(GraphicsObject):
     ) -> None:
         x = None
         y = None
-        
+
         if args and len(args) == 1:
             data = args[0]
             if data is None:

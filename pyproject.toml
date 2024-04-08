@@ -33,6 +33,7 @@ statsmodels = "^0.14.1"
 ipykernel = "^6.29.4"
 superqt = "^0.6.3"
 pyside6 = "^6.6.3"
+loguru = "^0.7.2"
 
 [tool.poetry.group.dev.dependencies]
 sourcery = "^1.16.0"

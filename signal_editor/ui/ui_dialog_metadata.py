@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'dialog_metadata.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.6.2
+## Created by: Qt User Interface Compiler version 6.6.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -16,9 +16,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QAbstractButton, QAbstractItemView, QAbstractScrollArea, QApplication,
-    QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox,
-    QFormLayout, QGridLayout, QHeaderView, QLabel,
-    QLineEdit, QScrollArea, QSizePolicy, QTreeWidgetItem,
+    QComboBox, QDialog, QDialogButtonBox, QFormLayout,
+    QGridLayout, QHeaderView, QLabel, QLineEdit,
+    QScrollArea, QSizePolicy, QSpinBox, QTreeWidgetItem,
     QVBoxLayout, QWidget)
 
 from pyqtgraph import DataTreeWidget
@@ -74,13 +74,6 @@ class Ui_MetadataDialog(object):
 
         self.formLayout.setWidget(2, QFormLayout.LabelRole, self.label_3)
 
-        self.dbl_spin_box_sampling_rate = QDoubleSpinBox(self.scrollAreaWidgetContents)
-        self.dbl_spin_box_sampling_rate.setObjectName(u"dbl_spin_box_sampling_rate")
-        self.dbl_spin_box_sampling_rate.setDecimals(1)
-        self.dbl_spin_box_sampling_rate.setMaximum(100000.000000000000000)
-
-        self.formLayout.setWidget(2, QFormLayout.FieldRole, self.dbl_spin_box_sampling_rate)
-
         self.label_5 = QLabel(self.scrollAreaWidgetContents)
         self.label_5.setObjectName(u"label_5")
 
@@ -120,6 +113,12 @@ class Ui_MetadataDialog(object):
 
         self.formLayout.setWidget(5, QFormLayout.FieldRole, self.data_tree_widget_additional_info)
 
+        self.spin_box_sampling_rate = QSpinBox(self.scrollAreaWidgetContents)
+        self.spin_box_sampling_rate.setObjectName(u"spin_box_sampling_rate")
+        self.spin_box_sampling_rate.setMaximum(10000)
+
+        self.formLayout.setWidget(2, QFormLayout.FieldRole, self.spin_box_sampling_rate)
+
 
         self.verticalLayout.addLayout(self.formLayout)
 
@@ -145,14 +144,14 @@ class Ui_MetadataDialog(object):
 #if QT_CONFIG(shortcut)
         self.label_2.setBuddy(self.line_edit_file_name)
         self.label_4.setBuddy(self.line_edit_file_type)
-        self.label_3.setBuddy(self.dbl_spin_box_sampling_rate)
+        self.label_3.setBuddy(self.spin_box_sampling_rate)
         self.label_5.setBuddy(self.combo_box_signal_column)
         self.label_6.setBuddy(self.combo_box_info_column)
         self.label_7.setBuddy(self.data_tree_widget_additional_info)
 #endif // QT_CONFIG(shortcut)
         QWidget.setTabOrder(self.line_edit_file_name, self.line_edit_file_type)
-        QWidget.setTabOrder(self.line_edit_file_type, self.dbl_spin_box_sampling_rate)
-        QWidget.setTabOrder(self.dbl_spin_box_sampling_rate, self.combo_box_signal_column)
+        QWidget.setTabOrder(self.line_edit_file_type, self.spin_box_sampling_rate)
+        QWidget.setTabOrder(self.spin_box_sampling_rate, self.combo_box_signal_column)
         QWidget.setTabOrder(self.combo_box_signal_column, self.combo_box_info_column)
         QWidget.setTabOrder(self.combo_box_info_column, self.data_tree_widget_additional_info)
 
@@ -169,11 +168,10 @@ class Ui_MetadataDialog(object):
         self.label_2.setText(QCoreApplication.translate("MetadataDialog", u"File Name", None))
         self.label_4.setText(QCoreApplication.translate("MetadataDialog", u"File Type", None))
         self.label_3.setText(QCoreApplication.translate("MetadataDialog", u"Sampling Rate*", None))
-        self.dbl_spin_box_sampling_rate.setSuffix(QCoreApplication.translate("MetadataDialog", u" Hz", None))
         self.label_5.setText(QCoreApplication.translate("MetadataDialog", u"Signal Column / Channel*", None))
         self.label_6.setText(QCoreApplication.translate("MetadataDialog", u"Info Column / Channel", None))
-        self.combo_box_info_column.setPlaceholderText(QCoreApplication.translate("MetadataDialog", u"None", None))
         self.label_7.setText(QCoreApplication.translate("MetadataDialog", u"Additional Info", None))
+        self.spin_box_sampling_rate.setSuffix(QCoreApplication.translate("MetadataDialog", u" Hz", None))
         self.label_8.setText(QCoreApplication.translate("MetadataDialog", u"*Field is required", None))
     # retranslateUi
 

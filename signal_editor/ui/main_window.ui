@@ -47,11 +47,31 @@
           </property>
           <widget class="QWidget" name="container_file_information" native="true">
            <layout class="QGridLayout" name="gridLayout">
+            <item row="2" column="0">
+             <widget class="QPushButton" name="btn_open_file">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>50</height>
+               </size>
+              </property>
+              <property name="text">
+               <string> Open File</string>
+              </property>
+              <property name="icon">
+               <iconset resource="../resources/resources.qrc">
+                <normaloff>:/icons/folder-open</normaloff>:/icons/folder-open</iconset>
+              </property>
+             </widget>
+            </item>
             <item row="1" column="0" colspan="3">
              <widget class="DataTreeWidget" name="data_tree_widget_import_metadata">
-              <property name="sizeAdjustPolicy">
-               <enum>QAbstractScrollArea::AdjustToContents</enum>
-              </property>
               <property name="editTriggers">
                <set>QAbstractItemView::NoEditTriggers</set>
               </property>
@@ -75,13 +95,10 @@
               </column>
              </widget>
             </item>
-            <item row="2" column="0">
-             <widget class="QPushButton" name="btn_change_metadata_values">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
+            <item row="2" column="1">
+             <widget class="QPushButton" name="btn_close_file">
+              <property name="enabled">
+               <bool>false</bool>
               </property>
               <property name="minimumSize">
                <size>
@@ -90,22 +107,19 @@
                </size>
               </property>
               <property name="text">
-               <string> Change Values</string>
+               <string> Close File</string>
               </property>
               <property name="icon">
                <iconset resource="../resources/resources.qrc">
-                <normaloff>:/icons/edit</normaloff>:/icons/edit</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>24</width>
-                <height>24</height>
-               </size>
+                <normaloff>:/icons/delete</normaloff>:/icons/delete</iconset>
               </property>
              </widget>
             </item>
             <item row="2" column="2">
              <widget class="QPushButton" name="btn_load_data">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -128,41 +142,12 @@
                <iconset resource="../resources/resources.qrc">
                 <normaloff>:/icons/table_import</normaloff>:/icons/table_import</iconset>
               </property>
-              <property name="iconSize">
-               <size>
-                <width>24</width>
-                <height>24</height>
-               </size>
-              </property>
              </widget>
             </item>
             <item row="0" column="0">
              <widget class="QLabel" name="label_2">
               <property name="text">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:700;&quot;&gt;File Information&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QPushButton" name="btn_close_file">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>50</height>
-               </size>
-              </property>
-              <property name="text">
-               <string> Close File</string>
-              </property>
-              <property name="icon">
-               <iconset resource="../resources/resources.qrc">
-                <normaloff>:/icons/folder-close</normaloff>:/icons/folder-close</iconset>
-              </property>
-              <property name="iconSize">
-               <size>
-                <width>24</width>
-                <height>24</height>
-               </size>
               </property>
              </widget>
             </item>
@@ -191,6 +176,9 @@
               <property name="selectionBehavior">
                <enum>QAbstractItemView::SelectRows</enum>
               </property>
+              <property name="cornerButtonEnabled">
+               <bool>false</bool>
+              </property>
               <attribute name="horizontalHeaderCascadingSectionResizes">
                <bool>true</bool>
               </attribute>
@@ -211,7 +199,7 @@
       <widget class="QWidget" name="stacked_page_edit">
        <layout class="QGridLayout" name="gridLayout_2">
         <item row="0" column="0">
-         <widget class="GraphicsLayoutWidget" name="pg_graphics_layout_widget"/>
+         <widget class="QWidget" name="plot_container" native="true"/>
         </item>
        </layout>
       </widget>
@@ -342,22 +330,24 @@
    <addaction name="action_show_export_page"/>
    <addaction name="action_show_info_page"/>
   </widget>
-  <widget class="QToolBar" name="tool_bar_editing">
+  <widget class="QToolBar" name="tool_bar_context_actions">
    <property name="windowTitle">
     <string>Editing Toolbar</string>
    </property>
    <property name="movable">
-    <bool>true</bool>
+    <bool>false</bool>
    </property>
    <property name="allowedAreas">
-    <set>Qt::RightToolBarArea</set>
+    <set>Qt::TopToolBarArea</set>
    </property>
    <attribute name="toolBarArea">
-    <enum>RightToolBarArea</enum>
+    <enum>TopToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
     <bool>false</bool>
    </attribute>
+   <addaction name="action_open_file"/>
+   <addaction name="action_edit_metadata"/>
   </widget>
   <action name="action_open_file">
    <property name="icon">
@@ -428,7 +418,7 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/file_export</normaloff>:/icons/file_export</iconset>
+     <normaloff>:/icons/table_export</normaloff>:/icons/table_export</iconset>
    </property>
    <property name="text">
     <string>Export</string>
@@ -491,7 +481,7 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/folder-close</normaloff>:/icons/folder-close</iconset>
+     <normaloff>:/icons/delete</normaloff>:/icons/delete</iconset>
    </property>
    <property name="text">
     <string>Close File</string>
@@ -503,13 +493,23 @@
     <enum>QAction::NoRole</enum>
    </property>
   </action>
+  <action name="action_export_result">
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/icons/file_export</normaloff>:/icons/file_export</iconset>
+   </property>
+   <property name="text">
+    <string>Export Result</string>
+   </property>
+   <property name="toolTip">
+    <string>Export results to the chosen file format</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>GraphicsLayoutWidget</class>
-   <extends>QGraphicsView</extends>
-   <header>pyqtgraph</header>
-  </customwidget>
   <customwidget>
    <class>MatplotlibWidget</class>
    <extends>QWidget</extends>

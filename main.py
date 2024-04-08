@@ -9,6 +9,7 @@ if __name__ == "__main__":
     import sys
     import os
     import argparse
+    from loguru import logger
 
     from signal_editor.signal_editor import SignalEditor
 
@@ -18,6 +19,8 @@ if __name__ == "__main__":
 
     if args.debug:
         os.environ["DEBUG"] = "1"
+    else:
+        logger.remove()
 
     app = SignalEditor(sys.argv)
     app.main_window.show()

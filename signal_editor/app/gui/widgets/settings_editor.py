@@ -343,6 +343,8 @@ class SettingsTree(QtWidgets.QTreeWidget):
                 data_folder=get_app_dir().canonicalPath(),
                 output_folder=get_app_dir().canonicalPath(),
                 float_visual_precision=3,
+                last_signal_column_name=None,
+                last_info_column_name=None,
             ),
         )
         self._DESCRIPTIONS = {
@@ -366,6 +368,8 @@ class SettingsTree(QtWidgets.QTreeWidget):
             "data_folder": "Which folder to open when selecting a data file",
             "output_folder": "Which folder to save the output files to",
             "float_visual_precision": "How many digits to use for displaying floating point (decimal) values",
+            "last_signal_column_name": "The name of the signal column in the last loaded data file. If a new data file is loaded that has a column with this name, the signal column will be automatically selected",
+            "last_info_column_name": "The name of the info column in the last loaded data file. If a new data file is loaded that has a column with this name, the info column will be automatically selected",
         }
         self._type_checker = TypeChecker()
         self.setItemDelegate(VariantDelegate(self._type_checker, self))
@@ -597,9 +601,9 @@ class SettingsTree(QtWidgets.QTreeWidget):
         after = self.child_at(parent, index - 1) if index != 0 else None
 
         if parent is not None:
-            item = QtWidgets.QTreeWidgetItem(parent, after)  # pyright: ignore[reportCallIssue, reportArgumentType]
+            item = QtWidgets.QTreeWidgetItem(parent, after)  # type: ignore
         else:
-            item = QtWidgets.QTreeWidgetItem(self, after)  # pyright: ignore[reportCallIssue, reportArgumentType]
+            item = QtWidgets.QTreeWidgetItem(self, after)  # type: ignore
 
         item.setText(0, text)
         if description is not None:

@@ -19,9 +19,7 @@ class DataTableModel(QtCore.QAbstractTableModel):
         self._name_index_column: str = "index"
         self._name_signal_column: str | None = None
         self._name_info_column: str | None = None
-        self._float_precision: int = QtCore.QSettings().value(
-            "Misc/float_visual_precision", 4, type=int
-        )
+        self._float_precision: int = QtCore.QSettings().value("Misc/float_visual_precision", 4)
 
     @property
     def df(self) -> pl.DataFrame:

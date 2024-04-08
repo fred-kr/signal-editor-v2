@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplicat
     QStackedWidget, QStatusBar, QTableView, QTableWidgetItem,
     QToolBar, QTreeWidgetItem, QWidget)
 
-from pyqtgraph import (DataTreeWidget, GraphicsLayoutWidget, TableWidget)
+from pyqtgraph import (DataTreeWidget, TableWidget)
 from pyqtgraph.widgets.MatplotlibWidget import MatplotlibWidget
 from . import resources_rc
 
@@ -63,7 +63,7 @@ class Ui_MainWindow(object):
         self.action_show_export_page.setObjectName(u"action_show_export_page")
         self.action_show_export_page.setCheckable(True)
         icon4 = QIcon()
-        icon4.addFile(u":/icons/file_export", QSize(), QIcon.Normal, QIcon.Off)
+        icon4.addFile(u":/icons/table_export", QSize(), QIcon.Normal, QIcon.Off)
         self.action_show_export_page.setIcon(icon4)
         self.action_show_export_page.setMenuRole(QAction.NoRole)
         self.action_show_info_page = QAction(MainWindow)
@@ -89,9 +89,15 @@ class Ui_MainWindow(object):
         self.action_close_file.setObjectName(u"action_close_file")
         self.action_close_file.setEnabled(False)
         icon8 = QIcon()
-        icon8.addFile(u":/icons/folder-close", QSize(), QIcon.Normal, QIcon.Off)
+        icon8.addFile(u":/icons/delete", QSize(), QIcon.Normal, QIcon.Off)
         self.action_close_file.setIcon(icon8)
         self.action_close_file.setMenuRole(QAction.NoRole)
+        self.action_export_result = QAction(MainWindow)
+        self.action_export_result.setObjectName(u"action_export_result")
+        icon9 = QIcon()
+        icon9.addFile(u":/icons/file_export", QSize(), QIcon.Normal, QIcon.Off)
+        self.action_export_result.setIcon(icon9)
+        self.action_export_result.setMenuRole(QAction.NoRole)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.gridLayout_4 = QGridLayout(self.centralwidget)
@@ -110,6 +116,18 @@ class Ui_MainWindow(object):
         self.container_file_information.setObjectName(u"container_file_information")
         self.gridLayout = QGridLayout(self.container_file_information)
         self.gridLayout.setObjectName(u"gridLayout")
+        self.btn_open_file = QPushButton(self.container_file_information)
+        self.btn_open_file.setObjectName(u"btn_open_file")
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.btn_open_file.sizePolicy().hasHeightForWidth())
+        self.btn_open_file.setSizePolicy(sizePolicy)
+        self.btn_open_file.setMinimumSize(QSize(0, 50))
+        self.btn_open_file.setIcon(icon)
+
+        self.gridLayout.addWidget(self.btn_open_file, 2, 0, 1, 1)
+
         self.data_tree_widget_import_metadata = DataTreeWidget(self.container_file_information)
         __qtreewidgetitem = QTreeWidgetItem()
         __qtreewidgetitem.setText(2, u"3");
@@ -117,34 +135,28 @@ class Ui_MainWindow(object):
         __qtreewidgetitem.setText(0, u"1");
         self.data_tree_widget_import_metadata.setHeaderItem(__qtreewidgetitem)
         self.data_tree_widget_import_metadata.setObjectName(u"data_tree_widget_import_metadata")
-        self.data_tree_widget_import_metadata.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
         self.data_tree_widget_import_metadata.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.data_tree_widget_import_metadata.setColumnCount(3)
 
         self.gridLayout.addWidget(self.data_tree_widget_import_metadata, 1, 0, 1, 3)
 
-        self.btn_change_metadata_values = QPushButton(self.container_file_information)
-        self.btn_change_metadata_values.setObjectName(u"btn_change_metadata_values")
-        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.btn_change_metadata_values.sizePolicy().hasHeightForWidth())
-        self.btn_change_metadata_values.setSizePolicy(sizePolicy)
-        self.btn_change_metadata_values.setMinimumSize(QSize(0, 50))
-        self.btn_change_metadata_values.setIcon(icon7)
-        self.btn_change_metadata_values.setIconSize(QSize(24, 24))
+        self.btn_close_file = QPushButton(self.container_file_information)
+        self.btn_close_file.setObjectName(u"btn_close_file")
+        self.btn_close_file.setEnabled(False)
+        self.btn_close_file.setMinimumSize(QSize(0, 50))
+        self.btn_close_file.setIcon(icon8)
 
-        self.gridLayout.addWidget(self.btn_change_metadata_values, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.btn_close_file, 2, 1, 1, 1)
 
         self.btn_load_data = QPushButton(self.container_file_information)
         self.btn_load_data.setObjectName(u"btn_load_data")
+        self.btn_load_data.setEnabled(False)
         sizePolicy.setHeightForWidth(self.btn_load_data.sizePolicy().hasHeightForWidth())
         self.btn_load_data.setSizePolicy(sizePolicy)
         self.btn_load_data.setMinimumSize(QSize(0, 50))
-        icon9 = QIcon()
-        icon9.addFile(u":/icons/table_import", QSize(), QIcon.Normal, QIcon.Off)
-        self.btn_load_data.setIcon(icon9)
-        self.btn_load_data.setIconSize(QSize(24, 24))
+        icon10 = QIcon()
+        icon10.addFile(u":/icons/table_import", QSize(), QIcon.Normal, QIcon.Off)
+        self.btn_load_data.setIcon(icon10)
 
         self.gridLayout.addWidget(self.btn_load_data, 2, 2, 1, 1)
 
@@ -152,14 +164,6 @@ class Ui_MainWindow(object):
         self.label_2.setObjectName(u"label_2")
 
         self.gridLayout.addWidget(self.label_2, 0, 0, 1, 1)
-
-        self.btn_close_file = QPushButton(self.container_file_information)
-        self.btn_close_file.setObjectName(u"btn_close_file")
-        self.btn_close_file.setMinimumSize(QSize(0, 50))
-        self.btn_close_file.setIcon(icon8)
-        self.btn_close_file.setIconSize(QSize(24, 24))
-
-        self.gridLayout.addWidget(self.btn_close_file, 2, 1, 1, 1)
 
         self.splitter_2.addWidget(self.container_file_information)
         self.container_loaded_data_table = QWidget(self.splitter_2)
@@ -177,6 +181,7 @@ class Ui_MainWindow(object):
         self.table_view_import_data.setProperty("showDropIndicator", False)
         self.table_view_import_data.setDragDropOverwriteMode(False)
         self.table_view_import_data.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table_view_import_data.setCornerButtonEnabled(False)
         self.table_view_import_data.horizontalHeader().setCascadingSectionResizes(True)
         self.table_view_import_data.verticalHeader().setVisible(False)
         self.table_view_import_data.verticalHeader().setHighlightSections(False)
@@ -192,10 +197,10 @@ class Ui_MainWindow(object):
         self.stacked_page_edit.setObjectName(u"stacked_page_edit")
         self.gridLayout_2 = QGridLayout(self.stacked_page_edit)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.pg_graphics_layout_widget = GraphicsLayoutWidget(self.stacked_page_edit)
-        self.pg_graphics_layout_widget.setObjectName(u"pg_graphics_layout_widget")
+        self.plot_container = QWidget(self.stacked_page_edit)
+        self.plot_container.setObjectName(u"plot_container")
 
-        self.gridLayout_2.addWidget(self.pg_graphics_layout_widget, 0, 0, 1, 1)
+        self.gridLayout_2.addWidget(self.plot_container, 0, 0, 1, 1)
 
         self.stackedWidget.addWidget(self.stacked_page_edit)
         self.stacked_page_result = QWidget()
@@ -271,11 +276,11 @@ class Ui_MainWindow(object):
         self.tool_bar_navigation.setAllowedAreas(Qt.LeftToolBarArea)
         self.tool_bar_navigation.setFloatable(False)
         MainWindow.addToolBar(Qt.LeftToolBarArea, self.tool_bar_navigation)
-        self.tool_bar_editing = QToolBar(MainWindow)
-        self.tool_bar_editing.setObjectName(u"tool_bar_editing")
-        self.tool_bar_editing.setMovable(True)
-        self.tool_bar_editing.setAllowedAreas(Qt.RightToolBarArea)
-        MainWindow.addToolBar(Qt.RightToolBarArea, self.tool_bar_editing)
+        self.tool_bar_context_actions = QToolBar(MainWindow)
+        self.tool_bar_context_actions.setObjectName(u"tool_bar_context_actions")
+        self.tool_bar_context_actions.setMovable(False)
+        self.tool_bar_context_actions.setAllowedAreas(Qt.TopToolBarArea)
+        MainWindow.addToolBar(Qt.TopToolBarArea, self.tool_bar_context_actions)
 
         self.menubar.addAction(self.menuFile.menuAction())
         self.menubar.addAction(self.menuEdit.menuAction())
@@ -291,6 +296,8 @@ class Ui_MainWindow(object):
         self.tool_bar_navigation.addAction(self.action_show_result_page)
         self.tool_bar_navigation.addAction(self.action_show_export_page)
         self.tool_bar_navigation.addAction(self.action_show_info_page)
+        self.tool_bar_context_actions.addAction(self.action_open_file)
+        self.tool_bar_context_actions.addAction(self.action_edit_metadata)
 
         self.retranslateUi(MainWindow)
 
@@ -332,19 +339,23 @@ class Ui_MainWindow(object):
 #if QT_CONFIG(tooltip)
         self.action_close_file.setToolTip(QCoreApplication.translate("MainWindow", u"Close the current file", None))
 #endif // QT_CONFIG(tooltip)
-        self.btn_change_metadata_values.setText(QCoreApplication.translate("MainWindow", u" Change Values", None))
+        self.action_export_result.setText(QCoreApplication.translate("MainWindow", u"Export Result", None))
+#if QT_CONFIG(tooltip)
+        self.action_export_result.setToolTip(QCoreApplication.translate("MainWindow", u"Export results to the chosen file format", None))
+#endif // QT_CONFIG(tooltip)
+        self.btn_open_file.setText(QCoreApplication.translate("MainWindow", u" Open File", None))
+        self.btn_close_file.setText(QCoreApplication.translate("MainWindow", u" Close File", None))
 #if QT_CONFIG(tooltip)
         self.btn_load_data.setToolTip(QCoreApplication.translate("MainWindow", u"Load data from the selected file using the settings shown above", None))
 #endif // QT_CONFIG(tooltip)
         self.btn_load_data.setText(QCoreApplication.translate("MainWindow", u" Load Data", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:14pt; font-weight:700;\">File Information</span></p></body></html>", None))
-        self.btn_close_file.setText(QCoreApplication.translate("MainWindow", u" Close File", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:14pt; font-weight:700;\">Loaded Data</span></p></body></html>", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
         self.menuSettings.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))
         self.menuView.setTitle(QCoreApplication.translate("MainWindow", u"View", None))
         self.tool_bar_navigation.setWindowTitle(QCoreApplication.translate("MainWindow", u"Navigation Toolbar", None))
-        self.tool_bar_editing.setWindowTitle(QCoreApplication.translate("MainWindow", u"Editing Toolbar", None))
+        self.tool_bar_context_actions.setWindowTitle(QCoreApplication.translate("MainWindow", u"Editing Toolbar", None))
     # retranslateUi
 
