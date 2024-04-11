@@ -78,7 +78,7 @@ class SignalEditor(QtWidgets.QApplication):
         if not self.plot_controller.region_selector.isVisible():
             return
         start, stop = self.plot_controller.region_selector.getRegion()
-        self.data_controller.new_section(start, stop)
+        self.data_controller.create_new_section(start, stop)
         self.plot_controller.hide_region_selector()
         self.main_window.toggle_section_actions(False)
         self.main_window.action_create_new_section.setChecked(False)
@@ -88,11 +88,6 @@ class SignalEditor(QtWidgets.QApplication):
         self.plot_controller.hide_region_selector()
         self.main_window.toggle_section_actions(False)
         self.main_window.action_create_new_section.setChecked(False)
-
-    # @QtCore.Slot()
-    # def create_new_section(self) -> None:
-    #     start, stop = self.plot_controller
-    #     self.data_controller.new_section
 
     @QtCore.Slot()
     def draw_signal(self) -> None:
@@ -117,10 +112,6 @@ class SignalEditor(QtWidgets.QApplication):
         self.main_window.data_tree_widget_import_metadata.setData(metadata_dict, hideRoot=True)
         self.main_window.data_tree_widget_import_metadata.collapseAll()
         self.main_window.spin_box_sampling_rate_import_page.setValue(metadata.sampling_rate)
-
-        # self.main_window.combo_box_signal_column_import_page.setCurrentText(
-        #     metadata_dict.get("signal_column", "")
-        # )
 
     @QtCore.Slot(list)
     def show_metadata_dialog(self, required_fields: list[str]) -> None:
@@ -162,6 +153,7 @@ class SignalEditor(QtWidgets.QApplication):
         if self.data_controller.metadata is None:
             return
         self.data_controller.update_metadata(sampling_rate=sampling_rate)
+        self.plot_controller.update_time_axis_scale(sampling_rate)
 
     @QtCore.Slot(str)
     def update_signal_column(self, signal_column: str) -> None:

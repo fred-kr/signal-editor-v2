@@ -25,7 +25,7 @@ if __name__ == "__main__":
     else:
         logger.remove()
 
-    pg.setConfigOptions(useOpenGL=True, enableExperimental=True, useNumba=True, useCupy=True)
+    pg.setConfigOptions(useOpenGL=True, enableExperimental=True, useNumba=True, useCupy=True, segmentedLineMode="on")
     pl.Config().activate_decimals(True)
 
     app = SignalEditor(sys.argv)

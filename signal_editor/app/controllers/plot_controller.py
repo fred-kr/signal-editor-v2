@@ -195,6 +195,11 @@ class PlotController(QtCore.QObject):
         self.remove_region_selector()
 
     @QtCore.Slot(int)
+    def update_time_axis_scale(self, sampling_rate: int) -> None:
+        for plt_item in (self.pw_main.getPlotItem(), self.pw_rate.getPlotItem()):
+            plt_item.getAxis("top").setScale(1 / sampling_rate)
+
+    @QtCore.Slot(int)
     def reset_view_range(self, upper_bound: int) -> None:
         self.pw_main.plotItem.vb.setRange(xRange=(0, upper_bound), disableAutoRange=False)
         self.pw_rate.plotItem.vb.setRange(xRange=(0, upper_bound), disableAutoRange=False)

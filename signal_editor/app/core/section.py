@@ -225,7 +225,7 @@ class Section:
     ) -> None:
         method = kwargs.get("method", _e.FilterMethod.NoFilter)
         raw_data = self.raw_signal.to_numpy(zero_copy_only=True)
-        filtered = np.empty(0, dtype=np.float64)
+        filtered = np.empty_like(raw_data)
         filter_params: _t.SignalFilterParameters | None = None
 
         match pipeline:

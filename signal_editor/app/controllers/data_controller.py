@@ -143,10 +143,15 @@ class DataController(QtCore.QObject):
         """
         return list(self._sections.keys())[1:] if len(self._sections) > 1 else []
 
-    def update_metadata(self, sampling_rate: int | None = None, signal_col: str | None = None, info_col: str | None = None) -> None:
+    def update_metadata(
+        self,
+        sampling_rate: int | None = None,
+        signal_col: str | None = None,
+        info_col: str | None = None,
+    ) -> None:
         if self.metadata is None:
             return
-        
+
         if sampling_rate is not None:
             self.metadata.sampling_rate = sampling_rate
         if signal_col != "" and signal_col is not None:
@@ -156,7 +161,6 @@ class DataController(QtCore.QObject):
 
         self.base_df_model.set_metadata(self.metadata)
         self.sig_new_metadata.emit(self.metadata)
-        
 
     @QtCore.Slot(str)
     def select_file(self, file_path: Path | str) -> None:
@@ -238,9 +242,13 @@ class DataController(QtCore.QObject):
 
         match suffix:
             case ".csv":
-                self._base_df = pl.read_csv(file_path, columns=columns, row_index_name=row_index_col)
+                self._base_df = pl.read_csv(
+                    file_path, columns=columns, row_index_name=row_index_col
+                )
             case ".txt":
-                self._base_df = pl.read_csv(file_path, columns=columns, separator=separator, row_index_name=row_index_col)
+                self._base_df = pl.read_csv(
+                    file_path, columns=columns, separator=separator, row_index_name=row_index_col
+                )
             case ".tsv":
                 self._base_df = pl.read_csv(
                     file_path,
@@ -249,7 +257,9 @@ class DataController(QtCore.QObject):
                     row_index_name=row_index_col,
                 )
             case ".feather":
-                self._base_df = pl.read_ipc(file_path, columns=columns, row_index_name=row_index_col)
+                self._base_df = pl.read_ipc(
+                    file_path, columns=columns, row_index_name=row_index_col
+                )
             case ".edf":
                 if info_col == "":
                     info_col = "temperature"
@@ -262,10 +272,13 @@ class DataController(QtCore.QObject):
         self.base_df_model.set_dataframe(self._base_df, signal_col, info_col=info_col)
         self.sig_new_data.emit()
 
-    def new_section(self, start: float | int, stop: float | int) -> None:
+    def create_new_section(self, start: float | int, stop: float | int) -> None:
         if self.metadata is None:
             return
         data = self.base_df.filter(pl.col("index").is_between(start, stop))
         section = Section(data, self.metadata.signal_column)
         self._sections[section.section_id] = section
         self.sig_section_added.emit(section.section_id)
+
+    def current_section(self) -> Section | None:
+        
