@@ -70,7 +70,7 @@ class DataController(QtCore.QObject):
     sig_section_added = QtCore.Signal(str)
     sig_section_removed = QtCore.Signal(str)
 
-    SUPPORTED_FILE_FORMATS = frozenset([".edf", ".xlsx", ".feather", ".csv", ".txt", ".tsv"])
+    SUPPORTED_FILE_FORMATS = frozenset([".edf", ".feather", ".csv", ".txt", ".tsv"])
 
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
@@ -190,8 +190,6 @@ class DataController(QtCore.QObject):
         match file_path.suffix:
             case ".edf":
                 self._metadata = EDFFileMetadata(file_path)
-            # case ".xlsx" | ".xls":
-            # self._metadata = ExcelFileMetadata(file_path)
             case ".feather":
                 self._metadata = FeatherFileMetadata(file_path)
             case ".csv" | ".txt" | ".tsv":
@@ -200,21 +198,6 @@ class DataController(QtCore.QObject):
                 raise ValueError(
                     f"Unsupported file format: {file_path.suffix}. Please select a valid file format."
                 )
-
-        # show_non_ascii_warning = False
-        # non_ascii_characters: list[tuple[int, tuple[str, list[tuple[str, int]]]]] = []
-        # for i, col in enumerate(self.metadata.column_names):
-        #     has_non_ascii, non_ascii_chars = check_string_for_non_ascii(col)
-        #     if has_non_ascii:
-        #         show_non_ascii_warning = True
-        #         col_name = self.metadata.column_names[i]
-
-        #         non_ascii_characters.append((i, (col_name, non_ascii_chars)))
-
-        # if show_non_ascii_warning:
-        #     self.sig_non_ascii_in_file_name.emit(
-        #         non_ascii_characters, self._metadata.file_format == ".edf"
-        #     )
 
         if self.metadata.required_fields:
             self.sig_user_input_required.emit(self.metadata.required_fields)
@@ -250,8 +233,6 @@ class DataController(QtCore.QObject):
                     columns=columns,
                     separator=TextFileSeparator.Tab,
                 )
-            # case ".xlsx":
-            # self._base_df = pl.read_excel(file_path)
             case ".feather":
                 self._base_df = pl.read_ipc(file_path, columns=columns)
             case ".edf":

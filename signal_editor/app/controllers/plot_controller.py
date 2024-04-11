@@ -68,7 +68,6 @@ class PlotController(QtCore.QObject):
         # plt.scene().sigMouseMoved.connect(self._on_mouse_moved)
 
         settings = QtCore.QSettings()
-        # self._graphics_layout_widget = plot_container
         self.set_background_color(settings.value("Plot/background_color"))
         self.set_foreground_color(settings.value("Plot/foreground_color"))
         self._region_selector = pg.LinearRegionItem(

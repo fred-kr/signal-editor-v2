@@ -1,9 +1,9 @@
 import datetime
 import typing as t
-import warnings
 
 import numpy as np
 import polars as pl
+from loguru import logger
 from PySide6 import QtCore
 
 from .. import type_defs as _t
@@ -58,9 +58,8 @@ class DataTableModel(QtCore.QAbstractTableModel):
         self._name_signal_column = signal_col
         if index_col not in self._schema or not self._schema[index_col].is_integer():
             if index_col != "index":
-                warnings.warn(
-                    f"Could not find index column '{index_col}' or the provided index column is not of type integer.\nCreating new index column with name 'index'",
-                    stacklevel=2,
+                logger.info(
+                    f"Could not find index column '{index_col}' or the provided index column is not of integer type.\nCreating new index column with name 'index'",
                 )
             self._name_index_column = "index"
             if self._name_index_column in self._df.columns:

@@ -16,14 +16,16 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplication, QGridLayout,
+from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplication, QComboBox,
+    QFormLayout, QFrame, QGridLayout, QGroupBox,
     QHeaderView, QLabel, QMainWindow, QMenu,
-    QMenuBar, QPushButton, QSizePolicy, QSplitter,
-    QStackedWidget, QStatusBar, QTableView, QTableWidgetItem,
-    QToolBar, QTreeWidgetItem, QWidget)
+    QMenuBar, QPushButton, QSizePolicy, QSpinBox,
+    QSplitter, QStackedWidget, QStatusBar, QTableView,
+    QTableWidgetItem, QToolBar, QWidget)
 
-from pyqtgraph import (DataTreeWidget, TableWidget)
+from pyqtgraph import TableWidget
 from pyqtgraph.widgets.MatplotlibWidget import MatplotlibWidget
+from superqt import QCollapsible
 from . import resources_rc
 
 class Ui_MainWindow(object):
@@ -116,41 +118,12 @@ class Ui_MainWindow(object):
         self.container_file_information.setObjectName(u"container_file_information")
         self.gridLayout = QGridLayout(self.container_file_information)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.btn_open_file = QPushButton(self.container_file_information)
-        self.btn_open_file.setObjectName(u"btn_open_file")
-        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.btn_open_file.sizePolicy().hasHeightForWidth())
-        self.btn_open_file.setSizePolicy(sizePolicy)
-        self.btn_open_file.setMinimumSize(QSize(0, 50))
-        self.btn_open_file.setIcon(icon)
-
-        self.gridLayout.addWidget(self.btn_open_file, 2, 0, 1, 1)
-
-        self.data_tree_widget_import_metadata = DataTreeWidget(self.container_file_information)
-        __qtreewidgetitem = QTreeWidgetItem()
-        __qtreewidgetitem.setText(2, u"3");
-        __qtreewidgetitem.setText(1, u"2");
-        __qtreewidgetitem.setText(0, u"1");
-        self.data_tree_widget_import_metadata.setHeaderItem(__qtreewidgetitem)
-        self.data_tree_widget_import_metadata.setObjectName(u"data_tree_widget_import_metadata")
-        self.data_tree_widget_import_metadata.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.data_tree_widget_import_metadata.setColumnCount(3)
-
-        self.gridLayout.addWidget(self.data_tree_widget_import_metadata, 1, 0, 1, 3)
-
-        self.btn_close_file = QPushButton(self.container_file_information)
-        self.btn_close_file.setObjectName(u"btn_close_file")
-        self.btn_close_file.setEnabled(False)
-        self.btn_close_file.setMinimumSize(QSize(0, 50))
-        self.btn_close_file.setIcon(icon8)
-
-        self.gridLayout.addWidget(self.btn_close_file, 2, 1, 1, 1)
-
         self.btn_load_data = QPushButton(self.container_file_information)
         self.btn_load_data.setObjectName(u"btn_load_data")
         self.btn_load_data.setEnabled(False)
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.btn_load_data.sizePolicy().hasHeightForWidth())
         self.btn_load_data.setSizePolicy(sizePolicy)
         self.btn_load_data.setMinimumSize(QSize(0, 50))
@@ -158,12 +131,82 @@ class Ui_MainWindow(object):
         icon10.addFile(u":/icons/table_import", QSize(), QIcon.Normal, QIcon.Off)
         self.btn_load_data.setIcon(icon10)
 
-        self.gridLayout.addWidget(self.btn_load_data, 2, 2, 1, 1)
+        self.gridLayout.addWidget(self.btn_load_data, 3, 2, 1, 1)
+
+        self.collapsible_frame = QCollapsible(self.container_file_information)
+        self.collapsible_frame.setObjectName(u"collapsible_frame")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.collapsible_frame.sizePolicy().hasHeightForWidth())
+        self.collapsible_frame.setSizePolicy(sizePolicy1)
+        self.collapsible_frame.setFrameShape(QFrame.StyledPanel)
+        self.collapsible_frame.setFrameShadow(QFrame.Raised)
+
+        self.gridLayout.addWidget(self.collapsible_frame, 1, 0, 1, 3)
+
+        self.btn_close_file = QPushButton(self.container_file_information)
+        self.btn_close_file.setObjectName(u"btn_close_file")
+        self.btn_close_file.setEnabled(False)
+        self.btn_close_file.setMinimumSize(QSize(0, 50))
+        self.btn_close_file.setIcon(icon8)
+
+        self.gridLayout.addWidget(self.btn_close_file, 3, 1, 1, 1)
 
         self.label_2 = QLabel(self.container_file_information)
         self.label_2.setObjectName(u"label_2")
+        sizePolicy.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
+        self.label_2.setSizePolicy(sizePolicy)
 
-        self.gridLayout.addWidget(self.label_2, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.label_2, 0, 0, 1, 3)
+
+        self.btn_open_file = QPushButton(self.container_file_information)
+        self.btn_open_file.setObjectName(u"btn_open_file")
+        sizePolicy.setHeightForWidth(self.btn_open_file.sizePolicy().hasHeightForWidth())
+        self.btn_open_file.setSizePolicy(sizePolicy)
+        self.btn_open_file.setMinimumSize(QSize(0, 50))
+        self.btn_open_file.setIcon(icon)
+
+        self.gridLayout.addWidget(self.btn_open_file, 3, 0, 1, 1)
+
+        self.groupBox = QGroupBox(self.container_file_information)
+        self.groupBox.setObjectName(u"groupBox")
+        self.formLayout = QFormLayout(self.groupBox)
+        self.formLayout.setObjectName(u"formLayout")
+        self.samplingRateLabel = QLabel(self.groupBox)
+        self.samplingRateLabel.setObjectName(u"samplingRateLabel")
+
+        self.formLayout.setWidget(0, QFormLayout.LabelRole, self.samplingRateLabel)
+
+        self.spin_box_sampling_rate_import_page = QSpinBox(self.groupBox)
+        self.spin_box_sampling_rate_import_page.setObjectName(u"spin_box_sampling_rate_import_page")
+        self.spin_box_sampling_rate_import_page.setMaximum(10000)
+        self.spin_box_sampling_rate_import_page.setValue(0)
+
+        self.formLayout.setWidget(0, QFormLayout.FieldRole, self.spin_box_sampling_rate_import_page)
+
+        self.signalColumnChannelLabel = QLabel(self.groupBox)
+        self.signalColumnChannelLabel.setObjectName(u"signalColumnChannelLabel")
+
+        self.formLayout.setWidget(1, QFormLayout.LabelRole, self.signalColumnChannelLabel)
+
+        self.combo_box_signal_column_import_page = QComboBox(self.groupBox)
+        self.combo_box_signal_column_import_page.setObjectName(u"combo_box_signal_column_import_page")
+
+        self.formLayout.setWidget(1, QFormLayout.FieldRole, self.combo_box_signal_column_import_page)
+
+        self.infoColumnChannelLabel = QLabel(self.groupBox)
+        self.infoColumnChannelLabel.setObjectName(u"infoColumnChannelLabel")
+
+        self.formLayout.setWidget(2, QFormLayout.LabelRole, self.infoColumnChannelLabel)
+
+        self.combo_box_info_column_import_page = QComboBox(self.groupBox)
+        self.combo_box_info_column_import_page.setObjectName(u"combo_box_info_column_import_page")
+
+        self.formLayout.setWidget(2, QFormLayout.FieldRole, self.combo_box_info_column_import_page)
+
+
+        self.gridLayout.addWidget(self.groupBox, 2, 0, 1, 3)
 
         self.splitter_2.addWidget(self.container_file_information)
         self.container_loaded_data_table = QWidget(self.splitter_2)
@@ -213,9 +256,6 @@ class Ui_MainWindow(object):
         self.splitter.setChildrenCollapsible(False)
         self.table_widget_mpl_data = TableWidget(self.splitter)
         self.table_widget_mpl_data.setObjectName(u"table_widget_mpl_data")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.table_widget_mpl_data.sizePolicy().hasHeightForWidth())
         self.table_widget_mpl_data.setSizePolicy(sizePolicy1)
         self.table_widget_mpl_data.setSizeAdjustPolicy(QAbstractScrollArea.AdjustToContents)
@@ -343,13 +383,18 @@ class Ui_MainWindow(object):
 #if QT_CONFIG(tooltip)
         self.action_export_result.setToolTip(QCoreApplication.translate("MainWindow", u"Export results to the chosen file format", None))
 #endif // QT_CONFIG(tooltip)
-        self.btn_open_file.setText(QCoreApplication.translate("MainWindow", u" Open File", None))
-        self.btn_close_file.setText(QCoreApplication.translate("MainWindow", u" Close File", None))
 #if QT_CONFIG(tooltip)
         self.btn_load_data.setToolTip(QCoreApplication.translate("MainWindow", u"Load data from the selected file using the settings shown above", None))
 #endif // QT_CONFIG(tooltip)
         self.btn_load_data.setText(QCoreApplication.translate("MainWindow", u" Load Data", None))
+        self.btn_close_file.setText(QCoreApplication.translate("MainWindow", u" Close File", None))
         self.label_2.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:14pt; font-weight:700;\">File Information</span></p></body></html>", None))
+        self.btn_open_file.setText(QCoreApplication.translate("MainWindow", u" Open File", None))
+        self.groupBox.setTitle(QCoreApplication.translate("MainWindow", u"Required Information", None))
+        self.samplingRateLabel.setText(QCoreApplication.translate("MainWindow", u"Sampling Rate", None))
+        self.spin_box_sampling_rate_import_page.setSuffix(QCoreApplication.translate("MainWindow", u" Hz", None))
+        self.signalColumnChannelLabel.setText(QCoreApplication.translate("MainWindow", u"Signal Column / Channel", None))
+        self.infoColumnChannelLabel.setText(QCoreApplication.translate("MainWindow", u"Info Column / Channel", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:14pt; font-weight:700;\">Loaded Data</span></p></body></html>", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))

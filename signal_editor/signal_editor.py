@@ -10,24 +10,6 @@ from .app.controllers.plot_controller import PlotController
 from .app.gui.main_window import MainWindow
 
 
-def check_string_for_non_ascii(string: str) -> tuple[bool, list[tuple[str, int]]]:
-    """
-    Checks a file name for possible non-ASCII characters.
-
-    Parameters
-    ----------
-    string : str
-        The string to check.
-
-    Returns
-    -------
-    tuple[bool, list[tuple[str, int]]
-        A tuple containing a boolean indicating whether non-ASCII characters were found and a list of tuples containing the detected non-ASCII characters and their positions in the input string.
-    """
-    non_ascii_chars = [(char, idx) for idx, char in enumerate(string) if ord(char) > 127]
-    return bool(non_ascii_chars), non_ascii_chars
-
-
 class SignalEditor(QtWidgets.QApplication):
     def __init__(self, args: list[str]) -> None:
         super().__init__(args)
@@ -53,15 +35,13 @@ class SignalEditor(QtWidgets.QApplication):
         self.main_window.btn_close_file.clicked.connect(self.close_file)
 
     def _connect_data_controller_signals(self) -> None:
-        # self.data_controller.sig_non_ascii_in_file_name.connect(self.show_non_ascii_warning)
         self.data_controller.sig_user_input_required.connect(self.show_metadata_dialog)
-        self.data_controller.sig_new_metadata.connect(self.update_metadata_read_only_tree)
+        self.data_controller.sig_new_metadata.connect(self.update_metadata_widgets)
         self.data_controller.sig_new_data.connect(self.draw_signal)
 
     def _disconnect_data_controller_signals(self) -> None:
-        # self.data_controller.sig_non_ascii_in_file_name.disconnect(self.show_non_ascii_warning)
         self.data_controller.sig_user_input_required.disconnect(self.show_metadata_dialog)
-        self.data_controller.sig_new_metadata.disconnect(self.update_metadata_read_only_tree)
+        self.data_controller.sig_new_metadata.disconnect(self.update_metadata_widgets)
         self.data_controller.sig_new_data.disconnect(self.draw_signal)
 
     @QtCore.Slot()
@@ -77,9 +57,19 @@ class SignalEditor(QtWidgets.QApplication):
         self.data_controller.update_metadata(metadata_dict)
 
     @QtCore.Slot(object)
-    def update_metadata_read_only_tree(self, metadata: _t.Metadata) -> None:
+    def update_metadata_widgets(self, metadata: _t.Metadata) -> None:
         self.main_window.data_tree_widget_import_metadata.setData(metadata.to_dict(), hideRoot=True)
         self.main_window.data_tree_widget_import_metadata.collapseAll()
+        self.main_window.combo_box_signal_column_import_page.clear()
+        self.main_window.combo_box_signal_column_import_page.addItems(metadata.column_names)
+        self.main_window.combo_box_info_column_import_page.clear()
+        self.main_window.combo_box_info_column_import_page.addItems(metadata.column_names)
+        self.main_window.spin_box_sampling_rate_import_page.setValue(metadata.sampling_rate)
+
+        with contextlib.suppress(Exception):
+            self.main_window.combo_box_info_column_import_page.setCurrentText(metadata.info_column or "")
+            self.main_window.combo_box_signal_column_import_page.setCurrentText(metadata.signal_column)
+            
 
     @QtCore.Slot(list)
     def show_metadata_dialog(self, required_fields: list[str]) -> None:
@@ -98,20 +88,27 @@ class SignalEditor(QtWidgets.QApplication):
         columns = metadata.column_names
 
         self.main_window.metadata_dialog.combo_box_signal_column.clear()
+        self.main_window.combo_box_signal_column_import_page.clear()
         self.main_window.metadata_dialog.combo_box_signal_column.addItems(columns)
+        self.main_window.combo_box_signal_column_import_page.addItems(columns)
 
         if len(columns) > 1:
             self.main_window.metadata_dialog.combo_box_info_column.clear()
+            self.main_window.combo_box_info_column_import_page.clear()
             self.main_window.metadata_dialog.combo_box_info_column.addItems([""] + columns)
+            self.main_window.combo_box_info_column_import_page.addItems([""] + columns)
         if "sampling_rate" not in required_fields:
             sampling_rate = metadata.sampling_rate
             self.main_window.metadata_dialog.spin_box_sampling_rate.setValue(sampling_rate)
+            self.main_window.spin_box_sampling_rate_import_page.setValue(sampling_rate)
         if "signal_column" not in required_fields:
             signal_col = metadata.signal_column
             self.main_window.metadata_dialog.combo_box_signal_column.setCurrentText(signal_col)
+            self.main_window.combo_box_signal_column_import_page.setCurrentText(signal_col)
         if "info_column" not in required_fields:
             info_col = metadata.info_column
             self.main_window.metadata_dialog.combo_box_info_column.setCurrentText(str(info_col))
+            self.main_window.combo_box_info_column_import_page.setCurrentText(str(info_col))
         if "additional_info" not in required_fields:
             additional_info = metadata.additional_info
             self.main_window.metadata_dialog.data_tree_widget_additional_info.setData(
@@ -212,30 +209,3 @@ class SignalEditor(QtWidgets.QApplication):
     @QtCore.Slot()
     def apply_settings(self) -> None:
         self.plot_controller.apply_settings()
-
-    # @QtCore.Slot(list, bool)
-    # def show_non_ascii_warning(
-    #     self, non_ascii_chars: list[tuple[int, tuple[str, list[tuple[str, int]]]]], is_edf: bool
-    # ) -> None:
-    #     chars = {
-    #         c[1][0]: [nc[1][1][0][0] for nc in non_ascii_chars if nc[1][0] == c[1][0]]
-    #         for c in non_ascii_chars
-    #     }
-
-    #     msg = (
-    #         "Non-ASCII characters found while reading from input file.\n"
-    #         "This may cause issues when reading the file or exporting results.\n"
-    #         f"If possible, rename the {'Channel' if is_edf else 'Column'} (see below), and try again.\n------\n"
-    #         f"<b>{'Channel' if is_edf else 'Column'}</b>: {non_ascii_chars[0][1][0]}, <b>Non-ASCII characters</b>: {chars[non_ascii_chars[0][1][0]]}\n------\n"
-    #         f"Rename the {'Channels' if is_edf else 'Columns'} now?"
-    #     )
-    #     btn = QtWidgets.QMessageBox.warning(
-    #         self.main_window,
-    #         "Non-ASCII characters found",
-    #         msg,
-    #         QtWidgets.QMessageBox.StandardButton.Yes
-    #         | QtWidgets.QMessageBox.StandardButton.No
-    #         | QtWidgets.QMessageBox.StandardButton.Cancel,
-    #     )
-    #     if btn == QtWidgets.QMessageBox.StandardButton.Yes:
-    #         self.sig_open_rename_dialog.emit([c[1][0] for c in non_ascii_chars], is_edf)

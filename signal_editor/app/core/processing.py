@@ -1,12 +1,12 @@
 import typing as t
 
 import neurokit2 as nk
+import numba
 import numpy as np
 import numpy.typing as npt
 import polars as pl
 import scipy.interpolate
 import scipy.signal
-import numba
 
 from .. import type_defs as _t
 

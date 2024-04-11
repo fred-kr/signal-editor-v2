@@ -47,75 +47,7 @@
           </property>
           <widget class="QWidget" name="container_file_information" native="true">
            <layout class="QGridLayout" name="gridLayout">
-            <item row="2" column="0">
-             <widget class="QPushButton" name="btn_open_file">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>50</height>
-               </size>
-              </property>
-              <property name="text">
-               <string> Open File</string>
-              </property>
-              <property name="icon">
-               <iconset resource="../resources/resources.qrc">
-                <normaloff>:/icons/folder-open</normaloff>:/icons/folder-open</iconset>
-              </property>
-             </widget>
-            </item>
-            <item row="1" column="0" colspan="3">
-             <widget class="DataTreeWidget" name="data_tree_widget_import_metadata">
-              <property name="editTriggers">
-               <set>QAbstractItemView::NoEditTriggers</set>
-              </property>
-              <property name="columnCount">
-               <number>3</number>
-              </property>
-              <column>
-               <property name="text">
-                <string notr="true">1</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string notr="true">2</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string notr="true">3</string>
-               </property>
-              </column>
-             </widget>
-            </item>
-            <item row="2" column="1">
-             <widget class="QPushButton" name="btn_close_file">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>50</height>
-               </size>
-              </property>
-              <property name="text">
-               <string> Close File</string>
-              </property>
-              <property name="icon">
-               <iconset resource="../resources/resources.qrc">
-                <normaloff>:/icons/delete</normaloff>:/icons/delete</iconset>
-              </property>
-             </widget>
-            </item>
-            <item row="2" column="2">
+            <item row="3" column="2">
              <widget class="QPushButton" name="btn_load_data">
               <property name="enabled">
                <bool>false</bool>
@@ -144,11 +76,125 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="0">
+            <item row="1" column="0" colspan="3">
+             <widget class="QCollapsible" name="collapsible_frame">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="frameShape">
+               <enum>QFrame::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Raised</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="1">
+             <widget class="QPushButton" name="btn_close_file">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>50</height>
+               </size>
+              </property>
+              <property name="text">
+               <string> Close File</string>
+              </property>
+              <property name="icon">
+               <iconset resource="../resources/resources.qrc">
+                <normaloff>:/icons/delete</normaloff>:/icons/delete</iconset>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0" colspan="3">
              <widget class="QLabel" name="label_2">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
               <property name="text">
                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:700;&quot;&gt;File Information&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <widget class="QPushButton" name="btn_open_file">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>50</height>
+               </size>
+              </property>
+              <property name="text">
+               <string> Open File</string>
+              </property>
+              <property name="icon">
+               <iconset resource="../resources/resources.qrc">
+                <normaloff>:/icons/folder-open</normaloff>:/icons/folder-open</iconset>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0" colspan="3">
+             <widget class="QGroupBox" name="groupBox">
+              <property name="title">
+               <string>Required Information</string>
+              </property>
+              <layout class="QFormLayout" name="formLayout">
+               <item row="0" column="0">
+                <widget class="QLabel" name="samplingRateLabel">
+                 <property name="text">
+                  <string>Sampling Rate</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QSpinBox" name="spin_box_sampling_rate_import_page">
+                 <property name="suffix">
+                  <string> Hz</string>
+                 </property>
+                 <property name="maximum">
+                  <number>10000</number>
+                 </property>
+                 <property name="value">
+                  <number>0</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="signalColumnChannelLabel">
+                 <property name="text">
+                  <string>Signal Column / Channel</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QComboBox" name="combo_box_signal_column_import_page"/>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="infoColumnChannelLabel">
+                 <property name="text">
+                  <string>Info Column / Channel</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QComboBox" name="combo_box_info_column_import_page"/>
+               </item>
+              </layout>
              </widget>
             </item>
            </layout>
@@ -522,9 +568,10 @@
    <header>pyqtgraph</header>
   </customwidget>
   <customwidget>
-   <class>DataTreeWidget</class>
-   <extends>QTreeWidget</extends>
-   <header>pyqtgraph</header>
+   <class>QCollapsible</class>
+   <extends>QFrame</extends>
+   <header>superqt</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

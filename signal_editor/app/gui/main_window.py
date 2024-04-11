@@ -1,5 +1,6 @@
 import typing as t
 
+import pyqtgraph as pg
 from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 
@@ -58,6 +59,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.table_view_import_data.horizontalHeader().setSectionResizeMode(
             QtWidgets.QHeaderView.ResizeMode.Stretch
         )
+        data_tree_widget = pg.DataTreeWidget(self.collapsible_frame)
+        data_tree_widget.setSizePolicy(
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding
+        )
+        self.collapsible_frame.setText("Detailed File Information")
+        self.collapsible_frame.setContent(data_tree_widget)
+        self.data_tree_widget_import_metadata = data_tree_widget
 
         dock_session_properties = SessionPropertiesDock(self)
         self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, dock_session_properties)
@@ -102,6 +110,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.action_show_settings.triggered.connect(self.show_settings)
         self.stackedWidget.currentChanged.connect(self.change_context_actions)
+
+        self.spin_box_sampling_rate_import_page.valueChanged.connect(
+            self.metadata_dialog.spin_box_sampling_rate.setValue
+        )
+        self.combo_box_info_column_import_page.currentTextChanged.connect(
+            self.metadata_dialog.combo_box_info_column.setCurrentText
+        )
+        self.combo_box_signal_column_import_page.currentTextChanged.connect(
+            self.metadata_dialog.combo_box_signal_column.setCurrentText
+        )
+        self.metadata_dialog.spin_box_sampling_rate.valueChanged.connect(
+            self.spin_box_sampling_rate_import_page.setValue
+        )
+        self.metadata_dialog.combo_box_info_column.currentTextChanged.connect(
+            self.combo_box_info_column_import_page.setCurrentText
+        )
+        self.metadata_dialog.combo_box_signal_column.currentTextChanged.connect(
+            self.combo_box_signal_column_import_page.setCurrentText
+        )
 
     @QtCore.Slot(int)
     def change_context_actions(self, index: int) -> None:

@@ -5,11 +5,14 @@ Main entry point for the application.
 if __name__ == "__main__":
     import multiprocessing
 
-    multiprocessing.freeze_support()
-    import sys
-    import os
+    multiprocessing.freeze_support()  # This is needed for PyInstaller to work
     import argparse
+    import os
+    import sys
+
+    import pyqtgraph as pg
     from loguru import logger
+    import polars as pl
 
     from signal_editor.signal_editor import SignalEditor
 
@@ -21,6 +24,9 @@ if __name__ == "__main__":
         os.environ["DEBUG"] = "1"
     else:
         logger.remove()
+
+    pg.setConfigOptions(useOpenGL=True, enableExperimental=True, useNumba=True, useCupy=True)
+    pl.Config().activate_decimals(True)
 
     app = SignalEditor(sys.argv)
     app.main_window.show()
