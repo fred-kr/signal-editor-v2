@@ -49,7 +49,7 @@ class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     sig_metadata_changed = QtCore.Signal(dict)
-    
+
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
@@ -132,6 +132,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.combo_box_signal_column_import_page.setCurrentText
         )
 
+    def toggle_section_actions(self, show: bool) -> None:
+        self.action_confirm_section.setEnabled(show)
+        self.action_cancel_section.setEnabled(show)
 
     @QtCore.Slot(int)
     def change_context_actions(self, index: int) -> None:
@@ -157,6 +160,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.tool_bar_context_actions.addAction(self.action_show_filter_inputs)
         self.tool_bar_context_actions.addAction(self.action_create_new_section)
         self.tool_bar_context_actions.addAction(self.action_toggle_auto_scaling)
+        self.tool_bar_context_actions.addSeparator()
+        self.tool_bar_context_actions.addAction(self.action_confirm_section)
+        self.tool_bar_context_actions.addAction(self.action_cancel_section)
+        self.action_confirm_section.setEnabled(False)
+        self.action_cancel_section.setEnabled(False)
 
     def _show_result_page_actions(self) -> None:
         self.tool_bar_context_actions.clear()

@@ -70,22 +70,33 @@ class PlotController(QtCore.QObject):
         settings = QtCore.QSettings()
         self.set_background_color(settings.value("Plot/background_color"))
         self.set_foreground_color(settings.value("Plot/foreground_color"))
-        self._region_selector = pg.LinearRegionItem(
+
+    def setup_region_selector(self):
+        settings = QtCore.QSettings()
+        self.region_selector = pg.LinearRegionItem(
             brush=settings.value("Plot/section_marker_color", type=QtGui.QColor),
             pen=(255, 255, 255, 255),
             hoverBrush=(0, 200, 100, 30),
             hoverPen={"color": "gray", "width": 2},
         )
-        self._region_selector.setZValue(1e3)
-        for line in self._region_selector.lines:
+        self.region_selector.setVisible(False)
+        self.region_selector.setZValue(1e3)
+        for line in self.region_selector.lines:
             line.addMarker("<|>", position=0.5, size=12)
 
-        self.pw_main.addItem(self._region_selector)
+        self.pw_main.addItem(self.region_selector)
+
+    def remove_region_selector(self):
+        if self.region_selector:
+            self.pw_main.removeItem(self.region_selector)
+            self.region_selector.setParent(None)
+            self.region_selector = None
 
     def setup_plot_data_items(self) -> None:
         self.initialize_signal_curve()
         self.initialize_peak_scatter()
         self.initialize_rate_curve()
+        self.setup_region_selector()
 
     # TODO: Find a better way to convey this information
     # self._temperature_label = pg.LabelItem("Temperature: - °C", parent=self.pw_main)
@@ -181,6 +192,7 @@ class PlotController(QtCore.QObject):
         self.remove_signal_curve()
         self.remove_peak_scatter()
         self.remove_rate_curve()
+        self.remove_region_selector()
 
     @QtCore.Slot(int)
     def reset_view_range(self, upper_bound: int) -> None:
@@ -211,11 +223,6 @@ class PlotController(QtCore.QObject):
         self.mpw_result.fig.clear()
 
         self.remove_plot_data_items()
-
-        if self._region_selector is not None:
-            self._region_selector.setParent(None)
-        self._region_selector = None
-
         self.clear_regions()
         self.setup_plot_data_items()
 
@@ -232,9 +239,9 @@ class PlotController(QtCore.QObject):
             self.regions.remove(region)
         if bounds is not None:
             self.regions = [r for r in self.regions if r.getRegion() != bounds]
-        if self._region_selector is not None:
-            self._region_selector.setParent(None)
-        self._region_selector = None
+        if self.region_selector is not None:
+            self.region_selector.setParent(None)
+        self.region_selector = None
 
     def clear_regions(self) -> None:
         for region in self.regions:
@@ -244,18 +251,18 @@ class PlotController(QtCore.QObject):
         self.regions = []
 
     def show_region_selector(self, initial_region: tuple[float, float]) -> None:
-        if not self._region_selector:
+        if not self.region_selector:
             return
 
-        self._region_selector.setRegion(initial_region)
-        if self._region_selector not in self.pw_main.plotItem.items:
-            self.pw_main.addItem(self._region_selector)
+        self.region_selector.setRegion(initial_region)
+        if self.region_selector not in self.pw_main.plotItem.items:
+            self.pw_main.addItem(self.region_selector)
 
-        self._region_selector.setVisible(True)
+        self.region_selector.setVisible(True)
 
     def hide_region_selector(self) -> None:
-        if self._region_selector:
-            self._region_selector.setVisible(False)
+        if self.region_selector:
+            self.region_selector.setVisible(False)
 
     @QtCore.Slot(int, int)
     def mark_region(self, x1: int, x2: int) -> None:

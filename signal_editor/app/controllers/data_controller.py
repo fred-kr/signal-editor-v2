@@ -234,20 +234,22 @@ class DataController(QtCore.QObject):
             columns.append(info_col)
         if other_cols is not None:
             columns.extend(other_cols)
+        row_index_col = "index" if "index" not in columns else None
 
         match suffix:
             case ".csv":
-                self._base_df = pl.read_csv(file_path, columns=columns)
+                self._base_df = pl.read_csv(file_path, columns=columns, row_index_name=row_index_col)
             case ".txt":
-                self._base_df = pl.read_csv(file_path, columns=columns, separator=separator)
+                self._base_df = pl.read_csv(file_path, columns=columns, separator=separator, row_index_name=row_index_col)
             case ".tsv":
                 self._base_df = pl.read_csv(
                     file_path,
                     columns=columns,
                     separator=TextFileSeparator.Tab,
+                    row_index_name=row_index_col,
                 )
             case ".feather":
-                self._base_df = pl.read_ipc(file_path, columns=columns)
+                self._base_df = pl.read_ipc(file_path, columns=columns, row_index_name=row_index_col)
             case ".edf":
                 if info_col == "":
                     info_col = "temperature"
@@ -259,3 +261,11 @@ class DataController(QtCore.QObject):
 
         self.base_df_model.set_dataframe(self._base_df, signal_col, info_col=info_col)
         self.sig_new_data.emit()
+
+    def new_section(self, start: float | int, stop: float | int) -> None:
+        if self.metadata is None:
+            return
+        data = self.base_df.filter(pl.col("index").is_between(start, stop))
+        section = Section(data, self.metadata.signal_column)
+        self._sections[section.section_id] = section
+        self.sig_section_added.emit(section.section_id)

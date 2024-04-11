@@ -1,4 +1,5 @@
 import contextlib
+import re
 import typing as t
 
 import attrs
@@ -8,9 +9,8 @@ import polars as pl
 import polars.selectors as ps
 from PySide6 import QtCore
 
-from .. import type_defs as _t
 from .. import enum_defs as _e
-
+from .. import type_defs as _t
 from ..models.result_models import CompactSectionResult
 from .peak_detection import find_peaks
 from .processing import filter_elgendi, filter_neurokit2, filter_signal, scale_signal, signal_rate
@@ -96,11 +96,13 @@ class ManualPeakEdits:
         )
 
 
-@attrs.define
-class SectionID:
-    value: str = attrs.field(
-        validator=attrs.validators.matches_re(r"^Section_[a-zA-Z0-9]+_[0-9]{3}$")
-    )
+class SectionID(str):
+    def __init__(self, value: str):
+        if not re.match(r"^Section_[a-zA-Z0-9]+_[0-9]{3}$", value):
+            raise ValueError(
+                f"SectionID must be of the form 'Section_<signal_name>_000', got '{value}'"
+            )
+        super().__init__()
 
 
 @attrs.define

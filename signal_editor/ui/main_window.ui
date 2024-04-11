@@ -555,6 +555,9 @@
    </property>
   </action>
   <action name="action_create_new_section">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
      <normaloff>:/icons/new_section</normaloff>:/icons/new_section</iconset>
@@ -600,6 +603,36 @@
    </property>
    <property name="toolTip">
     <string>Enable / Disable automatic y-axis scaling</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_confirm_section">
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/icons/tick_button</normaloff>:/icons/tick_button</iconset>
+   </property>
+   <property name="text">
+    <string>Confirm Section</string>
+   </property>
+   <property name="toolTip">
+    <string>Create new section</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_cancel_section">
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/icons/delete</normaloff>:/icons/delete</iconset>
+   </property>
+   <property name="text">
+    <string>Cancel Section</string>
+   </property>
+   <property name="toolTip">
+    <string>Cancel selection of new section</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>
