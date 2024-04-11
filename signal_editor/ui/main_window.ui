@@ -554,6 +554,57 @@
     <enum>QAction::NoRole</enum>
    </property>
   </action>
+  <action name="action_create_new_section">
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/icons/new_section</normaloff>:/icons/new_section</iconset>
+   </property>
+   <property name="text">
+    <string>New Section</string>
+   </property>
+   <property name="toolTip">
+    <string>Select a section to edit</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_show_filter_inputs">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/icons/view_app_monitor</normaloff>:/icons/view_app_monitor</iconset>
+   </property>
+   <property name="text">
+    <string>Signal Filtering</string>
+   </property>
+   <property name="toolTip">
+    <string>Show signal pre-processing options</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_toggle_auto_scaling">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/icons/toggle_autoscale</normaloff>:/icons/toggle_autoscale</iconset>
+   </property>
+   <property name="text">
+    <string>Toggle Auto-Scaling</string>
+   </property>
+   <property name="toolTip">
+    <string>Enable / Disable automatic y-axis scaling</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

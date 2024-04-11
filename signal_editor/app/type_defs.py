@@ -11,10 +11,6 @@ if t.TYPE_CHECKING:
     from PySide6 import QtCore, QtGui
 
     from .controllers.data_controller import (
-        EDFFileMetadata,
-        ExcelFileMetadata,
-        FeatherFileMetadata,
-        TextFileMetadata,
         TextFileSeparator,
     )
     from .core.section import SectionID
@@ -43,11 +39,11 @@ PGBrush = t.Union[PGColor, "QtGui.QBrush", PGBrushKwargs, None]
 PGPointSymbols = t.Union[_e.PointSymbols, "QtGui.QPainterPath"]
 
 type NamedInt = int  # See "mne.utils._bunch.NamedInt" for more info
-type Metadata = "TextFileMetadata | ExcelFileMetadata | EDFFileMetadata | FeatherFileMetadata"
+# type Metadata = "TextFileMetadata | ExcelFileMetadata | EDFFileMetadata | FeatherFileMetadata"
 
 
-class MetadataUpdateDict(t.TypedDict):
-    sampling_rate: float
+class MetadataUpdateDict(t.TypedDict, total=False):
+    sampling_rate: int
     signal_column: str
     info_column: str
     signal_column_index: int

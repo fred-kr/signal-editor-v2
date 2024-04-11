@@ -1,4 +1,5 @@
 import contextlib
+import typing as t
 from pathlib import Path
 
 import superqt
@@ -8,6 +9,9 @@ from .app import type_defs as _t
 from .app.controllers.data_controller import DataController
 from .app.controllers.plot_controller import PlotController
 from .app.gui.main_window import MainWindow
+
+if t.TYPE_CHECKING:
+    from .app.models.metadata import QFileMetadata
 
 
 class SignalEditor(QtWidgets.QApplication):
@@ -34,6 +38,16 @@ class SignalEditor(QtWidgets.QApplication):
         self.main_window.action_close_file.triggered.connect(self.close_file)
         self.main_window.btn_close_file.clicked.connect(self.close_file)
 
+        self.main_window.spin_box_sampling_rate_import_page.valueChanged.connect(
+            self.update_sampling_rate
+        )
+        self.main_window.combo_box_info_column_import_page.currentTextChanged.connect(
+            self.update_info_column
+        )
+        self.main_window.combo_box_signal_column_import_page.currentTextChanged.connect(
+            self.update_signal_column
+        )
+
     def _connect_data_controller_signals(self) -> None:
         self.data_controller.sig_user_input_required.connect(self.show_metadata_dialog)
         self.data_controller.sig_new_metadata.connect(self.update_metadata_widgets)
@@ -46,6 +60,8 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot()
     def draw_signal(self) -> None:
+        if self.data_controller.metadata is None:
+            return
         signal_column = self.data_controller.metadata.signal_column
         signal_data = self.data_controller.base_df.get_column(signal_column).to_numpy(
             zero_copy_only=True
@@ -54,22 +70,21 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot(dict)
     def update_metadata(self, metadata_dict: _t.MetadataUpdateDict) -> None:
-        self.data_controller.update_metadata(metadata_dict)
+        sampling_rate = metadata_dict.get("sampling_rate", None)
+        info_col = metadata_dict.get("info_column", None)
+        signal_col = metadata_dict.get("signal_column", None)
+        self.data_controller.update_metadata(sampling_rate, signal_col, info_col)
 
     @QtCore.Slot(object)
-    def update_metadata_widgets(self, metadata: _t.Metadata) -> None:
-        self.main_window.data_tree_widget_import_metadata.setData(metadata.to_dict(), hideRoot=True)
+    def update_metadata_widgets(self, metadata: "QFileMetadata") -> None:
+        metadata_dict = metadata.to_dict()
+        self.main_window.data_tree_widget_import_metadata.setData(metadata_dict, hideRoot=True)
         self.main_window.data_tree_widget_import_metadata.collapseAll()
-        self.main_window.combo_box_signal_column_import_page.clear()
-        self.main_window.combo_box_signal_column_import_page.addItems(metadata.column_names)
-        self.main_window.combo_box_info_column_import_page.clear()
-        self.main_window.combo_box_info_column_import_page.addItems(metadata.column_names)
         self.main_window.spin_box_sampling_rate_import_page.setValue(metadata.sampling_rate)
 
-        with contextlib.suppress(Exception):
-            self.main_window.combo_box_info_column_import_page.setCurrentText(metadata.info_column or "")
-            self.main_window.combo_box_signal_column_import_page.setCurrentText(metadata.signal_column)
-            
+        self.main_window.combo_box_signal_column_import_page.setCurrentText(
+            metadata_dict.get("signal_column", "")
+        )
 
     @QtCore.Slot(list)
     def show_metadata_dialog(self, required_fields: list[str]) -> None:
@@ -85,18 +100,10 @@ class SignalEditor(QtWidgets.QApplication):
 
         file_name = metadata.file_name
         file_type = metadata.file_format
-        columns = metadata.column_names
+        info_col = metadata.info_column
 
-        self.main_window.metadata_dialog.combo_box_signal_column.clear()
-        self.main_window.combo_box_signal_column_import_page.clear()
-        self.main_window.metadata_dialog.combo_box_signal_column.addItems(columns)
-        self.main_window.combo_box_signal_column_import_page.addItems(columns)
-
-        if len(columns) > 1:
-            self.main_window.metadata_dialog.combo_box_info_column.clear()
-            self.main_window.combo_box_info_column_import_page.clear()
-            self.main_window.metadata_dialog.combo_box_info_column.addItems([""] + columns)
-            self.main_window.combo_box_info_column_import_page.addItems([""] + columns)
+        self.main_window.metadata_dialog.combo_box_signal_column.setModel(metadata.columns)
+        self.main_window.metadata_dialog.combo_box_info_column.setModel(metadata.columns)
         if "sampling_rate" not in required_fields:
             sampling_rate = metadata.sampling_rate
             self.main_window.metadata_dialog.spin_box_sampling_rate.setValue(sampling_rate)
@@ -105,21 +112,74 @@ class SignalEditor(QtWidgets.QApplication):
             signal_col = metadata.signal_column
             self.main_window.metadata_dialog.combo_box_signal_column.setCurrentText(signal_col)
             self.main_window.combo_box_signal_column_import_page.setCurrentText(signal_col)
-        if "info_column" not in required_fields:
-            info_col = metadata.info_column
-            self.main_window.metadata_dialog.combo_box_info_column.setCurrentText(str(info_col))
-            self.main_window.combo_box_info_column_import_page.setCurrentText(str(info_col))
-        if "additional_info" not in required_fields:
-            additional_info = metadata.additional_info
-            self.main_window.metadata_dialog.data_tree_widget_additional_info.setData(
-                additional_info
-            )
+
+        self.main_window.metadata_dialog.combo_box_info_column.setCurrentText(info_col)
+        self.main_window.combo_box_info_column_import_page.setCurrentText(info_col)
 
         self.main_window.metadata_dialog.line_edit_file_name.setText(file_name)
         self.main_window.metadata_dialog.line_edit_file_type.setText(file_type)
 
         self.main_window.metadata_dialog.open()
 
+    @QtCore.Slot(int)
+    def update_sampling_rate(self, sampling_rate: int) -> None:
+        if self.data_controller.metadata is None:
+            return
+        self.data_controller.update_metadata(sampling_rate=sampling_rate)
+        # settings = QtCore.QSettings()
+        # settings.setValue("Data/sampling_rate", sampling_rate)
+
+    @QtCore.Slot(str)
+    def update_signal_column(self, signal_column: str) -> None:
+        if self.data_controller.metadata is None:
+            return
+        self.data_controller.update_metadata(signal_col=signal_column)
+        # settings = QtCore.QSettings()
+        # settings.setValue("Misc/last_signal_column_name", signal_column)
+
+    @QtCore.Slot(str)
+    def update_info_column(self, info_column: str) -> None:
+        if self.data_controller.metadata is None:
+            return
+        self.data_controller.update_metadata(info_col=info_column)
+        # settings = QtCore.QSettings()
+        # settings.setValue("Misc/last_info_column_name", info_column)
+
+    def set_column_model(self) -> None:
+        if self.data_controller.metadata is None:
+            return
+        self.main_window.combo_box_info_column_import_page.setModel(
+            self.data_controller.metadata.columns
+        )
+        self.main_window.combo_box_signal_column_import_page.setModel(
+            self.data_controller.metadata.columns
+        )
+        self.main_window.metadata_dialog.combo_box_signal_column.setModel(
+            self.data_controller.metadata.columns
+        )
+        self.main_window.metadata_dialog.combo_box_info_column.setModel(
+            self.data_controller.metadata.columns
+        )
+
+        with contextlib.suppress(Exception):
+            self.main_window.combo_box_info_column_import_page.setCurrentText(
+                self.data_controller.metadata.info_column
+            )
+            self.main_window.combo_box_signal_column_import_page.setCurrentText(
+                self.data_controller.metadata.signal_column
+            )
+
+    def clear_column_model(self) -> None:
+        with QtCore.QSignalBlocker(self.main_window.combo_box_info_column_import_page):
+            self.main_window.combo_box_info_column_import_page.clear()
+        with QtCore.QSignalBlocker(self.main_window.combo_box_signal_column_import_page):
+            self.main_window.combo_box_signal_column_import_page.clear()
+        with QtCore.QSignalBlocker(self.main_window.metadata_dialog.combo_box_info_column):
+            self.main_window.metadata_dialog.combo_box_signal_column.clear()
+        with QtCore.QSignalBlocker(self.main_window.metadata_dialog.combo_box_signal_column):
+            self.main_window.metadata_dialog.combo_box_info_column.clear()
+        self.main_window.data_tree_widget_import_metadata.clear()
+        
     @QtCore.Slot()
     def open_file(self) -> None:
         settings = QtCore.QSettings()
@@ -151,6 +211,7 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.data_controller.select_file(file_path)
         self.main_window.table_view_import_data.setModel(self.data_controller.base_df_model)
+        self.set_column_model()
 
     @QtCore.Slot()
     def read_data(self) -> None:
@@ -164,6 +225,7 @@ class SignalEditor(QtWidgets.QApplication):
     def close_file(self) -> None:
         self.main_window.table_view_import_data.setModel(None)
         self.main_window.data_tree_widget_import_metadata.clear()
+        self.clear_column_model()
 
         with contextlib.suppress(Exception):
             self._disconnect_data_controller_signals()
@@ -171,6 +233,7 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.data_controller = DataController(self)
         self._connect_data_controller_signals()
+        
 
         self.plot_controller.reset()
 

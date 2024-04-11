@@ -237,46 +237,46 @@ def detect_sampling_rate(
 def read_edf(
     file_path: Path,
     data_channel: str,
-    temperature_channel: str,
+    info_channel: str,
     *,
-    rename_channel_mapping: dict[str, str] | None = None,
-    include_duration_column: bool = False,
+    # rename_channel_mapping: dict[str, str] | None = None,
+    # include_duration_column: bool = False,
     start: int = 0,
     stop: int | None = None,
 ) -> pl.DataFrame:
-    raw_edf = mne.io.read_raw_edf(file_path, include=[data_channel, temperature_channel])
-    if rename_channel_mapping is not None:
-        # rename_channel_mapping = {}
-        for channel in raw_edf.ch_names:
-            if "hb" in channel.lower():
-                rename_channel_mapping[channel] = "heartbeat"
-                data_channel = "heartbeat"
-            elif "vent" in channel.lower():
-                rename_channel_mapping[channel] = "ventilation"
-                data_channel = "ventilation"
-            elif "temp" in channel.lower():
-                rename_channel_mapping[channel] = "temperature"
-                temperature_channel = "temperature"
+    raw_edf = mne.io.read_raw_edf(file_path, include=[data_channel, info_channel])
+    # if rename_channel_mapping is not None:
+    #     # rename_channel_mapping = {}
+    #     for channel in raw_edf.ch_names:
+    #         if "hb" in channel.lower():
+    #             rename_channel_mapping[channel] = "heartbeat"
+    #             data_channel = "heartbeat"
+    #         elif "vent" in channel.lower():
+    #             rename_channel_mapping[channel] = "ventilation"
+    #             data_channel = "ventilation"
+    #         elif "temp" in channel.lower():
+    #             rename_channel_mapping[channel] = "temperature"
+    #             info_channel = "temperature"
 
-        raw_edf.rename_channels(rename_channel_mapping)
-    channel_names = raw_edf.ch_names
-    measured_date = raw_edf.info["meas_date"]
+    #     raw_edf.rename_channels(rename_channel_mapping)
+    channel_names: list[str] = raw_edf.ch_names
+    # measured_date = raw_edf.info["meas_date"]
 
-    sampling_rate = raw_edf.info["sfreq"]
+    # sampling_rate = raw_edf.info["sfreq"]
 
     out = pl.from_numpy(raw_edf.get_data(start=start, stop=stop), schema=channel_names).select(
-        pl.col(temperature_channel).round(1),
+        pl.col(info_channel),
         pl.col(data_channel),
     )
-    if include_duration_column:
-        t_end = measured_date + datetime.timedelta(seconds=raw_edf.n_times / sampling_rate)
-        t_interval = datetime.timedelta(seconds=1 / sampling_rate)
-        times = (
-            pl.datetime_range(measured_date, t_end, interval=t_interval, closed="left", eager=True)
-            - measured_date
-        ).alias("time")
-        out.insert_column(0, times)
+    # if include_duration_column:
+    #     t_end = measured_date + datetime.timedelta(seconds=raw_edf.n_times / sampling_rate)
+    #     t_interval = datetime.timedelta(seconds=1 / sampling_rate)
+    #     times = (
+    #         pl.datetime_range(measured_date, t_end, interval=t_interval, closed="left", eager=True)
+    #         - measured_date
+    #     ).alias("time")
+    #     out.insert_column(0, times)
 
-    return out.filter(
-        (pl.col(data_channel) != 0) & (pl.col(temperature_channel) != 0)
-    ).with_row_index(offset=start)
+    return out.filter((pl.col(data_channel) != 0) & (pl.col(info_channel) != 0)).with_row_index(
+        offset=start
+    )

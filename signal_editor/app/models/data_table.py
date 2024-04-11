@@ -6,14 +6,16 @@ import polars as pl
 from loguru import logger
 from PySide6 import QtCore
 
-from .. import type_defs as _t
 from ..utils import human_readable_timedelta
+
+if t.TYPE_CHECKING:
+    from .metadata import QFileMetadata
 
 
 class DataTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
-        self._metadata: _t.Metadata | None = None
+        self._metadata: "QFileMetadata | None" = None
         self._df: pl.DataFrame | None = None
         self._schema: t.OrderedDict[str, pl.DataType] | None = None
         self._name_index_column: str = "index"
@@ -27,7 +29,7 @@ class DataTableModel(QtCore.QAbstractTableModel):
             raise ValueError("Dataframe has not been loaded.")
         return self._df
 
-    def set_metadata(self, metadata: _t.Metadata) -> None:
+    def set_metadata(self, metadata: "QFileMetadata") -> None:
         self._metadata = metadata
         metadata_dict = metadata.to_dict()
         self._name_signal_column = metadata_dict["signal_column"]

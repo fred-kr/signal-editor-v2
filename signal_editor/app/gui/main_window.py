@@ -48,6 +48,8 @@ class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
+    sig_metadata_changed = QtCore.Signal(dict)
+    
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
@@ -130,6 +132,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.combo_box_signal_column_import_page.setCurrentText
         )
 
+
     @QtCore.Slot(int)
     def change_context_actions(self, index: int) -> None:
         if index == 0:
@@ -151,7 +154,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _show_edit_page_actions(self) -> None:
         self.tool_bar_context_actions.clear()
-        # TODO: Add actions
+        self.tool_bar_context_actions.addAction(self.action_show_filter_inputs)
+        self.tool_bar_context_actions.addAction(self.action_create_new_section)
+        self.tool_bar_context_actions.addAction(self.action_toggle_auto_scaling)
 
     def _show_result_page_actions(self) -> None:
         self.tool_bar_context_actions.clear()

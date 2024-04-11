@@ -1,20 +1,17 @@
+import functools
 import typing as t
 from pathlib import Path
 
+import mne.io
 import polars as pl
 from PySide6 import QtCore
 
 from .. import type_defs as _t
-from ..core.file_io import read_edf
+from ..core.file_io import detect_sampling_rate, read_edf
 from ..core.section import Section, SectionID
 from ..enum_defs import TextFileSeparator
 from ..models.data_table import DataTableModel
-from ..models.metadata import (
-    EDFFileMetadata,
-    ExcelFileMetadata,
-    FeatherFileMetadata,
-    TextFileMetadata,
-)
+from ..models.metadata import QFileMetadata
 
 
 class MissingDataError(Exception):
@@ -31,24 +28,6 @@ class MissingSectionError(Exception):
     """
 
     pass
-
-
-def check_string_for_non_ascii(string: str) -> tuple[bool, list[tuple[str, int]]]:
-    """
-    Checks a file name for possible non-ASCII characters.
-
-    Parameters
-    ----------
-    string : str
-        The string to check.
-
-    Returns
-    -------
-    tuple[bool, list[tuple[str, int]]
-        A tuple containing a boolean indicating whether non-ASCII characters were found and a list of tuples containing the detected non-ASCII characters and their positions in the input string.
-    """
-    non_ascii_chars = [(char, idx) for idx, char in enumerate(string) if ord(char) > 127]
-    return bool(non_ascii_chars), non_ascii_chars
 
 
 class SectionContainer(t.OrderedDict[SectionID, Section]):
@@ -83,13 +62,22 @@ class DataController(QtCore.QObject):
         self._working_df: pl.DataFrame | None = None
         self.working_df_model = DataTableModel(self)
 
-        self._metadata: (
-            TextFileMetadata | ExcelFileMetadata | EDFFileMetadata | FeatherFileMetadata | None
-        ) = None
+        self.metadata: QFileMetadata | None = None
 
         self._sections: SectionContainer = SectionContainer()
         self._active_section: Section | None = None
         self._base_section: Section | None = None
+        try:
+            self._txt_separator = TextFileSeparator(
+                QtCore.QSettings().value("Data/txt_file_separator_character", TextFileSeparator.Tab)
+            ).value
+        except Exception:
+            self._txt_separator = TextFileSeparator.Tab
+        self._reader_funcs = {
+            ".csv": functools.partial(pl.scan_csv, separator=TextFileSeparator.Comma),
+            ".txt": functools.partial(pl.scan_csv, separator=self._txt_separator),
+            ".tsv": functools.partial(pl.scan_csv, separator=TextFileSeparator.Tab),
+        }
 
     @property
     def base_df(self) -> pl.DataFrame:
@@ -155,25 +143,20 @@ class DataController(QtCore.QObject):
         """
         return list(self._sections.keys())[1:] if len(self._sections) > 1 else []
 
-    @property
-    def metadata(
-        self,
-    ) -> _t.Metadata:
-        if self._metadata is None:
-            raise MissingDataError("No metadata available. Load a valid file to get metadata.")
-        return self._metadata
-
-    def update_metadata(self, metadata_dict: _t.MetadataUpdateDict) -> None:
-        if self._metadata is None:
+    def update_metadata(self, sampling_rate: int | None = None, signal_col: str | None = None, info_col: str | None = None) -> None:
+        if self.metadata is None:
             return
-        if metadata_dict["sampling_rate"] > 0:
-            self.metadata.sampling_rate = metadata_dict["sampling_rate"]
-        if metadata_dict["signal_column"] != "" and metadata_dict["signal_column_index"] != -1:
-            self.metadata.signal_column = metadata_dict["signal_column"]
-        self.metadata.info_column = metadata_dict["info_column"]
+        
+        if sampling_rate is not None:
+            self.metadata.sampling_rate = sampling_rate
+        if signal_col != "" and signal_col is not None:
+            self.metadata.signal_column = signal_col
+        if info_col is not None:
+            self.metadata.info_column = info_col
 
         self.base_df_model.set_metadata(self.metadata)
         self.sig_new_metadata.emit(self.metadata)
+        
 
     @QtCore.Slot(str)
     def select_file(self, file_path: Path | str) -> None:
@@ -186,19 +169,47 @@ class DataController(QtCore.QObject):
             raise ValueError(
                 f"Unsupported file format: {file_path.suffix}. Allowed formats: {', '.join(self.SUPPORTED_FILE_FORMATS)}"
             )
+        settings = QtCore.QSettings()
+
+        last_sampling_rate = settings.value("Data/sampling_rate", 0)
+        last_signal_col = settings.value("Misc/last_signal_column_name", None)
+        last_info_col = settings.value("Misc/last_info_column_name", None)
+        metadata = QFileMetadata(file_path, self)
 
         match file_path.suffix:
             case ".edf":
-                self._metadata = EDFFileMetadata(file_path)
+                edf_info = mne.io.read_raw_edf(file_path, preload=False)
+                metadata.sampling_rate = edf_info.info["sfreq"]
+                metadata.column_names = edf_info.ch_names
+                # self._metadata = EDFFileMetadata(file_path)
             case ".feather":
-                self._metadata = FeatherFileMetadata(file_path)
+                lf = pl.scan_ipc(file_path)
+                metadata.column_names = lf.columns
+                try:
+                    metadata.sampling_rate = detect_sampling_rate(lf)
+                except Exception:
+                    metadata.sampling_rate = int(last_sampling_rate)
+
+                # self._metadata = FeatherFileMetadata(file_path)
             case ".csv" | ".txt" | ".tsv":
-                self._metadata = TextFileMetadata(file_path)
+                lf = self._reader_funcs[file_path.suffix](file_path)
+                metadata.column_names = lf.columns
+                try:
+                    metadata.sampling_rate = detect_sampling_rate(lf)
+                except Exception:
+                    metadata.sampling_rate = int(last_sampling_rate)
+
+                # self._metadata = TextFileMetadata(file_path)
             case _:
                 raise ValueError(
                     f"Unsupported file format: {file_path.suffix}. Please select a valid file format."
                 )
 
+        if last_signal_col in metadata.column_names:
+            metadata.signal_column = str(last_signal_col)
+        if last_info_col in metadata.column_names:
+            metadata.info_column = str(last_info_col)
+        self.metadata = metadata
         if self.metadata.required_fields:
             self.sig_user_input_required.emit(self.metadata.required_fields)
 
@@ -206,6 +217,8 @@ class DataController(QtCore.QObject):
         self.sig_new_metadata.emit(self.metadata)
 
     def read_file(self, **kwargs: t.Unpack[_t.ReadFileKwargs]) -> None:
+        if self.metadata is None:
+            return
         suffix = self.metadata.file_format
         file_path = self.metadata.file_path
         settings = QtCore.QSettings()
@@ -217,7 +230,7 @@ class DataController(QtCore.QObject):
         info_col = self.metadata.info_column
         other_cols = kwargs.get("columns")
         columns = [signal_col]
-        if info_col is not None:
+        if info_col:
             columns.append(info_col)
         if other_cols is not None:
             columns.extend(other_cols)
@@ -236,10 +249,10 @@ class DataController(QtCore.QObject):
             case ".feather":
                 self._base_df = pl.read_ipc(file_path, columns=columns)
             case ".edf":
-                if info_col is None:
+                if info_col == "":
                     info_col = "temperature"
                 self._base_df = read_edf(
-                    file_path, data_channel=signal_col, temperature_channel=info_col
+                    Path(file_path), data_channel=signal_col, info_channel=info_col
                 )
             case _:
                 raise NotImplementedError(f"Cant read file type: {suffix}")

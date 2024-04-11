@@ -91,7 +91,11 @@ class PlotController(QtCore.QObject):
     # self._temperature_label = pg.LabelItem("Temperature: - °C", parent=self.pw_main)
     # self._bpm_label = pg.LabelItem("HR: - bpm", parent=self.pw_rate)
 
-    def initialize_signal_curve(self, pen_color: _t.PGColor = "lightgray") -> None:
+    def initialize_signal_curve(self, pen_color: _t.PGColor | None = None) -> None:
+        if pen_color is None:
+            pen_color = QtCore.QSettings().value(
+                "Plot/signal_line_color", "tomato", type=QtGui.QColor
+            )
         signal = pg.PlotDataItem(
             pen=pen_color,
             skipFiniteCheck=True,
@@ -115,10 +119,14 @@ class PlotController(QtCore.QObject):
 
     def initialize_peak_scatter(
         self,
-        brush_color: _t.PGColor = "darkgoldenrod",
+        brush_color: _t.PGColor | None = None,
         hover_pen: _t.PGColor = "black",
         hover_brush: _t.PGColor = "red",
     ) -> None:
+        if brush_color is None:
+            brush_color = QtCore.QSettings().value(
+                "Plot/point_color", "darkgoldenrod", type=QtGui.QColor
+            )
         scatter = CustomScatterPlotItem(
             pxMode=True,
             size=10,
@@ -148,7 +156,11 @@ class PlotController(QtCore.QObject):
         self.peak_scatter.setParent(None)
         self.peak_scatter = None
 
-    def initialize_rate_curve(self, pen_color: _t.PGColor = "green") -> None:
+    def initialize_rate_curve(self, pen_color: _t.PGColor | None = None) -> None:
+        if pen_color is None:
+            pen_color = QtCore.QSettings().value(
+                "Plot/rate_line_color", "lightgreen", type=QtGui.QColor
+            )
         rate_curve = pg.PlotDataItem(
             pen=pen_color,
             skipFiniteCheck=True,
