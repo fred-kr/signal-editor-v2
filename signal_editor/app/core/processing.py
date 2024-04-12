@@ -7,8 +7,10 @@ import numpy.typing as npt
 import polars as pl
 import scipy.interpolate
 import scipy.signal
+import scipy.stats
 
 from .. import type_defs as _t
+from .. import enum_defs as _e
 
 
 def _mad_value(sig: pl.Series | pl.Expr) -> float:
@@ -92,13 +94,13 @@ def _signal_filter_powerline(
 
 
 def filter_neurokit2(
-    sig: npt.NDArray[np.float64], sampling_rate: int, powerline: int | float = 50
+    sig: npt.NDArray[np.float64], sampling_rate: int, powerline: int = 50
 ) -> npt.NDArray[np.float64]:
-    clean = nk.signal_filter(
+    clean: npt.NDArray[np.float64] = nk.signal_filter(
         signal=sig,
         sampling_rate=sampling_rate,
         lowcut=0.5,
-        method="butterworth",
+        method=_e.FilterMethod.Butterworth,
         order=5,
     )
     return _signal_filter_powerline(clean, sampling_rate, powerline)
@@ -111,7 +113,7 @@ def filter_elgendi(sig: npt.NDArray[np.float64], sampling_rate: int) -> npt.NDAr
             sampling_rate=sampling_rate,
             lowcut=0.5,
             highcut=8,
-            method="butterworth",
+            method=_e.FilterMethod.Butterworth,
             order=3,
         ),
         dtype=np.float64,

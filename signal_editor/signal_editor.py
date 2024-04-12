@@ -56,11 +56,13 @@ class SignalEditor(QtWidgets.QApplication):
         self.data_controller.sig_user_input_required.connect(self.show_metadata_dialog)
         self.data_controller.sig_new_metadata.connect(self.update_metadata_widgets)
         self.data_controller.sig_new_data.connect(self.draw_signal)
+        self.data_controller.sig_new_data.connect(self.set_section_model)
 
     def _disconnect_data_controller_signals(self) -> None:
         self.data_controller.sig_user_input_required.disconnect(self.show_metadata_dialog)
         self.data_controller.sig_new_metadata.disconnect(self.update_metadata_widgets)
         self.data_controller.sig_new_data.disconnect(self.draw_signal)
+        self.data_controller.sig_new_data.disconnect(self.set_section_model)
 
     @QtCore.Slot(bool)
     def maybe_new_section(self, checked: bool) -> None:
@@ -90,11 +92,15 @@ class SignalEditor(QtWidgets.QApplication):
         self.main_window.action_create_new_section.setChecked(False)
 
     @QtCore.Slot()
+    def set_section_model(self) -> None:
+        self.main_window.section_list_dock.list_view.setModel(self.data_controller.sections)
+        
+    @QtCore.Slot()
     def draw_signal(self) -> None:
         if self.data_controller.metadata is None:
             return
         signal_column = self.data_controller.metadata.signal_column
-        signal_data = self.data_controller.base_df.get_column(signal_column).to_numpy(
+        signal_data = self.data_controller.active_section.data.get_column(signal_column).to_numpy(
             zero_copy_only=True
         )
         self.plot_controller.set_signal_data(signal_data, clear=False)
@@ -242,12 +248,14 @@ class SignalEditor(QtWidgets.QApplication):
             self.main_window.table_view_import_data.horizontalHeader().setSectionResizeMode(
                 col, QtWidgets.QHeaderView.ResizeMode.Stretch
             )
+        
 
     @QtCore.Slot()
     def close_file(self) -> None:
         self.main_window.table_view_import_data.setModel(None)
         self.main_window.data_tree_widget_import_metadata.clear()
         self._clear_column_model()
+        self.main_window.section_list_dock.list_view.setModel(None)
 
         with contextlib.suppress(Exception):
             self._disconnect_data_controller_signals()

@@ -73,10 +73,13 @@ class PlotController(QtCore.QObject):
 
     def setup_region_selector(self):
         settings = QtCore.QSettings()
+        brush_col: QtGui.QColor = settings.value("Plot/section_marker_color", type=QtGui.QColor)  # type: ignore
+        hover_brush_col = brush_col
+        hover_brush_col.setAlpha(30)
         self.region_selector = pg.LinearRegionItem(
-            brush=settings.value("Plot/section_marker_color", type=QtGui.QColor),
+            brush=brush_col,
             pen=(255, 255, 255, 255),
-            hoverBrush=(0, 200, 100, 30),
+            hoverBrush=hover_brush_col,
             hoverPen={"color": "gray", "width": 2},
         )
         self.region_selector.setVisible(False)
@@ -104,7 +107,7 @@ class PlotController(QtCore.QObject):
 
     def initialize_signal_curve(self, pen_color: _t.PGColor | None = None) -> None:
         if pen_color is None:
-            pen_color = QtCore.QSettings().value(
+            pen_color = QtCore.QSettings().value(  # type: ignore
                 "Plot/signal_line_color", "tomato", type=QtGui.QColor
             )
         signal = pg.PlotDataItem(
@@ -135,7 +138,7 @@ class PlotController(QtCore.QObject):
         hover_brush: _t.PGColor = "red",
     ) -> None:
         if brush_color is None:
-            brush_color = QtCore.QSettings().value(
+            brush_color = QtCore.QSettings().value(  # type: ignore
                 "Plot/point_color", "darkgoldenrod", type=QtGui.QColor
             )
         scatter = CustomScatterPlotItem(
@@ -169,7 +172,7 @@ class PlotController(QtCore.QObject):
 
     def initialize_rate_curve(self, pen_color: _t.PGColor | None = None) -> None:
         if pen_color is None:
-            pen_color = QtCore.QSettings().value(
+            pen_color = QtCore.QSettings().value(  # type: ignore
                 "Plot/rate_line_color", "lightgreen", type=QtGui.QColor
             )
         rate_curve = pg.PlotDataItem(
@@ -407,7 +410,7 @@ class PlotController(QtCore.QObject):
         self.sig_scatter_data_changed.emit("n", sender)
 
     def get_selection_area(self) -> QtCore.QRectF | None:
-        return self.pw_main.plotItem.vb.mapped_selection_rect  # pyright: ignore[reportAttributeAccessIssue, reportUnknownVariableType]
+        return self.pw_main.plotItem.vb.mapped_selection_rect  # type: ignore
 
     def draw_rolling_rate(
         self,
@@ -424,7 +427,7 @@ class PlotController(QtCore.QObject):
             x,
             y,
             color=color,
-            marker=marker,
+            marker=marker,  # type: ignore
             linestyle=linestyle,
             linewidth=linewidth,
             markersize=markersize,
@@ -465,11 +468,12 @@ class PlotController(QtCore.QObject):
 
         self.set_background_color(bg_color)
         self.set_foreground_color(fg_color)
-        if self.peak_scatter is not None:
+        if self.peak_scatter is not None and isinstance(point_color, QtGui.QColor):
             self.peak_scatter.setBrush(color=point_color)
-        if self.signal_curve is not None:
+        if self.signal_curve is not None and isinstance(signal_line_color, QtGui.QColor):
             self.signal_curve.setPen(color=signal_line_color)
-        if self.rate_curve is not None:
+        if self.rate_curve is not None and isinstance(rate_line_color, QtGui.QColor):
             self.rate_curve.setPen(color=rate_line_color)
         for r in self.regions:
-            r.setBrush(color=section_marker_color)
+            if isinstance(section_marker_color, QtGui.QColor):
+                r.setBrush(color=section_marker_color)

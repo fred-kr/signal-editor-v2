@@ -21,7 +21,7 @@ class DataTableModel(QtCore.QAbstractTableModel):
         self._name_index_column: str = "index"
         self._name_signal_column: str | None = None
         self._name_info_column: str | None = None
-        self._float_precision: int = QtCore.QSettings().value("Misc/float_visual_precision", 4)
+        self._float_precision: int = QtCore.QSettings().value("Misc/float_visual_precision", 4, type=int)  # type: ignore
 
     @property
     def df(self) -> pl.DataFrame:
@@ -29,6 +29,7 @@ class DataTableModel(QtCore.QAbstractTableModel):
             raise ValueError("Dataframe has not been loaded.")
         return self._df
 
+    # TODO: Can probably be removed
     def set_metadata(self, metadata: "QFileMetadata") -> None:
         self._metadata = metadata
         metadata_dict = metadata.to_dict()

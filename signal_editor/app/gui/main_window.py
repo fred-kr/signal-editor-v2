@@ -47,6 +47,24 @@ class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
         super().accept()
 
 
+class SectionListView(QtWidgets.QListView):
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
+        self.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        # self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+
+
+class SectionListDock(QtWidgets.QDockWidget):
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setVisible(False)
+        self.setObjectName("SectionListDock")
+        self.setWindowTitle("Section List")
+        self.list_view = SectionListView(self)
+        self.setWidget(self.list_view)
+
+
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     sig_metadata_changed = QtCore.Signal(dict)
 
@@ -83,6 +101,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.stackedWidget.setCurrentIndex(0)
         self.action_show_import_page.setChecked(True)
+
+        self.section_list_dock = SectionListDock(self)
 
         self.read_settings()
         self.setup_actions()
@@ -131,6 +151,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.metadata_dialog.combo_box_signal_column.currentTextChanged.connect(
             self.combo_box_signal_column_import_page.setCurrentText
         )
+        self.stackedWidget.currentChanged.connect(
+            lambda index: self.section_list_dock.setVisible(index == 1)
+        )
 
     def toggle_section_actions(self, show: bool) -> None:
         self.action_confirm_section.setEnabled(show)
@@ -139,23 +162,23 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.Slot(int)
     def change_context_actions(self, index: int) -> None:
         if index == 0:
-            self._show_import_page_actions()
+            self._show_import_page()
         elif index == 1:
-            self._show_edit_page_actions()
+            self._show_edit_page()
         elif index == 2:
-            self._show_result_page_actions()
+            self._show_result_page()
         elif index == 3:
-            self._show_export_page_actions()
+            self._show_export_page()
         elif index == 4:
-            self._show_info_page_actions()
+            self._show_info_page()
 
-    def _show_import_page_actions(self) -> None:
+    def _show_import_page(self) -> None:
         self.tool_bar_context_actions.clear()
         self.tool_bar_context_actions.addAction(self.action_open_file)
         self.tool_bar_context_actions.addAction(self.action_edit_metadata)
         self.tool_bar_context_actions.addAction(self.action_close_file)
 
-    def _show_edit_page_actions(self) -> None:
+    def _show_edit_page(self) -> None:
         self.tool_bar_context_actions.clear()
         self.tool_bar_context_actions.addAction(self.action_show_filter_inputs)
         self.tool_bar_context_actions.addAction(self.action_create_new_section)
@@ -166,15 +189,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.action_confirm_section.setEnabled(False)
         self.action_cancel_section.setEnabled(False)
 
-    def _show_result_page_actions(self) -> None:
+    def _show_result_page(self) -> None:
         self.tool_bar_context_actions.clear()
         # TODO: Add actions
 
-    def _show_export_page_actions(self) -> None:
+    def _show_export_page(self) -> None:
         self.tool_bar_context_actions.clear()
         self.tool_bar_context_actions.addAction(self.action_export_result)
 
-    def _show_info_page_actions(self) -> None:
+    def _show_info_page(self) -> None:
         self.tool_bar_context_actions.clear()
         # TODO: Add actions
 

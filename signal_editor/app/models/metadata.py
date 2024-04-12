@@ -13,7 +13,7 @@ class QFileMetadata(QtCore.QObject):
         self.required_fields = []
         self.file_info = QtCore.QFileInfo(file_path)
         settings = QtCore.QSettings()
-        self._sampling_rate = settings.value("Data/sampling_rate", 0, int)
+        self._sampling_rate: int = settings.value("Data/sampling_rate", 0, int)  # type: ignore
         if self._sampling_rate == 0:
             self.required_fields.append("sampling_rate")
 
@@ -46,7 +46,7 @@ class QFileMetadata(QtCore.QObject):
 
     @property
     def sampling_rate(self) -> int:
-        return int(self._sampling_rate)
+        return self._sampling_rate
 
     @sampling_rate.setter
     def sampling_rate(self, value: int) -> None:

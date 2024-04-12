@@ -110,3 +110,13 @@ class SmoothingKernels(enum.StrEnum):
     TUKEY = "tukey"
     BOXZEN = "boxzen"
     MEDIAN = "median"
+
+
+class MouseButtons(enum.StrEnum):
+    LeftButton = "left"
+    MiddleButton = "middle"
+    RightButton = "right"
+    LeftButtonWithControl = "left+control"
+    RightButtonWithControl = "right+control"
+    MiddleButtonWithControl = "middle+control"
+    Unknown = "unknown"

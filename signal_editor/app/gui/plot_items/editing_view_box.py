@@ -3,27 +3,27 @@ import typing as t
 import numpy as np
 import numpy.typing as npt
 import pyqtgraph as pg
-from PySide6 import QtCore, QtGui, QtWidgets
 from pyqtgraph.Point import Point
+from PySide6 import QtCore, QtGui, QtWidgets
+
+from ...enum_defs import MouseButtons
 
 if t.TYPE_CHECKING:
     from pyqtgraph.GraphicsScene import mouseEvents
 
 
-def _get_button_type(
-    ev: "mouseEvents.MouseDragEvent",
-) -> t.Literal["middle", "left", "left+control", "right", "unknown"]:
+def _get_button_type(ev: "mouseEvents.MouseDragEvent") -> MouseButtons:
     if ev.button() == QtCore.Qt.MouseButton.MiddleButton:
-        return "middle"
+        return MouseButtons.MiddleButton
     elif ev.button() == QtCore.Qt.MouseButton.LeftButton:
         if ev.modifiers() & QtCore.Qt.KeyboardModifier.ControlModifier:
-            return "left+control"
+            return MouseButtons.LeftButtonWithControl
         else:
-            return "left"
+            return MouseButtons.LeftButton
     elif ev.button() == QtCore.Qt.MouseButton.RightButton:
-        return "right"
+        return MouseButtons.RightButton
     else:
-        return "unknown"
+        return MouseButtons.Unknown
 
 
 class EditingViewBox(pg.ViewBox):

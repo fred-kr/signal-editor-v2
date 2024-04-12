@@ -12,6 +12,7 @@ from ..core.section import Section, SectionID
 from ..enum_defs import TextFileSeparator
 from ..models.data_table import DataTableModel
 from ..models.metadata import QFileMetadata
+from ..models.section_container import SectionListModel
 
 
 class MissingDataError(Exception):
@@ -64,7 +65,7 @@ class DataController(QtCore.QObject):
 
         self.metadata: QFileMetadata | None = None
 
-        self._sections: SectionContainer = SectionContainer()
+        self._sections: SectionListModel | None = None
         self._active_section: Section | None = None
         self._base_section: Section | None = None
         try:
@@ -92,7 +93,7 @@ class DataController(QtCore.QObject):
         return self._working_df
 
     @property
-    def sections(self) -> SectionContainer:
+    def sections(self) -> SectionListModel | None:
         return self._sections
 
     @property
@@ -109,30 +110,34 @@ class DataController(QtCore.QObject):
 
     @QtCore.Slot(int)
     def on_sampling_rate_changed(self, value: int) -> None:
-        for section in self._sections.values():
-            section.update_sampling_rate(value)
+        if self.sections is None:
+            return
+        self.sections.update_sampling_rate(value)
 
     def get_base_section(self) -> Section:
-        if self._base_df is None:
-            raise MissingDataError("No data available. Select a valid file to load, and try again.")
         if self._base_section is None:
-            self._base_section = Section(self._base_df)
+            try:
+                self._base_section = Section(self.base_df, self.metadata.signal_column)
+            except Exception as e:
+                raise MissingDataError(
+                    "No data available. Select a valid file to load, and try again."
+                ) from e
         return self._base_section
 
     @property
     def active_section(self) -> Section:
         if self._active_section is None:
-            # This will raise an exception if no data is available, so no need to check for it here (i think)
             self._active_section = self.get_base_section()
         return self._active_section
 
     @QtCore.Slot(str)
     def set_active_section(self, section_id: SectionID) -> None:
-        if section_id not in self._sections:
-            raise MissingSectionError(
-                f"No section found for ID: '{section_id}'. Available sections: \n\n{list(self._sections.keys())}"
-            )
-        self._active_section = self._sections[section_id]
+        if self.sections is None:
+            return
+        section = self.sections.get_section(section_id)
+        if section is None:
+            return
+        self._active_section = section
         has_peak_data = not self._active_section.peaks_local.is_empty()
         self.sig_active_section_changed.emit(has_peak_data)
 
@@ -141,7 +146,7 @@ class DataController(QtCore.QObject):
         """
         Returns the IDs of all currently available sections, excluding the base section.
         """
-        return list(self._sections.keys())[1:] if len(self._sections) > 1 else []
+        return [] if self.sections is None else self.sections.editable_section_ids
 
     def update_metadata(
         self,
@@ -175,7 +180,7 @@ class DataController(QtCore.QObject):
             )
         settings = QtCore.QSettings()
 
-        last_sampling_rate = settings.value("Data/sampling_rate", 0)
+        last_sampling_rate: int = settings.value("Data/sampling_rate", 0)  # type: ignore
         last_signal_col = settings.value("Misc/last_signal_column_name", None)
         last_info_col = settings.value("Misc/last_info_column_name", None)
         metadata = QFileMetadata(file_path, self)
@@ -185,25 +190,22 @@ class DataController(QtCore.QObject):
                 edf_info = mne.io.read_raw_edf(file_path, preload=False)
                 metadata.sampling_rate = edf_info.info["sfreq"]
                 metadata.column_names = edf_info.ch_names
-                # self._metadata = EDFFileMetadata(file_path)
             case ".feather":
                 lf = pl.scan_ipc(file_path)
                 metadata.column_names = lf.columns
                 try:
                     metadata.sampling_rate = detect_sampling_rate(lf)
                 except Exception:
-                    metadata.sampling_rate = int(last_sampling_rate)
+                    metadata.sampling_rate = last_sampling_rate
 
-                # self._metadata = FeatherFileMetadata(file_path)
             case ".csv" | ".txt" | ".tsv":
                 lf = self._reader_funcs[file_path.suffix](file_path)
                 metadata.column_names = lf.columns
                 try:
                     metadata.sampling_rate = detect_sampling_rate(lf)
                 except Exception:
-                    metadata.sampling_rate = int(last_sampling_rate)
+                    metadata.sampling_rate = last_sampling_rate
 
-                # self._metadata = TextFileMetadata(file_path)
             case _:
                 raise ValueError(
                     f"Unsupported file format: {file_path.suffix}. Please select a valid file format."
@@ -270,15 +272,14 @@ class DataController(QtCore.QObject):
                 raise NotImplementedError(f"Cant read file type: {suffix}")
 
         self.base_df_model.set_dataframe(self._base_df, signal_col, info_col=info_col)
+        self._base_section = Section(self._base_df, self.metadata.signal_column)
+        self._sections = SectionListModel(self._base_section, parent=self)
         self.sig_new_data.emit()
 
     def create_new_section(self, start: float | int, stop: float | int) -> None:
-        if self.metadata is None:
+        if self.metadata is None or self.sections is None:
             return
         data = self.base_df.filter(pl.col("index").is_between(start, stop))
         section = Section(data, self.metadata.signal_column)
-        self._sections[section.section_id] = section
+        self.sections.add_section(section)
         self.sig_section_added.emit(section.section_id)
-
-    def current_section(self) -> Section | None:
-        
