@@ -11,6 +11,7 @@ if __name__ == "__main__":
     import sys
 
     import pyqtgraph as pg
+    # import qdarkstyle
     from loguru import logger
     import polars as pl
 
@@ -29,5 +30,6 @@ if __name__ == "__main__":
     pl.Config().activate_decimals(True)
 
     app = SignalEditor(sys.argv)
+    # app.setStyleSheet(qdarkstyle.load_stylesheet(qdarkstyle.DarkPalette))
     app.main_window.show()
     sys.exit(app.exec())

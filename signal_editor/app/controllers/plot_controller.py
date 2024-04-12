@@ -6,7 +6,7 @@ import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from .. import type_defs as _t
-from ..gui.plot_items import CustomScatterPlotItem, PlotDataItem
+from ..gui.plot_items import CustomScatterPlotItem
 from ..gui.plot_items.editing_view_box import EditingViewBox
 from ..gui.plot_items.time_axis_item import TimeAxisItem
 
@@ -208,7 +208,7 @@ class PlotController(QtCore.QObject):
         self.pw_rate.plotItem.vb.setRange(xRange=(0, upper_bound), disableAutoRange=False)
 
     @QtCore.Slot(object)
-    def set_view_limits(self, plt_data_item: PlotDataItem) -> None:
+    def set_view_limits(self, plt_data_item: pg.PlotDataItem) -> None:
         if plt_data_item.xData is None or plt_data_item.xData.size == 0:
             return
         len_data = plt_data_item.xData.size
@@ -258,10 +258,13 @@ class PlotController(QtCore.QObject):
                 self.pw_main.removeItem(region)
         self.regions = []
 
-    def show_region_selector(self, initial_region: tuple[float, float]) -> None:
+    def show_region_selector(self, bounds: tuple[float, float]) -> None:
         if not self.region_selector:
             return
 
+        self.region_selector.setBounds(bounds)
+        view_range = self.pw_main.getPlotItem().getViewBox().viewRange()[0]
+        initial_region = (view_range[0], view_range[1] / 2)
         self.region_selector.setRegion(initial_region)
         if self.region_selector not in self.pw_main.plotItem.items:
             self.pw_main.addItem(self.region_selector)
@@ -281,8 +284,7 @@ class PlotController(QtCore.QObject):
             pen=pg.mkPen(color=(r, g, b, 255), width=2, style=QtCore.Qt.PenStyle.DashLine),
             movable=False,
         )
-        if self._show_regions:
-            marked_region.setVisible(False)
+        marked_region.setVisible(self._show_regions)
         marked_region.setZValue(10)
         self.regions.append(marked_region)
         self.pw_main.addItem(marked_region)
@@ -358,7 +360,7 @@ class PlotController(QtCore.QObject):
         click_y = ev.pos().y()
         x_data = self.signal_curve.xData
         y_data = self.signal_curve.yData
-        if not x_data or not y_data:
+        if x_data is None or y_data is None:
             return
         settings = QtCore.QSettings()
         scatter_search_radius = t.cast(int, settings.value("Editing/search_around_click_radius"))
@@ -477,3 +479,8 @@ class PlotController(QtCore.QObject):
         for r in self.regions:
             if isinstance(section_marker_color, QtGui.QColor):
                 r.setBrush(color=section_marker_color)
+
+    @QtCore.Slot(bool)
+    def toggle_auto_scaling(self, state: bool) -> None:
+        self.pw_main.enableAutoRange(y=state)
+        self.pw_rate.enableAutoRange(y=state)
