@@ -57,12 +57,20 @@ class SignalEditor(QtWidgets.QApplication):
         self.data_controller.sig_new_metadata.connect(self.update_metadata_widgets)
         self.data_controller.sig_new_data.connect(self.draw_signal)
         self.data_controller.sig_new_data.connect(self.set_section_model)
+        self.main_window.section_list_dock.list_view.clicked.connect(
+            self.data_controller.set_active_section
+        )
+        self.data_controller.sig_active_section_changed.connect(self._on_active_section_changed)
 
     def _disconnect_data_controller_signals(self) -> None:
         self.data_controller.sig_user_input_required.disconnect(self.show_metadata_dialog)
         self.data_controller.sig_new_metadata.disconnect(self.update_metadata_widgets)
         self.data_controller.sig_new_data.disconnect(self.draw_signal)
         self.data_controller.sig_new_data.disconnect(self.set_section_model)
+        self.main_window.section_list_dock.list_view.clicked.disconnect(
+            self.data_controller.set_active_section
+        )
+        self.data_controller.sig_active_section_changed.disconnect(self._on_active_section_changed)
 
     @QtCore.Slot(bool)
     def maybe_new_section(self, checked: bool) -> None:
@@ -94,11 +102,19 @@ class SignalEditor(QtWidgets.QApplication):
     @QtCore.Slot()
     def set_section_model(self) -> None:
         self.main_window.section_list_dock.list_view.setModel(self.data_controller.sections)
-        
+
+    @QtCore.Slot(bool)
+    def _on_active_section_changed(self, has_peaks: bool) -> None:
+        section = self.data_controller.active_section
+        self.plot_controller.set_signal_data(section.processed_signal.to_numpy(), clear=False)
+        if has_peaks:
+            self.plot_controller.set_peak_data(*section.get_peak_xy())
+            self.plot_controller.set_rate_data(section.rate_instantaneous_interpolated, clear=False)
+
     @QtCore.Slot()
     def draw_signal(self) -> None:
-        if self.data_controller.metadata is None:
-            return
+        # if self.data_controller.metadata is None:
+        # return
         signal_column = self.data_controller.metadata.signal_column
         signal_data = self.data_controller.active_section.data.get_column(signal_column).to_numpy(
             zero_copy_only=True
@@ -156,26 +172,26 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot(int)
     def update_sampling_rate(self, sampling_rate: int) -> None:
-        if self.data_controller.metadata is None:
-            return
+        # if self.data_controller.metadata is None:
+        #     return
         self.data_controller.update_metadata(sampling_rate=sampling_rate)
         self.plot_controller.update_time_axis_scale(sampling_rate)
 
     @QtCore.Slot(str)
     def update_signal_column(self, signal_column: str) -> None:
-        if self.data_controller.metadata is None:
-            return
+        # if self.data_controller.metadata is None:
+        #     return
         self.data_controller.update_metadata(signal_col=signal_column)
 
     @QtCore.Slot(str)
     def update_info_column(self, info_column: str) -> None:
-        if self.data_controller.metadata is None:
-            return
+        # if self.data_controller.metadata is None:
+        #     return
         self.data_controller.update_metadata(info_col=info_column)
 
     def _set_column_model(self) -> None:
-        if self.data_controller.metadata is None:
-            return
+        # if self.data_controller.metadata is None:
+        #     return
         self.main_window.combo_box_info_column_import_page.setModel(
             self.data_controller.metadata.columns
         )
@@ -238,7 +254,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.plot_controller.reset()
 
         self.data_controller.select_file(file_path)
-        self.main_window.table_view_import_data.setModel(self.data_controller.base_df_model)
+        self.main_window.table_view_import_data.setModel(self.data_controller.data_model)
         self._set_column_model()
 
     @QtCore.Slot()
@@ -248,7 +264,6 @@ class SignalEditor(QtWidgets.QApplication):
             self.main_window.table_view_import_data.horizontalHeader().setSectionResizeMode(
                 col, QtWidgets.QHeaderView.ResizeMode.Stretch
             )
-        
 
     @QtCore.Slot()
     def close_file(self) -> None:
@@ -294,7 +309,7 @@ class SignalEditor(QtWidgets.QApplication):
                     r.setBrush(color=value)
             case "float_visual_precision":
                 if isinstance(value, int):
-                    self.data_controller.base_df_model.set_float_precision(value)
+                    self.data_controller.data_model.set_float_precision(value)
             case _:
                 pass
 

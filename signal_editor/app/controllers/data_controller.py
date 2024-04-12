@@ -1,12 +1,10 @@
 import functools
-import typing as t
 from pathlib import Path
 
 import mne.io
 import polars as pl
 from PySide6 import QtCore
 
-from .. import type_defs as _t
 from ..core.file_io import detect_sampling_rate, read_edf
 from ..core.section import Section, SectionID
 from ..enum_defs import TextFileSeparator
@@ -31,15 +29,6 @@ class MissingSectionError(Exception):
     pass
 
 
-class SectionContainer(t.OrderedDict[SectionID, Section]):
-    def __setitem__(self, key: SectionID, value: Section) -> None:
-        super().__setitem__(key, value)
-        self.move_to_end(key)
-
-    def __getitem__(self, key: SectionID) -> Section:
-        return super().__getitem__(key)
-
-
 class DataController(QtCore.QObject):
     sig_non_ascii_in_file_name = QtCore.Signal(list, bool)
     sig_user_input_required = QtCore.Signal(list)
@@ -58,15 +47,13 @@ class DataController(QtCore.QObject):
         settings = QtCore.QSettings()
         self._sampling_rate = int(settings.value("Data/sampling_rate"))  # type: ignore
 
-        self._base_df: pl.DataFrame | None = None
-        self.base_df_model = DataTableModel(self)
-        self._working_df: pl.DataFrame | None = None
-        self.working_df_model = DataTableModel(self)
+        self.data_model = DataTableModel(self)
 
-        self.metadata: QFileMetadata | None = None
+        self._metadata: QFileMetadata | None = None
 
-        self._sections: SectionListModel | None = None
+        self._sections = SectionListModel(parent=self)
         self._active_section: Section | None = None
+        self.active_section_model = DataTableModel(self)
         self._base_section: Section | None = None
         try:
             self._txt_separator = TextFileSeparator(
@@ -82,23 +69,21 @@ class DataController(QtCore.QObject):
 
     @property
     def base_df(self) -> pl.DataFrame:
-        if self._base_df is None:
-            raise MissingDataError("No data available. Select a valid file to load, and try again.")
-        return self._base_df
+        return self.data_model.df
 
     @property
-    def working_df(self) -> pl.DataFrame:
-        if self._working_df is None:
-            raise MissingDataError("No data available. Select a valid file to load, and try again.")
-        return self._working_df
-
-    @property
-    def sections(self) -> SectionListModel | None:
+    def sections(self) -> SectionListModel:
         return self._sections
 
     @property
     def sampling_rate(self) -> int:
         return self._sampling_rate
+
+    @property
+    def metadata(self) -> QFileMetadata:
+        if self._metadata is None:
+            raise MissingDataError("No data available.")
+        return self._metadata
 
     def _set_sampling_rate(self, value: int) -> None:
         """
@@ -110,8 +95,6 @@ class DataController(QtCore.QObject):
 
     @QtCore.Slot(int)
     def on_sampling_rate_changed(self, value: int) -> None:
-        if self.sections is None:
-            return
         self.sections.update_sampling_rate(value)
 
     def get_base_section(self) -> Section:
@@ -130,23 +113,22 @@ class DataController(QtCore.QObject):
             self._active_section = self.get_base_section()
         return self._active_section
 
-    @QtCore.Slot(str)
-    def set_active_section(self, section_id: SectionID) -> None:
-        if self.sections is None:
-            return
-        section = self.sections.get_section(section_id)
-        if section is None:
-            return
-        self._active_section = section
-        has_peak_data = not self._active_section.peaks_local.is_empty()
-        self.sig_active_section_changed.emit(has_peak_data)
+    @QtCore.Slot(QtCore.QModelIndex)
+    def set_active_section(self, model_index: QtCore.QModelIndex) -> None:
+        section = self.sections.data(model_index, QtCore.Qt.ItemDataRole.UserRole)
+        if isinstance(section, Section):
+            self._active_section = section
+            self.active_section_model.set_metadata(self.metadata)
+            self.active_section_model.set_dataframe(self._active_section.data)
+            has_peak_data = not self._active_section.peaks_local.is_empty()
+            self.sig_active_section_changed.emit(has_peak_data)
 
     @property
     def editable_section_ids(self) -> list[SectionID]:
         """
         Returns the IDs of all currently available sections, excluding the base section.
         """
-        return [] if self.sections is None else self.sections.editable_section_ids
+        return self.sections.editable_section_ids
 
     def update_metadata(
         self,
@@ -154,7 +136,7 @@ class DataController(QtCore.QObject):
         signal_col: str | None = None,
         info_col: str | None = None,
     ) -> None:
-        if self.metadata is None:
+        if self._metadata is None:
             return
 
         if sampling_rate is not None:
@@ -164,7 +146,7 @@ class DataController(QtCore.QObject):
         if info_col is not None:
             self.metadata.info_column = info_col
 
-        self.base_df_model.set_metadata(self.metadata)
+        self.data_model.set_metadata(self.metadata)
         self.sig_new_metadata.emit(self.metadata)
 
     @QtCore.Slot(str)
@@ -215,15 +197,15 @@ class DataController(QtCore.QObject):
             metadata.signal_column = str(last_signal_col)
         if last_info_col in metadata.column_names:
             metadata.info_column = str(last_info_col)
-        self.metadata = metadata
+        self._metadata = metadata
         if self.metadata.required_fields:
             self.sig_user_input_required.emit(self.metadata.required_fields)
 
-        self.base_df_model.set_metadata(self.metadata)
+        self.data_model.set_metadata(self.metadata)
         self.sig_new_metadata.emit(self.metadata)
 
-    def read_file(self, **kwargs: t.Unpack[_t.ReadFileKwargs]) -> None:
-        if self.metadata is None:
+    def read_file(self) -> None:
+        if self._metadata is None:
             return
         suffix = self.metadata.file_format
         file_path = self.metadata.file_path
@@ -234,52 +216,46 @@ class DataController(QtCore.QObject):
 
         signal_col = self.metadata.signal_column
         info_col = self.metadata.info_column
-        other_cols = kwargs.get("columns")
         columns = [signal_col]
         if info_col:
             columns.append(info_col)
-        if other_cols is not None:
-            columns.extend(other_cols)
         row_index_col = "index" if "index" not in columns else None
 
         match suffix:
             case ".csv":
-                self._base_df = pl.read_csv(
-                    file_path, columns=columns, row_index_name=row_index_col
-                )
+                df = pl.read_csv(file_path, columns=columns, row_index_name=row_index_col)
             case ".txt":
-                self._base_df = pl.read_csv(
+                df = pl.read_csv(
                     file_path, columns=columns, separator=separator, row_index_name=row_index_col
                 )
             case ".tsv":
-                self._base_df = pl.read_csv(
+                df = pl.read_csv(
                     file_path,
                     columns=columns,
                     separator=TextFileSeparator.Tab,
                     row_index_name=row_index_col,
                 )
             case ".feather":
-                self._base_df = pl.read_ipc(
-                    file_path, columns=columns, row_index_name=row_index_col
-                )
+                df = pl.read_ipc(file_path, columns=columns, row_index_name=row_index_col)
             case ".edf":
                 if info_col == "":
                     info_col = "temperature"
-                self._base_df = read_edf(
-                    Path(file_path), data_channel=signal_col, info_channel=info_col
-                )
+                df = read_edf(Path(file_path), data_channel=signal_col, info_channel=info_col)
             case _:
                 raise NotImplementedError(f"Cant read file type: {suffix}")
 
-        self.base_df_model.set_dataframe(self._base_df, signal_col, info_col=info_col)
-        self._base_section = Section(self._base_df, self.metadata.signal_column)
-        self._sections = SectionListModel(self._base_section, parent=self)
+        self.data_model.set_dataframe(df, signal_col, info_col=info_col)
+        self._base_section = Section(df, self.metadata.signal_column)
+        self.sections.add_section(self._base_section)
         self.sig_new_data.emit()
 
     def create_new_section(self, start: float | int, stop: float | int) -> None:
-        if self.metadata is None or self.sections is None:
+        if self._metadata is None:
             return
         data = self.base_df.filter(pl.col("index").is_between(start, stop))
         section = Section(data, self.metadata.signal_column)
         self.sections.add_section(section)
         self.sig_section_added.emit(section.section_id)
+
+    def delete_section(self, section_id: SectionID) -> None:
+        self.sections.remove_section(section_id)

@@ -6,17 +6,11 @@ from ..core.section import Section, SectionID
 class SectionListModel(QtCore.QAbstractListModel):
     def __init__(
         self,
-        base_section: Section,
         sections: list[Section] | None = None,
         parent: QtCore.QObject | None = None,
     ) -> None:
         super().__init__(parent)
-        self._base_section = base_section
         self._sections = sections or []
-
-    @property
-    def base_section(self) -> Section:
-        return self._base_section
 
     @property
     def editable_sections(self) -> list[Section]:

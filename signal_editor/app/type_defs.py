@@ -102,7 +102,7 @@ class SignalFilterParameters(t.TypedDict, total=False):
     method: _e.FilterMethod
     order: int
     window_size: int | t.Literal["default"]
-    powerline: int | float
+    powerline: int
 
 
 class StandardizationParameters(t.TypedDict, total=False):

@@ -141,8 +141,8 @@ class Section:
     def get_id_counter(cls) -> int:
         return cls._id_counter
 
-    def __init__(self, data: pl.DataFrame, signal_name: str | None = None) -> None:
-        self.signal_name = signal_name or data.columns[-1]
+    def __init__(self, data: pl.DataFrame, signal_name: str) -> None:
+        self.signal_name = signal_name
         self.processed_signal_name = f"{self.signal_name}_processed"
 
         if not self.__class__._base_created:
@@ -159,12 +159,13 @@ class Section:
             .lazy()
             .select(ps.by_name("index", "section_index"), ~ps.by_name("index", "section_index"))
             .set_sorted(["index", "section_index"])
+            .with_columns(pl.col(signal_name).alias(self.processed_signal_name), pl.lit(0).alias("is_peak"), pl.lit(0).alias("is_manual"))
             .collect()
         )
 
         settings = QtCore.QSettings()
 
-        self.sampling_rate = t.cast(int, settings.value("Data/sampling_rate"))
+        self.sampling_rate: int = settings.value("Data/sampling_rate")  # type: ignore
         self.global_bounds: tuple[int, int] = (
             self.data.item(0, "index"),
             self.data.item(-1, "index"),
@@ -173,7 +174,7 @@ class Section:
         self.rate_instantaneous_interpolated = np.empty(self.data.height, dtype=np.float64)
         self.rate_rolling_window = pl.Series("rate_rolling_window", [], pl.Float64)
 
-        self._processing_parameters = ProcessingParameters(self.sampling_rate)
+        self._processing_parameters = ProcessingParameters(self.sampling_rate)  # type: ignore
         self._manual_peak_edits = ManualPeakEdits()
 
     def _generate_id(self) -> SectionID:
@@ -243,10 +244,10 @@ class Section:
                     "method": _e.FilterMethod.Butterworth,
                     "order": 3,
                     "window_size": "default",
-                    "powerline": 50.0,
+                    "powerline": 50,
                 }
             case _e.PreprocessPipeline.ECGNeuroKit2:
-                pow_line = kwargs.get("powerline", 50.0)
+                pow_line = kwargs.get("powerline", 50)
                 filtered = filter_neurokit2(raw_data, self.sampling_rate, powerline=pow_line)
                 filter_params = {
                     "highcut": None,
