@@ -329,11 +329,6 @@
     <addaction name="separator"/>
     <addaction name="action_edit_metadata"/>
    </widget>
-   <widget class="QMenu" name="menuEdit">
-    <property name="title">
-     <string>Edit</string>
-    </property>
-   </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
      <string>Settings</string>
@@ -346,7 +341,6 @@
     </property>
    </widget>
    <addaction name="menuFile"/>
-   <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuSettings"/>
   </widget>
@@ -560,13 +554,13 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/new_section</normaloff>:/icons/new_section</iconset>
+     <normaloff>:/icons/create</normaloff>:/icons/create</iconset>
    </property>
    <property name="text">
     <string>New Section</string>
    </property>
    <property name="toolTip">
-    <string>Select a section to edit</string>
+    <string>Select a section of the data for processing</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>
@@ -633,6 +627,27 @@
    </property>
    <property name="toolTip">
     <string>Cancel selection of new section</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_show_section_overview">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/icons/binoculars</normaloff>:/icons/binoculars</iconset>
+   </property>
+   <property name="text">
+    <string>Show Section Overview</string>
+   </property>
+   <property name="toolTip">
+    <string>Shows the current sections as colored regions in the plot</string>
    </property>
    <property name="menuRole">
     <enum>QAction::NoRole</enum>

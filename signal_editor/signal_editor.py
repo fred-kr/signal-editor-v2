@@ -51,6 +51,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.main_window.action_create_new_section.toggled.connect(self.maybe_new_section)
         self.main_window.action_confirm_section.triggered.connect(self.create_new_section)
         self.main_window.action_cancel_section.triggered.connect(self.cancel_new_section)
+        self.main_window.action_toggle_auto_scaling.toggled.connect(self.plot_controller.toggle_auto_scaling)
 
     def _connect_data_controller_signals(self) -> None:
         self.data_controller.sig_user_input_required.connect(self.show_metadata_dialog)
@@ -78,8 +79,8 @@ class SignalEditor(QtWidgets.QApplication):
         if not checked:
             self.plot_controller.hide_region_selector()
             return
-        data_limits = (0, self.data_controller.base_df.height // 2)
-        self.plot_controller.show_region_selector(data_limits)
+        bounds = (0, self.data_controller.base_df.height - 1)
+        self.plot_controller.show_region_selector(bounds)
 
     @QtCore.Slot()
     def create_new_section(self) -> None:

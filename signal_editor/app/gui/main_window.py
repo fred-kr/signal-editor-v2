@@ -7,8 +7,8 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from ...ui.ui_dialog_metadata import Ui_MetadataDialog
 from ...ui.ui_dock_session_properties import Ui_DockWidgetSessionProperties
 from ...ui.ui_main_window import Ui_MainWindow
+from .widgets.log_viewer import StatusMessageDock
 from .widgets.settings_editor import SettingsEditor
-from .widgets.text_edit_logger import StatusMessageDock
 
 
 class SessionPropertiesDock(QtWidgets.QDockWidget, Ui_DockWidgetSessionProperties):
@@ -103,6 +103,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.action_show_import_page.setChecked(True)
 
         self.section_list_dock = SectionListDock(self)
+        self.section_list_dock.setVisible(False)
 
         self.read_settings()
         self.setup_actions()
@@ -154,6 +155,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.stackedWidget.currentChanged.connect(
             lambda index: self.section_list_dock.setVisible(index == 1)
         )
+        self.action_toggle_auto_scaling.setChecked(True)
 
     def toggle_section_actions(self, show: bool) -> None:
         self.action_confirm_section.setEnabled(show)
@@ -181,8 +183,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def _show_edit_page(self) -> None:
         self.tool_bar_context_actions.clear()
         self.tool_bar_context_actions.addAction(self.action_show_filter_inputs)
-        self.tool_bar_context_actions.addAction(self.action_create_new_section)
         self.tool_bar_context_actions.addAction(self.action_toggle_auto_scaling)
+        self.tool_bar_context_actions.addAction(self.action_show_section_overview)
+        self.tool_bar_context_actions.addSeparator()
+        self.tool_bar_context_actions.addAction(self.action_create_new_section)
         self.tool_bar_context_actions.addSeparator()
         self.tool_bar_context_actions.addAction(self.action_confirm_section)
         self.tool_bar_context_actions.addAction(self.action_cancel_section)

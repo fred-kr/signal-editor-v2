@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file alias="binoculars">fugue-icons/binocular.png</file>
     <file alias="toggle_autoscale">fugue-icons/arrow-resize-090.png</file>
     <file alias="new_section">fugue-icons/selection-select.png</file>
     <file alias="folder-open">fugue-icons/folder-open.png</file>

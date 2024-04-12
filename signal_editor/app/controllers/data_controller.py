@@ -43,6 +43,7 @@ class DataController(QtCore.QObject):
 
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
+        Section.reset_id_counter()
 
         settings = QtCore.QSettings()
         self._sampling_rate = int(settings.value("Data/sampling_rate"))  # type: ignore

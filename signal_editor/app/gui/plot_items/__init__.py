@@ -1,5 +1,4 @@
-from .plot_data_item import PlotDataItem
-from .time_axis_item import TimeAxisItem
 from .scatter_plot_item import CustomScatterPlotItem
+from .time_axis_item import TimeAxisItem
 
-__all__ = ["PlotDataItem", "TimeAxisItem", "CustomScatterPlotItem"]
+__all__ = ["TimeAxisItem", "CustomScatterPlotItem"]
