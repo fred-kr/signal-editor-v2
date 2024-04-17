@@ -1,5 +1,43 @@
 import datetime
-import math
+import typing as t
+
+from PySide6 import QtCore, QtWidgets
+
+MICRO: t.Final = "\u03bc"
+
+
+class NonAsciiCharAndPosition(t.NamedTuple):
+    char: str
+    position: int
+
+
+class NonAsciiResult(t.NamedTuple):
+    has_non_ascii: bool
+    non_ascii_chars: list[NonAsciiCharAndPosition]
+
+
+def check_string_for_non_ascii(string: str) -> NonAsciiResult:
+    """
+    Checks a file name for possible non-ASCII characters.
+
+    Parameters
+    ----------
+    string : str
+        The string to check.
+
+    Returns
+    -------
+    NonAsciiResult
+        An instance of ``NonAsciiResult`` containing a boolean indicating whether non-ASCII
+        characters were found and a list of ``NonAsciiCharAndPosition`` named tuples containing the
+        detected non-ASCII characters and their positions in the input string.
+    """
+
+    non_ascii_chars = [
+        NonAsciiCharAndPosition(char, idx) for idx, char in enumerate(string) if ord(char) > 127
+    ]
+
+    return NonAsciiResult(has_non_ascii=bool(non_ascii_chars), non_ascii_chars=non_ascii_chars)
 
 
 def human_readable_timedelta(
@@ -20,53 +58,28 @@ def human_readable_timedelta(
     microseconds = time_delta.microseconds
     day_str = f"{days}d " if days > 0 else ""
 
-    return f"{day_str}{hours:02d}h {minutes:02d}m {seconds:02d}s {microseconds:06d}\u03bcs"
+    return f"{day_str}{hours:02d}h {minutes:02d}m {seconds:02d}s {microseconds:06d}{MICRO}s"
 
 
-def round_to_n(x: float, n: int) -> float:
-    return round(x, -int(math.floor(math.log10(x))) + (n - 1))
+def get_app_dir() -> QtCore.QDir:
+    app_instance = QtWidgets.QApplication.instance()
+    import sys
+
+    if hasattr(sys, "frozen") and app_instance is not None:
+        return QtCore.QDir(app_instance.applicationDirPath())
+    return QtCore.QDir.current()
 
 
-def check_string_for_non_ascii(string: str) -> tuple[bool, list[tuple[str, int]]]:
-    """
-    Checks a file name for possible non-ASCII characters.
+def safe_disconnect(
+    sender: QtCore.QObject, signal: QtCore.SignalInstance, slot: QtCore.Slot | t.Callable[..., None]
+) -> None:
+    meta_signal = QtCore.QMetaMethod.fromSignal(signal)
+    if sender.isSignalConnected(meta_signal):
+        signal.disconnect(slot)
 
-    Parameters
-    ----------
-    string : str
-        The string to check.
 
-    Returns
-    -------
-    tuple[bool, list[tuple[str, int]]
-        A tuple containing a boolean indicating whether non-ASCII characters were found and a list of tuples containing the detected non-ASCII characters and their positions in the input string.
-    """
-    non_ascii_chars = [(char, idx) for idx, char in enumerate(string) if ord(char) > 127]
-    return bool(non_ascii_chars), non_ascii_chars
-
-    # @QtCore.Slot(list, bool)
-    # def show_non_ascii_warning(
-    #     self, non_ascii_chars: list[tuple[int, tuple[str, list[tuple[str, int]]]]], is_edf: bool
-    # ) -> None:
-    #     chars = {
-    #         c[1][0]: [nc[1][1][0][0] for nc in non_ascii_chars if nc[1][0] == c[1][0]]
-    #         for c in non_ascii_chars
-    #     }
-
-    #     msg = (
-    #         "Non-ASCII characters found while reading from input file.\n"
-    #         "This may cause issues when reading the file or exporting results.\n"
-    #         f"If possible, rename the {'Channel' if is_edf else 'Column'} (see below), and try again.\n------\n"
-    #         f"<b>{'Channel' if is_edf else 'Column'}</b>: {non_ascii_chars[0][1][0]}, <b>Non-ASCII characters</b>: {chars[non_ascii_chars[0][1][0]]}\n------\n"
-    #         f"Rename the {'Channels' if is_edf else 'Columns'} now?"
-    #     )
-    #     btn = QtWidgets.QMessageBox.warning(
-    #         self.main_window,
-    #         "Non-ASCII characters found",
-    #         msg,
-    #         QtWidgets.QMessageBox.StandardButton.Yes
-    #         | QtWidgets.QMessageBox.StandardButton.No
-    #         | QtWidgets.QMessageBox.StandardButton.Cancel,
-    #     )
-    #     if btn == QtWidgets.QMessageBox.StandardButton.Yes:
-    #         self.sig_open_rename_dialog.emit([c[1][0] for c in non_ascii_chars], is_edf)
+def safe_multi_disconnect(
+    sender: QtCore.QObject, signal_slot_pairs: list[t.Tuple[QtCore.SignalInstance, QtCore.Slot]]
+) -> None:
+    for signal, slot in signal_slot_pairs:
+        safe_disconnect(sender, signal, slot)
