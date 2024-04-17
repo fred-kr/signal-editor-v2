@@ -9,7 +9,7 @@ import mne.io
 import polars as pl
 import polars.selectors as cs
 
-from .. import enum_defs as _e
+from ..enum_defs import OxygenCondition
 
 
 def parse_file_name(
@@ -17,7 +17,7 @@ def parse_file_name(
     date_format: str | None = None,
     id_format: str | None = None,
     oxygen_format: str | None = None,
-) -> tuple[datetime.datetime, str, _e.OxygenCondition]:
+) -> tuple[datetime.datetime, str, OxygenCondition]:
     """
     Parses a file name to extract the date, the ID, and the oxygen condition.
 
@@ -56,13 +56,13 @@ def parse_file_name(
         if match is not None:
             animal_id = match.group()
 
-    oxygen_condition = _e.OxygenCondition.Unknown
+    oxygen_condition = OxygenCondition.Unknown
     if oxygen_format is not None:
         match = re.search(oxygen_format, file_name, re.IGNORECASE)
         if match is not None:
-            oxygen_condition = _e.OxygenCondition(match.group().lower())
-    if oxygen_condition not in _e.OxygenCondition:
-        oxygen_condition = _e.OxygenCondition.Unknown
+            oxygen_condition = OxygenCondition(match.group().lower())
+    if oxygen_condition not in OxygenCondition:
+        oxygen_condition = OxygenCondition.Unknown
 
     return date, animal_id, oxygen_condition
 

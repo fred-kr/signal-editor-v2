@@ -258,5 +258,8 @@ class DataController(QtCore.QObject):
         self.sections.add_section(section)
         self.sig_section_added.emit(section.section_id)
 
-    def delete_section(self, section_id: SectionID) -> None:
-        self.sections.remove_section(section_id)
+    def delete_section(self, idx: QtCore.QModelIndex | SectionID) -> None:
+        if isinstance(idx, SectionID):
+            self.sections.remove_section(idx)
+        else:
+            self.sections.remove_section_by_index(idx)

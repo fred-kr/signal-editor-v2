@@ -67,6 +67,13 @@ class SectionListModel(QtCore.QAbstractListModel):
                 self.endRemoveRows()
                 break
 
+    def remove_section_by_index(self, index: QtCore.QModelIndex) -> None:
+        row = index.row()
+        parent = self.index(0, 0)
+        self.beginRemoveRows(parent, row, row)
+        self._sections.remove(self._sections[row])
+        self.endRemoveRows()
+
     def get_section(self, section_id: SectionID) -> Section | None:
         return next(
             (section for section in self._sections if section.section_id == section_id),

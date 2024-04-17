@@ -4,7 +4,14 @@ import typing as t
 import numpy as np
 import numpy.typing as npt
 
-from . import enum_defs as _e
+from .enum_defs import (
+    FilterMethod,
+    PeakDetectionMethod,
+    PointSymbols,
+    PreprocessPipeline,
+    StandardizationMethod,
+    WFDBPeakDirection,
+)
 
 if t.TYPE_CHECKING:
     import mne
@@ -36,10 +43,7 @@ class PGBrushKwargs(t.TypedDict, total=False):
 PGPen = t.Union[PGColor, "QtGui.QPen", PGPenKwargs, None]
 PGBrush = t.Union[PGColor, "QtGui.QBrush", PGBrushKwargs, None]
 
-PGPointSymbols = t.Union[_e.PointSymbols, "QtGui.QPainterPath"]
-
-type NamedInt = int  # See "mne.utils._bunch.NamedInt" for more info
-# type Metadata = "TextFileMetadata | ExcelFileMetadata | EDFFileMetadata | FeatherFileMetadata"
+PGPointSymbols = t.Union[PointSymbols, "QtGui.QPainterPath"]
 
 
 class MetadataUpdateDict(t.TypedDict, total=False):
@@ -99,14 +103,14 @@ class ReadFileKwargs(t.TypedDict, total=False):
 class SignalFilterParameters(t.TypedDict, total=False):
     lowcut: float | None
     highcut: float | None
-    method: _e.FilterMethod
+    method: FilterMethod
     order: int
     window_size: int | t.Literal["default"]
     powerline: int
 
 
 class StandardizationParameters(t.TypedDict, total=False):
-    method: _e.StandardizationMethod
+    method: StandardizationMethod
     robust: bool
     window_size: int | None
 
@@ -224,7 +228,7 @@ class PlotDataItemOpts(t.TypedDict):
 class NKSignalFilterParams(t.TypedDict, total=False):
     lowcut: float | None
     highcut: float | None
-    method: _e.FilterMethod
+    method: FilterMethod
     order: int
     window_size: int | t.Literal["default"]
     powerline: int | float
@@ -249,7 +253,7 @@ class PeaksLocalMinima(t.TypedDict):
 
 class PeaksWFDBXQRS(t.TypedDict):
     search_radius: int
-    peak_dir: t.NotRequired[_e.WFDBPeakDirection]
+    peak_dir: t.NotRequired[WFDBPeakDirection]
 
 
 class PeaksECGNeuroKit2(t.TypedDict, total=False):
@@ -292,10 +296,10 @@ class MutableMetadataAttributes(t.TypedDict, total=False):
 
 class ProcessingParametersDict(t.TypedDict):
     sampling_rate: int
-    processing_pipeline: _e.PreprocessPipeline
+    processing_pipeline: PreprocessPipeline
     filter_parameters: SignalFilterParameters | None
     standardization_parameters: StandardizationParameters | None
-    peak_detection_method: _e.PeakDetectionMethod
+    peak_detection_method: PeakDetectionMethod
     peak_detection_method_parameters: PeakDetectionMethodParameters
 
 
@@ -353,12 +357,12 @@ class EDFChannelDict(t.TypedDict, total=False):
     logno: int
     scanno: int
     range: float
-    unit_mul: NamedInt
+    unit_mul: int
     ch_name: str
-    unit: NamedInt
-    coord_frame: NamedInt
-    coil_type: NamedInt
-    kind: NamedInt
+    unit: int
+    coord_frame: int
+    coil_type: int
+    kind: int
     loc: npt.NDArray[np.float_]  # shape (12,)
 
 

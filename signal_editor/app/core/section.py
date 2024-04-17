@@ -9,8 +9,8 @@ import polars as pl
 import polars.selectors as ps
 from PySide6 import QtCore
 
-from .. import enum_defs as _e
 from .. import type_defs as _t
+from ..enum_defs import FilterMethod, PeakDetectionMethod, PreprocessPipeline
 from ..models.result_models import CompactSectionResult
 from .peak_detection import find_peaks
 from .processing import filter_elgendi, filter_neurokit2, filter_signal, scale_signal, signal_rate
@@ -26,10 +26,10 @@ def _format_long_sequence(seq: t.Sequence[int | float]) -> str:
 @attrs.define
 class ProcessingParameters:
     sampling_rate: int
-    processing_pipeline: _e.PreprocessPipeline = _e.PreprocessPipeline.Custom
+    processing_pipeline: PreprocessPipeline = PreprocessPipeline.Custom
     filter_parameters: _t.SignalFilterParameters | None = None
     standardization_parameters: _t.StandardizationParameters | None = None
-    peak_detection_method: _e.PeakDetectionMethod = _e.PeakDetectionMethod.PPGElgendi
+    peak_detection_method: PeakDetectionMethod = PeakDetectionMethod.PPGElgendi
     peak_detection_method_parameters: _t.PeakDetectionMethodParameters = {}
 
     def to_dict(self) -> _t.ProcessingParametersDict:
@@ -159,7 +159,11 @@ class Section:
             .lazy()
             .select(ps.by_name("index", "section_index"), ~ps.by_name("index", "section_index"))
             .set_sorted(["index", "section_index"])
-            .with_columns(pl.col(signal_name).alias(self.processed_signal_name), pl.lit(0).alias("is_peak"), pl.lit(0).alias("is_manual"))
+            .with_columns(
+                pl.col(signal_name).alias(self.processed_signal_name),
+                pl.lit(0).alias("is_peak"),
+                pl.lit(0).alias("is_manual"),
+            )
             .collect()
         )
 
@@ -222,37 +226,37 @@ class Section:
             self.calculate_rate(peaks)
 
     def filter_signal(
-        self, pipeline: _e.PreprocessPipeline, **kwargs: t.Unpack[_t.SignalFilterParameters]
+        self, pipeline: PreprocessPipeline, **kwargs: t.Unpack[_t.SignalFilterParameters]
     ) -> None:
-        method = kwargs.get("method", _e.FilterMethod.NoFilter)
+        method = kwargs.get("method", FilterMethod.NoFilter)
         raw_data = self.raw_signal.to_numpy(zero_copy_only=True)
         filtered = np.empty_like(raw_data)
         filter_params: _t.SignalFilterParameters | None = None
 
         match pipeline:
-            case _e.PreprocessPipeline.Custom:
-                if method == _e.FilterMethod.NoFilter:
+            case PreprocessPipeline.Custom:
+                if method == FilterMethod.NoFilter:
                     filtered = raw_data
                     filter_params = None
                 else:
                     filtered, filter_params = filter_signal(raw_data, self.sampling_rate, **kwargs)
-            case _e.PreprocessPipeline.PPGElgendi:
+            case PreprocessPipeline.PPGElgendi:
                 filtered = filter_elgendi(raw_data, self.sampling_rate)
                 filter_params = {
                     "highcut": 8.0,
                     "lowcut": 0.5,
-                    "method": _e.FilterMethod.Butterworth,
+                    "method": FilterMethod.Butterworth,
                     "order": 3,
                     "window_size": "default",
                     "powerline": 50,
                 }
-            case _e.PreprocessPipeline.ECGNeuroKit2:
+            case PreprocessPipeline.ECGNeuroKit2:
                 pow_line = kwargs.get("powerline", 50)
                 filtered = filter_neurokit2(raw_data, self.sampling_rate, powerline=pow_line)
                 filter_params = {
                     "highcut": None,
                     "lowcut": 0.5,
-                    "method": _e.FilterMethod.Butterworth,
+                    "method": FilterMethod.Butterworth,
                     "order": 5,
                     "window_size": "default",
                     "powerline": pow_line,
@@ -274,7 +278,7 @@ class Section:
         self.data = self.data.with_columns(scaled.alias(self.processed_signal_name))
 
     def detect_peaks(
-        self, method: _e.PeakDetectionMethod, method_parameters: _t.PeakDetectionMethodParameters
+        self, method: PeakDetectionMethod, method_parameters: _t.PeakDetectionMethodParameters
     ) -> None:
         peaks = find_peaks(
             self.processed_signal.to_numpy(zero_copy_only=True),

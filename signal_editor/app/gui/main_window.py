@@ -48,11 +48,26 @@ class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
 
 
 class SectionListView(QtWidgets.QListView):
+    sig_delete_current_item: t.ClassVar[QtCore.Signal] = QtCore.Signal(QtCore.QModelIndex)
+
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         self.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
-        # self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+
+        self.customContextMenuRequested.connect(self.show_context_menu)
+
+    @QtCore.Slot(QtCore.QPoint)
+    def show_context_menu(self, point: QtCore.QPoint) -> None:
+        menu = QtWidgets.QMenu(self)
+        menu.addAction("Delete Selected", self.emit_delete_current_request)
+        menu.exec(self.mapToGlobal(point))
+
+    @QtCore.Slot()
+    def emit_delete_current_request(self) -> None:
+        index = self.currentIndex()
+        self.sig_delete_current_item.emit(index)
 
 
 class SectionListDock(QtWidgets.QDockWidget):
@@ -66,7 +81,7 @@ class SectionListDock(QtWidgets.QDockWidget):
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
-    sig_metadata_changed = QtCore.Signal(dict)
+    sig_metadata_changed: t.ClassVar[QtCore.Signal] = QtCore.Signal(dict)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
@@ -102,8 +117,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.stackedWidget.setCurrentIndex(0)
         self.action_show_import_page.setChecked(True)
 
-        self.section_list_dock = SectionListDock(self)
-        self.section_list_dock.setVisible(False)
+        self.dock_section_list = SectionListDock(self)
+        self.dock_section_list.setVisible(False)
 
         self.read_settings()
         self.setup_actions()
@@ -153,7 +168,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.combo_box_signal_column_import_page.setCurrentText
         )
         self.stackedWidget.currentChanged.connect(
-            lambda index: self.section_list_dock.setVisible(index == 1)
+            lambda index: self.dock_section_list.setVisible(index == 1)  # type: ignore
         )
         self.action_toggle_auto_scaling.setChecked(True)
 
@@ -182,14 +197,20 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _show_edit_page(self) -> None:
         self.tool_bar_context_actions.clear()
+        
         self.tool_bar_context_actions.addAction(self.action_show_filter_inputs)
         self.tool_bar_context_actions.addAction(self.action_toggle_auto_scaling)
         self.tool_bar_context_actions.addAction(self.action_show_section_overview)
+        
         self.tool_bar_context_actions.addSeparator()
+        
         self.tool_bar_context_actions.addAction(self.action_create_new_section)
+        
         self.tool_bar_context_actions.addSeparator()
+        
         self.tool_bar_context_actions.addAction(self.action_confirm_section)
         self.tool_bar_context_actions.addAction(self.action_cancel_section)
+        
         self.action_confirm_section.setEnabled(False)
         self.action_cancel_section.setEnabled(False)
 

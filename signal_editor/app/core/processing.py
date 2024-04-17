@@ -10,7 +10,7 @@ import scipy.signal
 import scipy.stats
 
 from .. import type_defs as _t
-from .. import enum_defs as _e
+from ..enum_defs import FilterMethod
 
 
 def _mad_value(sig: pl.Series | pl.Expr) -> float:
@@ -100,7 +100,7 @@ def filter_neurokit2(
         signal=sig,
         sampling_rate=sampling_rate,
         lowcut=0.5,
-        method=_e.FilterMethod.Butterworth,
+        method=FilterMethod.Butterworth,
         order=5,
     )
     return _signal_filter_powerline(clean, sampling_rate, powerline)
@@ -113,7 +113,7 @@ def filter_elgendi(sig: npt.NDArray[np.float64], sampling_rate: int) -> npt.NDAr
             sampling_rate=sampling_rate,
             lowcut=0.5,
             highcut=8,
-            method=_e.FilterMethod.Butterworth,
+            method=FilterMethod.Butterworth,
             order=3,
         ),
         dtype=np.float64,

@@ -9,6 +9,7 @@ from .app import type_defs as _t
 from .app.controllers.data_controller import DataController
 from .app.controllers.plot_controller import PlotController
 from .app.gui.main_window import MainWindow
+from .app.utils import safe_disconnect, safe_multi_disconnect
 
 if t.TYPE_CHECKING:
     from .app.models.metadata import QFileMetadata
@@ -38,7 +39,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.main_window.action_close_file.triggered.connect(self.close_file)
         self.main_window.btn_close_file.clicked.connect(self.close_file)
 
-        self.main_window.spin_box_sampling_rate_import_page.valueChanged.connect(
+        self.main_window.spin_box_sampling_rate_import_page.editingFinished.connect(
             self.update_sampling_rate
         )
         self.main_window.combo_box_info_column_import_page.currentTextChanged.connect(
@@ -51,27 +52,39 @@ class SignalEditor(QtWidgets.QApplication):
         self.main_window.action_create_new_section.toggled.connect(self.maybe_new_section)
         self.main_window.action_confirm_section.triggered.connect(self.create_new_section)
         self.main_window.action_cancel_section.triggered.connect(self.cancel_new_section)
-        self.main_window.action_toggle_auto_scaling.toggled.connect(self.plot_controller.toggle_auto_scaling)
+        self.main_window.action_toggle_auto_scaling.toggled.connect(
+            self.plot_controller.toggle_auto_scaling
+        )
+
+        self.main_window.dock_section_list.list_view.sig_delete_current_item.connect(
+            self.delete_section
+        )
 
     def _connect_data_controller_signals(self) -> None:
         self.data_controller.sig_user_input_required.connect(self.show_metadata_dialog)
         self.data_controller.sig_new_metadata.connect(self.update_metadata_widgets)
         self.data_controller.sig_new_data.connect(self.draw_signal)
         self.data_controller.sig_new_data.connect(self.set_section_model)
-        self.main_window.section_list_dock.list_view.clicked.connect(
+        self.main_window.dock_section_list.list_view.clicked.connect(
             self.data_controller.set_active_section
         )
         self.data_controller.sig_active_section_changed.connect(self._on_active_section_changed)
 
     def _disconnect_data_controller_signals(self) -> None:
-        self.data_controller.sig_user_input_required.disconnect(self.show_metadata_dialog)
-        self.data_controller.sig_new_metadata.disconnect(self.update_metadata_widgets)
-        self.data_controller.sig_new_data.disconnect(self.draw_signal)
-        self.data_controller.sig_new_data.disconnect(self.set_section_model)
-        self.main_window.section_list_dock.list_view.clicked.disconnect(
-            self.data_controller.set_active_section
+        sender = self.data_controller
+        signal_slot_pairs = [
+            (sender.sig_user_input_required, self.show_metadata_dialog),
+            (sender.sig_new_metadata, self.update_metadata_widgets),
+            (sender.sig_new_data, self.draw_signal),
+            (sender.sig_new_data, self.set_section_model),
+            (sender.sig_active_section_changed, self._on_active_section_changed),
+        ]
+        safe_multi_disconnect(sender, signal_slot_pairs)
+        safe_disconnect(
+            self.main_window.dock_section_list.list_view,
+            self.main_window.dock_section_list.list_view.clicked,
+            self.data_controller.set_active_section,
         )
-        self.data_controller.sig_active_section_changed.disconnect(self._on_active_section_changed)
 
     @QtCore.Slot(bool)
     def maybe_new_section(self, checked: bool) -> None:
@@ -100,13 +113,19 @@ class SignalEditor(QtWidgets.QApplication):
         self.main_window.toggle_section_actions(False)
         self.main_window.action_create_new_section.setChecked(False)
 
+    @QtCore.Slot(QtCore.QModelIndex)
+    def delete_section(self, index: QtCore.QModelIndex) -> None:
+        self.data_controller.delete_section(index)
+
     @QtCore.Slot()
     def set_section_model(self) -> None:
-        self.main_window.section_list_dock.list_view.setModel(self.data_controller.sections)
+        self.main_window.dock_section_list.list_view.setModel(self.data_controller.sections)
 
     @QtCore.Slot(bool)
     def _on_active_section_changed(self, has_peaks: bool) -> None:
         section = self.data_controller.active_section
+        is_base_section = section.section_id.endswith("_000")
+        self.main_window.action_create_new_section.setEnabled(is_base_section)
         self.plot_controller.set_signal_data(section.processed_signal.to_numpy(), clear=False)
         if has_peaks:
             self.plot_controller.set_peak_data(*section.get_peak_xy())
@@ -114,8 +133,6 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot()
     def draw_signal(self) -> None:
-        # if self.data_controller.metadata is None:
-        # return
         signal_column = self.data_controller.metadata.signal_column
         signal_data = self.data_controller.active_section.data.get_column(signal_column).to_numpy(
             zero_copy_only=True
@@ -173,26 +190,18 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot(int)
     def update_sampling_rate(self, sampling_rate: int) -> None:
-        # if self.data_controller.metadata is None:
-        #     return
         self.data_controller.update_metadata(sampling_rate=sampling_rate)
         self.plot_controller.update_time_axis_scale(sampling_rate)
 
     @QtCore.Slot(str)
     def update_signal_column(self, signal_column: str) -> None:
-        # if self.data_controller.metadata is None:
-        #     return
         self.data_controller.update_metadata(signal_col=signal_column)
 
     @QtCore.Slot(str)
     def update_info_column(self, info_column: str) -> None:
-        # if self.data_controller.metadata is None:
-        #     return
         self.data_controller.update_metadata(info_col=info_column)
 
-    def _set_column_model(self) -> None:
-        # if self.data_controller.metadata is None:
-        #     return
+    def _set_column_models(self) -> None:
         self.main_window.combo_box_info_column_import_page.setModel(
             self.data_controller.metadata.columns
         )
@@ -214,7 +223,7 @@ class SignalEditor(QtWidgets.QApplication):
                 self.data_controller.metadata.signal_column
             )
 
-    def _clear_column_model(self) -> None:
+    def _clear_column_models(self) -> None:
         with QtCore.QSignalBlocker(self.main_window.combo_box_info_column_import_page):
             self.main_window.combo_box_info_column_import_page.clear()
         with QtCore.QSignalBlocker(self.main_window.combo_box_signal_column_import_page):
@@ -256,7 +265,7 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.data_controller.select_file(file_path)
         self.main_window.table_view_import_data.setModel(self.data_controller.data_model)
-        self._set_column_model()
+        self._set_column_models()
 
     @QtCore.Slot()
     def read_data(self) -> None:
@@ -270,8 +279,8 @@ class SignalEditor(QtWidgets.QApplication):
     def close_file(self) -> None:
         self.main_window.table_view_import_data.setModel(None)
         self.main_window.data_tree_widget_import_metadata.clear()
-        self._clear_column_model()
-        self.main_window.section_list_dock.list_view.setModel(None)
+        self._clear_column_models()
+        self.main_window.dock_section_list.list_view.setModel(None)
 
         with contextlib.suppress(Exception):
             self._disconnect_data_controller_signals()

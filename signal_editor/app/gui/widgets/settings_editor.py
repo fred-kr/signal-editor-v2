@@ -1,5 +1,4 @@
 import contextlib
-import enum
 import os
 import typing as t
 
@@ -8,15 +7,12 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from ... import type_defs as _t
 from ...controllers.data_controller import TextFileSeparator
+from ...enum_defs import RateComputationMethod
+from ...utils import get_app_dir
 
 
-def mkColor(*args: _t.PGColor) -> QtGui.QColor:
+def make_qcolor(*args: _t.PGColor) -> QtGui.QColor:
     return args[0] if isinstance(args[0], QtGui.QColor) else pg.mkColor(*args)
-
-
-class RateComputationMethod(enum.StrEnum):
-    Instantaneous = "instantaneous"
-    RollingWindow = "rolling_window"
 
 
 class TypeChecker:
@@ -60,11 +56,6 @@ class TypeChecker:
         self.date_time_expr = QtCore.QRegularExpression(f"^{date_pattern}T{time_pattern}$")
         assert self.date_time_expr.isValid()
 
-        self.directory_expr = QtCore.QRegularExpression(
-            r"^([a-zA-Z]:\\)?((?:[^\\/:*?\"<>|\r\n]+\\?)*)$"
-        )
-        assert self.directory_expr.isValid()
-
     def type_from_text(
         self, text: str
     ) -> (
@@ -76,7 +67,6 @@ class TypeChecker:
             | QtCore.QDate
             | QtCore.QTime
             | QtCore.QDateTime
-            | QtCore.QDir
         ]
         | None
     ):
@@ -94,8 +84,6 @@ class TypeChecker:
             return QtCore.QTime
         elif self.date_time_expr.match(text).hasMatch():
             return QtCore.QDateTime
-        elif self.directory_expr.match(text).hasMatch():
-            return QtCore.QDir
 
         return None
 
@@ -122,8 +110,6 @@ class TypeChecker:
             return QtGui.QRegularExpressionValidator(self.rect_expr, parent)
         if isinstance(value, QtCore.QSize):
             return QtGui.QRegularExpressionValidator(self.size_expr, parent)
-        if isinstance(value, QtCore.QDir):
-            return QtGui.QRegularExpressionValidator(self.directory_expr, parent)
         return None
 
     def from_string(self, text: str, original_value: t.Any) -> t.Any:
@@ -160,8 +146,6 @@ class TypeChecker:
             return QtCore.QSize(int(match.captured(1)), int(match.captured(2)))
         if isinstance(original_value, list):
             return text.split(",")
-        if isinstance(original_value, QtCore.QDir):
-            return QtCore.QDir(text)
         return type(original_value)(text)
 
 
@@ -254,7 +238,6 @@ class VariantDelegate(QtWidgets.QItemDelegate):
                 float,
                 str,
                 QtCore.QByteArray,
-                QtCore.QDir,
                 QtGui.QColor,
                 QtCore.QDate,
                 QtCore.QTime,
@@ -275,8 +258,6 @@ class VariantDelegate(QtWidgets.QItemDelegate):
             if value in {"instantaneous", "rolling_window"}:
                 return RateComputationMethod(value).name
             return value
-        if isinstance(value, QtCore.QDir):
-            return value.canonicalPath()
         if isinstance(value, bool):
             return "True" if value else "False"
         if isinstance(value, QtCore.QByteArray):
@@ -296,30 +277,21 @@ class VariantDelegate(QtWidgets.QItemDelegate):
             w, h = value.width(), value.height()
             return f"QSize(Width = {w}, Height = {h})"
         if isinstance(value, list):
-            return ", ".join(map(repr, value))  # pyright: ignore[reportUnknownArgumentType]
-        if isinstance(value, tuple) and len(value) == 4:  # pyright: ignore[reportUnknownArgumentType]
+            return ", ".join(map(repr, value))  # type: ignore
+        if isinstance(value, tuple) and len(value) == 4:  # type: ignore
             try:
-                c = mkColor(value)  # pyright: ignore[reportUnknownArgumentType]
+                c = make_qcolor(value)  # type: ignore
                 return c.name()
             except Exception:
                 return f"<{value}>"
         return "<Invalid>" if value is None else f"<{value}>"
 
 
-def get_app_dir() -> QtCore.QDir:
-    app_instance = QtWidgets.QApplication.instance()
-    import sys
-
-    if hasattr(sys, "frozen") and app_instance is not None:
-        return QtCore.QDir(app_instance.applicationDirPath())
-    return QtCore.QDir.current()
-
-
 class SettingsTree(QtWidgets.QTreeWidget):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
 
-        self._DEFAULT_VALUES = _t.DefaultAppSettings(
+        self.DEFAULT_VALUES: t.Final[_t.DefaultAppSettings] = _t.DefaultAppSettings(
             Plot=_t.DefaultPlotSettings(
                 background_color=pg.mkColor("black"),
                 foreground_color=pg.mkColor("lightgray"),
@@ -347,7 +319,7 @@ class SettingsTree(QtWidgets.QTreeWidget):
                 last_info_column_name=None,
             ),
         )
-        self._DESCRIPTIONS = {
+        self.DESCRIPTIONS: t.Final[dict[str, str]] = {
             # "Plot": "Settings related to the interactive plots",
             "background_color": "The background color for the interactive plots",
             "foreground_color": "The foreground (text, axis, etc) color for the interactive plots",
@@ -418,7 +390,7 @@ class SettingsTree(QtWidgets.QTreeWidget):
 
         if self.settings is not None:
             # Check if all default values exist in the settings, if not add the missing ones
-            for group, default_values in self._DEFAULT_VALUES.items():
+            for group, default_values in self.DEFAULT_VALUES.items():
                 for setting_key, default_value in default_values.items():  # type: ignore
                     setting_key = f"{group}/{setting_key}"
                     if not self.settings.contains(setting_key):
@@ -448,7 +420,7 @@ class SettingsTree(QtWidgets.QTreeWidget):
         if sure != QtWidgets.QMessageBox.StandardButton.Yes:
             return
 
-        for grp, kvs in self._DEFAULT_VALUES.items():
+        for grp, kvs in self.DEFAULT_VALUES.items():
             self.settings.remove(grp)
             self.settings.beginGroup(grp)
             for k, v in kvs.items():  # type: ignore
@@ -480,8 +452,11 @@ class SettingsTree(QtWidgets.QTreeWidget):
         if self.settings is None:
             return
 
-        with contextlib.suppress(Exception):
+        itemChangedSignal = QtCore.QMetaMethod.fromSignal(self.itemChanged)
+        if self.isSignalConnected(itemChangedSignal):
             self.itemChanged.disconnect(self.update_setting)
+        # with contextlib.suppress(RuntimeError):
+        # self.itemChanged.disconnect(self.update_setting)
 
         self.settings.sync()
         self.update_child_items(None)
@@ -513,6 +488,24 @@ class SettingsTree(QtWidgets.QTreeWidget):
         if self.auto_refresh:
             self.refresh()
 
+    def determine_icon(self, key: str) -> QtGui.QIcon:
+        if "color" in key:
+            return self.color_icon
+        elif key == "data_folder":
+            return self.folder_import_icon
+        elif key == "output_folder":
+            return self.folder_export_icon
+        else:
+            return self.key_icon
+
+    def adjust_colors(self, child: QtWidgets.QTreeWidgetItem, value: _t.PGColor) -> None:
+        color = make_qcolor(value)
+        child.setBackground(2, color)
+        if color.lightnessF() < 0.5:
+            child.setForeground(2, QtGui.QBrush(QtGui.QColor(255, 255, 255)))
+        else:
+            child.setForeground(2, QtGui.QBrush(QtGui.QColor(0, 0, 0)))
+
     def update_child_items(self, parent: QtWidgets.QTreeWidgetItem | None) -> None:
         divider_index = 0
         if self.settings is None:
@@ -540,28 +533,14 @@ class SettingsTree(QtWidgets.QTreeWidget):
             child_index = self.find_child(parent, key, 0)
             if child_index == -1:
                 child = self.create_item(key, parent, divider_index)
-                if "color" in key:
-                    child.setIcon(0, self.color_icon)
-                elif key == "data_folder":
-                    child.setIcon(0, self.folder_import_icon)
-                elif key == "output_folder":
-                    child.setIcon(0, self.folder_export_icon)
-                else:
-                    child.setIcon(0, self.key_icon)
+                child.setIcon(0, self.determine_icon(key))
                 divider_index += 1
             elif child_index >= divider_index:
                 child = self.child_at(parent, child_index)
                 for i in range(child.childCount()):
                     self.delete_item(child, i)
                 self.move_item_forward(parent, child_index, divider_index)
-                if "color" in key:
-                    child.setIcon(0, self.color_icon)
-                elif key == "data_folder":
-                    child.setIcon(0, self.folder_import_icon)
-                elif key == "output_folder":
-                    child.setIcon(0, self.folder_export_icon)
-                else:
-                    child.setIcon(0, self.key_icon)
+                child.setIcon(0, self.determine_icon(key))
                 divider_index += 1
             else:
                 child = self.child_at(parent, child_index)
@@ -571,22 +550,17 @@ class SettingsTree(QtWidgets.QTreeWidget):
                 child.setText(1, "Invalid")
             else:
                 # Try to convert to type unless a QByteArray is received
-                if isinstance(value, str):
-                    if value_type := self._type_checker.type_from_text(value):
-                        value = self.settings.value(key, type=value_type)
+                if isinstance(value, str) and (
+                    value_type := self._type_checker.type_from_text(value)
+                ):
+                    value = self.settings.value(key, type=value_type)
                 child.setText(1, value.__class__.__name__)
             child.setText(2, VariantDelegate.display_text(value))
             child.setData(2, QtCore.Qt.ItemDataRole.UserRole, value)
-            child.setText(3, self._DESCRIPTIONS.get(key, ""))
+            child.setText(3, self.DESCRIPTIONS.get(key, ""))
             if "color" in key or isinstance(value, QtGui.QColor):
                 with contextlib.suppress(Exception):
-                    color = mkColor(value)  # pyright: ignore[reportArgumentType]
-                    child.setBackground(2, color)
-                    # Adjust foreground color to be readable
-                    if color.lightnessF() < 0.5:
-                        child.setForeground(2, QtGui.QBrush(QtGui.QColor(255, 255, 255)))
-                    else:
-                        child.setForeground(2, QtGui.QBrush(QtGui.QColor(0, 0, 0)))
+                    self.adjust_colors(child, value)  # type: ignore
 
         while divider_index < self.child_count(parent):
             self.delete_item(parent, divider_index)
@@ -644,7 +618,7 @@ class SettingsTree(QtWidgets.QTreeWidget):
         if not item.parent():
             return
 
-        default_value = self._DEFAULT_VALUES[item.parent().text(0)][key]  # type: ignore
+        default_value = self.DEFAULT_VALUES[item.parent().text(0)][key]  # type: ignore
         if isinstance(default_value, QtCore.QDir):
             default_value = default_value.canonicalPath()
         item.setData(2, QtCore.Qt.ItemDataRole.UserRole, default_value)
@@ -683,6 +657,13 @@ class SettingsEditor(QtWidgets.QDialog):
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
+        self._type_handlers = {
+            "QColor": self._handle_qcolor,
+            "str": self._handle_str,
+            "int": self._handle_int,
+            "float": self._handle_float,
+            "bool": self._handle_bool,
+        }
         self.setVisible(False)
 
         self.setWindowTitle("Settings")
@@ -773,7 +754,7 @@ class SettingsEditor(QtWidgets.QDialog):
     def get_text(self, initial: str) -> str:
         val, ok = QtWidgets.QInputDialog.getText(
             self,
-            "Edit Item Value",
+            "Edit Setting",
             "Enter new value:",
             QtWidgets.QLineEdit.EchoMode.Normal,
             initial,
@@ -785,7 +766,7 @@ class SettingsEditor(QtWidgets.QDialog):
     ) -> int:
         val, ok = QtWidgets.QInputDialog.getInt(
             self,
-            "Edit Item Value",
+            "Edit Setting",
             "Enter new value:",
             initial,
             min_allowed,
@@ -798,7 +779,7 @@ class SettingsEditor(QtWidgets.QDialog):
     ) -> float:
         val, ok = QtWidgets.QInputDialog.getDouble(
             self,
-            "Edit Item Value",
+            "Edit Setting",
             "Enter new value:",
             initial,
             min_allowed,
@@ -808,102 +789,99 @@ class SettingsEditor(QtWidgets.QDialog):
 
     @QtCore.Slot(QtWidgets.QTreeWidgetItem)
     def _on_edit_selected_item_value(self, item: QtWidgets.QTreeWidgetItem) -> None:
-        new_value = None
-        match item.text(1):
-            case "QColor":
-                new_value = self.get_color(item.data(2, QtCore.Qt.ItemDataRole.UserRole))
-                if new_value is not None:
-                    item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
-                    item.setText(2, new_value.name())
-                    item.setBackground(2, new_value)
-
-            case "str":
-                if item.text(0) in {"data_folder", "output_folder"}:
-                    if new_value := QtWidgets.QFileDialog.getExistingDirectory(
-                        self,
-                        "Select Directory",
-                        item.data(2, QtCore.Qt.ItemDataRole.UserRole),
-                    ):
-                        item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
-                        item.setText(2, new_value)
-
-                elif item.text(0) == "rate_computation_method":
-                    items = ("instantaneous", "rolling_window")
-                    current_value = item.data(2, QtCore.Qt.ItemDataRole.UserRole)
-                    new_value, ok = QtWidgets.QInputDialog.getItem(
-                        self,
-                        "Edit Item Value",
-                        "Select Method",
-                        items,
-                        items.index(current_value),
-                        False,
-                    )
-                    if ok and new_value:
-                        item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
-                        item.setText(2, new_value)
-                elif item.text(0) == "txt_file_separator_character":
-                    items = [TextFileSeparator(c).name for c in TextFileSeparator]
-                    current_value = TextFileSeparator(
-                        item.data(2, QtCore.Qt.ItemDataRole.UserRole)
-                    ).name
-                    new_value, ok = QtWidgets.QInputDialog.getItem(
-                        self,
-                        "Edit Item Value",
-                        "Select Character",
-                        items,
-                        items.index(current_value),
-                        False,
-                    )
-                    if ok and new_value:
-                        item.setData(
-                            2, QtCore.Qt.ItemDataRole.UserRole, TextFileSeparator[new_value].value
-                        )
-                        item.setText(2, new_value)
-                else:
-                    new_value = self.get_text(item.data(2, QtCore.Qt.ItemDataRole.UserRole))
-                    item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
-                    item.setText(2, new_value)
-            case "int":
-                if item.text(0) in {
-                    "click_width_signal_line",
-                    "search_around_click_radius",
-                    "minimum_peak_distance",
-                }:
-                    new_value = self.get_int(
-                        item.data(2, QtCore.Qt.ItemDataRole.UserRole), 5, 10_000
-                    )
-                else:
-                    new_value = self.get_int(item.data(2, QtCore.Qt.ItemDataRole.UserRole))
-                item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
-                item.setText(2, str(new_value))
-            case "float":
-                if item.text(0) == "sampling_rate":
-                    new_value = self.get_float(
-                        item.data(2, QtCore.Qt.ItemDataRole.UserRole), 1, 100_000
-                    )
-                else:
-                    new_value = self.get_float(item.data(2, QtCore.Qt.ItemDataRole.UserRole))
-
-                item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
-                item.setText(2, str(new_value))
-            case "bool":
-                options = ["True", "False"]
-                new_value, ok = QtWidgets.QInputDialog.getItem(
-                    self,
-                    "Edit Item Value",
-                    "Select new value:",
-                    options,
-                    options.index(str(item.data(2, QtCore.Qt.ItemDataRole.UserRole))),
-                    False,
-                )
-                if ok and new_value:
-                    item.setData(2, QtCore.Qt.ItemDataRole.UserRole, bool(new_value))
-                    item.setText(2, new_value)
-            case _:
-                QtWidgets.QMessageBox.warning(
-                    self,
-                    "Cannot Edit Directly",
-                    "This item cannot be edited directly.",
-                )
+        handler = self._type_handlers.get(item.text(1), self._handle_default)
+        new_value = handler(item)
         if new_value is not None:
             self.sig_setting_changed.emit(item.text(0), new_value)
+
+    def _handle_qcolor(self, item: QtWidgets.QTreeWidgetItem) -> None:
+        new_value = self.get_color(item.data(2, QtCore.Qt.ItemDataRole.UserRole))
+        if new_value is not None:
+            item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
+            item.setText(2, new_value.name())
+            item.setBackground(2, new_value)
+
+    def _handle_str(self, item: QtWidgets.QTreeWidgetItem) -> None:
+        setting_name = item.text(0)
+        if setting_name in {"data_folder", "output_folder"}:
+            if new_value := QtWidgets.QFileDialog.getExistingDirectory(
+                self, "Select Directory", item.data(2, QtCore.Qt.ItemDataRole.UserRole)
+            ):
+                item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
+                item.setText(2, new_value)
+        elif setting_name == "rate_computation_method":
+            items = ("instantaneous", "rolling_window")
+            current_value = item.data(2, QtCore.Qt.ItemDataRole.UserRole)
+            new_value, ok = QtWidgets.QInputDialog.getItem(
+                self,
+                "Edit Setting",
+                "Select Method",
+                items,
+                items.index(current_value),
+                False,
+            )
+            if ok and new_value:
+                item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
+                item.setText(2, new_value)
+        elif setting_name == "txt_file_separator_character":
+            items = [TextFileSeparator(c).name for c in TextFileSeparator]
+            current_value = TextFileSeparator(item.data(2, QtCore.Qt.ItemDataRole.UserRole)).name
+            new_value, ok = QtWidgets.QInputDialog.getItem(
+                self,
+                "Edit Setting",
+                "Select Character",
+                items,
+                items.index(current_value),
+                False,
+            )
+            if ok and new_value:
+                item.setData(2, QtCore.Qt.ItemDataRole.UserRole, TextFileSeparator[new_value].value)
+                item.setText(2, new_value)
+        else:
+            new_value = self.get_text(item.data(2, QtCore.Qt.ItemDataRole.UserRole))
+            item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
+            item.setText(2, new_value)
+
+    def _handle_int(self, item: QtWidgets.QTreeWidgetItem) -> None:
+        setting_name = item.text(0)
+        if setting_name in {
+            "click_width_signal_line",
+            "search_around_click_radius",
+            "minimum_peak_distance",
+        }:
+            new_value = self.get_int(item.data(2, QtCore.Qt.ItemDataRole.UserRole), 5, 10_000)
+        else:
+            new_value = self.get_int(item.data(2, QtCore.Qt.ItemDataRole.UserRole))
+        item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
+        item.setText(2, str(new_value))
+
+    def _handle_float(self, item: QtWidgets.QTreeWidgetItem) -> None:
+        setting_name = item.text(0)
+        if setting_name == "sampling_rate":
+            new_value = self.get_float(item.data(2, QtCore.Qt.ItemDataRole.UserRole), 1, 100_000)
+        else:
+            new_value = self.get_float(item.data(2, QtCore.Qt.ItemDataRole.UserRole))
+
+        item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
+        item.setText(2, str(new_value))
+
+    def _handle_bool(self, item: QtWidgets.QTreeWidgetItem) -> None:
+        options = ("True", "False")
+        new_value, ok = QtWidgets.QInputDialog.getItem(
+            self,
+            "Edit Setting",
+            "Select new value:",
+            options,
+            options.index(str(item.data(2, QtCore.Qt.ItemDataRole.UserRole))),
+            False,
+        )
+        if ok and new_value:
+            item.setData(2, QtCore.Qt.ItemDataRole.UserRole, bool(new_value))
+            item.setText(2, new_value)
+
+    def _handle_default(self, item: QtWidgets.QTreeWidgetItem) -> None:
+        QtWidgets.QMessageBox.warning(
+            self,
+            "Cannot Edit Directly",
+            "This item cannot be edited directly.",
+        )
