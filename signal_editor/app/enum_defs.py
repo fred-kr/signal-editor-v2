@@ -1,5 +1,10 @@
 import enum
 
+class RateComputationMethod(enum.StrEnum):
+    Instantaneous = "instantaneous"
+    RollingWindow = "rolling_window"
+
+    
 class TextFileSeparator(enum.StrEnum):
     Tab = "\t"
     Space = " "
