@@ -10,7 +10,7 @@ python = ">=3.12,<3.13"
 pyarrow = "^15.0.2"
 pyopengl-accelerate = "^3.1.7"
 wfdb = "^4.1.2"
-polars = "^0.20.18"
+polars = "^0.20.21"
 neurokit2 = "^0.2.7"
 pyopengl = "^3.1.7"
 mne = "^1.6.1"
@@ -20,8 +20,8 @@ numpy = "^1.26.4"
 scipy = "^1.13.0"
 xlsxwriter = "^3.2.0"
 xlsx2csv = "^0.8.2"
-pyinstaller = "^6.5.0"
-pyinstaller-hooks-contrib = "^2024.3"
+pyinstaller = "^6.6.0"
+pyinstaller-hooks-contrib = "^2024.4"
 python-dateutil = "^2.9.0.post0"
 qtconsole = "^5.5.1"
 attrs = "^23.2.0"
@@ -29,21 +29,21 @@ tables = "^3.9.2"
 numexpr = "^2.10.0"
 numba = "^0.59.1"
 pyqtgraph = {git = "https://github.com/pyqtgraph/pyqtgraph.git", rev = "master"}
-statsmodels = "^0.14.1"
+statsmodels = "^0.14.2"
 ipykernel = "^6.29.4"
 superqt = "^0.6.3"
-pyside6 = "^6.6.3"
+pyside6 = "^6.7.0"
 loguru = "^0.7.2"
 
 [tool.poetry.group.dev.dependencies]
 sourcery = "^1.16.0"
-ruff = "^0.3.5"
+ruff = "^0.3.7"
 mypy = {extras = ["mypyc"], version = "^1.9.0"}
 python-dotenv = "^1.0.1"
 pytest = "^8.1.1"
 hypothesis = {extras = ["numpy"], version = "^6.100"}
-pyside6-examples = "^6.6.3"
-rich = {extras = ["jupyter"], version ="^13.7.1"}
+pyside6-examples = "^6.7.0"
+rich = {extras = ["jupyter"], version = "^13.7.1"}
 
 [tool.mypy]
 python_version = "3.12"
