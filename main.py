@@ -2,6 +2,8 @@
 Main entry point for the application.
 """
 
+from PySide6 import QtWidgets
+
 if __name__ == "__main__":
     import multiprocessing
 
@@ -10,10 +12,11 @@ if __name__ == "__main__":
     import os
     import sys
 
+    import polars as pl
     import pyqtgraph as pg
+
     # import qdarkstyle
     from loguru import logger
-    import polars as pl
 
     from signal_editor.signal_editor import SignalEditor
 
@@ -26,10 +29,14 @@ if __name__ == "__main__":
     else:
         logger.remove()
 
-    pg.setConfigOptions(useOpenGL=True, enableExperimental=True, useNumba=True, useCupy=True, segmentedLineMode="on")
+    pg.setConfigOptions(
+        useOpenGL=True, enableExperimental=True, useNumba=True, useCupy=True, segmentedLineMode="on"
+    )
     pl.Config().activate_decimals(True)
 
     app = SignalEditor(sys.argv)
     # app.setStyleSheet(qdarkstyle.load_stylesheet(qdarkstyle.DarkPalette))
+    # Built-in styles: ['windows11', 'windowsvista', 'Windows', 'Fusion']
+    app.setStyle(QtWidgets.QStyleFactory.create("windows11"))
     app.main_window.show()
     sys.exit(app.exec())
