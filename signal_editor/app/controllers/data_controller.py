@@ -6,7 +6,7 @@ import polars as pl
 from PySide6 import QtCore
 
 from ..core.file_io import detect_sampling_rate, read_edf
-from ..core.section import Section, SectionID
+from ..core.section import Section
 from ..enum_defs import TextFileSeparator
 from ..models.data_table import DataTableModel
 from ..models.metadata import QFileMetadata
@@ -43,7 +43,6 @@ class DataController(QtCore.QObject):
 
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
-        Section.reset_id_counter()
 
         settings = QtCore.QSettings()
         self._sampling_rate = int(settings.value("Data/sampling_rate"))  # type: ignore
@@ -125,11 +124,8 @@ class DataController(QtCore.QObject):
             self.sig_active_section_changed.emit(has_peak_data)
 
     @property
-    def editable_section_ids(self) -> list[SectionID]:
-        """
-        Returns the IDs of all currently available sections, excluding the base section.
-        """
-        return self.sections.editable_section_ids
+    def base_section_index(self) -> QtCore.QModelIndex:
+        return self.sections.index(0)
 
     def update_metadata(
         self,
@@ -151,7 +147,7 @@ class DataController(QtCore.QObject):
         self.sig_new_metadata.emit(self.metadata)
 
     @QtCore.Slot(str)
-    def select_file(self, file_path: Path | str) -> None:
+    def open_file(self, file_path: Path | str) -> None:
         file_path = Path(file_path)
         if not file_path.is_file():
             raise FileNotFoundError(
@@ -205,7 +201,7 @@ class DataController(QtCore.QObject):
         self.data_model.set_metadata(self.metadata)
         self.sig_new_metadata.emit(self.metadata)
 
-    def read_file(self) -> None:
+    def load_data(self) -> None:
         if self._metadata is None:
             return
         suffix = self.metadata.file_format
@@ -248,9 +244,10 @@ class DataController(QtCore.QObject):
         self.data_model.set_dataframe(df, signal_col, info_col=info_col)
         self._base_section = Section(df, self.metadata.signal_column)
         self.sections.add_section(self._base_section)
+        self.set_active_section(self.base_section_index)
         self.sig_new_data.emit()
 
-    def create_new_section(self, start: float | int, stop: float | int) -> None:
+    def create_section(self, start: float | int, stop: float | int) -> None:
         if self._metadata is None:
             return
         data = self.base_df.filter(pl.col("index").is_between(start, stop))
@@ -258,8 +255,6 @@ class DataController(QtCore.QObject):
         self.sections.add_section(section)
         self.sig_section_added.emit(section.section_id)
 
-    def delete_section(self, idx: QtCore.QModelIndex | SectionID) -> None:
-        if isinstance(idx, SectionID):
-            self.sections.remove_section(idx)
-        else:
-            self.sections.remove_section_by_index(idx)
+    def delete_section(self, idx: QtCore.QModelIndex) -> None:
+        self.sections.remove_section(idx)
+        self.set_active_section(self.base_section_index)

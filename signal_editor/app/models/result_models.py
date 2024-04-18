@@ -8,7 +8,7 @@ import polars as pl
 from .. import type_defs as _t
 
 if t.TYPE_CHECKING:
-    from ..controllers.data_controller import SelectedFileMetadata
+    from .metadata import QFileMetadata
     from ..core.section import ManualPeakEdits, SectionID, SectionMetadata
 
 
@@ -74,7 +74,7 @@ class DetailedSectionResult:
 
 @dataclass(slots=True, frozen=True, repr=True)
 class CompleteResult:
-    metadata: "SelectedFileMetadata" = field()
+    metadata: "QFileMetadata" = field()
     global_dataframe: pl.DataFrame = field()
     section_results: dict["SectionID", DetailedSectionResult] = field()
 

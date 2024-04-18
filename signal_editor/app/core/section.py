@@ -104,6 +104,14 @@ class SectionID(str):
             )
         super().__init__()
 
+    @staticmethod
+    def default() -> "SectionID":
+        return SectionID("Section_DEFAULT_000")
+
+    def pretty_name(self) -> str:
+        sig_name = self.split("_")[1]
+        return f"Section {self[-3:]} ({sig_name.capitalize()})"
+
 
 @attrs.define
 class SectionMetadata:
@@ -124,32 +132,10 @@ class SectionMetadata:
 
 
 class Section:
-    _id_counter: t.ClassVar[int] = 0
-    _base_created: t.ClassVar[bool] = False
-
-    @classmethod
-    def _get_next_id(cls) -> int:
-        cls._id_counter += 1
-        return cls._id_counter
-
-    @classmethod
-    def reset_id_counter(cls) -> None:
-        cls._id_counter = 0
-        cls._base_created = False
-
-    @classmethod
-    def get_id_counter(cls) -> int:
-        return cls._id_counter
-
     def __init__(self, data: pl.DataFrame, signal_name: str) -> None:
         self.signal_name = signal_name
         self.processed_signal_name = f"{self.signal_name}_processed"
-
-        if not self.__class__._base_created:
-            self.section_id = SectionID(f"Section_{self.signal_name}_000")
-            self.__class__._base_created = True
-        else:
-            self.section_id = self._generate_id()
+        self.section_id = SectionID.default()
 
         if "section_index" in data.columns:
             data.drop_in_place("section_index")
@@ -180,11 +166,6 @@ class Section:
 
         self._processing_parameters = ProcessingParameters(self.sampling_rate)  # type: ignore
         self._manual_peak_edits = ManualPeakEdits()
-
-    def _generate_id(self) -> SectionID:
-        prefix = f"Section_{self.signal_name}"
-        number = self._get_next_id()
-        return SectionID(f"{prefix}_{number:03}")
 
     @property
     def raw_signal(self) -> pl.Series:

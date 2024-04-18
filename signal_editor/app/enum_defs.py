@@ -1,5 +1,13 @@
 import enum
 
+class LogLevel(enum.IntEnum):
+    DEBUG = 10
+    INFO = 20
+    WARNING = 30
+    ERROR = 40
+    CRITICAL = 50
+    SUCCESS = 60
+    
 class RateComputationMethod(enum.StrEnum):
     Instantaneous = "instantaneous"
     RollingWindow = "rolling_window"

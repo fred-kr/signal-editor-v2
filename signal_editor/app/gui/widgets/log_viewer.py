@@ -1,11 +1,12 @@
 import os
+import typing as t
 
 from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
 class TextEditLoguru(QtWidgets.QTextEdit):
-    sig_log_message = QtCore.Signal(str)
+    sig_log_message: t.ClassVar[QtCore.Signal] = QtCore.Signal(str, int, str)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
@@ -30,22 +31,35 @@ class TextEditLoguru(QtWidgets.QTextEdit):
 
         # Format the message using HTML
         html_dtm = f'<b style="color: gray;">{dtm_part}</b>'
-        if "debug" in lvl_part.lower():
-            html_lvl = f'<b style="color: steelblue;">{lvl_part}</b>'
-        elif "info" in lvl_part.lower():
+        if "success" in lvl_part.lower():
             html_lvl = f'<b style="color: lightgreen;">{lvl_part}</b>'
+            log_level = 60
+        elif "debug" in lvl_part.lower():
+            html_lvl = f'<b style="color: teal;">{lvl_part}</b>'
+            log_level = 10
+        elif "info" in lvl_part.lower():
+            html_lvl = f'<b style="color: lightgray;">{lvl_part}</b>'
+            log_level = 20
         elif "warning" in lvl_part.lower():
             html_lvl = f'<b style="color: goldenrod;">{lvl_part}</b>'
+            log_level = 30
         elif "error" in lvl_part.lower():
-            html_lvl = f'<b style="color: red;">{lvl_part}</b>'
-        elif "critical" in lvl_part.lower():
             html_lvl = f'<b style="color: firebrick;">{lvl_part}</b>'
+            log_level = 40
+        elif "critical" in lvl_part.lower():
+            html_lvl = f'<b style="color: crimson;">{lvl_part}</b>'
+            log_level = 50
         else:
-            html_lvl = f'<b style="color: gray;">{lvl_part}</b>'
+            html_lvl = f'<b style="color: lightgray;">{lvl_part}</b>'
+            log_level = 20
 
         html_src = f"<i>{src_part}</i>"
         html_out = f"{html_dtm} | {html_lvl} | {html_src} - {msg_part}"
-        self.sig_log_message.emit(html_out)
+        self.sig_log_message.emit(html_out, log_level, message)
+
+    @QtCore.Slot(str, int, str)
+    def append(self, message: str, log_level: int, original_message: str) -> None:
+        super().append(message)
 
 
 class StatusMessageDock(QtWidgets.QDockWidget):

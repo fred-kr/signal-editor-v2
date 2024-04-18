@@ -290,24 +290,26 @@ class PlotController(QtCore.QObject):
         self.pw_main.addItem(marked_region)
         self.hide_region_selector()
 
-    def set_signal_data(self, y_data: npt.NDArray[np.float_], clear: bool = True) -> None:
+    def set_signal_data(self, y_data: npt.NDArray[np.float64], clear: bool = False) -> None:
         if self.signal_curve is None:
             return
         if clear:
-            self.pw_main.plotItem.clear()
-            self.pw_rate.plotItem.clear()
+            self.signal_curve.clear()
+            if self.peak_scatter is not None and self.rate_curve is not None:
+                self.peak_scatter.clear()
+                self.rate_curve.clear()
 
         self.signal_curve.setData(y_data)
 
-    def set_rate_data(self, y_data: npt.NDArray[np.float_], clear: bool = True) -> None:
+    def set_rate_data(self, y_data: npt.NDArray[np.float64], clear: bool = False) -> None:
         if self.rate_curve is None:
             return
         if clear:
-            self.pw_rate.plotItem.clear()
+            self.rate_curve.clear()
         self.rate_curve.setData(y_data)
 
     def set_peak_data(
-        self, x_data: npt.NDArray[np.intp | np.uintp], y_data: npt.NDArray[np.float_]
+        self, x_data: npt.NDArray[np.intp | np.uintp], y_data: npt.NDArray[np.float64]
     ) -> None:
         if self.peak_scatter is None:
             return

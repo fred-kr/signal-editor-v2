@@ -3,6 +3,7 @@ import typing as t
 from pathlib import Path
 
 import superqt
+from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from .app import type_defs as _t
@@ -60,12 +61,19 @@ class SignalEditor(QtWidgets.QApplication):
             self.delete_section
         )
 
+    @QtCore.Slot()
+    def _on_sig_new_data(self) -> None:
+        self.main_window.dock_section_list.list_view.setModel(self.data_controller.sections)
+        self.main_window.dock_section_list.list_view.setCurrentIndex(
+            self.data_controller.base_section_index
+        )
+        self.update_sampling_rate()
+
     def _connect_data_controller_signals(self) -> None:
         self.data_controller.sig_user_input_required.connect(self.show_metadata_dialog)
         self.data_controller.sig_new_metadata.connect(self.update_metadata_widgets)
-        self.data_controller.sig_new_data.connect(self.draw_signal)
-        self.data_controller.sig_new_data.connect(self.set_section_model)
-        self.main_window.dock_section_list.list_view.clicked.connect(
+        self.data_controller.sig_new_data.connect(self._on_sig_new_data)
+        self.main_window.dock_section_list.list_view.pressed.connect(
             self.data_controller.set_active_section
         )
         self.data_controller.sig_active_section_changed.connect(self._on_active_section_changed)
@@ -75,14 +83,13 @@ class SignalEditor(QtWidgets.QApplication):
         signal_slot_pairs = [
             (sender.sig_user_input_required, self.show_metadata_dialog),
             (sender.sig_new_metadata, self.update_metadata_widgets),
-            (sender.sig_new_data, self.draw_signal),
-            (sender.sig_new_data, self.set_section_model),
+            (sender.sig_new_data, self._on_sig_new_data),
             (sender.sig_active_section_changed, self._on_active_section_changed),
         ]
         safe_multi_disconnect(sender, signal_slot_pairs)
         safe_disconnect(
             self.main_window.dock_section_list.list_view,
-            self.main_window.dock_section_list.list_view.clicked,
+            self.main_window.dock_section_list.list_view.pressed,
             self.data_controller.set_active_section,
         )
 
@@ -102,7 +109,7 @@ class SignalEditor(QtWidgets.QApplication):
         if not self.plot_controller.region_selector.isVisible():
             return
         start, stop = self.plot_controller.region_selector.getRegion()
-        self.data_controller.create_new_section(start, stop)
+        self.data_controller.create_section(start, stop)
         self.plot_controller.hide_region_selector()
         self.main_window.toggle_section_actions(False)
         self.main_window.action_create_new_section.setChecked(False)
@@ -116,28 +123,17 @@ class SignalEditor(QtWidgets.QApplication):
     @QtCore.Slot(QtCore.QModelIndex)
     def delete_section(self, index: QtCore.QModelIndex) -> None:
         self.data_controller.delete_section(index)
-
-    @QtCore.Slot()
-    def set_section_model(self) -> None:
-        self.main_window.dock_section_list.list_view.setModel(self.data_controller.sections)
+        logger.info(f"Deleted section {index.row():03}")
 
     @QtCore.Slot(bool)
     def _on_active_section_changed(self, has_peaks: bool) -> None:
         section = self.data_controller.active_section
-        is_base_section = section.section_id.endswith("_000")
+        is_base_section = section is self.data_controller.get_base_section()
         self.main_window.action_create_new_section.setEnabled(is_base_section)
-        self.plot_controller.set_signal_data(section.processed_signal.to_numpy(), clear=False)
+        self.plot_controller.set_signal_data(section.processed_signal.to_numpy())
         if has_peaks:
             self.plot_controller.set_peak_data(*section.get_peak_xy())
-            self.plot_controller.set_rate_data(section.rate_instantaneous_interpolated, clear=False)
-
-    @QtCore.Slot()
-    def draw_signal(self) -> None:
-        signal_column = self.data_controller.metadata.signal_column
-        signal_data = self.data_controller.active_section.data.get_column(signal_column).to_numpy(
-            zero_copy_only=True
-        )
-        self.plot_controller.set_signal_data(signal_data, clear=False)
+            self.plot_controller.set_rate_data(section.rate_instantaneous_interpolated)
 
     @QtCore.Slot(dict)
     def update_metadata(self, metadata_dict: _t.MetadataUpdateDict) -> None:
@@ -188,18 +184,22 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.main_window.metadata_dialog.open()
 
-    @QtCore.Slot(int)
-    def update_sampling_rate(self, sampling_rate: int) -> None:
+    @QtCore.Slot()
+    def update_sampling_rate(self) -> None:
+        sampling_rate = self.main_window.spin_box_sampling_rate_import_page.value()
         self.data_controller.update_metadata(sampling_rate=sampling_rate)
         self.plot_controller.update_time_axis_scale(sampling_rate)
+        logger.info(f"Sampling rate set to {sampling_rate} Hz.")
 
     @QtCore.Slot(str)
     def update_signal_column(self, signal_column: str) -> None:
         self.data_controller.update_metadata(signal_col=signal_column)
+        logger.info(f"Signal column set to '{signal_column}'.")
 
     @QtCore.Slot(str)
     def update_info_column(self, info_column: str) -> None:
         self.data_controller.update_metadata(info_col=info_column)
+        logger.info(f"Info column set to '{info_column}'.")
 
     def _set_column_models(self) -> None:
         self.main_window.combo_box_info_column_import_page.setModel(
@@ -263,13 +263,13 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.plot_controller.reset()
 
-        self.data_controller.select_file(file_path)
+        self.data_controller.open_file(file_path)
         self.main_window.table_view_import_data.setModel(self.data_controller.data_model)
         self._set_column_models()
 
     @QtCore.Slot()
     def read_data(self) -> None:
-        self.data_controller.read_file()
+        self.data_controller.load_data()
         for col in range(self.data_controller.base_df.width):
             self.main_window.table_view_import_data.horizontalHeader().setSectionResizeMode(
                 col, QtWidgets.QHeaderView.ResizeMode.Stretch
