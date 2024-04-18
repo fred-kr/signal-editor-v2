@@ -50,5 +50,17 @@
     <file alias="expand_minus">fugue-icons/toggle.png</file>
     <file alias="folder_import">fugue-icons/folder-import.png</file>
     <file alias="folder_export">fugue-icons/folder-export.png</file>
+    <file alias="info">fugue-icons/information.png</file>
+    <file alias="question">fugue-icons/question.png</file>
+    <file alias="warning_triangle">fugue-icons/exclamation.png</file>
+    <file alias="warning">fugue-icons/exclamation-circle.png</file>
+    <file alias="error">fugue-icons/exclamation-red.png</file>
+    <file alias="critical">fugue-icons/cross-circle.png</file>
+    <file alias="success">fugue-icons/tick-circle.png</file>
+    <file alias="tick_mark">fugue-icons/tick.png</file>
+    <file alias="nav_left">fugue-icons/navigation-180.png</file>
+    <file alias="nav_right">fugue-icons/navigation.png</file>
+    <file alias="nav_left_btn">fugue-icons/navigation-180-button.png</file>
+    <file alias="nav_right_btn">fugue-icons/navigation-000-button.png</file>
   </qresource>
 </RCC>

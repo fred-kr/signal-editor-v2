@@ -1,3 +1,4 @@
+import os
 import typing as t
 
 import pyqtgraph as pg
@@ -7,6 +8,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from ...ui.ui_dialog_metadata import Ui_MetadataDialog
 from ...ui.ui_dock_session_properties import Ui_DockWidgetSessionProperties
 from ...ui.ui_main_window import Ui_MainWindow
+from ..enum_defs import LogLevel
 from .widgets.log_viewer import StatusMessageDock
 from .widgets.settings_editor import SettingsEditor
 
@@ -53,15 +55,20 @@ class SectionListView(QtWidgets.QListView):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
+        self.setSelectionRectVisible(True)
         self.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
 
+        self.action_delete_selected = QtGui.QAction("Delete Selected", self)
+        self.action_delete_selected.triggered.connect(self.emit_delete_current_request)
         self.customContextMenuRequested.connect(self.show_context_menu)
 
     @QtCore.Slot(QtCore.QPoint)
     def show_context_menu(self, point: QtCore.QPoint) -> None:
         menu = QtWidgets.QMenu(self)
-        menu.addAction("Delete Selected", self.emit_delete_current_request)
+        selected_is_base = self.currentIndex().row() == 0
+        self.action_delete_selected.setEnabled(not selected_is_base)
+        menu.addAction(self.action_delete_selected)
         menu.exec(self.mapToGlobal(point))
 
     @QtCore.Slot()
@@ -86,6 +93,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
+        self._msg_box_icons = {
+            LogLevel.SUCCESS: QtGui.QIcon(":/icons/success"),
+            LogLevel.DEBUG: QtGui.QIcon(":/icons/app_monitor"),
+            LogLevel.INFO: QtGui.QIcon(":/icons/info"),
+            LogLevel.WARNING: QtGui.QIcon(":/icons/warning"),
+            LogLevel.ERROR: QtGui.QIcon(":/icons/error"),
+            LogLevel.CRITICAL: QtGui.QIcon(":/icons/critical"),
+        }
         self.tool_bar_navigation.setWindowIcon(QtGui.QIcon(":/icons/navigation"))
 
         self.table_view_import_data.horizontalHeader().setDefaultAlignment(
@@ -109,6 +124,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         dock_status_log = StatusMessageDock(self)
         self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, dock_status_log)
         self.dock_status_log = dock_status_log
+        self.dock_status_log.log_text_box.sig_log_message.connect(self.maybe_show_error_dialog)
 
         self.settings_editor = SettingsEditor(self)
 
@@ -197,20 +213,20 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _show_edit_page(self) -> None:
         self.tool_bar_context_actions.clear()
-        
+
         self.tool_bar_context_actions.addAction(self.action_show_filter_inputs)
         self.tool_bar_context_actions.addAction(self.action_toggle_auto_scaling)
         self.tool_bar_context_actions.addAction(self.action_show_section_overview)
-        
+
         self.tool_bar_context_actions.addSeparator()
-        
+
         self.tool_bar_context_actions.addAction(self.action_create_new_section)
-        
+
         self.tool_bar_context_actions.addSeparator()
-        
+
         self.tool_bar_context_actions.addAction(self.action_confirm_section)
         self.tool_bar_context_actions.addAction(self.action_cancel_section)
-        
+
         self.action_confirm_section.setEnabled(False)
         self.action_cancel_section.setEnabled(False)
 
@@ -288,3 +304,48 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.settings_editor.isVisible():
             self.settings_editor.done(QtWidgets.QDialog.DialogCode.Rejected)
         return super().closeEvent(event)
+
+    @QtCore.Slot(str, int, str)
+    def maybe_show_error_dialog(
+        self,
+        message: str,
+        msg_log_level: int,
+        plain_message: str,
+        threshold: LogLevel = LogLevel.ERROR,
+    ) -> None:
+        """
+        Slot that listens for log messages and shows a QMessageBox if the message is above a certain
+        log level.
+
+        Parameters
+        ----------
+        message : str
+            The log message to be displayed.
+        msg_log_level : LogLevel, optional
+            The log level of the message.
+        plain_message : str
+            The original log message without HTML formatting.
+        threshold : LogLevel, optional
+            The log level threshold for showing the message as a QMessageBox.
+        """
+        try:
+            msg_log_level = LogLevel(msg_log_level)
+        except ValueError:
+            msg_log_level = LogLevel.DEBUG
+            logger.debug(
+                f"Invalid log level {msg_log_level} passed to maybe_show_error_dialog.\nOriginal message: {message}"
+            )
+        if os.environ.get("DEBUG") == "1":
+            threshold = LogLevel.DEBUG
+
+        if msg_log_level >= threshold:
+            time = plain_message.split("|", 1)[0].strip().split(" ", 1)[1]
+            text = message.split(" - ", 1)[1]
+
+            msg_box = QtWidgets.QMessageBox(self)
+            msg_box.setWindowIcon(self._msg_box_icons[msg_log_level])
+            msg_box.setWindowTitle(f"Message: {msg_log_level.name} - {time}")
+            msg_box.setIconPixmap(self._msg_box_icons[msg_log_level].pixmap(64, 64))
+            msg_box.setText(text)
+            msg_box.setDetailedText(plain_message)
+            msg_box.open()
