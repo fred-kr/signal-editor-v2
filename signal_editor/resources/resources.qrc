@@ -1,5 +1,17 @@
 <RCC>
   <qresource prefix="icons">
+    <file alias="cross_close">fugue-icons/cross-script.png</file>
+    <file alias="app_ab">fugue-icons/application-ab.png</file>
+    <file alias="app_docs">fugue-icons/application-documents.png</file>
+    <file alias="app_plus">fugue-icons/application-plus.png</file>
+    <file alias="app_plus_black">fugue-icons/application-plus-black.png</file>
+    <file alias="app_plus_red">fugue-icons/application-plus-red.png</file>
+    <file alias="search">fugue-icons/magnifier.png</file>
+    <file alias="search_minus">fugue-icons/magnifier--minus.png</file>
+    <file alias="search_plus">fugue-icons/magnifier--plus.png</file>
+    <file alias="zoom_fit">fugue-icons/magnifier-zoom-fit.png</file>
+    <file alias="zoom_in">fugue-icons/magnifier-zoom-in.png</file>
+    <file alias="zoom_out">fugue-icons/magnifier-zoom-out.png</file>
     <file alias="binoculars">fugue-icons/binocular.png</file>
     <file alias="toggle_autoscale">fugue-icons/arrow-resize-090.png</file>
     <file alias="new_section">fugue-icons/selection-select.png</file>

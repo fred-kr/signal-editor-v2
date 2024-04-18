@@ -256,3 +256,5 @@ project-structure.txt
 .ruff_cache/
 notes/
 NOTES.md
+docs/old_paper_ventilation_crabs.pdf
+build.ps1

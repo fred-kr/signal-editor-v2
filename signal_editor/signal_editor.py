@@ -9,6 +9,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from .app import type_defs as _t
 from .app.controllers.data_controller import DataController
 from .app.controllers.plot_controller import PlotController
+from .app.enum_defs import PreprocessPipeline, StandardizationMethod
 from .app.gui.main_window import MainWindow
 from .app.utils import safe_disconnect, safe_multi_disconnect
 
@@ -56,9 +57,50 @@ class SignalEditor(QtWidgets.QApplication):
         self.main_window.action_toggle_auto_scaling.toggled.connect(
             self.plot_controller.toggle_auto_scaling
         )
+        self.main_window.action_show_filter_inputs.triggered.connect(self.show_filter_input_dialog)
 
         self.main_window.dock_section_list.list_view.sig_delete_current_item.connect(
             self.delete_section
+        )
+        self.main_window.processing_parameters_dialog.sig_filter_applied.connect(
+            self.filter_active_signal
+        )
+        self.main_window.processing_parameters_dialog.sig_pipeline_run.connect(
+            self.run_preprocess_pipeline
+        )
+        self.main_window.processing_parameters_dialog.sig_standardization_applied.connect(
+            self.standardize_active_signal
+        )
+
+    @QtCore.Slot(dict)
+    def filter_active_signal(self, filter_params: _t.SignalFilterParameters) -> None:
+        self.data_controller.active_section.filter_signal(
+            pipeline=PreprocessPipeline.Custom, **filter_params
+        )
+        self.refresh_plot_data()
+
+    @QtCore.Slot(object)
+    def run_preprocess_pipeline(self, pipeline: PreprocessPipeline) -> None:
+        if pipeline not in {PreprocessPipeline.PPGElgendi, PreprocessPipeline.ECGNeuroKit2}:
+            return
+        self.data_controller.active_section.filter_signal(pipeline)
+        self.refresh_plot_data()
+
+    @QtCore.Slot(dict)
+    def standardize_active_signal(
+        self, standardization_params: _t.StandardizationParameters
+    ) -> None:
+        method = standardization_params.pop("method")
+        window_size = standardization_params.pop("window_size")
+        robust = method == StandardizationMethod.MedianAbsoluteDeviation
+        self.data_controller.active_section.scale_signal(
+            method=method, robust=robust, window_size=window_size
+        )
+        self.refresh_plot_data()
+
+    def refresh_plot_data(self) -> None:
+        self.plot_controller.set_signal_data(
+            self.data_controller.active_section.processed_signal.to_numpy()
         )
 
     @QtCore.Slot()
@@ -134,6 +176,10 @@ class SignalEditor(QtWidgets.QApplication):
         if has_peaks:
             self.plot_controller.set_peak_data(*section.get_peak_xy())
             self.plot_controller.set_rate_data(section.rate_instantaneous_interpolated)
+
+    @QtCore.Slot()
+    def show_filter_input_dialog(self) -> None:
+        self.main_window.processing_parameters_dialog.open()
 
     @QtCore.Slot(dict)
     def update_metadata(self, metadata_dict: _t.MetadataUpdateDict) -> None:
@@ -236,6 +282,7 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot()
     def open_file(self) -> None:
+        self.close_file()
         settings = QtCore.QSettings()
         default_data_dir = str(settings.value("Misc/data_folder", self.applicationDirPath()))
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(

@@ -126,14 +126,14 @@ def filter_signal(
     sampling_rate: int,
     **kwargs: t.Unpack[_t.SignalFilterParameters],
 ) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
-    method = kwargs.get("method", "butterworth")
+    method = kwargs.get("method", FilterMethod.Butterworth)
     highcut = kwargs.get("highcut")
     lowcut = kwargs.get("lowcut")
     if highcut == 0:
         kwargs["highcut"] = None
     if lowcut == 0:
         kwargs["lowcut"] = None
-    if method == "fir":
+    if method == FilterMethod.FIR:
         max_attempts = 5  # Define a maximum number of attempts for FIR filtering
 
         for _ in range(max_attempts):

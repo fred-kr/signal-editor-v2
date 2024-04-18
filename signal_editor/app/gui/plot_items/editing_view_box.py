@@ -67,7 +67,7 @@ class EditingViewBox(pg.ViewBox):
 
         pos = ev.pos()
         last_pos = ev.lastPos()
-        dif = (pos - last_pos) * np.array([-1, -1])
+        dif: Point = (pos - last_pos) * np.array([-1, -1])
 
         mouse_enabled = np.array(self.state["mouseEnabled"], dtype=np.float64)
         mask = mouse_enabled.copy()
@@ -121,16 +121,16 @@ class EditingViewBox(pg.ViewBox):
         self.scaleBy(x=x, y=y, center=center)
         self.sigRangeChangedManually.emit(self.state["mouseEnabled"])
 
-    def _on_left_mouse_drag(self, dif: t.Any, mask: npt.NDArray[np.float64]) -> None:
+    def _on_left_mouse_drag(self, dif: Point, mask: npt.NDArray[np.float64]) -> None:
         tr = pg.invertQTransform(self.childGroup.transform())
-        tr = tr.map(dif * mask) - tr.map(Point(0, 0))  # type: ignore
+        tr = tr.map(dif * mask) - tr.map(Point(0, 0))
 
-        x = tr.x() if mask[0] == 1 else None  # type: ignore
-        y = tr.y() if mask[1] == 1 else None  # type: ignore
+        x = tr.x() if mask[0] == 1 else None
+        y = tr.y() if mask[1] == 1 else None
 
         self._resetTarget()
         if x is not None or y is not None:
-            self.translateBy(x=x, y=y)  # type: ignore
+            self.translateBy(x=x, y=y)
         self.sigRangeChangedManually.emit(self.state["mouseEnabled"])
 
     def _on_left_mouse_drag_finished(self, ev: "mouseEvents.MouseDragEvent", pos: Point) -> None:

@@ -8,7 +8,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from ... import type_defs as _t
 from ...controllers.data_controller import TextFileSeparator
 from ...enum_defs import RateComputationMethod
-from ...utils import get_app_dir
+from ...utils import get_app_dir, safe_disconnect
 
 
 def make_qcolor(*args: _t.PGColor) -> QtGui.QColor:
@@ -452,11 +452,10 @@ class SettingsTree(QtWidgets.QTreeWidget):
         if self.settings is None:
             return
 
-        itemChangedSignal = QtCore.QMetaMethod.fromSignal(self.itemChanged)
-        if self.isSignalConnected(itemChangedSignal):
-            self.itemChanged.disconnect(self.update_setting)
-        # with contextlib.suppress(RuntimeError):
-        # self.itemChanged.disconnect(self.update_setting)
+        safe_disconnect(self, self.itemChanged, self.update_setting)
+        # itemChangedSignal = QtCore.QMetaMethod.fromSignal(self.itemChanged)
+        # if self.isSignalConnected(itemChangedSignal):
+        #     self.itemChanged.disconnect(self.update_setting)
 
         self.settings.sync()
         self.update_child_items(None)

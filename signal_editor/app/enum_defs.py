@@ -40,6 +40,12 @@ class FilterMethod(enum.StrEnum):
     NoFilter = "none"
 
 
+class FilterType(enum.StrEnum):
+    LowPass = "lowpass"
+    HighPass = "highpass"
+    BandPass = "bandpass"
+
+
 class PreprocessPipeline(enum.StrEnum):
     Custom = "custom"
     PPGElgendi = "ppg_elgendi"
@@ -133,3 +139,5 @@ class MouseButtons(enum.StrEnum):
     RightButtonWithControl = "right+control"
     MiddleButtonWithControl = "middle+control"
     Unknown = "unknown"
+
+

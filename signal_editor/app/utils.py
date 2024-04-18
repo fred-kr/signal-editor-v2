@@ -71,7 +71,7 @@ def get_app_dir() -> QtCore.QDir:
 
 
 def safe_disconnect(
-    sender: QtCore.QObject, signal: QtCore.SignalInstance, slot: QtCore.Slot | t.Callable[..., None]
+    sender: QtCore.QObject, signal: QtCore.SignalInstance, slot: QtCore.Slot | t.Callable[..., t.Any]
 ) -> None:
     meta_signal = QtCore.QMetaMethod.fromSignal(signal)
     if sender.isSignalConnected(meta_signal):

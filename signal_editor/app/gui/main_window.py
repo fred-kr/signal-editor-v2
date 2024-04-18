@@ -10,6 +10,7 @@ from ...ui.ui_dock_session_properties import Ui_DockWidgetSessionProperties
 from ...ui.ui_main_window import Ui_MainWindow
 from ..enum_defs import LogLevel
 from .widgets.log_viewer import StatusMessageDock
+from .widgets.processing_inputs import ProcessingParametersDialog
 from .widgets.settings_editor import SettingsEditor
 
 
@@ -84,7 +85,25 @@ class SectionListDock(QtWidgets.QDockWidget):
         self.setObjectName("SectionListDock")
         self.setWindowTitle("Section List")
         self.list_view = SectionListView(self)
-        self.setWidget(self.list_view)
+        main_widget = QtWidgets.QWidget(self)
+        main_layout = QtWidgets.QVBoxLayout(main_widget)
+
+        active_section_label = QtWidgets.QLabel("Active Section: ", main_widget)
+        active_section_label.setFont(QtGui.QFont("Arial", 12, QtGui.QFont.Weight.Bold))
+        main_layout.addWidget(active_section_label)
+
+        nav_btn_widget = QtWidgets.QWidget(self)
+        nav_btn_layout = QtWidgets.QHBoxLayout(nav_btn_widget)
+        self.btn_prev_section = QtWidgets.QPushButton(QtGui.QIcon(":/icons/nav_left"), "Previous")
+        self.btn_next_section = QtWidgets.QPushButton(QtGui.QIcon(":/icons/nav_right"), "Next")
+        nav_btn_layout.addWidget(self.btn_prev_section)
+        nav_btn_layout.addStretch()
+        nav_btn_layout.addWidget(self.btn_next_section)
+
+        main_layout.addWidget(nav_btn_widget)
+        main_layout.addWidget(self.list_view)
+
+        self.setWidget(main_widget)
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -101,6 +120,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             LogLevel.CRITICAL: QtGui.QIcon(":/icons/critical"),
             LogLevel.SUCCESS: QtGui.QIcon(":/icons/success"),
         }
+
         self.tool_bar_navigation.setWindowIcon(QtGui.QIcon(":/icons/navigation"))
 
         self.table_view_import_data.horizontalHeader().setDefaultAlignment(
@@ -135,6 +155,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.dock_section_list = SectionListDock(self)
         self.dock_section_list.setVisible(False)
+
+        self.processing_parameters_dialog = ProcessingParametersDialog(self)
 
         self.read_settings()
         self.setup_actions()
