@@ -117,7 +117,7 @@ class CustomScatterPlotItem(pg.ScatterPlotItem):
                         vh = _mk_pen(vh)
                     elif k == "hoverBrush":
                         vh = _mk_brush(vh)
-                    self.opts[k] = vh
+                    self.opts[k] = vh  # type: ignore
                 case "data":
                     self.setPointData(kargs["data"], dataSet=new_data)
                 case _:

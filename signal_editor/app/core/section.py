@@ -109,6 +109,14 @@ class SectionID(str):
         return SectionID("Section_DEFAULT_000")
 
     def pretty_name(self) -> str:
+        """
+        Formats the section ID nicely for display in the UI.
+
+        Returns
+        -------
+        str
+            The formatted section ID.
+        """
         sig_name = self.split("_")[1]
         return f"Section {self[-3:]} ({sig_name.capitalize()})"
 

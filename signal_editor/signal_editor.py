@@ -123,7 +123,7 @@ class SignalEditor(QtWidgets.QApplication):
     @QtCore.Slot(QtCore.QModelIndex)
     def delete_section(self, index: QtCore.QModelIndex) -> None:
         self.data_controller.delete_section(index)
-        logger.info(f"Deleted section {index.row():03}")
+        logger.success(f"Deleted section {index.row():03}")
 
     @QtCore.Slot(bool)
     def _on_active_section_changed(self, has_peaks: bool) -> None:

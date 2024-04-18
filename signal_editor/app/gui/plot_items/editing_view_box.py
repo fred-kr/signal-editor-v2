@@ -76,14 +76,14 @@ class EditingViewBox(pg.ViewBox):
 
         button_type = _get_button_type(ev)
 
-        if button_type in {"middle", "left+control"}:
+        if button_type in {MouseButtons.MiddleButton, MouseButtons.LeftButtonWithControl}:
             if ev.isFinish():
                 r = QtCore.QRectF(ev.pos(), ev.buttonDownPos())
                 self.mapped_selection_rect = self.mapToView(r).boundingRect()
             else:
                 self.updateSelectionBox(ev.pos(), ev.buttonDownPos())
                 self.mapped_selection_rect = None
-        elif button_type == "left":
+        elif button_type == MouseButtons.LeftButton:
             if self.state["mouseMode"] == pg.ViewBox.RectMode and axis is None:
                 if ev.isFinish():
                     self._on_left_mouse_drag_finished(ev, pos)
@@ -91,7 +91,7 @@ class EditingViewBox(pg.ViewBox):
                     self.updateScaleBox(ev.buttonDownPos(), ev.pos())
             else:
                 self._on_left_mouse_drag(dif, mask)
-        elif button_type == "right":
+        elif button_type == MouseButtons.RightButton:
             self._on_right_mouse_drag(mask, ev, mouse_enabled)
 
     def _on_right_mouse_drag(
@@ -123,14 +123,14 @@ class EditingViewBox(pg.ViewBox):
 
     def _on_left_mouse_drag(self, dif: t.Any, mask: npt.NDArray[np.float64]) -> None:
         tr = pg.invertQTransform(self.childGroup.transform())
-        tr = tr.map(dif * mask) - tr.map(Point(0, 0))
+        tr = tr.map(dif * mask) - tr.map(Point(0, 0))  # type: ignore
 
-        x = tr.x() if mask[0] == 1 else None
-        y = tr.y() if mask[1] == 1 else None
+        x = tr.x() if mask[0] == 1 else None  # type: ignore
+        y = tr.y() if mask[1] == 1 else None  # type: ignore
 
         self._resetTarget()
         if x is not None or y is not None:
-            self.translateBy(x=x, y=y)
+            self.translateBy(x=x, y=y)  # type: ignore
         self.sigRangeChangedManually.emit(self.state["mouseEnabled"])
 
     def _on_left_mouse_drag_finished(self, ev: "mouseEvents.MouseDragEvent", pos: Point) -> None:

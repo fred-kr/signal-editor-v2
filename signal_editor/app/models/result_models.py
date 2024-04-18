@@ -8,8 +8,7 @@ import polars as pl
 from .. import type_defs as _t
 
 if t.TYPE_CHECKING:
-    from .metadata import QFileMetadata
-    from ..core.section import ManualPeakEdits, SectionID, SectionMetadata
+    from ..core.section import ManualPeakEdits, SectionMetadata
 
 
 @dataclass(slots=True, frozen=True)
@@ -72,17 +71,17 @@ class DetailedSectionResult:
         )
 
 
-@dataclass(slots=True, frozen=True, repr=True)
-class CompleteResult:
-    metadata: "QFileMetadata" = field()
-    global_dataframe: pl.DataFrame = field()
-    section_results: dict["SectionID", DetailedSectionResult] = field()
+# @dataclass(slots=True, frozen=True, repr=True)
+# class CompleteResult:
+#     metadata: "QFileMetadata" = field()
+#     global_dataframe: pl.DataFrame = field()
+#     section_results: dict["SectionID", DetailedSectionResult] = field()
 
-    def to_dict(self) -> _t.CompleteResultDict:
-        section_results = {k: v.to_dict() for k, v in self.section_results.items()}
+#     def to_dict(self) -> _t.CompleteResultDict:
+#         section_results = {k: v.to_dict() for k, v in self.section_results.items()}
 
-        return _t.CompleteResultDict(
-            metadata=self.metadata.to_dict(),
-            global_dataframe=self.global_dataframe.to_numpy(structured=True),
-            section_results=section_results,
-        )
+#         return _t.CompleteResultDict(
+#             metadata=self.metadata.to_dict(),
+#             global_dataframe=self.global_dataframe.to_numpy(structured=True),
+#             section_results=section_results,
+#         )

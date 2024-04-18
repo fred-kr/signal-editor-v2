@@ -94,12 +94,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         super().__init__(parent)
         self.setupUi(self)
         self._msg_box_icons = {
-            LogLevel.SUCCESS: QtGui.QIcon(":/icons/success"),
             LogLevel.DEBUG: QtGui.QIcon(":/icons/app_monitor"),
             LogLevel.INFO: QtGui.QIcon(":/icons/info"),
             LogLevel.WARNING: QtGui.QIcon(":/icons/warning"),
             LogLevel.ERROR: QtGui.QIcon(":/icons/error"),
             LogLevel.CRITICAL: QtGui.QIcon(":/icons/critical"),
+            LogLevel.SUCCESS: QtGui.QIcon(":/icons/success"),
         }
         self.tool_bar_navigation.setWindowIcon(QtGui.QIcon(":/icons/navigation"))
 
