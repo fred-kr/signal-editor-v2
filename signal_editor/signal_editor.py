@@ -290,7 +290,6 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot()
     def open_file(self) -> None:
-        self.close_file()
         settings = QtCore.QSettings()
         default_data_dir = str(settings.value("Misc/data_folder", self.applicationDirPath()))
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
@@ -301,6 +300,8 @@ class SignalEditor(QtWidgets.QApplication):
         )
         if not file_path:
             return
+
+        self.close_file()
 
         settings.setValue("Misc/data_folder", Path(file_path).parent.resolve().as_posix())
 

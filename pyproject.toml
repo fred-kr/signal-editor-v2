@@ -34,6 +34,7 @@ ipykernel = "^6.29.4"
 superqt = "^0.6.3"
 pyside6 = "^6.7.0"
 loguru = "^0.7.2"
+polars-standardize-series = {path = "E:/dev-home/projects/rust/polars_standardize_series/target/wheels/polars_standardize_series-0.1.0-cp38-abi3-win_amd64.whl"}
 
 [tool.poetry.group.dev.dependencies]
 sourcery = "^1.16.0"
@@ -44,6 +45,7 @@ pytest = "^8.1.1"
 hypothesis = {extras = ["numpy"], version = "^6.100"}
 pyside6-examples = "^6.7.0"
 rich = {extras = ["jupyter"], version = "^13.7.1"}
+mkdocs-material = {git = "https://github.com/squidfunk/mkdocs-material.git", rev = "chore/update-to-mkdocs-1.6"}
 
 [tool.mypy]
 python_version = "3.12"
