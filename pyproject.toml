@@ -7,13 +7,13 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
-pyarrow = "^15.0.2"
+pyarrow = "^16.0.0"
 pyopengl-accelerate = "^3.1.7"
 wfdb = "^4.1.2"
-polars = "^0.20.21"
+polars = "^0.20.22"
 neurokit2 = "^0.2.7"
 pyopengl = "^3.1.7"
-mne = "^1.6.1"
+mne = "^1.7.0"
 pywavelets = "^1.6.0"
 qdarkstyle = "^3.2.3"
 numpy = "^1.26.4"
@@ -37,7 +37,7 @@ loguru = "^0.7.2"
 
 [tool.poetry.group.dev.dependencies]
 sourcery = "^1.16.0"
-ruff = "^0.3.7"
+ruff = "^0.4.1"
 mypy = {extras = ["mypyc"], version = "^1.9.0"}
 python-dotenv = "^1.0.1"
 pytest = "^8.1.1"

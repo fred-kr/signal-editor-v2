@@ -2,8 +2,6 @@
 Main entry point for the application.
 """
 
-from PySide6 import QtWidgets
-
 if __name__ == "__main__":
     import multiprocessing
 
@@ -22,6 +20,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Signal Editor")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
+    parser.add_argument("--no-opengl", action="store_false", help="Don't use OpenGL for rendering")
     args = parser.parse_args()
 
     if args.debug:
@@ -29,14 +28,19 @@ if __name__ == "__main__":
     else:
         logger.remove()
 
+    use_opengl = args.no_opengl
+
     pg.setConfigOptions(
-        useOpenGL=True, enableExperimental=True, useNumba=True, useCupy=True, segmentedLineMode="on"
+        useOpenGL=use_opengl,
+        enableExperimental=use_opengl,
+        useNumba=use_opengl,
+        segmentedLineMode="on",
     )
     pl.Config().activate_decimals(True)
 
     app = SignalEditor(sys.argv)
     # app.setStyleSheet(qdarkstyle.load_stylesheet(qdarkstyle.DarkPalette))
     # Built-in styles: ['windows11', 'windowsvista', 'Windows', 'Fusion']
-    app.setStyle(QtWidgets.QStyleFactory.create("windows11"))
+    app.setStyle("Fusion")
     app.main_window.show()
     sys.exit(app.exec())

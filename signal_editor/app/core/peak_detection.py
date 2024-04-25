@@ -16,7 +16,8 @@ def _signal_smoothing_median(
 ) -> npt.NDArray[np.float64]:
     if size % 2 == 0:
         size += 1
-    return signal.medfilt(sig, kernel_size=size)
+    return ndimage.median_filter(sig, size=size)
+    # return signal.medfilt(sig, kernel_size=size)
 
 
 def _signal_smoothing(
@@ -46,12 +47,12 @@ def _signal_smooth(
     if method == "loess":
         smoothed, _ = nk.fit_loess(sig, alpha=alpha)
     elif method == "convolution":
-        if kernel == "boxcar":
+        if kernel == SmoothingKernels.BOXCAR:
             smoothed = ndimage.uniform_filter1d(sig, size=size, mode="nearest")
-        elif kernel == "boxzen":
+        elif kernel == SmoothingKernels.BOXZEN:
             x = ndimage.uniform_filter1d(sig, size=size, mode="nearest")
             smoothed = _signal_smoothing(x, kernel=SmoothingKernels.PARZEN, size=size)
-        elif kernel == "median":
+        elif kernel == SmoothingKernels.MEDIAN:
             smoothed = _signal_smoothing_median(sig, size=size)
         else:
             smoothed = _signal_smoothing(sig, kernel=kernel, size=size)

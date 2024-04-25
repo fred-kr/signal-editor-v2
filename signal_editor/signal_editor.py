@@ -71,12 +71,20 @@ class SignalEditor(QtWidgets.QApplication):
         self.main_window.processing_parameters_dialog.sig_standardization_applied.connect(
             self.standardize_active_signal
         )
+        self.main_window.processing_parameters_dialog.sig_restore_unfiltered.connect(
+            self.restore_original_signal
+        )
 
     @QtCore.Slot(dict)
     def filter_active_signal(self, filter_params: _t.SignalFilterParameters) -> None:
         self.data_controller.active_section.filter_signal(
             pipeline=PreprocessPipeline.Custom, **filter_params
         )
+        self.refresh_plot_data()
+
+    @QtCore.Slot()
+    def restore_original_signal(self) -> None:
+        self.data_controller.active_section.reset_signal()
         self.refresh_plot_data()
 
     @QtCore.Slot(object)
@@ -92,7 +100,7 @@ class SignalEditor(QtWidgets.QApplication):
     ) -> None:
         method = standardization_params.pop("method")
         window_size = standardization_params.pop("window_size")
-        robust = method == StandardizationMethod.MedianAbsoluteDeviation
+        robust = method == StandardizationMethod.ZScoreRobust
         self.data_controller.active_section.scale_signal(
             method=method, robust=robust, window_size=window_size
         )

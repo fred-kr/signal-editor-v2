@@ -116,30 +116,30 @@ class StandardizationParameters(t.TypedDict, total=False):
 
 
 class SpotDict(t.TypedDict, total=False):
-    pos: "tuple[float, float] | QtCore.QPointF"
+    pos: t.Union[tuple[float, float], "QtCore.QPointF"]
     size: float
-    pen: "QtGui.QPen | str | None"
-    brush: "QtGui.QBrush | str | None"
+    pen: PGPen
+    brush: PGBrush
     symbol: str
 
 
 class SpotItemSetDataKwargs(t.TypedDict, total=False):
     spots: list[SpotDict]
-    x: npt.ArrayLike
-    y: npt.ArrayLike
-    pos: npt.ArrayLike | list[tuple[float, float]]
+    x: npt.NDArray[np.float_ | np.intp | np.uintp] | t.Sequence[float | int]
+    y: npt.NDArray[np.float_ | np.intp | np.uintp] | t.Sequence[float | int]
+    pos: npt.NDArray[np.float_ | np.intp] | list[tuple[float, float]]
     pxMode: bool
     symbol: str
-    pen: "QtGui.QPen | str | None"
-    brush: "QtGui.QBrush | str | None"
+    pen: PGPen
+    brush: PGBrush
     size: float
     data: npt.NDArray[np.void] | list[t.Any]
     hoverable: bool
     tip: str | None
     hoverSymbol: str
     hoverSize: float
-    hoverPen: "QtGui.QPen | str | None"
-    hoverBrush: "QtGui.QBrush | str | None"
+    hoverPen: PGPen
+    hoverBrush: PGBrush
     useCache: bool
     antialias: bool
     compositionMode: "QtGui.QPainter.CompositionMode | None"

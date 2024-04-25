@@ -26,7 +26,7 @@ class CustomScatterPlotItem(pg.ScatterPlotItem):
     code to make use of more modern Python features (3.12+).
     """
 
-    def addPoints(self, *args: t.Any, **kargs: t.Any) -> None:
+    def addPoints(self, *args: list[_t.SpotDict] | t.Sequence[float], **kargs: t.Unpack[_t.SpotItemSetDataKwargs]) -> None:
         arg_keys = ["spots", "x", "y"]
         for i, key in enumerate(arg_keys[: len(args)]):
             kargs[key] = args[i]
@@ -67,23 +67,22 @@ class CustomScatterPlotItem(pg.ScatterPlotItem):
         if spots is not None:
             for i, spot in enumerate(spots):
                 for k, v in spot.items():
-                    match k:
-                        case "pos":
-                            pos = v
-                            if isinstance(pos, QtCore.QPointF):
-                                x, y = pos.x(), pos.y()
-                            else:
-                                x, y = pos[0], pos[1]
-                            new_data[i]["x"] = x
-                            new_data[i]["y"] = y
-                        case "pen":
-                            new_data[i][k] = _mk_pen(v)
-                        case "brush":
-                            new_data[i][k] = _mk_brush(v)
-                        case "x" | "y" | "size" | "symbol" | "data":
-                            new_data[i][k] = v
-                        case _:
-                            raise KeyError(f"Invalid key: {k}")
+                    if k == "pos":
+                        pos = v
+                        if isinstance(pos, QtCore.QPointF):
+                            x, y = pos.x(), pos.y()
+                        else:
+                            x, y = pos[0], pos[1]
+                        new_data[i]["x"] = x
+                        new_data[i]["y"] = y
+                    elif k == "pen":
+                        new_data[i][k] = _mk_pen(v)
+                    elif k == "brush":
+                        new_data[i][k] = _mk_brush(v)
+                    elif k in ["x", "y", "size", "symbol", "data"]:
+                        new_data[i][k] = v
+                    else:
+                        raise KeyError(f"Invalid key: {k}")
         # Handle 'y' parameter
         elif y is not None:
             new_data["x"] = x

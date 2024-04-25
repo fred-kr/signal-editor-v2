@@ -53,9 +53,8 @@ class PreprocessPipeline(enum.StrEnum):
 
 
 class StandardizationMethod(enum.StrEnum):
-    ZScore = "zscore"
-    MedianAbsoluteDeviation = "mad"
-    MinMax = "minmax"
+    ZScore = "std"
+    ZScoreRobust = "mad"
     NoStandardization = "none"
 
 

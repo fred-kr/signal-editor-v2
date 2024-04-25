@@ -83,3 +83,10 @@ def safe_multi_disconnect(
 ) -> None:
     for signal, slot in signal_slot_pairs:
         safe_disconnect(sender, signal, slot)
+
+
+def format_long_sequence(seq: t.Sequence[int | float]) -> str:
+    if len(seq) > 10:
+        return f"[{', '.join(map(str, seq[:5]))}, ..., {', '.join(map(str, seq[-5:]))}]"
+    else:
+        return str(seq)

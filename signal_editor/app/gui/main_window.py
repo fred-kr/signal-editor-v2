@@ -120,6 +120,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             LogLevel.CRITICAL: QtGui.QIcon(":/icons/critical"),
             LogLevel.SUCCESS: QtGui.QIcon(":/icons/success"),
         }
+        self._icons = {
+            "properties": QtGui.QIcon(":/icons/properties"),
+            "processor": QtGui.QIcon(":/icons/processor"),
+            "edit": QtGui.QIcon(":/icons/view_app_monitor"),
+            "navigation": QtGui.QIcon(":/icons/navigation"),
+        }
 
         self.tool_bar_navigation.setWindowIcon(QtGui.QIcon(":/icons/navigation"))
 
@@ -266,22 +272,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def setup_menus(self) -> None:
         action_toggle_dock_session_properties = self.dock_session_properties.toggleViewAction()
-        action_toggle_dock_session_properties.setIcon(QtGui.QIcon(":/icons/properties"))
+        action_toggle_dock_session_properties.setIcon(self._icons["properties"])
         action_toggle_dock_session_properties.setText("Show Session Properties")
         self.menuView.addAction(action_toggle_dock_session_properties)
 
         action_toggle_dock_status_log = self.dock_status_log.toggleViewAction()
-        action_toggle_dock_status_log.setIcon(QtGui.QIcon(":/icons/processor"))
+        action_toggle_dock_status_log.setIcon(self._icons["processor"])
         action_toggle_dock_status_log.setText("Show Status Log")
         self.menuView.addAction(action_toggle_dock_status_log)
 
         action_toggle_tb_edit = self.tool_bar_context_actions.toggleViewAction()
-        action_toggle_tb_edit.setIcon(QtGui.QIcon(":/icons/view_app_monitor"))
+        action_toggle_tb_edit.setIcon(self._icons["edit"])
         action_toggle_tb_edit.setText("Toggle Editing Toolbar")
         self.menuView.addAction(action_toggle_tb_edit)
 
         action_toggle_nav_toolbar = self.tool_bar_navigation.toggleViewAction()
-        action_toggle_nav_toolbar.setIcon(QtGui.QIcon(":/icons/navigation"))
+        action_toggle_nav_toolbar.setIcon(self._icons["navigation"])
         action_toggle_nav_toolbar.setText("Toggle Navigation Toolbar")
         self.menuView.addAction(action_toggle_nav_toolbar)
 
