@@ -10,8 +10,8 @@ from ...enum_defs import FilterMethod, FilterType, PreprocessPipeline, Standardi
 
 class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs):
     sig_pipeline_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal(str)
-    sig_filter_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal()
-    sig_standardization_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal()
+    sig_filter_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal(object)
+    sig_standardization_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal(object)
     sig_data_reset_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal()
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
@@ -80,7 +80,7 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
         self.enum_combo_standardize_method.setEnumClass(StandardizationMethod)
 
         self._connect_qt_signals()
-        self._restore_defaults()
+        self._set_filter_widget_states()
 
     def _connect_qt_signals(self) -> None:
         self.btn_run_pipeline.clicked.connect(self._emit_pipeline_requested)

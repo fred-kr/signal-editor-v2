@@ -43,5 +43,5 @@ if __name__ == "__main__":
     # app.setStyleSheet(qdarkstyle.load_stylesheet(qdarkstyle.DarkPalette))
     # Built-in styles: ['windows11', 'windowsvista', 'Windows', 'Fusion']
     app.setStyle("Default")
-    app.main_window.show()
+    app.mw.show()
     sys.exit(app.exec())

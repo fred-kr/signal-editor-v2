@@ -217,6 +217,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             lambda index: self.dock_section_list.setVisible(index == 1)  # type: ignore
         )
         self.action_toggle_auto_scaling.setChecked(True)
+        self.action_show_section_overview.setChecked(False)
 
     def toggle_section_actions(self, show: bool) -> None:
         self.action_confirm_section.setEnabled(show)

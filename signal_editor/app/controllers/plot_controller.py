@@ -473,7 +473,7 @@ class PlotController(QtCore.QObject):
         self.set_background_color(bg_color)
         self.set_foreground_color(fg_color)
         if self.peak_scatter is not None and isinstance(point_color, QtGui.QColor):
-            self.peak_scatter.setBrush(color=point_color)
+            self.peak_scatter.setBrush(point_color)
         if self.signal_curve is not None and isinstance(signal_line_color, QtGui.QColor):
             self.signal_curve.setPen(color=signal_line_color)
         if self.rate_curve is not None and isinstance(rate_line_color, QtGui.QColor):
