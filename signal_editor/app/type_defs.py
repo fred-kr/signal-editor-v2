@@ -115,12 +115,12 @@ class StandardizationParameters(t.TypedDict, total=False):
     window_size: int | None
 
 
-class SpotDict(t.TypedDict, total=False):
+class SpotDict(t.TypedDict):
     pos: t.Union[tuple[float, float], "QtCore.QPointF"]
     size: float
     pen: PGPen
     brush: PGBrush
-    symbol: str
+    symbol: PGPointSymbols
 
 
 class SpotItemSetDataKwargs(t.TypedDict, total=False):
@@ -129,14 +129,14 @@ class SpotItemSetDataKwargs(t.TypedDict, total=False):
     y: npt.NDArray[np.float_ | np.intp | np.uintp] | t.Sequence[float | int]
     pos: npt.NDArray[np.float_ | np.intp] | list[tuple[float, float]]
     pxMode: bool
-    symbol: str
+    symbol: PGPointSymbols
     pen: PGPen
     brush: PGBrush
     size: float
-    data: npt.NDArray[np.void] | list[t.Any]
+    data: npt.NDArray[np.void]
     hoverable: bool
     tip: str | None
-    hoverSymbol: str
+    hoverSymbol: PGPointSymbols
     hoverSize: float
     hoverPen: PGPen
     hoverBrush: PGBrush

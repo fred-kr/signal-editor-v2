@@ -57,21 +57,23 @@ class SignalEditor(QtWidgets.QApplication):
         self.main_window.action_toggle_auto_scaling.toggled.connect(
             self.plot_controller.toggle_auto_scaling
         )
-        self.main_window.action_show_filter_inputs.triggered.connect(self.show_filter_input_dialog)
+        self.main_window.action_show_filter_inputs.triggered.connect(
+            self.show_processing_inputs_dock
+        )
 
         self.main_window.dock_section_list.list_view.sig_delete_current_item.connect(
             self.delete_section
         )
-        self.main_window.processing_parameters_dialog.sig_filter_applied.connect(
+        self.main_window.dock_processing_inputs.sig_filter_requested.connect(
             self.filter_active_signal
         )
-        self.main_window.processing_parameters_dialog.sig_pipeline_run.connect(
+        self.main_window.dock_processing_inputs.sig_pipeline_requested.connect(
             self.run_preprocess_pipeline
         )
-        self.main_window.processing_parameters_dialog.sig_standardization_applied.connect(
+        self.main_window.dock_processing_inputs.sig_standardization_requested.connect(
             self.standardize_active_signal
         )
-        self.main_window.processing_parameters_dialog.sig_restore_unfiltered.connect(
+        self.main_window.dock_processing_inputs.sig_data_reset_requested.connect(
             self.restore_original_signal
         )
 
@@ -186,8 +188,8 @@ class SignalEditor(QtWidgets.QApplication):
             self.plot_controller.set_rate_data(section.rate_instantaneous_interpolated)
 
     @QtCore.Slot()
-    def show_filter_input_dialog(self) -> None:
-        self.main_window.processing_parameters_dialog.open()
+    def show_processing_inputs_dock(self) -> None:
+        self.main_window.dock_processing_inputs.show()
 
     @QtCore.Slot(dict)
     def update_metadata(self, metadata_dict: _t.MetadataUpdateDict) -> None:
@@ -243,6 +245,7 @@ class SignalEditor(QtWidgets.QApplication):
         sampling_rate = self.main_window.spin_box_sampling_rate_import_page.value()
         self.data_controller.update_metadata(sampling_rate=sampling_rate)
         self.plot_controller.update_time_axis_scale(sampling_rate)
+        self.main_window.dock_processing_inputs.update_frequency_sliders(sampling_rate)
         logger.info(f"Sampling rate set to {sampling_rate} Hz.")
 
     @QtCore.Slot(str)
@@ -363,7 +366,7 @@ class SignalEditor(QtWidgets.QApplication):
                 self.plot_controller.set_foreground_color(value)
             case "point_color":
                 if self.plot_controller.peak_scatter is not None:
-                    self.plot_controller.peak_scatter.setBrush(color=value)
+                    self.plot_controller.peak_scatter.setBrush(value)
             case "signal_line_color":
                 if self.plot_controller.signal_curve is not None:
                     self.plot_controller.signal_curve.setPen(value)

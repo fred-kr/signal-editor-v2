@@ -1,113 +1,24 @@
-import enum
 import typing as t
 
 import superqt
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
+from ....ui.ui_dock_processing_input import Ui_DockWidgetProcessingInputs
 from ... import type_defs as _t
 from ...enum_defs import FilterMethod, FilterType, PreprocessPipeline, StandardizationMethod
 
 
-class ProcessingParametersDialog(QtWidgets.QDialog):
-    sig_pipeline_run: t.ClassVar[QtCore.Signal] = QtCore.Signal(enum.StrEnum)
-    sig_filter_applied: t.ClassVar[QtCore.Signal] = QtCore.Signal(dict)
-    sig_standardization_applied: t.ClassVar[QtCore.Signal] = QtCore.Signal(dict)
-    sig_restore_unfiltered: t.ClassVar[QtCore.Signal] = QtCore.Signal()
+class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs):
+    sig_pipeline_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal(str)
+    sig_filter_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal()
+    sig_standardization_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal()
+    sig_data_reset_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal()
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setWindowModality(QtCore.Qt.WindowModality.NonModal)
-        self.setMinimumWidth(400)
-        # self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowType.WindowContextHelpButtonHint)
-        self.setWindowIcon(QtGui.QIcon(":/icons/app_wave"))
-        self.setWindowTitle("Processing Parameters")
-
-        self._layout = QtWidgets.QVBoxLayout()
-
-        h1_font = QtGui.QFont("Segoe UI", 14, QtGui.QFont.Weight.Bold)
-
-        main_header = QtWidgets.QLabel("Pre-processing Options")
-        main_header.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Fixed
-        )
-        main_header.setFont(h1_font)
-        self._layout.addWidget(main_header)
-
-        self._setup_pipeline_section()
-        self._setup_custom_filter_section()
-        self._setup_standardization_section()
-
-        self.btn_reset_inputs = QtWidgets.QPushButton("Reset Inputs")
-        self.btn_reset_inputs.setToolTip("Set all inputs to their default values")
-        self.btn_reset_inputs.clicked.connect(self._restore_defaults)
-
-        self.btn_reset_data = QtWidgets.QPushButton("Reset Data")
-        self.btn_reset_data.setToolTip("Restore the data to its original, unfiltered state")
-        self.btn_reset_data.clicked.connect(self._emit_restore_unfiltered)
-
-        self.btn_done = QtWidgets.QPushButton("Done")
-        self.btn_done.clicked.connect(self.accept)
-
-        btn_box = QtWidgets.QDialogButtonBox()
-        btn_box.addButton(self.btn_reset_inputs, QtWidgets.QDialogButtonBox.ButtonRole.ResetRole)
-        btn_box.addButton(self.btn_reset_data, QtWidgets.QDialogButtonBox.ButtonRole.ResetRole)
-        btn_box.addButton(self.btn_done, QtWidgets.QDialogButtonBox.ButtonRole.AcceptRole)
-
-        btn_box.accepted.connect(self.accept)
-        btn_box.rejected.connect(self.reject)
-
-        self._layout.addWidget(btn_box)
-
-        self.setLayout(self._layout)
-
-    def _setup_pipeline_section(self) -> None:
-        grp_box_pipeline = QtWidgets.QGroupBox("Filter using a pre-defined pipeline")
-        grp_box_pipeline_layout = QtWidgets.QFormLayout()
-        # grp_box_pipeline_layout.setRowWrapPolicy(QtWidgets.QFormLayout.RowWrapPolicy.WrapAllRows)
-
-        combo_pipeline = superqt.QEnumComboBox(enum_class=PreprocessPipeline)
-        self.combo_pipeline = combo_pipeline
-
-        self.btn_run_pipeline = QtWidgets.QPushButton("Run")
-        self.btn_run_pipeline.clicked.connect(self._emit_pipeline_run)
-
-        grp_box_pipeline_layout.addRow("Pipeline", combo_pipeline)
-        grp_box_pipeline_layout.addRow(self.btn_run_pipeline)
-
-        grp_box_pipeline.setLayout(grp_box_pipeline_layout)
-
-        self.grp_box_pipeline = grp_box_pipeline
-        self._layout.addWidget(self.grp_box_pipeline)
-
-    @QtCore.Slot()
-    def _emit_pipeline_run(self) -> None:
-        pipeline = PreprocessPipeline(self.combo_pipeline.currentEnum())
-        self.sig_pipeline_run.emit(pipeline)
-
-    def _setup_custom_filter_section(self) -> None:
+        self.setupUi(self)
         settings = QtCore.QSettings()
         sampling_rate: int = settings.value("Data/sampling_rate")  # type: ignore
-        grp_box_custom = QtWidgets.QGroupBox("Define a custom filter")
-        grp_box_custom_layout = QtWidgets.QFormLayout()
-        grp_box_custom_layout.setRowWrapPolicy(QtWidgets.QFormLayout.RowWrapPolicy.WrapAllRows)
-
-        combo_filter_method = superqt.QEnumComboBox(enum_class=FilterMethod)
-        combo_filter_method.setCurrentEnum(FilterMethod.Butterworth)
-        self.combo_filter_method = combo_filter_method
-        self.combo_filter_method.currentEnumChanged.connect(self._set_filter_widget_states)
-
-        combo_filter_type = superqt.QEnumComboBox(enum_class=FilterType)
-        combo_filter_type.setCurrentEnum(FilterType.LowPass)
-        self.combo_filter_type = combo_filter_type
-        self.combo_filter_type.currentEnumChanged.connect(self._set_frequency_slider_states)
-
-        slider_order = superqt.QLabeledSlider(QtCore.Qt.Orientation.Horizontal)
-        slider_order.setTickPosition(QtWidgets.QSlider.TickPosition.TicksBelow)
-        slider_order.setTickInterval(1)
-        slider_order.setEdgeLabelMode(superqt.QLabeledSlider.EdgeLabelMode.LabelIsValue)
-        slider_order.setRange(1, 10)
-        slider_order.setValue(3)
-        self.slider_order = slider_order
 
         freq_range = (0, sampling_rate // 2)
         dbl_slider_lowcut = superqt.QLabeledDoubleSlider(QtCore.Qt.Orientation.Horizontal)
@@ -116,6 +27,9 @@ class ProcessingParametersDialog(QtWidgets.QDialog):
         dbl_slider_lowcut.setRange(*freq_range)
         dbl_slider_lowcut.setValue(1)
         self.dbl_slider_lowcut = dbl_slider_lowcut
+        self.form_layout_grp_box_filter_parameters.addRow(
+            "Low-cut frequency", self.dbl_slider_lowcut
+        )
 
         dbl_slider_highcut = superqt.QLabeledDoubleSlider(QtCore.Qt.Orientation.Horizontal)
         dbl_slider_highcut.setEdgeLabelMode(superqt.QLabeledDoubleSlider.EdgeLabelMode.LabelIsValue)
@@ -123,6 +37,9 @@ class ProcessingParametersDialog(QtWidgets.QDialog):
         dbl_slider_highcut.setRange(*freq_range)
         dbl_slider_highcut.setValue(8)
         self.dbl_slider_highcut = dbl_slider_highcut
+        self.form_layout_grp_box_filter_parameters.addRow(
+            "High-cut frequency", self.dbl_slider_highcut
+        )
 
         slider_window_size_filter = superqt.QLabeledSlider(QtCore.Qt.Orientation.Horizontal)
         slider_window_size_filter.setEdgeLabelMode(
@@ -131,6 +48,9 @@ class ProcessingParametersDialog(QtWidgets.QDialog):
         slider_window_size_filter.setRange(5, 5_000)
         slider_window_size_filter.setValue(500)
         self.slider_window_size_filter = slider_window_size_filter
+        self.form_layout_grp_box_filter_parameters.addRow(
+            "Window size", self.slider_window_size_filter
+        )
 
         combo_powerline = QtWidgets.QComboBox()
         combo_powerline.addItem("50 Hz")
@@ -139,36 +59,118 @@ class ProcessingParametersDialog(QtWidgets.QDialog):
         combo_powerline.setItemData(0, 50, QtCore.Qt.ItemDataRole.UserRole)
         combo_powerline.setItemData(1, 60, QtCore.Qt.ItemDataRole.UserRole)
         self.combo_powerline = combo_powerline
+        self.form_layout_grp_box_filter_parameters.addRow("Power line", self.combo_powerline)
 
-        self.btn_apply_filter = QtWidgets.QPushButton("Apply Filter")
-        self.btn_apply_filter.clicked.connect(self._emit_filter_applied)
+        slider_window_size_standardize = superqt.QLabeledSlider(QtCore.Qt.Orientation.Horizontal)
+        slider_window_size_standardize.setEdgeLabelMode(
+            superqt.QLabeledSlider.EdgeLabelMode.LabelIsValue
+        )
 
-        grp_box_custom_layout.addRow("Filter Method", combo_filter_method)
-        grp_box_custom_layout.addRow("Filter Type", combo_filter_type)
-        grp_box_custom_layout.addRow("Highcut Frequency", dbl_slider_highcut)
-        grp_box_custom_layout.addRow("Lowcut Frequency", dbl_slider_lowcut)
-        grp_box_custom_layout.addRow("Filter Order", slider_order)
-        grp_box_custom_layout.addRow("Window Size", slider_window_size_filter)
-        grp_box_custom_layout.addRow("Powerline Frequency", combo_powerline)
-        grp_box_custom_layout.addRow(self.btn_apply_filter)
+        slider_window_size_standardize.setRange(3, 3_333)
+        slider_window_size_standardize.setValue(300)
+        self.form_layout_standardize_roll_window.setWidget(
+            0, QtWidgets.QFormLayout.ItemRole.FieldRole, slider_window_size_standardize
+        )
 
-        grp_box_custom.setLayout(grp_box_custom_layout)
-        self.grp_box_custom = grp_box_custom
-        self._layout.addWidget(self.grp_box_custom)
+        self.slider_window_size_standardize = slider_window_size_standardize
+
+        self.enum_combo_pipeline.setEnumClass(PreprocessPipeline)
+        self.enum_combo_filter_method.setEnumClass(FilterMethod)
+        self.enum_combo_filter_type.setEnumClass(FilterType)
+        self.enum_combo_standardize_method.setEnumClass(StandardizationMethod)
+
+        self._connect_qt_signals()
+        self._restore_defaults()
+
+    def _connect_qt_signals(self) -> None:
+        self.btn_run_pipeline.clicked.connect(self._emit_pipeline_requested)
+        self.btn_apply_signal_filter.clicked.connect(self._emit_filter_requested)
+        self.btn_apply_standardization.clicked.connect(self._emit_standardization_requested)
+        self.btn_reset_data.clicked.connect(self._emit_data_reset_requested)
+        self.btn_restore_defaults.clicked.connect(self._restore_defaults)
+
+        self.enum_combo_filter_method.currentEnumChanged.connect(self._set_filter_widget_states)
+        self.enum_combo_filter_type.currentEnumChanged.connect(self._set_frequency_slider_states)
+
+        self.enum_combo_standardize_method.currentEnumChanged.connect(
+            self._set_rolling_window_checkbox_state
+        )
+
+    def update_frequency_sliders(self, sampling_rate: int) -> None:
+        freq_range = (0, sampling_rate // 2)
+        self.dbl_slider_lowcut.setRange(*freq_range)
+        self.dbl_slider_highcut.setRange(*freq_range)
 
     @QtCore.Slot()
     def _restore_defaults(self) -> None:
-        self.combo_pipeline.setCurrentEnum(PreprocessPipeline.Custom)
-        self.combo_filter_method.setCurrentEnum(FilterMethod.Butterworth)
-        self.combo_filter_type.setCurrentEnum(FilterType.LowPass)
+        self.enum_combo_pipeline.setCurrentEnum(PreprocessPipeline.Custom)
+        self.enum_combo_filter_method.setCurrentEnum(FilterMethod.Butterworth)
+        self.enum_combo_filter_type.setCurrentEnum(FilterType.LowPass)
         self.dbl_slider_lowcut.setValue(1)
         self.dbl_slider_highcut.setValue(8)
-        self.slider_order.setValue(3)
+        self.spin_box_filter_order.setValue(3)
         self.slider_window_size_filter.setValue(500)
         self.combo_powerline.setCurrentIndex(0)
-        self.combo_standardization.setCurrentEnum(StandardizationMethod.ZScore)
-        self.checkbox_rolling.setChecked(False)
+        self.enum_combo_standardize_method.setCurrentEnum(StandardizationMethod.ZScore)
+        self.grp_box_standardize_rolling_window.setChecked(False)
         self.slider_window_size_standardize.setValue(300)
+
+    @QtCore.Slot(object)
+    def _set_rolling_window_checkbox_state(self, method_enum: StandardizationMethod) -> None:
+        if method_enum == StandardizationMethod.ZScore:
+            self.grp_box_standardize_rolling_window.setEnabled(True)
+        else:
+            self.grp_box_standardize_rolling_window.setChecked(False)
+            self.grp_box_standardize_rolling_window.setEnabled(False)
+
+    @QtCore.Slot()
+    def _emit_pipeline_requested(self) -> None:
+        pipeline = PreprocessPipeline(self.enum_combo_pipeline.currentEnum())
+        self.sig_pipeline_requested.emit(pipeline)
+
+    @QtCore.Slot()
+    def _emit_filter_requested(self) -> None:
+        freq_cutoff_type = self.enum_combo_filter_type.currentEnum()
+        if freq_cutoff_type is None:
+            return
+        lowcut = None
+        highcut = None
+        if freq_cutoff_type == FilterType.LowPass:
+            highcut = self.dbl_slider_highcut.value()
+        elif freq_cutoff_type == FilterType.HighPass:
+            lowcut = self.dbl_slider_lowcut.value()
+        elif freq_cutoff_type == FilterType.BandPass:
+            lowcut = self.dbl_slider_lowcut.value()
+            highcut = self.dbl_slider_highcut.value()
+
+        method = FilterMethod(self.enum_combo_filter_method.currentEnum())
+        order = self.spin_box_filter_order.value()
+        powerline = self.combo_powerline.currentData(QtCore.Qt.ItemDataRole.UserRole)
+
+        filter_params: _t.SignalFilterParameters = {
+            "lowcut": lowcut,
+            "highcut": highcut,
+            "method": method,
+            "order": order,
+            "window_size": self.slider_window_size_filter.value(),
+            "powerline": powerline,
+        }
+
+        self.sig_filter_requested.emit(filter_params)
+
+    @QtCore.Slot()
+    def _emit_standardization_requested(self) -> None:
+        method = StandardizationMethod(self.enum_combo_standardize_method.currentEnum())
+        window_size = self.slider_window_size_standardize.value()
+        standardization_params: _t.StandardizationParameters = {
+            "method": method,
+            "window_size": window_size,
+        }
+        self.sig_standardization_requested.emit(standardization_params)
+
+    @QtCore.Slot()
+    def _emit_data_reset_requested(self) -> None:
+        self.sig_data_reset_requested.emit()
 
     @QtCore.Slot(object)
     def _set_frequency_slider_states(self, filter_type_enum: FilterType) -> None:
@@ -176,7 +178,7 @@ class ProcessingParametersDialog(QtWidgets.QDialog):
         # Low-pass: Enable highcut slider, disable lowcut slider
         # High-pass: Enable lowcut slider, disable highcut slider
         # Band-pass: Enable both lowcut and highcut sliders
-        if not self.combo_filter_type.isEnabled():
+        if not self.enum_combo_filter_type.isEnabled():
             return
         if filter_type_enum == FilterType.LowPass:
             self.dbl_slider_lowcut.setEnabled(False)
@@ -195,130 +197,39 @@ class ProcessingParametersDialog(QtWidgets.QDialog):
             FilterMethod.ButterworthLegacy,
             FilterMethod.Bessel,
         ]:
-            self.combo_filter_type.setEnabled(True)
+            self.enum_combo_filter_type.setEnabled(True)
             self.dbl_slider_lowcut.setEnabled(True)
             self.dbl_slider_highcut.setEnabled(True)
-            self.slider_order.setEnabled(True)
-            self.slider_window_size_standardize.setEnabled(False)
+            self.spin_box_filter_order.setEnabled(True)
+            self.slider_window_size_filter.setEnabled(False)
             self.combo_powerline.setEnabled(False)
         elif method_enum == FilterMethod.SavGol:
-            self.combo_filter_type.setEnabled(False)
+            self.enum_combo_filter_type.setEnabled(False)
             self.dbl_slider_lowcut.setEnabled(False)
             self.dbl_slider_highcut.setEnabled(False)
-            self.slider_order.setEnabled(True)
-            self.slider_window_size_standardize.setEnabled(True)
+            self.spin_box_filter_order.setEnabled(True)
+            self.slider_window_size_filter.setEnabled(True)
             self.combo_powerline.setEnabled(False)
         elif method_enum == FilterMethod.FIR:
-            self.combo_filter_type.setEnabled(True)
+            self.enum_combo_filter_type.setEnabled(True)
             self.dbl_slider_lowcut.setEnabled(True)
             self.dbl_slider_highcut.setEnabled(True)
-            self.slider_order.setEnabled(False)
-            self.slider_window_size_standardize.setEnabled(True)
+            self.spin_box_filter_order.setEnabled(False)
+            self.slider_window_size_filter.setEnabled(True)
             self.combo_powerline.setEnabled(False)
         elif method_enum == FilterMethod.Powerline:
-            self.combo_filter_type.setEnabled(False)
+            self.enum_combo_filter_type.setEnabled(False)
             self.dbl_slider_lowcut.setEnabled(False)
             self.dbl_slider_highcut.setEnabled(False)
-            self.slider_order.setEnabled(False)
-            self.slider_window_size_standardize.setEnabled(False)
+            self.spin_box_filter_order.setEnabled(False)
+            self.slider_window_size_filter.setEnabled(False)
             self.combo_powerline.setEnabled(True)
         elif method_enum == FilterMethod.NoFilter:
-            self.combo_filter_type.setEnabled(False)
+            self.enum_combo_filter_type.setEnabled(False)
             self.dbl_slider_lowcut.setEnabled(False)
             self.dbl_slider_highcut.setEnabled(False)
-            self.slider_order.setEnabled(False)
-            self.slider_window_size_standardize.setEnabled(False)
+            self.spin_box_filter_order.setEnabled(False)
+            self.slider_window_size_filter.setEnabled(False)
             self.combo_powerline.setEnabled(False)
 
-        self._set_frequency_slider_states(FilterType(self.combo_filter_type.currentEnum()))
-
-    @QtCore.Slot()
-    def _emit_filter_applied(self) -> None:
-        frequency_cutoff_type: FilterType | None = self.combo_filter_type.currentEnum()
-        if frequency_cutoff_type is None:
-            return
-        lowcut = None
-        highcut = None
-        if frequency_cutoff_type == FilterType.LowPass:
-            highcut = self.dbl_slider_highcut.value()
-        elif frequency_cutoff_type == FilterType.HighPass:
-            lowcut = self.dbl_slider_lowcut.value()
-        elif frequency_cutoff_type == FilterType.BandPass:
-            lowcut = self.dbl_slider_lowcut.value()
-            highcut = self.dbl_slider_highcut.value()
-
-        method = FilterMethod(self.combo_filter_method.currentEnum())
-        powerline = self.combo_powerline.currentData(QtCore.Qt.ItemDataRole.UserRole)
-
-        filter_params: _t.SignalFilterParameters = {
-            "lowcut": lowcut,
-            "highcut": highcut,
-            "method": method,
-            "order": self.slider_order.value(),
-            "window_size": self.slider_window_size_standardize.value(),
-            "powerline": powerline,
-        }
-
-        self.sig_filter_applied.emit(filter_params)
-
-    def _setup_standardization_section(self) -> None:
-        grp_box_standardization = QtWidgets.QGroupBox("Standardization")
-        standardization_layout = QtWidgets.QFormLayout()
-        standardization_layout.setRowWrapPolicy(QtWidgets.QFormLayout.RowWrapPolicy.WrapAllRows)
-
-        combo_standardization = superqt.QEnumComboBox(enum_class=StandardizationMethod)
-        combo_standardization.setCurrentEnum(StandardizationMethod.ZScore)
-        self.combo_standardization = combo_standardization
-
-        checkbox_rolling = QtWidgets.QCheckBox("Use Rolling Window")
-        checkbox_rolling.setChecked(False)
-        self.checkbox_rolling = checkbox_rolling
-
-        combo_standardization.currentEnumChanged.connect(self._set_rolling_window_checkbox_state)
-
-        slider_window_size_standardize = superqt.QLabeledSlider(QtCore.Qt.Orientation.Horizontal)
-        slider_window_size_standardize.setEdgeLabelMode(
-            superqt.QLabeledSlider.EdgeLabelMode.LabelIsValue
-        )
-
-        slider_window_size_standardize.setRange(3, 3_333)
-        slider_window_size_standardize.setValue(300)
-        self.slider_window_size_standardize = slider_window_size_standardize
-
-        self.checkbox_rolling.stateChanged.connect(self.slider_window_size_standardize.setEnabled)
-
-        self.btn_apply_standardization = QtWidgets.QPushButton("Apply Standardization")
-        self.btn_apply_standardization.clicked.connect(self._emit_standardization_applied)
-
-        standardization_layout.addRow("Method", combo_standardization)
-        standardization_layout.addRow(checkbox_rolling)
-        standardization_layout.addRow("Window Size", slider_window_size_standardize)
-        standardization_layout.addRow(self.btn_apply_standardization)
-
-        grp_box_standardization.setLayout(standardization_layout)
-        self.grp_box_standardization = grp_box_standardization
-        self._layout.addWidget(self.grp_box_standardization)
-
-    @QtCore.Slot(object)
-    def _set_rolling_window_checkbox_state(self, method_enum: StandardizationMethod) -> None:
-        if method_enum == StandardizationMethod.ZScore:
-            self.checkbox_rolling.setEnabled(True)
-            self.slider_window_size_standardize.setEnabled(self.checkbox_rolling.isChecked())
-        else:
-            self.checkbox_rolling.setChecked(False)
-            self.checkbox_rolling.setEnabled(False)
-            self.slider_window_size_standardize.setEnabled(False)
-
-    @QtCore.Slot()
-    def _emit_standardization_applied(self) -> None:
-        method = StandardizationMethod(self.combo_standardization.currentEnum())
-        window_size = self.slider_window_size_standardize.value()
-        standardization_params: _t.StandardizationParameters = {
-            "method": method,
-            "window_size": window_size,
-        }
-        self.sig_standardization_applied.emit(standardization_params)
-
-    @QtCore.Slot()
-    def _emit_restore_unfiltered(self) -> None:
-        self.sig_restore_unfiltered.emit()
+        self._set_frequency_slider_states(FilterType(self.enum_combo_filter_type.currentEnum()))

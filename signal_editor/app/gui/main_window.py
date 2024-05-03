@@ -10,7 +10,7 @@ from ...ui.ui_dock_session_properties import Ui_DockWidgetSessionProperties
 from ...ui.ui_main_window import Ui_MainWindow
 from ..enum_defs import LogLevel
 from .widgets.log_viewer import StatusMessageDock
-from .widgets.processing_inputs import ProcessingParametersDialog
+from .widgets.processing_inputs import ProcessingInputsDock
 from .widgets.settings_editor import SettingsEditor
 
 
@@ -162,7 +162,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_section_list = SectionListDock(self)
         self.dock_section_list.setVisible(False)
 
-        self.processing_parameters_dialog = ProcessingParametersDialog(self)
+        self.dock_processing_inputs = ProcessingInputsDock()
+        self.dock_processing_inputs.setVisible(False)
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.dock_processing_inputs)
 
         self.read_settings()
         self.setup_actions()

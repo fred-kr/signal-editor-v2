@@ -23,6 +23,7 @@ if __name__ == "__main__":
     parser.add_argument("--no-opengl", action="store_false", help="Don't use OpenGL for rendering")
     args = parser.parse_args()
 
+    os.environ["QT_LOGGING_RULES"] = "qt.pyside.libpyside.warning=true"
     if args.debug:
         os.environ["DEBUG"] = "1"
     else:
@@ -41,6 +42,6 @@ if __name__ == "__main__":
     app = SignalEditor(sys.argv)
     # app.setStyleSheet(qdarkstyle.load_stylesheet(qdarkstyle.DarkPalette))
     # Built-in styles: ['windows11', 'windowsvista', 'Windows', 'Fusion']
-    app.setStyle("Fusion")
+    app.setStyle("Default")
     app.main_window.show()
     sys.exit(app.exec())

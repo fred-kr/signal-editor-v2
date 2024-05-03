@@ -470,6 +470,7 @@ class SettingsTree(QtWidgets.QTreeWidget):
 
         return super().event(e)
 
+    @QtCore.Slot(QtWidgets.QTreeWidgetItem)
     def update_setting(self, item: QtWidgets.QTreeWidgetItem) -> None:
         key = item.text(0)
         ancestor = item.parent()
