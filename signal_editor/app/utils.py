@@ -79,7 +79,7 @@ def safe_disconnect(
 
 
 def safe_multi_disconnect(
-    sender: QtCore.QObject, signal_slot_pairs: list[t.Tuple[QtCore.SignalInstance, QtCore.Slot]]
+    sender: QtCore.QObject, signal_slot_pairs: list[tuple[QtCore.SignalInstance, QtCore.Slot | t.Callable[..., t.Any]]]
 ) -> None:
     for signal, slot in signal_slot_pairs:
         safe_disconnect(sender, signal, slot)

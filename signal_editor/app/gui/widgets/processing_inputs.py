@@ -17,6 +17,7 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
+        self.setVisible(False)
         settings = QtCore.QSettings()
         sampling_rate: int = settings.value("Data/sampling_rate")  # type: ignore
 
@@ -80,14 +81,14 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
         self.enum_combo_standardize_method.setEnumClass(StandardizationMethod)
 
         self._connect_qt_signals()
-        self._set_filter_widget_states()
+        self._set_filter_widget_states(self.enum_combo_filter_method.currentEnum())
 
     def _connect_qt_signals(self) -> None:
         self.btn_run_pipeline.clicked.connect(self._emit_pipeline_requested)
         self.btn_apply_signal_filter.clicked.connect(self._emit_filter_requested)
         self.btn_apply_standardization.clicked.connect(self._emit_standardization_requested)
         self.btn_reset_data.clicked.connect(self._emit_data_reset_requested)
-        self.btn_restore_defaults.clicked.connect(self._restore_defaults)
+        self.btn_reset_processing_inputs.clicked.connect(self._restore_defaults)
 
         self.enum_combo_filter_method.currentEnumChanged.connect(self._set_filter_widget_states)
         self.enum_combo_filter_type.currentEnumChanged.connect(self._set_frequency_slider_states)

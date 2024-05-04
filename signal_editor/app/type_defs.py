@@ -234,7 +234,7 @@ class NKSignalFilterParams(t.TypedDict, total=False):
     powerline: int | float
 
 
-class PeaksPPGElgendi(t.TypedDict, total=False):
+class PeaksPPGElgendi(t.TypedDict):
     peakwindow: float
     beatwindow: float
     beatoffset: float
@@ -253,10 +253,10 @@ class PeaksLocalMinima(t.TypedDict):
 
 class PeaksWFDBXQRS(t.TypedDict):
     search_radius: int
-    peak_dir: t.NotRequired[WFDBPeakDirection]
+    peak_dir: WFDBPeakDirection
 
 
-class PeaksECGNeuroKit2(t.TypedDict, total=False):
+class PeaksECGNeuroKit2(t.TypedDict):
     smoothwindow: float
     avgwindow: float
     gradthreshweight: float
@@ -265,7 +265,7 @@ class PeaksECGNeuroKit2(t.TypedDict, total=False):
     correct_artifacts: bool
 
 
-class PeaksPanTompkins(t.TypedDict, total=False):
+class PeaksPanTompkins(t.TypedDict):
     correct_artifacts: bool
 
 

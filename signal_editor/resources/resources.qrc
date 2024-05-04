@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file alias="arrow_right">fugue-icons/arrow.png</file>
     <file alias="cross_close">fugue-icons/cross-script.png</file>
     <file alias="app_ab">fugue-icons/application-ab.png</file>
     <file alias="app_docs">fugue-icons/application-documents.png</file>

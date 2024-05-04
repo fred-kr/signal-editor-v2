@@ -13,7 +13,7 @@ if __name__ == "__main__":
     import polars as pl
     import pyqtgraph as pg
 
-    # import qdarkstyle
+    import qdarkstyle
     from loguru import logger
 
     from signal_editor.signal_editor import SignalEditor
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     parser.add_argument("--no-opengl", action="store_false", help="Don't use OpenGL for rendering")
     args = parser.parse_args()
 
-    os.environ["QT_LOGGING_RULES"] = "qt.pyside.libpyside.warning=true"
+    # os.environ["QT_LOGGING_RULES"] = "qt.pyside.libpyside.warning=true"
     if args.debug:
         os.environ["DEBUG"] = "1"
     else:
@@ -40,8 +40,8 @@ if __name__ == "__main__":
     pl.Config().activate_decimals(True)
 
     app = SignalEditor(sys.argv)
-    # app.setStyleSheet(qdarkstyle.load_stylesheet(qdarkstyle.DarkPalette))
+    app.setStyleSheet(qdarkstyle.load_stylesheet())
     # Built-in styles: ['windows11', 'windowsvista', 'Windows', 'Fusion']
-    app.setStyle("Default")
+    # app.setStyle("Default")
     app.mw.show()
     sys.exit(app.exec())

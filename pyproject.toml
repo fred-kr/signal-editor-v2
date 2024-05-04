@@ -46,6 +46,7 @@ hypothesis = {extras = ["numpy"], version = "^6.100"}
 pyside6-examples = "^6.7.0"
 rich = {extras = ["jupyter"], version = "^13.7.1"}
 mkdocs-material = {git = "https://github.com/squidfunk/mkdocs-material.git", rev = "chore/update-to-mkdocs-1.6"}
+pyright = "^1.1.361"
 
 [tool.mypy]
 python_version = "3.12"

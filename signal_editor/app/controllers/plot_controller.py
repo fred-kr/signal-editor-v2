@@ -5,6 +5,8 @@ import numpy.typing as npt
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from ..enum_defs import PointSymbols
+
 from .. import type_defs as _t
 from ..gui.plot_items import CustomScatterPlotItem
 from ..gui.plot_items.editing_view_box import EditingViewBox
@@ -150,7 +152,7 @@ class PlotController(QtCore.QObject):
             name="Peaks",
             hoverable=True,
             hoverPen=hover_pen,
-            hoverSymbol="x",
+            hoverSymbol=PointSymbols.Cross,
             hoverBrush=hover_brush,
             hoverSize=15,
             tip=None,
@@ -393,7 +395,7 @@ class PlotController(QtCore.QObject):
 
     @QtCore.Slot()
     def _on_remove_selection(self) -> None:
-        vb = t.cast(EditingViewBox, self.pw_main.plotItem.vb)
+        vb: EditingViewBox = self.pw_main.plotItem.vb  # type: ignore
         if vb.mapped_selection_rect is None or self.peak_scatter is None:
             return
 
