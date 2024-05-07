@@ -16,8 +16,14 @@
   <property name="locale">
    <locale language="English" country="Germany"/>
   </property>
+  <property name="documentMode">
+   <bool>true</bool>
+  </property>
   <property name="dockNestingEnabled">
    <bool>true</bool>
+  </property>
+  <property name="dockOptions">
+   <set>QMainWindow::DockOption::AllowNestedDocks|QMainWindow::DockOption::AllowTabbedDocks|QMainWindow::DockOption::AnimatedDocks|QMainWindow::DockOption::VerticalTabs</set>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QGridLayout" name="gridLayout_4">
@@ -42,12 +48,30 @@
        <layout class="QGridLayout" name="gridLayout_8">
         <item row="0" column="0">
          <widget class="QSplitter" name="splitter_2">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
           <property name="orientation">
            <enum>Qt::Orientation::Horizontal</enum>
           </property>
+          <property name="opaqueResize">
+           <bool>true</bool>
+          </property>
+          <property name="childrenCollapsible">
+           <bool>false</bool>
+          </property>
           <widget class="QWidget" name="container_file_information" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <layout class="QGridLayout" name="gridLayout">
-            <item row="3" column="2">
+            <item row="3" column="0" colspan="2">
              <widget class="QPushButton" name="btn_load_data">
               <property name="enabled">
                <bool>false</bool>
@@ -76,23 +100,107 @@
               </property>
              </widget>
             </item>
-            <item row="1" column="0" colspan="3">
-             <widget class="QCollapsible" name="collapsible_frame">
+            <item row="0" column="0" colspan="3">
+             <widget class="QLabel" name="label_2">
               <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                 <horstretch>0</horstretch>
                 <verstretch>0</verstretch>
                </sizepolicy>
               </property>
-              <property name="frameShape">
-               <enum>QFrame::Shape::StyledPanel</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Shadow::Raised</enum>
+              <property name="text">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:700;&quot;&gt;Data Import&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
              </widget>
             </item>
-            <item row="3" column="1">
+            <item row="2" column="0" colspan="3">
+             <widget class="QGroupBox" name="grp_box_required_info">
+              <property name="title">
+               <string>Required Information</string>
+              </property>
+              <layout class="QFormLayout" name="formLayout">
+               <item row="0" column="0">
+                <widget class="QLabel" name="samplingRateLabel">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>31</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Sampling Rate</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QSpinBox" name="spin_box_sampling_rate_import_page">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>31</height>
+                  </size>
+                 </property>
+                 <property name="suffix">
+                  <string> Hz</string>
+                 </property>
+                 <property name="maximum">
+                  <number>10000</number>
+                 </property>
+                 <property name="value">
+                  <number>0</number>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="0">
+                <widget class="QLabel" name="signalColumnChannelLabel">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>31</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Signal Column / Channel</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="1" column="1">
+                <widget class="QComboBox" name="combo_box_signal_column_import_page">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>31</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="0">
+                <widget class="QLabel" name="infoColumnChannelLabel">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>31</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Info Column / Channel</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="2" column="1">
+                <widget class="QComboBox" name="combo_box_info_column_import_page">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>31</height>
+                  </size>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </item>
+            <item row="3" column="2">
              <widget class="QPushButton" name="btn_close_file">
               <property name="enabled">
                <bool>false</bool>
@@ -108,24 +216,11 @@
               </property>
               <property name="icon">
                <iconset resource="../resources/resources.qrc">
-                <normaloff>:/icons/delete</normaloff>:/icons/delete</iconset>
+                <normaloff>:/icons/cross_close</normaloff>:/icons/cross_close</iconset>
               </property>
              </widget>
             </item>
-            <item row="0" column="0" colspan="3">
-             <widget class="QLabel" name="label_2">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:700;&quot;&gt;File Information&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
+            <item row="1" column="0" colspan="3">
              <widget class="QPushButton" name="btn_open_file">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -140,7 +235,7 @@
                </size>
               </property>
               <property name="text">
-               <string> Open File</string>
+               <string> Select File</string>
               </property>
               <property name="icon">
                <iconset resource="../resources/resources.qrc">
@@ -148,53 +243,27 @@
               </property>
              </widget>
             </item>
-            <item row="2" column="0" colspan="3">
-             <widget class="QGroupBox" name="groupBox">
-              <property name="title">
-               <string>Required Information</string>
+            <item row="5" column="0" colspan="3">
+             <widget class="QCollapsible" name="collapsible_frame">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
               </property>
-              <layout class="QFormLayout" name="formLayout">
-               <item row="0" column="0">
-                <widget class="QLabel" name="samplingRateLabel">
-                 <property name="text">
-                  <string>Sampling Rate</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QSpinBox" name="spin_box_sampling_rate_import_page">
-                 <property name="suffix">
-                  <string> Hz</string>
-                 </property>
-                 <property name="maximum">
-                  <number>10000</number>
-                 </property>
-                 <property name="value">
-                  <number>0</number>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="0">
-                <widget class="QLabel" name="signalColumnChannelLabel">
-                 <property name="text">
-                  <string>Signal Column / Channel</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="1" column="1">
-                <widget class="QComboBox" name="combo_box_signal_column_import_page"/>
-               </item>
-               <item row="2" column="0">
-                <widget class="QLabel" name="infoColumnChannelLabel">
-                 <property name="text">
-                  <string>Info Column / Channel</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="1">
-                <widget class="QComboBox" name="combo_box_info_column_import_page"/>
-               </item>
-              </layout>
+              <property name="frameShape">
+               <enum>QFrame::Shape::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Shadow::Raised</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="4" column="0" colspan="3">
+             <widget class="Line" name="line">
+              <property name="orientation">
+               <enum>Qt::Orientation::Horizontal</enum>
+              </property>
              </widget>
             </item>
            </layout>
@@ -204,7 +273,7 @@
             <item row="0" column="0">
              <widget class="QLabel" name="label">
               <property name="text">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:700;&quot;&gt;Loaded Data&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:700;&quot;&gt;Data View&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
              </widget>
             </item>
@@ -388,6 +457,7 @@
    </attribute>
    <addaction name="action_open_file"/>
    <addaction name="action_edit_metadata"/>
+   <addaction name="action_close_file"/>
   </widget>
   <action name="action_open_file">
    <property name="icon">
@@ -527,7 +597,7 @@
     <string>Close File</string>
    </property>
    <property name="toolTip">
-    <string>Closes the currently loaded file and refreshes the app state. Any changes made to the file will be lost, so make sure to export any results first.</string>
+    <string>Closes the currently loaded file and refreshes the app state. Make sure to export any existing results first, as they will be lost on refresh.</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -554,13 +624,13 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/app_plus</normaloff>:/icons/app_plus</iconset>
+     <normaloff>:/icons/section_add</normaloff>:/icons/section_add</iconset>
    </property>
    <property name="text">
     <string>New Section</string>
    </property>
    <property name="toolTip">
-    <string>Select a section of the data for processing</string>
+    <string>Select a section of the signal data to work with</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
@@ -569,16 +639,22 @@
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
-  <action name="action_show_filter_inputs">
+  <action name="action_show_processing_inputs">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/view_app_monitor</normaloff>:/icons/view_app_monitor</iconset>
+     <normaloff>:/icons/filter_edit</normaloff>:/icons/filter_edit</iconset>
    </property>
    <property name="text">
-    <string>Signal Filtering</string>
+    <string>Signal Processing</string>
    </property>
    <property name="toolTip">
-    <string>Show signal pre-processing options</string>
+    <string>Show signal processing options</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+1</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -641,13 +717,17 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/app_ab</normaloff>:/icons/app_ab</iconset>
+     <normaloff>:/icons/eye_close</normaloff>
+     <normalon>:/icons/eye_open</normalon>:/icons/eye_close</iconset>
    </property>
    <property name="text">
     <string>Show Section Overview</string>
    </property>
    <property name="toolTip">
     <string>Shows the current sections as colored regions in the plot</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+3</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -656,7 +736,7 @@
   <action name="action_remove_peaks_in_selection">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/search_minus</normaloff>:/icons/search_minus</iconset>
+     <normaloff>:/icons/eraser</normaloff>:/icons/eraser</iconset>
    </property>
    <property name="text">
     <string>Remove Peaks in Selection</string>
@@ -674,7 +754,7 @@
   <action name="action_find_peaks_in_selection">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/search_plus</normaloff>:/icons/search_plus</iconset>
+     <normaloff>:/icons/search</normaloff>:/icons/search</iconset>
    </property>
    <property name="text">
     <string>Find Peaks in Selection</string>
@@ -684,6 +764,27 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+F</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_show_peak_detection_inputs">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/icons/target_edit</normaloff>:/icons/target_edit</iconset>
+   </property>
+   <property name="text">
+    <string>Peak Detection</string>
+   </property>
+   <property name="toolTip">
+    <string>Show peak detection inputs</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+2</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>

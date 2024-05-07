@@ -13,7 +13,7 @@ if __name__ == "__main__":
     import polars as pl
     import pyqtgraph as pg
 
-    import qdarkstyle
+    # import qdarkstyle
     from loguru import logger
 
     from signal_editor.signal_editor import SignalEditor
@@ -40,8 +40,8 @@ if __name__ == "__main__":
     pl.Config().activate_decimals(True)
 
     app = SignalEditor(sys.argv)
-    app.setStyleSheet(qdarkstyle.load_stylesheet())
+    # app.setStyleSheet(qdarkstyle.load_stylesheet())
     # Built-in styles: ['windows11', 'windowsvista', 'Windows', 'Fusion']
-    # app.setStyle("Default")
+    app.setStyle("Fusion")
     app.mw.show()
     sys.exit(app.exec())

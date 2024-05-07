@@ -1,3 +1,4 @@
+import enum
 import typing as t
 
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -5,10 +6,11 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from ....ui.ui_dock_peak_detection import Ui_DockWidgetPeakDetection
 from ... import type_defs as _t
 from ...enum_defs import PeakDetectionMethod, WFDBPeakDirection
+from . import _widget_defaults as _widget_defs
 
 
 class PeakDetectionDock(QtWidgets.QDockWidget, Ui_DockWidgetPeakDetection):
-    sig_peak_detection_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal(object)
+    sig_peak_detection_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal(enum.StrEnum, dict)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
@@ -16,36 +18,7 @@ class PeakDetectionDock(QtWidgets.QDockWidget, Ui_DockWidgetPeakDetection):
         self.setVisible(False)
         self.setWindowIcon(QtGui.QIcon(":/icons/search"))
 
-        self._DEFAULT_VALUES = {
-            "peak_elgendi_ppg": {
-                "peakwindow": 0.111,
-                "beatwindow": 0.667,
-                "beatoffset": 0.02,
-                "mindelay": 0.3,
-            },
-            "peak_neurokit2": {
-                "smoothwindow": 0.1,
-                "avgwindow": 0.75,
-                "gradthreshweight": 1.5,
-                "minlenweight": 0.4,
-                "mindelay": 0.3,
-            },
-            "peak_local_max": {
-                "radius": 100,
-                "min_dist": 15,
-            },
-            "peak_local_min": {
-                "radius": 100,
-                "min_dist": 15,
-            },
-            "peak_pantompkins": {
-                "correct_artifacts": False,
-            },
-            "peak_xqrs": {
-                "search_radius": 50,
-                "peak_dir": WFDBPeakDirection.Up,
-            },
-        }
+        self._DEFAULT_VALUES = _widget_defs.PEAK_DETECTION
 
         self.enum_combo_peak_method.setEnumClass(PeakDetectionMethod)
         self.enum_combo_peak_method.setCurrentEnum(PeakDetectionMethod.PPGElgendi)
@@ -78,7 +51,7 @@ class PeakDetectionDock(QtWidgets.QDockWidget, Ui_DockWidgetPeakDetection):
     def _emit_peak_detection_requested(self) -> None:
         method = PeakDetectionMethod(self.enum_combo_peak_method.currentEnum())
         peak_params = self.get_peak_detection_parameters(method)
-        self.sig_peak_detection_requested.emit(peak_params)
+        self.sig_peak_detection_requested.emit(method, peak_params)
 
     def get_peak_detection_parameters(
         self, method: PeakDetectionMethod
@@ -133,9 +106,9 @@ class PeakDetectionDock(QtWidgets.QDockWidget, Ui_DockWidgetPeakDetection):
             for param_name, default_value in param_map.items():
                 widget_name = f"{widget_name_prefix}_{param_name}"
                 widget = getattr(self, widget_name)
-                if isinstance(default_value, (int, float)):
-                    widget.setValue(default_value)
-                elif isinstance(default_value, bool):
+                if isinstance(default_value, bool):
                     widget.setChecked(default_value)
+                elif isinstance(default_value, (int, float)):
+                    widget.setValue(default_value)
                 else:
                     widget.setCurrentEnum(default_value)

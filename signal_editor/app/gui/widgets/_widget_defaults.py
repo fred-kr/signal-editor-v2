@@ -1,4 +1,4 @@
-from ...enum_defs import PeakDetectionMethod, WFDBPeakDirection
+from ...enum_defs import WFDBPeakDirection
 
 PEAK_DETECTION = {
     "peak_elgendi_ppg": {
@@ -15,12 +15,12 @@ PEAK_DETECTION = {
         "mindelay": 0.3,
     },
     "peak_local_max": {
-        "search_radius": 100,
-        "min_distance": 15,
+        "radius": 100,
+        "min_dist": 15,
     },
     "peak_local_min": {
-        "search_radius": 100,
-        "min_distance": 15,
+        "radius": 100,
+        "min_dist": 15,
     },
     "peak_pantompkins": {
         "correct_artifacts": False,
@@ -28,5 +28,5 @@ PEAK_DETECTION = {
     "peak_xqrs": {
         "search_radius": 50,
         "peak_dir": WFDBPeakDirection.Up,
-    }
+    },
 }

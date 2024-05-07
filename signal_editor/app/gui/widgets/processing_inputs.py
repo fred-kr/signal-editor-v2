@@ -54,6 +54,7 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
         )
 
         combo_powerline = QtWidgets.QComboBox()
+        combo_powerline.setMinimumHeight(31)
         combo_powerline.addItem("50 Hz")
         combo_powerline.addItem("60 Hz")
         combo_powerline.setCurrentIndex(0)

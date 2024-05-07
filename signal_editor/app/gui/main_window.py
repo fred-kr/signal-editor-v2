@@ -6,20 +6,12 @@ from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from ...ui.ui_dialog_metadata import Ui_MetadataDialog
-from ...ui.ui_dock_session_properties import Ui_DockWidgetSessionProperties
 from ...ui.ui_main_window import Ui_MainWindow
 from ..enum_defs import LogLevel
 from .widgets.log_viewer import StatusMessageDock
-from .widgets.processing_inputs import ProcessingInputsDock
 from .widgets.peak_detection_inputs import PeakDetectionDock
+from .widgets.processing_inputs import ProcessingInputsDock
 from .widgets.settings_editor import SettingsEditor
-
-
-class SessionPropertiesDock(QtWidgets.QDockWidget, Ui_DockWidgetSessionProperties):
-    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
-        super().__init__(parent)
-        self.setupUi(self)
-        self.setVisible(False)
 
 
 class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
@@ -90,7 +82,7 @@ class SectionListDock(QtWidgets.QDockWidget):
         main_layout = QtWidgets.QVBoxLayout(main_widget)
 
         active_section_label = QtWidgets.QLabel("Active Section: ", main_widget)
-        active_section_label.setFont(QtGui.QFont("Arial", 12, QtGui.QFont.Weight.Bold))
+        active_section_label.setFont(QtGui.QFont("Segoe UI", 12, QtGui.QFont.Weight.Bold))
         main_layout.addWidget(active_section_label)
 
         nav_btn_widget = QtWidgets.QWidget(self)
@@ -126,7 +118,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             "processor": QtGui.QIcon(":/icons/processor"),
             "edit": QtGui.QIcon(":/icons/view_app_monitor"),
             "navigation": QtGui.QIcon(":/icons/navigation"),
+            "confirm": QtGui.QIcon(":/icons/tick_button"),
+            "cancel": QtGui.QIcon(":/icons/delete"),
         }
+        self.setDockNestingEnabled(True)
 
         self.tool_bar_navigation.setWindowIcon(QtGui.QIcon(":/icons/navigation"))
 
@@ -144,10 +139,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.collapsible_frame.setContent(data_tree_widget)
         self.data_tree_widget_import_metadata = data_tree_widget
 
-        dock_session_properties = SessionPropertiesDock(self)
-        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, dock_session_properties)
-        self.dock_session_properties = dock_session_properties
-
         dock_status_log = StatusMessageDock(self)
         self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, dock_status_log)
         self.dock_status_log = dock_status_log
@@ -155,7 +146,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.settings_editor = SettingsEditor(self)
 
-        self.metadata_dialog = MetadataDialog(self)
+        self.dialog_meta = MetadataDialog(self)
 
         self.stackedWidget.setCurrentIndex(0)
         self.action_show_import_page.setChecked(True)
@@ -164,11 +155,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.dock_section_list)
 
         self.dock_processing_inputs = ProcessingInputsDock()
-        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.dock_processing_inputs)
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, self.dock_processing_inputs)
 
-        self.dock_peak_detection_inputs = PeakDetectionDock()
-        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.dock_peak_detection_inputs)
-        
+        self.dock_peaks = PeakDetectionDock()
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, self.dock_peaks)
+
+        self.dialog_new_section = QtWidgets.QDialog(
+            self, QtCore.Qt.WindowType.Tool | QtCore.Qt.WindowType.FramelessWindowHint
+        )
+        tbtn_confirm = QtWidgets.QToolButton(self.dialog_new_section)
+        tbtn_confirm.setIcon(self._icons["confirm"])
+        tbtn_confirm.clicked.connect(self.action_confirm_section.trigger)
+        tbtn_cancel = QtWidgets.QToolButton(self.dialog_new_section)
+        tbtn_cancel.setIcon(self._icons["cancel"])
+        tbtn_cancel.clicked.connect(self.action_cancel_section.trigger)
+
+        dlg_layout = QtWidgets.QHBoxLayout()
+        dlg_layout.addWidget(tbtn_confirm)
+        dlg_layout.addWidget(tbtn_cancel)
+        self.dialog_new_section.setLayout(dlg_layout)
 
         self.read_settings()
         self.setup_actions()
@@ -200,21 +205,21 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.stackedWidget.currentChanged.connect(self.change_context_actions)
 
         self.spin_box_sampling_rate_import_page.valueChanged.connect(
-            self.metadata_dialog.spin_box_sampling_rate.setValue
+            self.dialog_meta.spin_box_sampling_rate.setValue
         )
         self.combo_box_info_column_import_page.currentTextChanged.connect(
-            self.metadata_dialog.combo_box_info_column.setCurrentText
+            self.dialog_meta.combo_box_info_column.setCurrentText
         )
         self.combo_box_signal_column_import_page.currentTextChanged.connect(
-            self.metadata_dialog.combo_box_signal_column.setCurrentText
+            self.dialog_meta.combo_box_signal_column.setCurrentText
         )
-        self.metadata_dialog.spin_box_sampling_rate.valueChanged.connect(
+        self.dialog_meta.spin_box_sampling_rate.valueChanged.connect(
             self.spin_box_sampling_rate_import_page.setValue
         )
-        self.metadata_dialog.combo_box_info_column.currentTextChanged.connect(
+        self.dialog_meta.combo_box_info_column.currentTextChanged.connect(
             self.combo_box_info_column_import_page.setCurrentText
         )
-        self.metadata_dialog.combo_box_signal_column.currentTextChanged.connect(
+        self.dialog_meta.combo_box_signal_column.currentTextChanged.connect(
             self.combo_box_signal_column_import_page.setCurrentText
         )
         self.stackedWidget.currentChanged.connect(
@@ -226,6 +231,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def toggle_section_actions(self, show: bool) -> None:
         self.action_confirm_section.setEnabled(show)
         self.action_cancel_section.setEnabled(show)
+        if not show:
+            self.dialog_new_section.close()
+        else:
+            self.dialog_new_section.show()
 
     @QtCore.Slot(int)
     def change_context_actions(self, index: int) -> None:
@@ -249,9 +258,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def _show_edit_page(self) -> None:
         self.tool_bar_context_actions.clear()
 
-        self.tool_bar_context_actions.addAction(self.action_show_filter_inputs)
-        self.tool_bar_context_actions.addAction(self.action_toggle_auto_scaling)
+        self.tool_bar_context_actions.addAction(self.action_show_processing_inputs)
+        self.tool_bar_context_actions.addAction(self.action_show_peak_detection_inputs)
         self.tool_bar_context_actions.addAction(self.action_show_section_overview)
+        self.tool_bar_context_actions.addAction(self.action_toggle_auto_scaling)
 
         self.tool_bar_context_actions.addSeparator()
 
@@ -278,11 +288,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # TODO: Add actions
 
     def setup_menus(self) -> None:
-        action_toggle_dock_session_properties = self.dock_session_properties.toggleViewAction()
-        action_toggle_dock_session_properties.setIcon(self._icons["properties"])
-        action_toggle_dock_session_properties.setText("Show Session Properties")
-        self.menuView.addAction(action_toggle_dock_session_properties)
-
         action_toggle_dock_status_log = self.dock_status_log.toggleViewAction()
         action_toggle_dock_status_log.setIcon(self._icons["processor"])
         action_toggle_dock_status_log.setText("Show Status Log")

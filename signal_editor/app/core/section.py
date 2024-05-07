@@ -281,7 +281,7 @@ class Section:
         self, method: PeakDetectionMethod, method_parameters: _t.PeakDetectionMethodParameters
     ) -> None:
         peaks = find_peaks(
-            self.processed_signal.to_numpy(zero_copy_only=True),
+            self.processed_signal.to_numpy(),
             self.sampling_rate,
             method,
             method_parameters,
@@ -301,6 +301,8 @@ class Section:
         ----------
         peaks : npt.NDArray[np.int32]
             A 1D array of integers representing the indices of the peaks in the processed signal.
+        update_rate : bool
+            Whether to recalculate the signal rate based on the new peaks. Defaults to True.
         """
         # Remove any negative peak indices
         peaks = peaks[peaks >= 0]
@@ -317,7 +319,7 @@ class Section:
 
         self._manual_peak_edits.clear()
         if update_rate:
-            self.calculate_rate(peaks)
+            self.calculate_rate(peaks, desired_length=self.data.height)
 
     def update_peaks(
         self,
@@ -337,7 +339,7 @@ class Section:
             A 1D array of integers representing the indices of the peaks in the processed signal.
         """
         pl_peaks = pl.Series("peaks", peaks, pl.Int32)
-        then_value = 1 if action == "add" else 0
+        then_value = 1 if action in ["a", "add"] else 0
 
         updated_data = (
             self.data.lazy()

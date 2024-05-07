@@ -124,6 +124,8 @@ def _find_peaks_ppg_elgendi(
 
     if end_waves[0] < beg_waves[0]:
         end_waves = end_waves[1:]
+    if end_waves[-1] < beg_waves[-1]:
+        beg_waves = beg_waves[:-1]
 
     diff_waves = end_waves - beg_waves
     valid_waves = diff_waves >= peakwindow_samples

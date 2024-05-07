@@ -17,9 +17,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QAbstractScrollArea, QAbstractSpinBox, QApplication, QCheckBox,
     QDockWidget, QDoubleSpinBox, QFormLayout, QFrame,
-    QGridLayout, QLabel, QPushButton, QScrollArea,
-    QSizePolicy, QSpinBox, QStackedWidget, QTextBrowser,
-    QVBoxLayout, QWidget)
+    QGridLayout, QLabel, QPushButton, QSizePolicy,
+    QSpinBox, QStackedWidget, QTextBrowser, QWidget)
 
 from superqt import QEnumComboBox
 from . import resources_rc
@@ -28,23 +27,30 @@ class Ui_DockWidgetPeakDetection(object):
     def setupUi(self, DockWidgetPeakDetection):
         if not DockWidgetPeakDetection.objectName():
             DockWidgetPeakDetection.setObjectName(u"DockWidgetPeakDetection")
-        DockWidgetPeakDetection.resize(450, 538)
+        DockWidgetPeakDetection.resize(306, 503)
+        DockWidgetPeakDetection.setAllowedAreas(Qt.DockWidgetArea.LeftDockWidgetArea|Qt.DockWidgetArea.RightDockWidgetArea)
         self.dockWidgetContents = QWidget()
         self.dockWidgetContents.setObjectName(u"dockWidgetContents")
         self.gridLayout = QGridLayout(self.dockWidgetContents)
         self.gridLayout.setObjectName(u"gridLayout")
         self.label_2 = QLabel(self.dockWidgetContents)
         self.label_2.setObjectName(u"label_2")
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
+        self.label_2.setSizePolicy(sizePolicy)
+        self.label_2.setMinimumSize(QSize(0, 31))
 
         self.gridLayout.addWidget(self.label_2, 0, 0, 1, 2)
 
         self.btn_reset_peak_inputs = QPushButton(self.dockWidgetContents)
         self.btn_reset_peak_inputs.setObjectName(u"btn_reset_peak_inputs")
-        sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.btn_reset_peak_inputs.sizePolicy().hasHeightForWidth())
-        self.btn_reset_peak_inputs.setSizePolicy(sizePolicy)
+        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(0)
+        sizePolicy1.setHeightForWidth(self.btn_reset_peak_inputs.sizePolicy().hasHeightForWidth())
+        self.btn_reset_peak_inputs.setSizePolicy(sizePolicy1)
         self.btn_reset_peak_inputs.setMinimumSize(QSize(0, 31))
         icon = QIcon()
         icon.addFile(u":/icons/restore_defaults", QSize(), QIcon.Normal, QIcon.Off)
@@ -55,11 +61,9 @@ class Ui_DockWidgetPeakDetection(object):
 
         self.label = QLabel(self.dockWidgetContents)
         self.label.setObjectName(u"label")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Preferred)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(0)
         sizePolicy1.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
         self.label.setSizePolicy(sizePolicy1)
+        self.label.setMinimumSize(QSize(0, 31))
         font = QFont()
         font.setBold(True)
         self.label.setFont(font)
@@ -75,30 +79,36 @@ class Ui_DockWidgetPeakDetection(object):
 
         self.btn_run_peak_detection = QPushButton(self.dockWidgetContents)
         self.btn_run_peak_detection.setObjectName(u"btn_run_peak_detection")
+        sizePolicy.setHeightForWidth(self.btn_run_peak_detection.sizePolicy().hasHeightForWidth())
+        self.btn_run_peak_detection.setSizePolicy(sizePolicy)
         self.btn_run_peak_detection.setMinimumSize(QSize(0, 31))
 
         self.gridLayout.addWidget(self.btn_run_peak_detection, 2, 0, 1, 3)
 
-        self.scrollArea = QScrollArea(self.dockWidgetContents)
-        self.scrollArea.setObjectName(u"scrollArea")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        self.stacked_peak_parameters = QStackedWidget(self.dockWidgetContents)
+        self.stacked_peak_parameters.setObjectName(u"stacked_peak_parameters")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.scrollArea.sizePolicy().hasHeightForWidth())
-        self.scrollArea.setSizePolicy(sizePolicy2)
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollAreaWidgetContents = QWidget()
-        self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 430, 383))
-        self.verticalLayout = QVBoxLayout(self.scrollAreaWidgetContents)
-        self.verticalLayout.setObjectName(u"verticalLayout")
-        self.stacked_peak_parameters = QStackedWidget(self.scrollAreaWidgetContents)
-        self.stacked_peak_parameters.setObjectName(u"stacked_peak_parameters")
+        sizePolicy2.setHeightForWidth(self.stacked_peak_parameters.sizePolicy().hasHeightForWidth())
+        self.stacked_peak_parameters.setSizePolicy(sizePolicy2)
         self.stacked_peak_parameters.setFrameShape(QFrame.Shape.StyledPanel)
         self.page_peak_elgendi_ppg = QWidget()
         self.page_peak_elgendi_ppg.setObjectName(u"page_peak_elgendi_ppg")
-        self.formLayout_3 = QFormLayout(self.page_peak_elgendi_ppg)
-        self.formLayout_3.setObjectName(u"formLayout_3")
+        self.formLayout_2 = QFormLayout(self.page_peak_elgendi_ppg)
+        self.formLayout_2.setObjectName(u"formLayout_2")
+        self.peak_elgendi_ppg_info = QTextBrowser(self.page_peak_elgendi_ppg)
+        self.peak_elgendi_ppg_info.setObjectName(u"peak_elgendi_ppg_info")
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.peak_elgendi_ppg_info.sizePolicy().hasHeightForWidth())
+        self.peak_elgendi_ppg_info.setSizePolicy(sizePolicy3)
+        self.peak_elgendi_ppg_info.setMaximumSize(QSize(16777215, 100))
+        self.peak_elgendi_ppg_info.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+
+        self.formLayout_2.setWidget(0, QFormLayout.SpanningRole, self.peak_elgendi_ppg_info)
+
         self.label_peak_window = QLabel(self.page_peak_elgendi_ppg)
         self.label_peak_window.setObjectName(u"label_peak_window")
         self.label_peak_window.setMinimumSize(QSize(0, 31))
@@ -107,7 +117,7 @@ class Ui_DockWidgetPeakDetection(object):
         font1.setItalic(False)
         self.label_peak_window.setFont(font1)
 
-        self.formLayout_3.setWidget(1, QFormLayout.LabelRole, self.label_peak_window)
+        self.formLayout_2.setWidget(1, QFormLayout.LabelRole, self.label_peak_window)
 
         self.peak_elgendi_ppg_peakwindow = QDoubleSpinBox(self.page_peak_elgendi_ppg)
         self.peak_elgendi_ppg_peakwindow.setObjectName(u"peak_elgendi_ppg_peakwindow")
@@ -120,14 +130,14 @@ class Ui_DockWidgetPeakDetection(object):
         self.peak_elgendi_ppg_peakwindow.setStepType(QAbstractSpinBox.StepType.AdaptiveDecimalStepType)
         self.peak_elgendi_ppg_peakwindow.setValue(0.111000000000000)
 
-        self.formLayout_3.setWidget(1, QFormLayout.FieldRole, self.peak_elgendi_ppg_peakwindow)
+        self.formLayout_2.setWidget(1, QFormLayout.FieldRole, self.peak_elgendi_ppg_peakwindow)
 
         self.beatWindowLabel = QLabel(self.page_peak_elgendi_ppg)
         self.beatWindowLabel.setObjectName(u"beatWindowLabel")
         self.beatWindowLabel.setMinimumSize(QSize(0, 31))
         self.beatWindowLabel.setFont(font1)
 
-        self.formLayout_3.setWidget(2, QFormLayout.LabelRole, self.beatWindowLabel)
+        self.formLayout_2.setWidget(2, QFormLayout.LabelRole, self.beatWindowLabel)
 
         self.peak_elgendi_ppg_beatwindow = QDoubleSpinBox(self.page_peak_elgendi_ppg)
         self.peak_elgendi_ppg_beatwindow.setObjectName(u"peak_elgendi_ppg_beatwindow")
@@ -139,14 +149,14 @@ class Ui_DockWidgetPeakDetection(object):
         self.peak_elgendi_ppg_beatwindow.setStepType(QAbstractSpinBox.StepType.AdaptiveDecimalStepType)
         self.peak_elgendi_ppg_beatwindow.setValue(0.667000000000000)
 
-        self.formLayout_3.setWidget(2, QFormLayout.FieldRole, self.peak_elgendi_ppg_beatwindow)
+        self.formLayout_2.setWidget(2, QFormLayout.FieldRole, self.peak_elgendi_ppg_beatwindow)
 
         self.beatOffsetLabel = QLabel(self.page_peak_elgendi_ppg)
         self.beatOffsetLabel.setObjectName(u"beatOffsetLabel")
         self.beatOffsetLabel.setMinimumSize(QSize(0, 31))
         self.beatOffsetLabel.setFont(font1)
 
-        self.formLayout_3.setWidget(3, QFormLayout.LabelRole, self.beatOffsetLabel)
+        self.formLayout_2.setWidget(3, QFormLayout.LabelRole, self.beatOffsetLabel)
 
         self.peak_elgendi_ppg_beatoffset = QDoubleSpinBox(self.page_peak_elgendi_ppg)
         self.peak_elgendi_ppg_beatoffset.setObjectName(u"peak_elgendi_ppg_beatoffset")
@@ -157,14 +167,14 @@ class Ui_DockWidgetPeakDetection(object):
         self.peak_elgendi_ppg_beatoffset.setStepType(QAbstractSpinBox.StepType.AdaptiveDecimalStepType)
         self.peak_elgendi_ppg_beatoffset.setValue(0.020000000000000)
 
-        self.formLayout_3.setWidget(3, QFormLayout.FieldRole, self.peak_elgendi_ppg_beatoffset)
+        self.formLayout_2.setWidget(3, QFormLayout.FieldRole, self.peak_elgendi_ppg_beatoffset)
 
         self.minimumDelayLabel = QLabel(self.page_peak_elgendi_ppg)
         self.minimumDelayLabel.setObjectName(u"minimumDelayLabel")
         self.minimumDelayLabel.setMinimumSize(QSize(0, 31))
         self.minimumDelayLabel.setFont(font1)
 
-        self.formLayout_3.setWidget(4, QFormLayout.LabelRole, self.minimumDelayLabel)
+        self.formLayout_2.setWidget(4, QFormLayout.LabelRole, self.minimumDelayLabel)
 
         self.peak_elgendi_ppg_mindelay = QDoubleSpinBox(self.page_peak_elgendi_ppg)
         self.peak_elgendi_ppg_mindelay.setObjectName(u"peak_elgendi_ppg_mindelay")
@@ -175,19 +185,7 @@ class Ui_DockWidgetPeakDetection(object):
         self.peak_elgendi_ppg_mindelay.setStepType(QAbstractSpinBox.StepType.AdaptiveDecimalStepType)
         self.peak_elgendi_ppg_mindelay.setValue(0.300000000000000)
 
-        self.formLayout_3.setWidget(4, QFormLayout.FieldRole, self.peak_elgendi_ppg_mindelay)
-
-        self.peak_elgendi_ppg_info = QTextBrowser(self.page_peak_elgendi_ppg)
-        self.peak_elgendi_ppg_info.setObjectName(u"peak_elgendi_ppg_info")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.peak_elgendi_ppg_info.sizePolicy().hasHeightForWidth())
-        self.peak_elgendi_ppg_info.setSizePolicy(sizePolicy3)
-        self.peak_elgendi_ppg_info.setMaximumSize(QSize(16777215, 100))
-        self.peak_elgendi_ppg_info.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-
-        self.formLayout_3.setWidget(0, QFormLayout.SpanningRole, self.peak_elgendi_ppg_info)
+        self.formLayout_2.setWidget(4, QFormLayout.FieldRole, self.peak_elgendi_ppg_mindelay)
 
         self.stacked_peak_parameters.addWidget(self.page_peak_elgendi_ppg)
         self.page_peak_local_max = QWidget()
@@ -214,8 +212,11 @@ class Ui_DockWidgetPeakDetection(object):
 
         self.peak_local_max_info = QTextBrowser(self.page_peak_local_max)
         self.peak_local_max_info.setObjectName(u"peak_local_max_info")
-        sizePolicy2.setHeightForWidth(self.peak_local_max_info.sizePolicy().hasHeightForWidth())
-        self.peak_local_max_info.setSizePolicy(sizePolicy2)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.peak_local_max_info.sizePolicy().hasHeightForWidth())
+        self.peak_local_max_info.setSizePolicy(sizePolicy4)
         self.peak_local_max_info.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.peak_local_max_info.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
 
@@ -244,8 +245,8 @@ class Ui_DockWidgetPeakDetection(object):
         self.formLayout.setObjectName(u"formLayout")
         self.peak_local_min_info = QTextBrowser(self.page_peak_local_min)
         self.peak_local_min_info.setObjectName(u"peak_local_min_info")
-        sizePolicy2.setHeightForWidth(self.peak_local_min_info.sizePolicy().hasHeightForWidth())
-        self.peak_local_min_info.setSizePolicy(sizePolicy2)
+        sizePolicy4.setHeightForWidth(self.peak_local_min_info.sizePolicy().hasHeightForWidth())
+        self.peak_local_min_info.setSizePolicy(sizePolicy4)
         self.peak_local_min_info.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.peak_local_min_info.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
 
@@ -407,8 +408,8 @@ class Ui_DockWidgetPeakDetection(object):
 
         self.peak_neurokit2_info = QTextBrowser(self.page_peak_neurokit2)
         self.peak_neurokit2_info.setObjectName(u"peak_neurokit2_info")
-        sizePolicy2.setHeightForWidth(self.peak_neurokit2_info.sizePolicy().hasHeightForWidth())
-        self.peak_neurokit2_info.setSizePolicy(sizePolicy2)
+        sizePolicy4.setHeightForWidth(self.peak_neurokit2_info.sizePolicy().hasHeightForWidth())
+        self.peak_neurokit2_info.setSizePolicy(sizePolicy4)
         self.peak_neurokit2_info.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
 
         self.formLayout_6.setWidget(0, QFormLayout.SpanningRole, self.peak_neurokit2_info)
@@ -464,8 +465,8 @@ class Ui_DockWidgetPeakDetection(object):
 
         self.peak_promac_info = QTextBrowser(self.page_peak_promac)
         self.peak_promac_info.setObjectName(u"peak_promac_info")
-        sizePolicy2.setHeightForWidth(self.peak_promac_info.sizePolicy().hasHeightForWidth())
-        self.peak_promac_info.setSizePolicy(sizePolicy2)
+        sizePolicy4.setHeightForWidth(self.peak_promac_info.sizePolicy().hasHeightForWidth())
+        self.peak_promac_info.setSizePolicy(sizePolicy4)
         self.peak_promac_info.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
 
         self.formLayout_7.setWidget(0, QFormLayout.SpanningRole, self.peak_promac_info)
@@ -490,8 +491,8 @@ class Ui_DockWidgetPeakDetection(object):
 
         self.peak_pantompkins_info = QTextBrowser(self.page_peak_pantompkins)
         self.peak_pantompkins_info.setObjectName(u"peak_pantompkins_info")
-        sizePolicy2.setHeightForWidth(self.peak_pantompkins_info.sizePolicy().hasHeightForWidth())
-        self.peak_pantompkins_info.setSizePolicy(sizePolicy2)
+        sizePolicy4.setHeightForWidth(self.peak_pantompkins_info.sizePolicy().hasHeightForWidth())
+        self.peak_pantompkins_info.setSizePolicy(sizePolicy4)
         self.peak_pantompkins_info.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
 
         self.formLayout_8.setWidget(0, QFormLayout.SpanningRole, self.peak_pantompkins_info)
@@ -503,8 +504,8 @@ class Ui_DockWidgetPeakDetection(object):
         self.formLayout_9.setObjectName(u"formLayout_9")
         self.peak_xqrs_info = QTextBrowser(self.page_peak_xqrs)
         self.peak_xqrs_info.setObjectName(u"peak_xqrs_info")
-        sizePolicy2.setHeightForWidth(self.peak_xqrs_info.sizePolicy().hasHeightForWidth())
-        self.peak_xqrs_info.setSizePolicy(sizePolicy2)
+        sizePolicy4.setHeightForWidth(self.peak_xqrs_info.sizePolicy().hasHeightForWidth())
+        self.peak_xqrs_info.setSizePolicy(sizePolicy4)
         self.peak_xqrs_info.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
 
         self.formLayout_9.setWidget(0, QFormLayout.SpanningRole, self.peak_xqrs_info)
@@ -542,11 +543,7 @@ class Ui_DockWidgetPeakDetection(object):
 
         self.stacked_peak_parameters.addWidget(self.page_peak_xqrs)
 
-        self.verticalLayout.addWidget(self.stacked_peak_parameters)
-
-        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
-
-        self.gridLayout.addWidget(self.scrollArea, 3, 0, 1, 3)
+        self.gridLayout.addWidget(self.stacked_peak_parameters, 3, 0, 1, 3)
 
         DockWidgetPeakDetection.setWidget(self.dockWidgetContents)
 
@@ -566,14 +563,6 @@ class Ui_DockWidgetPeakDetection(object):
 #endif // QT_CONFIG(tooltip)
         self.label.setText(QCoreApplication.translate("DockWidgetPeakDetection", u"Detection Method:", None))
         self.btn_run_peak_detection.setText(QCoreApplication.translate("DockWidgetPeakDetection", u"Run peak detection", None))
-        self.label_peak_window.setText(QCoreApplication.translate("DockWidgetPeakDetection", u"Peak Window", None))
-        self.peak_elgendi_ppg_peakwindow.setSuffix(QCoreApplication.translate("DockWidgetPeakDetection", u" s", None))
-        self.beatWindowLabel.setText(QCoreApplication.translate("DockWidgetPeakDetection", u"Beat Window", None))
-        self.peak_elgendi_ppg_beatwindow.setSuffix(QCoreApplication.translate("DockWidgetPeakDetection", u" s", None))
-        self.beatOffsetLabel.setText(QCoreApplication.translate("DockWidgetPeakDetection", u"Beat Offset", None))
-        self.peak_elgendi_ppg_beatoffset.setSuffix("")
-        self.minimumDelayLabel.setText(QCoreApplication.translate("DockWidgetPeakDetection", u"Minimum Delay", None))
-        self.peak_elgendi_ppg_mindelay.setSuffix(QCoreApplication.translate("DockWidgetPeakDetection", u" s", None))
         self.peak_elgendi_ppg_info.setHtml(QCoreApplication.translate("DockWidgetPeakDetection", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
@@ -584,6 +573,14 @@ class Ui_DockWidgetPeakDetection(object):
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Algorithm for detecting peaks in a PPG signal, described here: <a href=\"https://doi.org/10.1371/journal.pone.0076585\"><span style=\" text-decoration: underline; color:#038387;\">Paper</span></a></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Implementation based on `<span style=\" font-style:italic;\">neurokit2._ppg_fi"
                         "ndpeaks_elgendi`</span> function</p></body></html>", None))
+        self.label_peak_window.setText(QCoreApplication.translate("DockWidgetPeakDetection", u"Peak Window", None))
+        self.peak_elgendi_ppg_peakwindow.setSuffix(QCoreApplication.translate("DockWidgetPeakDetection", u" s", None))
+        self.beatWindowLabel.setText(QCoreApplication.translate("DockWidgetPeakDetection", u"Beat Window", None))
+        self.peak_elgendi_ppg_beatwindow.setSuffix(QCoreApplication.translate("DockWidgetPeakDetection", u" s", None))
+        self.beatOffsetLabel.setText(QCoreApplication.translate("DockWidgetPeakDetection", u"Beat Offset", None))
+        self.peak_elgendi_ppg_beatoffset.setSuffix("")
+        self.minimumDelayLabel.setText(QCoreApplication.translate("DockWidgetPeakDetection", u"Minimum Delay", None))
+        self.peak_elgendi_ppg_mindelay.setSuffix(QCoreApplication.translate("DockWidgetPeakDetection", u" s", None))
         self.label_22.setText(QCoreApplication.translate("DockWidgetPeakDetection", u"Search Radius", None))
         self.peak_local_max_info.setHtml(QCoreApplication.translate("DockWidgetPeakDetection", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"

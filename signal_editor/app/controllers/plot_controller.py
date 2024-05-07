@@ -201,6 +201,8 @@ class PlotController(QtCore.QObject):
 
     @QtCore.Slot(int)
     def update_time_axis_scale(self, sampling_rate: int) -> None:
+        if sampling_rate == 0:
+            return
         for plt_item in (self.pw_main.getPlotItem(), self.pw_rate.getPlotItem()):
             plt_item.getAxis("top").setScale(1 / sampling_rate)
 
