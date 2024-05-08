@@ -319,6 +319,21 @@ class PlotController(QtCore.QObject):
             return
         self.peak_scatter.setData(x=x_data, y=y_data)
 
+    def clear_peaks(self) -> None:
+        if self.peak_scatter is None:
+            return
+        self.peak_scatter.clear()
+
+    def clear_rate(self) -> None:
+        if self.rate_curve is None:
+            return
+        self.rate_curve.clear()
+
+    def remove_selection_rect(self) -> None:
+        vb: EditingViewBox = self.pw_main.plotItem.vb
+        vb.selection_box = None
+        vb.mapped_selection_rect = None
+
     @QtCore.Slot(object, object, object)
     def _on_scatter_clicked(
         self,
@@ -396,7 +411,7 @@ class PlotController(QtCore.QObject):
         self.sig_scatter_data_changed.emit("a", x_new)
 
     @QtCore.Slot()
-    def _on_remove_selection(self) -> None:
+    def remove_peaks_in_selection(self) -> None:
         vb: EditingViewBox = self.pw_main.plotItem.vb  # type: ignore
         if vb.mapped_selection_rect is None or self.peak_scatter is None:
             return

@@ -332,7 +332,7 @@ class Section:
 
         Parameters
         ----------
-        action : t.Literal["a", "r", "add", "remove"]
+        action : {"a", "r", "add", "remove"}
             The action to perform. Must be one of "a"/"add" for adding peaks or "r"/"remove" for
             removing peaks.
         peaks : t.Sequence[int] | npt.NDArray[np.int32]
@@ -432,9 +432,9 @@ class Section:
         )
 
     def get_peak_xy(self) -> tuple[npt.NDArray[np.int32], npt.NDArray[np.float64]]:
-        peaks = self.peaks_local.to_numpy(zero_copy_only=True)
+        peaks = self.peaks_local.to_numpy()
 
-        return peaks, self.processed_signal.gather(peaks).to_numpy(zero_copy_only=True)
+        return peaks, self.processed_signal.gather(peaks).to_numpy()
 
     def get_focused_result(self) -> CompactSectionResult:
         section_peaks = self.peaks_local

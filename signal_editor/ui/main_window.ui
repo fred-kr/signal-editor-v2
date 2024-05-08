@@ -409,7 +409,20 @@
      <string>View</string>
     </property>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="action_remove_peaks_in_selection"/>
+    <addaction name="action_find_peaks_in_selection"/>
+    <addaction name="separator"/>
+    <addaction name="action_show_peak_detection_inputs"/>
+    <addaction name="action_show_processing_inputs"/>
+    <addaction name="separator"/>
+    <addaction name="action_toggle_auto_scaling"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
    <addaction name="menuView"/>
    <addaction name="menuSettings"/>
   </widget>

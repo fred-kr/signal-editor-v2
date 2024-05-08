@@ -121,7 +121,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             "confirm": QtGui.QIcon(":/icons/tick_button"),
             "cancel": QtGui.QIcon(":/icons/delete"),
         }
-        self.setDockNestingEnabled(True)
 
         self.tool_bar_navigation.setWindowIcon(QtGui.QIcon(":/icons/navigation"))
 
@@ -151,11 +150,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.stackedWidget.setCurrentIndex(0)
         self.action_show_import_page.setChecked(True)
 
-        self.dock_section_list = SectionListDock()
-        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.dock_section_list)
+        self.dock_sections = SectionListDock()
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea, self.dock_sections)
 
-        self.dock_processing_inputs = ProcessingInputsDock()
-        self.addDockWidget(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, self.dock_processing_inputs)
+        self.dock_processing = ProcessingInputsDock()
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, self.dock_processing)
 
         self.dock_peaks = PeakDetectionDock()
         self.addDockWidget(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, self.dock_peaks)
@@ -223,7 +222,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.combo_box_signal_column_import_page.setCurrentText
         )
         self.stackedWidget.currentChanged.connect(
-            lambda index: self.dock_section_list.setVisible(index == 1)  # type: ignore
+            lambda index: self.dock_sections.setVisible(index == 1)  # type: ignore
         )
         self.action_toggle_auto_scaling.setChecked(True)
         self.action_show_section_overview.setChecked(False)
@@ -343,6 +342,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.write_settings()
         if self.settings_editor.isVisible():
             self.settings_editor.done(QtWidgets.QDialog.DialogCode.Rejected)
+        self.dock_status_log.close()
+        self.dock_processing.close()
+        self.dock_peaks.close()
+        self.dock_sections.close()
         return super().closeEvent(event)
 
     @QtCore.Slot(str, int, str)
