@@ -5,9 +5,8 @@ import numpy.typing as npt
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ..enum_defs import PointSymbols
-
 from .. import type_defs as _t
+from ..enum_defs import PointSymbols
 from ..gui.plot_items import CustomScatterPlotItem
 from ..gui.plot_items.editing_view_box import EditingViewBox
 from ..gui.plot_items.time_axis_item import TimeAxisItem
@@ -61,13 +60,10 @@ class PlotController(QtCore.QObject):
             plt_item.addLegend(colCount=2)
             plt_item.addLegend().anchor(itemPos=(0, 1), parentPos=(0, 1), offset=(5, -5))
             plt_item.setMouseEnabled(x=True, y=False)
-            vb.enableAutoRange("y", enable=0.95)
+            vb.enableAutoRange("y", enable=0.99)
             vb.setAutoVisible(y=False)
 
         self.pw_main.getPlotItem().getViewBox().setXLink("rate_plot")
-
-        # ? Maybe better in main controller
-        # plt.scene().sigMouseMoved.connect(self._on_mouse_moved)
 
         settings = QtCore.QSettings()
         self.set_background_color(settings.value("Plot/background_color"))
@@ -102,10 +98,6 @@ class PlotController(QtCore.QObject):
         self.initialize_peak_scatter()
         self.initialize_rate_curve()
         self.setup_region_selector()
-
-    # TODO: Find a better way to convey this information
-    # self._temperature_label = pg.LabelItem("Temperature: - °C", parent=self.pw_main)
-    # self._bpm_label = pg.LabelItem("HR: - bpm", parent=self.pw_rate)
 
     def initialize_signal_curve(self, pen_color: _t.PGColor | None = None) -> None:
         if pen_color is None:
@@ -159,7 +151,7 @@ class PlotController(QtCore.QObject):
         )
         scatter.setZValue(60)
         scatter.sigClicked.connect(self._on_scatter_clicked)
-        scatter.sigPlotChanged.connect(self._on_scatter_changed)
+        # scatter.sigPlotChanged.connect(self._on_scatter_changed)
         self.peak_scatter = scatter
         self.pw_main.addItem(self.peak_scatter)
 
@@ -167,7 +159,7 @@ class PlotController(QtCore.QObject):
         if self.peak_scatter is None:
             return
         self.peak_scatter.sigClicked.disconnect(self._on_scatter_clicked)
-        self.peak_scatter.sigPlotChanged.disconnect(self._on_scatter_changed)
+        # self.peak_scatter.sigPlotChanged.disconnect(self._on_scatter_changed)
         self.pw_main.removeItem(self.peak_scatter)
         self.peak_scatter.setParent(None)
         self.peak_scatter = None
@@ -250,25 +242,28 @@ class PlotController(QtCore.QObject):
         if region is not None:
             self.regions.remove(region)
         if bounds is not None:
-            self.regions = [r for r in self.regions if r.getRegion() != bounds]
-        if self.region_selector is not None:
-            self.region_selector.setParent(None)
-        self.region_selector = None
+            for region in self.regions:
+                reg_bounds = region.getRegion()
+                if np.allclose(bounds, reg_bounds):
+                    self.regions.remove(region)
+                    self.pw_main.removeItem(region)
+                    break
 
     def clear_regions(self) -> None:
         for region in self.regions:
             region.setParent(None)
             if region in self.pw_main.plotItem.items:
                 self.pw_main.removeItem(region)
-        self.regions = []
+        self.regions.clear()
 
     def show_region_selector(self, bounds: tuple[float, float]) -> None:
         if not self.region_selector:
             return
 
         self.region_selector.setBounds(bounds)
-        view_range = self.pw_main.getPlotItem().getViewBox().viewRange()[0]
-        initial_region = (view_range[0], view_range[1] / 2)
+        view_range = self.pw_main.plotItem.vb.viewRange()[0]
+        span = view_range[1] - view_range[0]
+        initial_region = (view_range[0], view_range[0] + 0.33 * span)
         self.region_selector.setRegion(initial_region)
         if self.region_selector not in self.pw_main.plotItem.items:
             self.pw_main.addItem(self.region_selector)
@@ -319,10 +314,12 @@ class PlotController(QtCore.QObject):
             return
         self.peak_scatter.setData(x=x_data, y=y_data)
 
-    def clear_peaks(self) -> None:
+    def clear_peaks(self, clear_rate: bool = True) -> None:
         if self.peak_scatter is None:
             return
         self.peak_scatter.clear()
+        if clear_rate:
+            self.clear_rate()
 
     def clear_rate(self) -> None:
         if self.rate_curve is None:
@@ -330,7 +327,7 @@ class PlotController(QtCore.QObject):
         self.rate_curve.clear()
 
     def remove_selection_rect(self) -> None:
-        vb: EditingViewBox = self.pw_main.plotItem.vb
+        vb: EditingViewBox = self.pw_main.plotItem.vb  # type: ignore
         vb.selection_box = None
         vb.mapped_selection_rect = None
 
@@ -355,11 +352,11 @@ class PlotController(QtCore.QObject):
             The mouse click event holding information about the click and its position.
         """
         ev.accept()
-        if self.peak_scatter is None:
+        if not self.peak_scatter or not points:
             return
 
         point = points[0]
-        point_x = point.pos().toQPoint()
+        point_x = int(point.pos().x())
         point_index = point.index()
 
         scatter_data = self.peak_scatter.data
@@ -367,7 +364,7 @@ class PlotController(QtCore.QObject):
         new_y = np.delete(scatter_data["y"], point_index)
         self.peak_scatter.setData(x=new_x, y=new_y)
 
-        self.sig_scatter_data_changed.emit("r", point_x)
+        self.sig_scatter_data_changed.emit("remove", np.array([point_x], dtype=np.int32))
 
     @QtCore.Slot(object, object)
     def _on_curve_clicked(
@@ -377,38 +374,54 @@ class PlotController(QtCore.QObject):
         if self.signal_curve is None or self.peak_scatter is None:
             return
 
-        click_x = ev.pos().x()
+        click_x = int(ev.pos().x())
         click_y = ev.pos().y()
         x_data = self.signal_curve.xData
         y_data = self.signal_curve.yData
         if x_data is None or y_data is None:
             return
-        settings = QtCore.QSettings()
-        scatter_search_radius = t.cast(int, settings.value("Editing/search_around_click_radius"))
+
+        scatter_search_radius = self._get_scatter_search_radius()
 
         left_index = np.searchsorted(x_data, click_x - scatter_search_radius, side="left")
         right_index = np.searchsorted(x_data, click_x + scatter_search_radius, side="right")
 
-        valid_x_values = x_data[left_index:right_index]
-        valid_y_values = y_data[left_index:right_index]
+        valid_x, valid_y = x_data[left_index:right_index], y_data[left_index:right_index]
 
-        extreme_index = left_index + np.argmin(np.abs(valid_x_values - click_x))
-        extreme_value = valid_y_values[np.argmin(np.abs(valid_x_values - click_x))]
+        closest_index_offset = np.argmin(np.abs(valid_x - click_x) + np.abs(valid_y - click_y))
+        closest_index = left_index + closest_index_offset
+        closest_x, closest_y = valid_x[closest_index_offset], valid_y[closest_index_offset]
 
-        y_extreme_index = left_index + np.argmin(np.abs(valid_y_values - click_y))
-        y_extreme_value = valid_y_values[np.argmin(np.abs(valid_y_values - click_y))]
-
-        if np.abs(y_extreme_value - click_y) < np.abs(extreme_value - click_y):
-            extreme_index = y_extreme_index
-            extreme_value = y_extreme_value
-
-        if extreme_index in self.peak_scatter.data["x"]:
+        if closest_index in self.peak_scatter.data["x"]:
             return
 
-        x_new, y_new = x_data[extreme_index], extreme_value
-        self.peak_scatter.addPoints(x=x_new, y=y_new)
+        self.peak_scatter.addPoints(x=closest_x, y=closest_y)
+        self.sig_scatter_data_changed.emit("add", np.array([closest_x], dtype=np.int32))
 
-        self.sig_scatter_data_changed.emit("a", x_new)
+        # valid_x_values = x_data[left_index:right_index]
+        # valid_y_values = y_data[left_index:right_index]
+
+        # extreme_index = left_index + np.argmin(np.abs(valid_x_values - click_x))
+        # extreme_value = valid_y_values[np.argmin(np.abs(valid_x_values - click_x))]
+
+        # y_extreme_index = left_index + np.argmin(np.abs(valid_y_values - click_y))
+        # y_extreme_value = valid_y_values[np.argmin(np.abs(valid_y_values - click_y))]
+
+        # if np.abs(y_extreme_value - click_y) < np.abs(extreme_value - click_y):
+        #     extreme_index = y_extreme_index
+        #     extreme_value = y_extreme_value
+
+        # if extreme_index in self.peak_scatter.data["x"]:
+        #     return
+
+        # x_new, y_new = x_data[extreme_index], extreme_value
+        # self.peak_scatter.addPoints(x=x_new, y=y_new)
+
+        # self.sig_scatter_data_changed.emit("add", np.array([x_new], dtype=np.int32))
+
+    def _get_scatter_search_radius(self) -> int:
+        settings = QtCore.QSettings()
+        return settings.value("Editing/search_around_click_radius", type=int)  # type: ignore
 
     @QtCore.Slot()
     def remove_peaks_in_selection(self) -> None:
@@ -424,7 +437,7 @@ class PlotController(QtCore.QObject):
         mask = (scatter_x < rx) | (scatter_x > rx + rw) | (scatter_y < ry) | (scatter_y > ry + rh)
 
         self.peak_scatter.setData(x=scatter_x[mask], y=scatter_y[mask])
-        self.sig_scatter_data_changed.emit("r", scatter_x[~mask].astype(np.int32))
+        self.sig_scatter_data_changed.emit("remove", scatter_x[~mask].astype(np.int32))
         vb.mapped_selection_rect = None
         vb.selection_box = None
 

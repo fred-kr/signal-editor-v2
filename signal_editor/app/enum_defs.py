@@ -63,8 +63,8 @@ class PeakDetectionMethod(enum.StrEnum):
     LocalMinima = "local_minima"
     PPGElgendi = "ppg_elgendi"
     WFDBXQRS = "wfdb_xqrs"
-    PanTompkins = "pan_tompkins"
-    ECGNeuroKit2 = "ecg_neurokit2"
+    PanTompkins = "pantompkins"
+    ECGNeuroKit2 = "neurokit"
 
 
 class WFDBPeakDirection(enum.StrEnum):

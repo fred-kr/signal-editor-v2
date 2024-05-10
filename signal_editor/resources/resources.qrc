@@ -1,5 +1,8 @@
 <RCC>
   <qresource prefix="icons">
+    <file alias="report">fugue-icons/report.png</file>
+    <file alias="color_palette">fugue-icons/palette-medium.png</file>
+    <file alias="list_view">fugue-icons/ui-list-box.png</file>
     <file alias="section_view">fugue-icons/zone.png</file>
     <file alias="section_remove">fugue-icons/zone--minus.png</file>
     <file alias="section_add">fugue-icons/zone--plus.png</file>

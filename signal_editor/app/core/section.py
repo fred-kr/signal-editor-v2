@@ -26,12 +26,12 @@ from .processing import (
 
 @attrs.define
 class ProcessingParameters:
-    sampling_rate: int
-    processing_pipeline: PreprocessPipeline = PreprocessPipeline.Custom
-    filter_parameters: _t.SignalFilterParameters | None = None
-    standardization_parameters: _t.StandardizationParameters | None = None
-    peak_detection_method: PeakDetectionMethod = PeakDetectionMethod.PPGElgendi
-    peak_detection_method_parameters: _t.PeakDetectionMethodParameters = {}
+    sampling_rate: int = attrs.field(converter=int)
+    processing_pipeline: PreprocessPipeline = attrs.field(init=False)
+    filter_parameters: _t.SignalFilterParameters | None = attrs.field(init=False)
+    standardization_parameters: _t.StandardizationParameters | None = attrs.field(init=False)
+    peak_detection_method: PeakDetectionMethod = attrs.field(init=False)
+    peak_detection_method_parameters: _t.PeakDetectionMethodParameters = attrs.field(init=False)
 
     def to_dict(self) -> _t.ProcessingParametersDict:
         return _t.ProcessingParametersDict(
@@ -124,11 +124,11 @@ class SectionID(str):
 
 @attrs.define
 class SectionMetadata:
-    signal_name: str
-    section_id: SectionID
-    global_bounds: tuple[int, int]
-    sampling_rate: int
-    processing_parameters: ProcessingParameters
+    signal_name: str = attrs.field()
+    section_id: SectionID = attrs.field()
+    global_bounds: tuple[int, int] = attrs.field()
+    sampling_rate: int = attrs.field()
+    processing_parameters: ProcessingParameters = attrs.field()
 
     def to_dict(self) -> _t.SectionMetadataDict:
         return _t.SectionMetadataDict(
@@ -157,8 +157,8 @@ class Section:
             .set_sorted(["index", "section_index"])
             .with_columns(
                 pl.col(signal_name).alias(self.processed_signal_name),
-                pl.lit(0).alias("is_peak"),
-                pl.lit(0).alias("is_manual"),
+                pl.lit(0, pl.Int8).alias("is_peak"),
+                pl.lit(0, pl.Int8).alias("is_manual"),
             )
             .collect()
         )
@@ -313,7 +313,7 @@ class Section:
             pl.when(pl.col("section_index").is_in(pl_peaks))
             .then(pl.lit(1))
             .otherwise(pl.lit(0))
-            .shrink_dtype()
+            # .shrink_dtype()
             .alias("is_peak")
         )
 
@@ -324,7 +324,8 @@ class Section:
     def update_peaks(
         self,
         action: t.Literal["a", "r", "add", "remove"],
-        peaks: t.Sequence[int] | npt.NDArray[np.int32],
+        peaks: npt.NDArray[np.int32],
+        update_rate: bool = True,
     ) -> None:
         """
         Updates the `is_peak` column in `self.data` at the given indices according to the provided
@@ -335,7 +336,7 @@ class Section:
         action : {"a", "r", "add", "remove"}
             The action to perform. Must be one of "a"/"add" for adding peaks or "r"/"remove" for
             removing peaks.
-        peaks : t.Sequence[int] | npt.NDArray[np.int32]
+        peaks : npt.NDArray[np.int32]
             A 1D array of integers representing the indices of the peaks in the processed signal.
         """
         pl_peaks = pl.Series("peaks", peaks, pl.Int32)
@@ -347,7 +348,7 @@ class Section:
                 pl.when(pl.col("section_index").is_in(pl_peaks))
                 .then(pl.lit(then_value))
                 .otherwise(pl.col("is_peak"))
-                .shrink_dtype()
+                # .shrink_dtype()
                 .alias("is_peak")
             )
             .collect()
@@ -358,10 +359,13 @@ class Section:
 
         self.data.replace("is_peak", updated_data)
 
-        if action == "add":
+        if action in ["a", "add"]:
             self._manual_peak_edits.new_added(changed_indices)
         else:
             self._manual_peak_edits.new_removed(changed_indices)
+
+        if update_rate and self.peaks_local.len() > 3:
+            self.calculate_rate(self.peaks_local.to_numpy(), desired_length=self.data.height)
 
     def calculate_rate(
         self, peaks: npt.NDArray[np.int32], desired_length: int | None = None
@@ -470,3 +474,7 @@ class Section:
 
     def reset_signal(self) -> None:
         self.data.replace(self.processed_signal_name, self.raw_signal)
+        self.data = self.data.lazy().with_columns(
+            pl.lit(0, pl.Int8).alias("is_peak"),
+            pl.lit(0, pl.Int8).alias("is_manual"),
+        ).collect()

@@ -367,5 +367,9 @@ def find_peaks(
             )
         case PeakDetectionMethod.ECGNeuroKit2 | PeakDetectionMethod.PanTompkins:
             return nk.ecg_peaks(
-                ecg_cleaned=sig, sampling_rate=sampling_rate, method=method, **method_parameters
+                ecg_cleaned=sig,
+                sampling_rate=sampling_rate,
+                method=method,
+                correct_artifacts=method_parameters.get("correct_artifacts", False),
+                # **method_parameters
             )[1]["ECG_R_Peaks"]

@@ -42,6 +42,6 @@ if __name__ == "__main__":
     app = SignalEditor(sys.argv)
     # app.setStyleSheet(qdarkstyle.load_stylesheet())
     # Built-in styles: ['windows11', 'windowsvista', 'Windows', 'Fusion']
-    app.setStyle("Fusion")
+    app.setStyle("windows11")
     app.mw.show()
     sys.exit(app.exec())

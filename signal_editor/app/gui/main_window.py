@@ -48,6 +48,7 @@ class SectionListView(QtWidgets.QListView):
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setUniformItemSizes(True)
         self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         self.setSelectionRectVisible(True)
         self.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -78,22 +79,15 @@ class SectionListDock(QtWidgets.QDockWidget):
         self.setObjectName("SectionListDock")
         self.setWindowTitle("Section List")
         self.list_view = SectionListView(self)
+        self.toggleViewAction().setIcon(QtGui.QIcon(":/icons/list_view"))
         main_widget = QtWidgets.QWidget(self)
         main_layout = QtWidgets.QVBoxLayout(main_widget)
 
-        active_section_label = QtWidgets.QLabel("Active Section: ", main_widget)
-        active_section_label.setFont(QtGui.QFont("Segoe UI", 12, QtGui.QFont.Weight.Bold))
-        main_layout.addWidget(active_section_label)
+        label_active_section = QtWidgets.QLabel("Active Section: ", main_widget)
+        label_active_section.setFont(QtGui.QFont("Segoe UI", 12, QtGui.QFont.Weight.Bold))
+        main_layout.addWidget(label_active_section)
+        self.label_active_section = label_active_section
 
-        nav_btn_widget = QtWidgets.QWidget(self)
-        nav_btn_layout = QtWidgets.QHBoxLayout(nav_btn_widget)
-        self.btn_prev_section = QtWidgets.QPushButton(QtGui.QIcon(":/icons/nav_left"), "Previous")
-        self.btn_next_section = QtWidgets.QPushButton(QtGui.QIcon(":/icons/nav_right"), "Next")
-        nav_btn_layout.addWidget(self.btn_prev_section)
-        nav_btn_layout.addStretch()
-        nav_btn_layout.addWidget(self.btn_next_section)
-
-        main_layout.addWidget(nav_btn_widget)
         main_layout.addWidget(self.list_view)
 
         self.setWidget(main_widget)
@@ -105,6 +99,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
+
         self._msg_box_icons = {
             LogLevel.DEBUG: QtGui.QIcon(":/icons/app_monitor"),
             LogLevel.INFO: QtGui.QIcon(":/icons/info"),
@@ -123,6 +118,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         }
 
         self.tool_bar_navigation.setWindowIcon(QtGui.QIcon(":/icons/navigation"))
+        cc_tb = QtWidgets.QToolBar()
+        cc_tb.setObjectName("tool_bar_confirm_cancel")
+        cc_tb.addActions([self.action_confirm_section, self.action_cancel_section])
+        self.addToolBarBreak(QtCore.Qt.ToolBarArea.TopToolBarArea)
+        self.addToolBar(QtCore.Qt.ToolBarArea.TopToolBarArea, cc_tb)
+        self.tool_bar_cc = cc_tb
+        self.tool_bar_cc.setVisible(False)
 
         self.table_view_import_data.horizontalHeader().setDefaultAlignment(
             QtCore.Qt.AlignmentFlag.AlignLeft
@@ -159,24 +161,41 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_peaks = PeakDetectionDock()
         self.addDockWidget(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea, self.dock_peaks)
 
-        self.dialog_new_section = QtWidgets.QDialog(
-            self, QtCore.Qt.WindowType.Tool | QtCore.Qt.WindowType.FramelessWindowHint
-        )
-        tbtn_confirm = QtWidgets.QToolButton(self.dialog_new_section)
-        tbtn_confirm.setIcon(self._icons["confirm"])
-        tbtn_confirm.clicked.connect(self.action_confirm_section.trigger)
-        tbtn_cancel = QtWidgets.QToolButton(self.dialog_new_section)
-        tbtn_cancel.setIcon(self._icons["cancel"])
-        tbtn_cancel.clicked.connect(self.action_cancel_section.trigger)
+        self._context_actions = {
+            "import": [self.action_open_file, self.action_edit_metadata, self.action_close_file],
+            "edit": [
+                self.dock_processing.toggleViewAction(),
+                self.dock_peaks.toggleViewAction(),
+                self.action_show_section_overview,
+                self.action_toggle_auto_scaling,
+                self.action_create_new_section,
+            ],
+            "result": [],
+            "export": [self.action_export_result],
+            "info": [],
+        }
 
-        dlg_layout = QtWidgets.QHBoxLayout()
-        dlg_layout.addWidget(tbtn_confirm)
-        dlg_layout.addWidget(tbtn_cancel)
-        self.dialog_new_section.setLayout(dlg_layout)
+        self.menuView.addActions(
+            [self.dock_sections.toggleViewAction(), self.dock_status_log.toggleViewAction()]
+        )
+        self.menuView.addSeparator()
+        self.menuView.addActions(
+            [self.dock_processing.toggleViewAction(), self.dock_peaks.toggleViewAction()]
+        )
+        self.menuEdit.insertActions(
+            self.action_show_section_overview,
+            [self.dock_processing.toggleViewAction(), self.dock_peaks.toggleViewAction()],
+        )
+        self.menuEdit.insertSeparator(self.action_show_section_overview)
 
         self.read_settings()
         self.setup_actions()
-        self.setup_menus()
+        self.connect_qt_signals()
+        self.dock_status_log.hide()
+        self.dock_processing.hide()
+        self.dock_peaks.hide()
+        self.dock_sections.hide()
+        self.change_context_actions(0)
 
     def setup_actions(self) -> None:
         navigation_action_group = QtGui.QActionGroup(self.tool_bar_navigation)
@@ -188,19 +207,36 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         navigation_action_group.addAction(self.action_show_export_page)
         navigation_action_group.addAction(self.action_show_info_page)
 
+        self.action_toggle_auto_scaling.setChecked(True)
+        self.action_show_section_overview.setChecked(False)
+
+        for action_list in self._context_actions.values():
+            self.tool_bar_context_actions.addActions(action_list)
+
+    def connect_qt_signals(self) -> None:
         self.action_show_import_page.triggered.connect(
-            lambda: self.stackedWidget.setCurrentIndex(0)
+            lambda: self.stackedWidget.setCurrentWidget(self.stacked_page_import)
         )
-        self.action_show_edit_page.triggered.connect(lambda: self.stackedWidget.setCurrentIndex(1))
+        self.action_show_edit_page.triggered.connect(
+            lambda: self.stackedWidget.setCurrentWidget(self.stacked_page_edit)
+        )
         self.action_show_result_page.triggered.connect(
-            lambda: self.stackedWidget.setCurrentIndex(2)
+            lambda: self.stackedWidget.setCurrentWidget(self.stacked_page_result)
         )
         self.action_show_export_page.triggered.connect(
-            lambda: self.stackedWidget.setCurrentIndex(3)
+            lambda: self.stackedWidget.setCurrentWidget(self.stacked_page_export)
         )
-        self.action_show_info_page.triggered.connect(lambda: self.stackedWidget.setCurrentIndex(4))
+        self.action_show_info_page.triggered.connect(
+            lambda: self.stackedWidget.setCurrentWidget(self.stacked_page_test)
+        )
 
         self.action_show_settings.triggered.connect(self.show_settings)
+
+        self.dock_sections.toggleViewAction().toggled.connect(self.dock_sections.setVisible)
+        self.dock_processing.toggleViewAction().toggled.connect(self.dock_processing.setVisible)
+        self.dock_peaks.toggleViewAction().toggled.connect(self.dock_peaks.setVisible)
+        self.dock_status_log.toggleViewAction().toggled.connect(self.dock_status_log.setVisible)
+
         self.stackedWidget.currentChanged.connect(self.change_context_actions)
 
         self.spin_box_sampling_rate_import_page.valueChanged.connect(
@@ -221,86 +257,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dialog_meta.combo_box_signal_column.currentTextChanged.connect(
             self.combo_box_signal_column_import_page.setCurrentText
         )
-        self.stackedWidget.currentChanged.connect(
-            lambda index: self.dock_sections.setVisible(index == 1)  # type: ignore
-        )
-        self.action_toggle_auto_scaling.setChecked(True)
-        self.action_show_section_overview.setChecked(False)
-
-    def toggle_section_actions(self, show: bool) -> None:
-        self.action_confirm_section.setEnabled(show)
-        self.action_cancel_section.setEnabled(show)
-        if not show:
-            self.dialog_new_section.close()
-        else:
-            self.dialog_new_section.show()
 
     @QtCore.Slot(int)
     def change_context_actions(self, index: int) -> None:
+        self.tool_bar_context_actions.clear()
+        self.tool_bar_cc.setVisible(False)
         if index == 0:
-            self._show_import_page()
+            self.tool_bar_context_actions.addActions(self._context_actions["import"])
         elif index == 1:
-            self._show_edit_page()
+            self.tool_bar_context_actions.addActions(self._context_actions["edit"])
+            self.tool_bar_context_actions.insertSeparator(self.action_show_section_overview)
+            self.tool_bar_context_actions.insertSeparator(self.action_create_new_section)
+            self.dock_sections.toggleViewAction().setChecked(True)
         elif index == 2:
-            self._show_result_page()
+            self.tool_bar_context_actions.addActions(self._context_actions["result"])
         elif index == 3:
-            self._show_export_page()
+            self.tool_bar_context_actions.addActions(self._context_actions["export"])
         elif index == 4:
-            self._show_info_page()
-
-    def _show_import_page(self) -> None:
-        self.tool_bar_context_actions.clear()
-        self.tool_bar_context_actions.addAction(self.action_open_file)
-        self.tool_bar_context_actions.addAction(self.action_edit_metadata)
-        self.tool_bar_context_actions.addAction(self.action_close_file)
-
-    def _show_edit_page(self) -> None:
-        self.tool_bar_context_actions.clear()
-
-        self.tool_bar_context_actions.addAction(self.action_show_processing_inputs)
-        self.tool_bar_context_actions.addAction(self.action_show_peak_detection_inputs)
-        self.tool_bar_context_actions.addAction(self.action_show_section_overview)
-        self.tool_bar_context_actions.addAction(self.action_toggle_auto_scaling)
-
-        self.tool_bar_context_actions.addSeparator()
-
-        self.tool_bar_context_actions.addAction(self.action_create_new_section)
-
-        self.tool_bar_context_actions.addSeparator()
-
-        self.tool_bar_context_actions.addAction(self.action_confirm_section)
-        self.tool_bar_context_actions.addAction(self.action_cancel_section)
-
-        self.action_confirm_section.setEnabled(False)
-        self.action_cancel_section.setEnabled(False)
-
-    def _show_result_page(self) -> None:
-        self.tool_bar_context_actions.clear()
-        # TODO: Add actions
-
-    def _show_export_page(self) -> None:
-        self.tool_bar_context_actions.clear()
-        self.tool_bar_context_actions.addAction(self.action_export_result)
-
-    def _show_info_page(self) -> None:
-        self.tool_bar_context_actions.clear()
-        # TODO: Add actions
-
-    def setup_menus(self) -> None:
-        action_toggle_dock_status_log = self.dock_status_log.toggleViewAction()
-        action_toggle_dock_status_log.setIcon(self._icons["processor"])
-        action_toggle_dock_status_log.setText("Show Status Log")
-        self.menuView.addAction(action_toggle_dock_status_log)
-
-        action_toggle_tb_edit = self.tool_bar_context_actions.toggleViewAction()
-        action_toggle_tb_edit.setIcon(self._icons["edit"])
-        action_toggle_tb_edit.setText("Toggle Editing Toolbar")
-        self.menuView.addAction(action_toggle_tb_edit)
-
-        action_toggle_nav_toolbar = self.tool_bar_navigation.toggleViewAction()
-        action_toggle_nav_toolbar.setIcon(self._icons["navigation"])
-        action_toggle_nav_toolbar.setText("Toggle Navigation Toolbar")
-        self.menuView.addAction(action_toggle_nav_toolbar)
+            self.tool_bar_context_actions.addActions(self._context_actions["info"])
 
     def write_settings(self) -> None:
         settings = QtCore.QSettings()
@@ -392,3 +366,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             msg_box.setText(text)
             msg_box.setDetailedText(plain_message)
             msg_box.open()
+
+    def set_active_section_label(self, label_text: str) -> None:
+        self.dock_sections.label_active_section.setText(f"Active Section: {label_text}")

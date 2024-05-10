@@ -25,7 +25,7 @@ class SectionListModel(QtCore.QAbstractListModel):
         self,
         index: QtCore.QModelIndex | QtCore.QPersistentModelIndex,
         role: int = QtCore.Qt.ItemDataRole.DisplayRole,
-    ) -> Section | str | None:
+    ) -> Section | str | QtCore.QSize | None:
         if not index.isValid():
             return None
         if index.row() >= self.rowCount():
@@ -34,6 +34,8 @@ class SectionListModel(QtCore.QAbstractListModel):
 
         if role == QtCore.Qt.ItemDataRole.DisplayRole:
             return section.section_id.pretty_name()
+        if role == QtCore.Qt.ItemDataRole.SizeHintRole:
+            return QtCore.QSize(100, 31)
         return section if role == QtCore.Qt.ItemDataRole.UserRole else None
 
     def add_section(self, section: Section) -> None:

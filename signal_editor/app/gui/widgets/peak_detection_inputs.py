@@ -16,6 +16,7 @@ class PeakDetectionDock(QtWidgets.QDockWidget, Ui_DockWidgetPeakDetection):
         super().__init__(parent)
         self.setupUi(self)
         self.setVisible(False)
+        self.toggleViewAction().setIcon(QtGui.QIcon(":/icons/target_edit"))
         self.setWindowIcon(QtGui.QIcon(":/icons/search"))
 
         self._DEFAULT_VALUES = _widget_defs.PEAK_DETECTION

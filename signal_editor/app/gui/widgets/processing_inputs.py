@@ -1,7 +1,7 @@
 import typing as t
 
 import superqt
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ....ui.ui_dock_processing_input import Ui_DockWidgetProcessingInputs
 from ... import type_defs as _t
@@ -18,6 +18,7 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
         super().__init__(parent)
         self.setupUi(self)
         self.setVisible(False)
+        self.toggleViewAction().setIcon(QtGui.QIcon(":/icons/filter_edit"))
         settings = QtCore.QSettings()
         sampling_rate: int = settings.value("Data/sampling_rate")  # type: ignore
 
