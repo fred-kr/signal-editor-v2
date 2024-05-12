@@ -5,13 +5,13 @@ import pyqtgraph as pg
 from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ...ui.ui_dialog_metadata import Ui_MetadataDialog
-from ...ui.ui_main_window import Ui_MainWindow
-from ..enum_defs import LogLevel
-from .widgets.log_viewer import StatusMessageDock
-from .widgets.peak_detection_inputs import PeakDetectionDock
-from .widgets.processing_inputs import ProcessingInputsDock
-from .widgets.settings_editor import SettingsEditor
+from signal_editor.ui.ui_dialog_metadata import Ui_MetadataDialog
+from signal_editor.ui.ui_main_window import Ui_MainWindow
+from signal_editor.app.enum_defs import LogLevel
+from signal_editor.app.gui.widgets.log_viewer import StatusMessageDock
+from signal_editor.app.gui.widgets.peak_detection_inputs import PeakDetectionDock
+from signal_editor.app.gui.widgets.processing_inputs import ProcessingInputsDock
+from signal_editor.app.gui.widgets.settings_editor import SettingsEditor
 
 
 class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
@@ -121,7 +121,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         cc_tb = QtWidgets.QToolBar()
         cc_tb.setObjectName("tool_bar_confirm_cancel")
         cc_tb.addActions([self.action_confirm_section, self.action_cancel_section])
-        self.addToolBarBreak(QtCore.Qt.ToolBarArea.TopToolBarArea)
         self.addToolBar(QtCore.Qt.ToolBarArea.TopToolBarArea, cc_tb)
         self.tool_bar_cc = cc_tb
         self.tool_bar_cc.setVisible(False)
@@ -288,9 +287,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         settings = QtCore.QSettings()
         settings.beginGroup("MainWindow")
         self.restoreGeometry(
-            settings.value("geometry", QtCore.QByteArray(), type=QtCore.QByteArray)  # pyright: ignore[reportArgumentType]
+            settings.value("geometry", QtCore.QByteArray(), type=QtCore.QByteArray)  # type: ignore
         )
-        self.restoreState(settings.value("state", QtCore.QByteArray(), type=QtCore.QByteArray))  # pyright: ignore[reportArgumentType]
+        self.restoreState(settings.value("state", QtCore.QByteArray(), type=QtCore.QByteArray))  # type: ignore
         settings.endGroup()
 
     @QtCore.Slot()

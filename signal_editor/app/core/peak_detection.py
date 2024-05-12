@@ -7,8 +7,8 @@ import wfdb.processing as wp
 from PySide6 import QtCore
 from scipy import ndimage, signal
 
-from ..enum_defs import SmoothingKernels, WFDBPeakDirection, PeakDetectionMethod
-from .. import type_defs as _t
+from signal_editor.app.enum_defs import SmoothingKernels, WFDBPeakDirection, PeakDetectionMethod
+from signal_editor.app import type_defs as _t
 
 
 def _signal_smoothing_median(

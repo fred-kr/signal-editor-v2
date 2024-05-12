@@ -3,9 +3,9 @@ import typing as t
 import superqt
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ....ui.ui_dock_processing_input import Ui_DockWidgetProcessingInputs
-from ... import type_defs as _t
-from ...enum_defs import FilterMethod, FilterType, PreprocessPipeline, StandardizationMethod
+from signal_editor.ui.ui_dock_processing_input import Ui_DockWidgetProcessingInputs
+from signal_editor.app import type_defs as _t
+from signal_editor.app.enum_defs import FilterMethod, FilterType, PreprocessPipeline, StandardizationMethod
 
 
 class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs):
@@ -236,3 +236,4 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
             self.combo_powerline.setEnabled(False)
 
         self._set_frequency_slider_states(FilterType(self.enum_combo_filter_type.currentEnum()))
+        self._restore_defaults()

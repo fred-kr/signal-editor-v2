@@ -9,8 +9,8 @@ import scipy.signal
 import scipy.stats
 from polars_standardize_series import standardize
 
-from .. import type_defs as _t
-from ..enum_defs import FilterMethod
+from signal_editor.app import type_defs as _t
+from signal_editor.app.enum_defs import FilterMethod
 
 
 def standardize_signal(
@@ -90,24 +90,31 @@ def filter_signal(
 
 
 def signal_rate(
-    peaks: npt.NDArray[np.int32], sampling_rate: int, desired_length: int | None = None
+    peaks: npt.NDArray[np.int32],
+    sampling_rate: int,
+    desired_length: int | None = None,
 ) -> npt.NDArray[np.float64]:
     period = np.ediff1d(peaks, to_begin=0) / sampling_rate
+    # For the first period, use the mean of the first 10 periods
     period[0] = np.mean(period[1:10])
 
     if desired_length is not None:
+        # Create a new set of indexes for the desired length
         x_new = np.arange(desired_length, dtype=np.int32)
+        # Interpolate the period values to the new length
         period = scipy.interpolate.PchipInterpolator(peaks, period, extrapolate=True)(x_new)
-        first_index = np.searchsorted(x_new, peaks[0])  # type: ignore
-        last_index = np.searchsorted(x_new, peaks[-1])  # type: ignore
+        # Find the index of the first and last peaks in the new indexes
+        first_index = np.searchsorted(x_new, peaks[0])
+        last_index = np.searchsorted(x_new, peaks[-1])
+        # Fill the beginning and end of the array with the first and last period values
         fill_value = (
-            np.repeat([period[first_index]], first_index),  # type: ignore
-            np.repeat([period[last_index]], len(x_new) - last_index - 1),  # type: ignore
+            np.repeat([period[first_index]], first_index),
+            np.repeat([period[last_index]], len(x_new) - last_index - 1),
         )
         period[:first_index] = fill_value[0]
         period[last_index + 1 :] = fill_value[1]
 
-    return 60 / period
+    return np.divide(60, period)
 
 
 def rolling_rate(

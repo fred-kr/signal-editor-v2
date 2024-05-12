@@ -5,12 +5,12 @@ import mne.io
 import polars as pl
 from PySide6 import QtCore
 
-from ..core.file_io import detect_sampling_rate, read_edf
-from ..core.section import Section
-from ..enum_defs import TextFileSeparator
-from ..models.data_table import DataTableModel
-from ..models.metadata import QFileMetadata
-from ..models.section_container import SectionListModel
+from signal_editor.app.core.file_io import detect_sampling_rate, read_edf
+from signal_editor.app.core.section import Section
+from signal_editor.app.enum_defs import TextFileSeparator
+from signal_editor.app.models.data_table import DataTableModel
+from signal_editor.app.models.metadata import QFileMetadata
+from signal_editor.app.models.section_container import SectionListModel
 
 
 class MissingDataError(Exception):

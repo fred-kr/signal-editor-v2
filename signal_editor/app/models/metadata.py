@@ -4,7 +4,7 @@ from pathlib import Path
 from loguru import logger
 from PySide6 import QtCore
 
-from ..enum_defs import FileFormat
+from signal_editor.app.enum_defs import FileFormat
 
 
 class QFileMetadata(QtCore.QObject):

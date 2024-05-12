@@ -1,4 +1,4 @@
-from ...enum_defs import WFDBPeakDirection
+from signal_editor.app.enum_defs import WFDBPeakDirection
 
 PEAK_DETECTION = {
     "peak_elgendi_ppg": {

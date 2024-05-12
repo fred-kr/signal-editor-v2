@@ -5,16 +5,16 @@ import numpy.typing as npt
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .. import type_defs as _t
-from ..enum_defs import PointSymbols
-from ..gui.plot_items import CustomScatterPlotItem
-from ..gui.plot_items.editing_view_box import EditingViewBox
-from ..gui.plot_items.time_axis_item import TimeAxisItem
+from signal_editor.app import type_defs as _t
+from signal_editor.app.enum_defs import PointSymbols
+from signal_editor.app.gui.plot_items import CustomScatterPlotItem
+from signal_editor.app.gui.plot_items.editing_view_box import EditingViewBox
+from signal_editor.app.gui.plot_items.time_axis_item import TimeAxisItem
 
 if t.TYPE_CHECKING:
     from pyqtgraph.GraphicsScene import mouseEvents
 
-    from ..gui.main_window import MainWindow
+    from signal_editor.app.gui.main_window import MainWindow
 
 
 class PlotController(QtCore.QObject):
@@ -151,7 +151,6 @@ class PlotController(QtCore.QObject):
         )
         scatter.setZValue(60)
         scatter.sigClicked.connect(self._on_scatter_clicked)
-        # scatter.sigPlotChanged.connect(self._on_scatter_changed)
         self.peak_scatter = scatter
         self.pw_main.addItem(self.peak_scatter)
 
@@ -159,7 +158,6 @@ class PlotController(QtCore.QObject):
         if self.peak_scatter is None:
             return
         self.peak_scatter.sigClicked.disconnect(self._on_scatter_clicked)
-        # self.peak_scatter.sigPlotChanged.disconnect(self._on_scatter_changed)
         self.pw_main.removeItem(self.peak_scatter)
         self.peak_scatter.setParent(None)
         self.peak_scatter = None
@@ -314,17 +312,15 @@ class PlotController(QtCore.QObject):
             return
         self.peak_scatter.setData(x=x_data, y=y_data)
 
-    def clear_peaks(self, clear_rate: bool = True) -> None:
+    @QtCore.Slot()
+    def clear_peaks(self) -> None:
         if self.peak_scatter is None:
             return
         self.peak_scatter.clear()
-        if clear_rate:
-            self.clear_rate()
-
-    def clear_rate(self) -> None:
-        if self.rate_curve is None:
-            return
-        self.rate_curve.clear()
+        if self.rate_curve is not None:
+            self.rate_curve.clear()
+        # ? Unclear if this is a good way of forcing a redraw
+        self.pw_rate.invalidateScene()
 
     def remove_selection_rect(self) -> None:
         vb: EditingViewBox = self.pw_main.plotItem.vb  # type: ignore
@@ -338,21 +334,8 @@ class PlotController(QtCore.QObject):
         points: t.Sequence[pg.SpotItem],
         ev: "mouseEvents.MouseClickEvent",
     ) -> None:
-        """
-        Slot that is called when a spot item of a scatter plot item is clicked. Removes the spot
-        item from the scatter plot item and updates the peak scatter plot item.
-
-        Parameters
-        ----------
-        sender : CustomScatterPlotItem
-            The scatter plot item that was clicked.
-        points : t.Sequence[pg.SpotItem]
-            An array of spot items under the cursor at the time of the click.
-        ev : mouseEvents.MouseClickEvent
-            The mouse click event holding information about the click and its position.
-        """
         ev.accept()
-        if not self.peak_scatter or not points:
+        if not self.peak_scatter or len(points) == 0:
             return
 
         point = points[0]
@@ -397,27 +380,6 @@ class PlotController(QtCore.QObject):
 
         self.peak_scatter.addPoints(x=closest_x, y=closest_y)
         self.sig_scatter_data_changed.emit("add", np.array([closest_x], dtype=np.int32))
-
-        # valid_x_values = x_data[left_index:right_index]
-        # valid_y_values = y_data[left_index:right_index]
-
-        # extreme_index = left_index + np.argmin(np.abs(valid_x_values - click_x))
-        # extreme_value = valid_y_values[np.argmin(np.abs(valid_x_values - click_x))]
-
-        # y_extreme_index = left_index + np.argmin(np.abs(valid_y_values - click_y))
-        # y_extreme_value = valid_y_values[np.argmin(np.abs(valid_y_values - click_y))]
-
-        # if np.abs(y_extreme_value - click_y) < np.abs(extreme_value - click_y):
-        #     extreme_index = y_extreme_index
-        #     extreme_value = y_extreme_value
-
-        # if extreme_index in self.peak_scatter.data["x"]:
-        #     return
-
-        # x_new, y_new = x_data[extreme_index], extreme_value
-        # self.peak_scatter.addPoints(x=x_new, y=y_new)
-
-        # self.sig_scatter_data_changed.emit("add", np.array([x_new], dtype=np.int32))
 
     def _get_scatter_search_radius(self) -> int:
         settings = QtCore.QSettings()

@@ -9,7 +9,7 @@ import mne.io
 import polars as pl
 import polars.selectors as cs
 
-from ..enum_defs import OxygenCondition
+from signal_editor.app.enum_defs import OxygenCondition
 
 
 def parse_file_name(

@@ -6,7 +6,7 @@ import polars as pl
 from loguru import logger
 from PySide6 import QtCore
 
-from ..utils import human_readable_timedelta
+from signal_editor.app.utils import human_readable_timedelta
 
 if t.TYPE_CHECKING:
     from .metadata import QFileMetadata
@@ -21,9 +21,9 @@ class DataTableModel(QtCore.QAbstractTableModel):
         self._name_index_column: str = "index"
         self._name_signal_column: str | None = None
         self._name_info_column: str | None = None
-        self._float_precision: int = QtCore.QSettings().value(
+        self._float_precision: int = QtCore.QSettings().value(  # type: ignore
             "Misc/float_visual_precision", 4, type=int
-        )  # type: ignore
+        )
 
     @property
     def df(self) -> pl.DataFrame:

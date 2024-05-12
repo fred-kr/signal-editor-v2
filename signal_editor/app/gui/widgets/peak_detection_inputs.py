@@ -3,14 +3,15 @@ import typing as t
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ....ui.ui_dock_peak_detection import Ui_DockWidgetPeakDetection
-from ... import type_defs as _t
-from ...enum_defs import PeakDetectionMethod, WFDBPeakDirection
-from . import _widget_defaults as _widget_defs
+from signal_editor.ui.ui_dock_peak_detection import Ui_DockWidgetPeakDetection
+from signal_editor.app import type_defs as _t
+from signal_editor.app.enum_defs import PeakDetectionMethod, WFDBPeakDirection
+from signal_editor.app.gui.widgets import _widget_defaults as _widget_defs
 
 
 class PeakDetectionDock(QtWidgets.QDockWidget, Ui_DockWidgetPeakDetection):
     sig_peak_detection_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal(enum.StrEnum, dict)
+    sig_clear_peaks_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal()
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
@@ -32,6 +33,7 @@ class PeakDetectionDock(QtWidgets.QDockWidget, Ui_DockWidgetPeakDetection):
         self.enum_combo_peak_method.currentEnumChanged.connect(self._show_method_parameters)
         self.btn_run_peak_detection.clicked.connect(self._emit_peak_detection_requested)
         self.btn_reset_peak_inputs.clicked.connect(self._restore_defaults)
+        self.btn_clear_peaks.clicked.connect(self.sig_clear_peaks_requested)
 
     @QtCore.Slot(object)
     def _show_method_parameters(self, method: PeakDetectionMethod) -> None:

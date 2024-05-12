@@ -39,6 +39,6 @@
 		"mypy-type-checker.importStrategy": "fromEnvironment",
 		"mypy-type-checker.preferDaemon": true,
 		"mypy-type-checker.reportingScope": "workspace",
-		"python.analysis.stubPath": "E:/dev-home/.config/mypy/python-type-stubs/stubs"
+		"python.analysis.stubPath": "E:\\dev-home\\.config\\mypy\\python-type-stubs\\stubs"
 	}
 }

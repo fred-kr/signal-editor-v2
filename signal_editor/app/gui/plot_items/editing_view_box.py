@@ -6,7 +6,7 @@ import pyqtgraph as pg
 from pyqtgraph.Point import Point
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ...enum_defs import MouseButtons
+from signal_editor.app.enum_defs import MouseButtons
 
 if t.TYPE_CHECKING:
     from pyqtgraph.GraphicsScene import mouseEvents

@@ -5,10 +5,10 @@ import typing as t
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ... import type_defs as _t
-from ...controllers.data_controller import TextFileSeparator
-from ...enum_defs import RateComputationMethod
-from ...utils import get_app_dir, safe_disconnect
+from signal_editor.app import type_defs as _t
+from signal_editor.app.controllers.data_controller import TextFileSeparator
+from signal_editor.app.enum_defs import RateComputationMethod
+from signal_editor.app.utils import get_app_dir, safe_disconnect
 
 
 def make_qcolor(*args: _t.PGColor) -> QtGui.QColor:

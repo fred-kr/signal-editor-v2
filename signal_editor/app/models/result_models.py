@@ -5,10 +5,10 @@ import numpy as np
 import numpy.typing as npt
 import polars as pl
 
-from .. import type_defs as _t
+from signal_editor.app import type_defs as _t
 
 if t.TYPE_CHECKING:
-    from ..core.section import ManualPeakEdits, SectionMetadata
+    from signal_editor.app.core.section import ManualPeakEdits, SectionMetadata
 
 
 @dataclass(slots=True, frozen=True)

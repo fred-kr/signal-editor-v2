@@ -4,7 +4,7 @@ import typing as t
 import numpy as np
 import numpy.typing as npt
 
-from .enum_defs import (
+from signal_editor.app.enum_defs import (
     FilterMethod,
     PeakDetectionMethod,
     PointSymbols,
@@ -17,11 +17,11 @@ if t.TYPE_CHECKING:
     import mne
     from PySide6 import QtCore, QtGui
 
-    from .controllers.data_controller import (
+    from signal_editor.app.controllers.data_controller import (
         TextFileSeparator,
     )
-    from .core.section import SectionID
-    from .gui.widgets.settings_editor import RateComputationMethod
+    from signal_editor.app.core.section import SectionID
+    from signal_editor.app.gui.widgets.settings_editor import RateComputationMethod
 
 
 PGColor = t.Union[str, int, float, tuple[int, int, int], tuple[int, int, int, int], "QtGui.QColor"]

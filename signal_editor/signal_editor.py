@@ -9,13 +9,13 @@ import superqt
 from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .app import type_defs as _t
-from .app.controllers.data_controller import DataController
-from .app.controllers.plot_controller import PlotController
-from .app.core.peak_detection import find_peaks
-from .app.enum_defs import PeakDetectionMethod, PreprocessPipeline, StandardizationMethod
-from .app.gui.main_window import MainWindow
-from .app.utils import safe_disconnect, safe_multi_disconnect
+from signal_editor.app import type_defs as _t
+from signal_editor.app.controllers.data_controller import DataController
+from signal_editor.app.controllers.plot_controller import PlotController
+from signal_editor.app.core.peak_detection import find_peaks
+from signal_editor.app.enum_defs import PeakDetectionMethod, PreprocessPipeline, StandardizationMethod
+from signal_editor.app.gui.main_window import MainWindow
+from signal_editor.app.utils import safe_disconnect, safe_multi_disconnect
 
 if t.TYPE_CHECKING:
     from .app.models.metadata import QFileMetadata
@@ -59,8 +59,8 @@ class SignalEditor(QtWidgets.QApplication):
 
         # Section actions
         self.mw.action_create_new_section.toggled.connect(self.maybe_new_section)
-        self.mw.action_confirm_section.triggered.connect(self.create_new_section)
-        self.mw.action_cancel_section.triggered.connect(self.cancel_new_section)
+        self.mw.action_confirm_section.triggered.connect(self._on_confirm_new_section)
+        self.mw.action_cancel_section.triggered.connect(self._on_cancel_new_section)
         self.mw.action_show_section_overview.toggled.connect(self.plot.toggle_regions)
 
         self.mw.action_toggle_auto_scaling.toggled.connect(self.plot.toggle_auto_scaling)
@@ -76,12 +76,18 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.dock_processing.sig_data_reset_requested.connect(self.restore_original_signal)
 
         self.mw.dock_peaks.sig_peak_detection_requested.connect(self.run_peak_detection)
+        self.mw.dock_peaks.sig_clear_peaks_requested.connect(self.clear_peaks)
 
         self.mw.action_find_peaks_in_selection.triggered.connect(self.find_peaks_in_selection)
         self.mw.action_remove_peaks_in_selection.triggered.connect(
             self.plot.remove_peaks_in_selection
         )
         self.plot.sig_scatter_data_changed.connect(self.handle_peak_edit)
+
+    @QtCore.Slot()
+    def clear_peaks(self) -> None:
+        self.data.active_section.reset_peaks()
+        self.plot.clear_peaks()
 
     @QtCore.Slot()
     def find_peaks_in_selection(self) -> None:
@@ -112,7 +118,7 @@ class SignalEditor(QtWidgets.QApplication):
         active_section.update_peaks("add", peaks)
         self.sig_peaks_updated.emit()
         self.plot.set_peak_data(*active_section.get_peak_xy())
-        self.plot.set_rate_data(active_section.rate_instantaneous_interpolated)
+        self.plot.set_rate_data(active_section.rate_instant_interpolated)
 
     @QtCore.Slot(str, object)
     def handle_peak_edit(
@@ -124,7 +130,7 @@ class SignalEditor(QtWidgets.QApplication):
     @QtCore.Slot()
     def refresh_peak_data(self) -> None:
         self.plot.set_peak_data(*self.data.active_section.get_peak_xy())
-        self.plot.set_rate_data(self.data.active_section.rate_instantaneous_interpolated)
+        self.plot.set_rate_data(self.data.active_section.rate_instant_interpolated)
 
     @QtCore.Slot(dict)
     def filter_active_signal(self, filter_params: _t.SignalFilterParameters) -> None:
@@ -135,7 +141,7 @@ class SignalEditor(QtWidgets.QApplication):
     def restore_original_signal(self) -> None:
         self.data.active_section.reset_signal()
         self.refresh_plot_data()
-        self.plot.clear_peaks(clear_rate=True)
+        self.plot.clear_peaks()
 
     @QtCore.Slot(object)
     def run_preprocess_pipeline(self, pipeline: PreprocessPipeline) -> None:
@@ -202,7 +208,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.plot.show_region_selector(bounds)
 
     @QtCore.Slot()
-    def create_new_section(self) -> None:
+    def _on_confirm_new_section(self) -> None:
         if self.plot.region_selector is None:
             return
         if not self.plot.region_selector.isVisible():
@@ -215,7 +221,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.plot.mark_region(start, stop)
 
     @QtCore.Slot()
-    def cancel_new_section(self) -> None:
+    def _on_cancel_new_section(self) -> None:
         self.plot.hide_region_selector()
         self.mw.tool_bar_cc.setVisible(False)
         self.mw.action_create_new_section.setChecked(False)

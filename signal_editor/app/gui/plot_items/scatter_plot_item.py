@@ -6,9 +6,9 @@ from pyqtgraph.Qt.internals import PrimitiveArray
 from pyqtgraph.graphicsItems.ScatterPlotItem import SymbolAtlas
 from PySide6 import QtCore, QtGui
 
-from ...enum_defs import PointSymbols
+from signal_editor.app.enum_defs import PointSymbols
 
-from ... import type_defs as _t
+from signal_editor.app import type_defs as _t
 
 
 def _mk_pen(*args: _t.PGPen, **kwargs: t.Unpack[_t.PGPenKwargs]) -> QtGui.QPen:

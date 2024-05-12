@@ -2,6 +2,7 @@ import contextlib
 import re
 import typing as t
 import warnings
+from dataclasses import dataclass, field
 
 import attrs
 import numpy as np
@@ -11,17 +12,17 @@ import polars.selectors as ps
 from polars_standardize_series import standardize
 from PySide6 import QtCore
 
-from .. import type_defs as _t
-from ..enum_defs import FilterMethod, PeakDetectionMethod, PreprocessPipeline
-from ..models.result_models import CompactSectionResult
-from ..utils import format_long_sequence
-from .peak_detection import find_peaks
-from .processing import (
+from signal_editor.app import type_defs as _t
+from signal_editor.app.core.peak_detection import find_peaks
+from signal_editor.app.core.processing import (
     filter_elgendi,
     filter_neurokit2,
     filter_signal,
     signal_rate,
 )
+from signal_editor.app.enum_defs import FilterMethod, PeakDetectionMethod, PreprocessPipeline
+from signal_editor.app.models.result_models import CompactSectionResult
+from signal_editor.app.utils import format_long_sequence
 
 
 @attrs.define
@@ -44,10 +45,10 @@ class ProcessingParameters:
         )
 
 
-@attrs.define
+@dataclass(slots=True)
 class ManualPeakEdits:
-    added: list[int] = attrs.field(factory=list)
-    removed: list[int] = attrs.field(factory=list)
+    added: list[int] = field(default_factory=list)
+    removed: list[int] = field(default_factory=list)
 
     def __repr__(self) -> str:
         return f"Added Peaks [{len(self.added)}]: {format_long_sequence(self.added)}\nRemoved Peaks [{len(self.removed)}]: {format_long_sequence(self.removed)}"
@@ -145,6 +146,7 @@ class Section:
         self.signal_name = signal_name
         self.processed_signal_name = f"{self.signal_name}_processed"
         self.section_id = SectionID.default()
+        self._is_filtered: bool = False
         self._is_standardized: bool = False
 
         if "section_index" in data.columns:
@@ -170,8 +172,9 @@ class Section:
             self.data.item(0, "index"),
             self.data.item(-1, "index"),
         )
-        self.rate_instantaneous = np.empty(0, dtype=np.float64)
-        self.rate_instantaneous_interpolated = np.empty(self.data.height, dtype=np.float64)
+        self.rate_instant = np.empty(0, dtype=np.float64)
+        self.rate_instant_interpolated = np.zeros(data.height, dtype=np.float64)
+        self.rate_rolling: npt.NDArray[np.float64] | None = None
 
         self._processing_parameters = ProcessingParameters(self.sampling_rate)  # type: ignore
         self._manual_peak_edits = ManualPeakEdits()
@@ -212,14 +215,14 @@ class Section:
     def update_sampling_rate(self, sampling_rate: int) -> None:
         self.sampling_rate = sampling_rate
         with contextlib.suppress(Exception):
-            peaks = self.peaks_local.to_numpy()
+            peaks = self.peaks_local.to_numpy(allow_copy=False)
             self.calculate_rate(peaks)
 
     def filter_signal(
         self, pipeline: PreprocessPipeline, **kwargs: t.Unpack[_t.SignalFilterParameters]
     ) -> None:
         method = kwargs.get("method", FilterMethod.NoFilter)
-        raw_data = self.raw_signal.to_numpy()
+        raw_data = self.raw_signal.to_numpy(allow_copy=False)
         filtered = np.empty_like(raw_data)
         filter_params: _t.SignalFilterParameters | None = None
 
@@ -254,9 +257,7 @@ class Section:
 
         self._processing_parameters.processing_pipeline = pipeline
         self._processing_parameters.filter_parameters = filter_params
-        self.data = self.data.with_columns(
-            pl.Series(self.processed_signal_name, filtered, dtype=pl.Float64)
-        )
+        self.data = self.data.with_columns(pl.Series(self.processed_signal_name, filtered))
 
     def scale_signal(self, **kwargs: t.Unpack[_t.StandardizationParameters]) -> None:
         if self._is_standardized:
@@ -275,13 +276,13 @@ class Section:
             .alias(self.processed_signal_name)
         )
 
-        self._processing_parameters.standardization_parameters = {**kwargs}
+        self._processing_parameters.standardization_parameters = kwargs
 
     def detect_peaks(
         self, method: PeakDetectionMethod, method_parameters: _t.PeakDetectionMethodParameters
     ) -> None:
         peaks = find_peaks(
-            self.processed_signal.to_numpy(),
+            self.processed_signal.to_numpy(allow_copy=False),
             self.sampling_rate,
             method,
             method_parameters,
@@ -299,21 +300,19 @@ class Section:
 
         Parameters
         ----------
-        peaks : npt.NDArray[np.int32]
+        peaks : ndarray
             A 1D array of integers representing the indices of the peaks in the processed signal.
         update_rate : bool
             Whether to recalculate the signal rate based on the new peaks. Defaults to True.
         """
-        # Remove any negative peak indices
         peaks = peaks[peaks >= 0]
 
-        pl_peaks = pl.Series("peaks", peaks, pl.Int32)
+        pl_peaks = pl.Series("", peaks, pl.Int32)
 
         self.data = self.data.with_columns(
             pl.when(pl.col("section_index").is_in(pl_peaks))
             .then(pl.lit(1))
             .otherwise(pl.lit(0))
-            # .shrink_dtype()
             .alias("is_peak")
         )
 
@@ -336,8 +335,11 @@ class Section:
         action : {"a", "r", "add", "remove"}
             The action to perform. Must be one of "a"/"add" for adding peaks or "r"/"remove" for
             removing peaks.
-        peaks : npt.NDArray[np.int32]
+        peaks : ndarray
             A 1D array of integers representing the indices of the peaks in the processed signal.
+        update_rate : bool
+            Whether to recalculate the signal rate based on the new peaks. Defaults to True.
+
         """
         pl_peaks = pl.Series("peaks", peaks, pl.Int32)
         then_value = 1 if action in ["a", "add"] else 0
@@ -348,7 +350,6 @@ class Section:
                 pl.when(pl.col("section_index").is_in(pl_peaks))
                 .then(pl.lit(then_value))
                 .otherwise(pl.col("is_peak"))
-                # .shrink_dtype()
                 .alias("is_peak")
             )
             .collect()
@@ -365,14 +366,18 @@ class Section:
             self._manual_peak_edits.new_removed(changed_indices)
 
         if update_rate and self.peaks_local.len() > 3:
-            self.calculate_rate(self.peaks_local.to_numpy(), desired_length=self.data.height)
+            self.calculate_rate(
+                self.peaks_local.to_numpy(allow_copy=False), desired_length=self.data.height
+            )
 
     def calculate_rate(
-        self, peaks: npt.NDArray[np.int32], desired_length: int | None = None
+        self, peaks: npt.NDArray[np.int32] | None = None, desired_length: int | None = None
     ) -> None:
-        self.rate_instantaneous_interpolated = signal_rate(
-            peaks, self.sampling_rate, desired_length
-        )
+        if peaks is None:
+            peaks = self.peaks_local.to_numpy(allow_copy=False)
+        if desired_length is None:
+            desired_length = self.data.height
+        self.rate_instant_interpolated = signal_rate(peaks, self.sampling_rate, desired_length)
 
     def calculate_rolling_rate(
         self,
@@ -436,9 +441,9 @@ class Section:
         )
 
     def get_peak_xy(self) -> tuple[npt.NDArray[np.int32], npt.NDArray[np.float64]]:
-        peaks = self.peaks_local.to_numpy()
+        peaks = self.peaks_local.to_numpy(allow_copy=False)
 
-        return peaks, self.processed_signal.gather(peaks).to_numpy()
+        return peaks, self.processed_signal.gather(peaks).to_numpy(allow_copy=False)
 
     def get_focused_result(self) -> CompactSectionResult:
         section_peaks = self.peaks_local
@@ -457,7 +462,9 @@ class Section:
         temperature = self.data.get_column("temperature").gather(section_peaks)
 
         instantaneous_rate = pl.Series(
-            "instantaneous_rate", signal_rate(section_peaks.to_numpy(), sampling_rate), pl.Float64
+            "instantaneous_rate",
+            signal_rate(section_peaks.to_numpy(allow_copy=False), sampling_rate),
+            pl.Float64,
         )
         roll_window = self.calculate_rolling_rate("section_index")
 
@@ -474,7 +481,18 @@ class Section:
 
     def reset_signal(self) -> None:
         self.data.replace(self.processed_signal_name, self.raw_signal)
-        self.data = self.data.lazy().with_columns(
-            pl.lit(0, pl.Int8).alias("is_peak"),
-            pl.lit(0, pl.Int8).alias("is_manual"),
-        ).collect()
+        self.data = (
+            self.data.lazy()
+            .with_columns(
+                pl.lit(0, pl.Int8).alias("is_peak"),
+                pl.lit(0, pl.Int8).alias("is_manual"),
+            )
+            .collect()
+        )
+        self._manual_peak_edits.clear()
+        self.rate_instant_interpolated.fill(0.0)
+
+    def reset_peaks(self) -> None:
+        self.data.replace("is_peak", pl.repeat(0, self.data.height, dtype=pl.Int8, eager=True))
+        self._manual_peak_edits.clear()
+        self.rate_instant_interpolated.fill(0.0)
