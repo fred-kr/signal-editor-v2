@@ -32,11 +32,11 @@ class PlotController(QtCore.QObject):
         self._line_click_width_changed = False
         self.regions: list[pg.LinearRegionItem] = []
         self._show_regions = False
-        self.setup_plot_widgets()
-        self.setup_plot_items()
-        self.setup_plot_data_items()
+        self._setup_plot_widgets()
+        self._setup_plot_items()
+        self._setup_plot_data_items()
 
-    def setup_plot_widgets(self) -> None:
+    def _setup_plot_widgets(self) -> None:
         widget_layout = QtWidgets.QVBoxLayout()
         widget_layout.setContentsMargins(0, 0, 0, 0)
         widget_layout.setSpacing(2)
@@ -50,7 +50,7 @@ class PlotController(QtCore.QObject):
         self.pw_rate = rate_plot_widget
         self.mpw_result = self._mw_ref.mpl_widget
 
-    def setup_plot_items(self) -> None:
+    def _setup_plot_items(self) -> None:
         for plt_item in (self.pw_main.getPlotItem(), self.pw_rate.getPlotItem()):
             vb = plt_item.getViewBox()
             plt_item.setAxisItems({"top": TimeAxisItem(orientation="top")})
@@ -69,7 +69,7 @@ class PlotController(QtCore.QObject):
         self.set_background_color(settings.value("Plot/background_color"))
         self.set_foreground_color(settings.value("Plot/foreground_color"))
 
-    def setup_region_selector(self):
+    def _setup_region_selector(self):
         settings = QtCore.QSettings()
         brush_col: QtGui.QColor = settings.value("Plot/section_marker_color", type=QtGui.QColor)  # type: ignore
         hover_brush_col = brush_col
@@ -93,11 +93,11 @@ class PlotController(QtCore.QObject):
             self.region_selector.setParent(None)
             self.region_selector = None
 
-    def setup_plot_data_items(self) -> None:
+    def _setup_plot_data_items(self) -> None:
         self.initialize_signal_curve()
         self.initialize_peak_scatter()
         self.initialize_rate_curve()
-        self.setup_region_selector()
+        self._setup_region_selector()
 
     def initialize_signal_curve(self, pen_color: _t.PGColor | None = None) -> None:
         if pen_color is None:
@@ -226,7 +226,7 @@ class PlotController(QtCore.QObject):
 
         self.remove_plot_data_items()
         self.clear_regions()
-        self.setup_plot_data_items()
+        self._setup_plot_data_items()
 
     @QtCore.Slot(bool)
     def toggle_regions(self, visible: bool) -> None:
@@ -320,6 +320,7 @@ class PlotController(QtCore.QObject):
         if self.rate_curve is not None:
             self.rate_curve.clear()
         # ? Unclear if this is a good way of forcing a redraw
+        self.pw_main.invalidateScene()
         self.pw_rate.invalidateScene()
 
     def remove_selection_rect(self) -> None:

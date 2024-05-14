@@ -20,8 +20,9 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
         self.setVisible(False)
         self.toggleViewAction().setIcon(QtGui.QIcon(":/icons/filter_edit"))
         settings = QtCore.QSettings()
-        sampling_rate: int = settings.value("Data/sampling_rate")  # type: ignore
-
+        sampling_rate = settings.value("Data/sampling_rate", 400, type=int)
+        if not isinstance(sampling_rate, int) or sampling_rate <= 0:
+            sampling_rate = 400
         freq_range = (0, sampling_rate // 2)
         dbl_slider_lowcut = superqt.QLabeledDoubleSlider(QtCore.Qt.Orientation.Horizontal)
         dbl_slider_lowcut.setEdgeLabelMode(superqt.QLabeledDoubleSlider.EdgeLabelMode.LabelIsValue)

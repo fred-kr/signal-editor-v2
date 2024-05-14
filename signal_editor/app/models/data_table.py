@@ -12,6 +12,18 @@ if t.TYPE_CHECKING:
     from .metadata import QFileMetadata
 
 
+def validate_column(
+    col_name: str | None, schema: t.OrderedDict[str, pl.DataType], default: str | None = None
+) -> str:
+    if not col_name:
+        col_name = default
+    if col_name not in schema and col_name != "":
+        raise ValueError(
+            f"Column '{col_name}' not found in data. Available columns: {", ".join(schema.keys())}"
+        )
+    return col_name
+
+
 class DataTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
@@ -28,7 +40,7 @@ class DataTableModel(QtCore.QAbstractTableModel):
     @property
     def df(self) -> pl.DataFrame:
         if self._df is None:
-            raise ValueError("Dataframe has not been loaded.")
+            raise ValueError("Data not loaded yet.")
         return self._df
 
     # TODO: Can probably be removed
@@ -54,32 +66,24 @@ class DataTableModel(QtCore.QAbstractTableModel):
         self.beginResetModel()
         self._df = data
         self._schema = data.schema
-        if signal_col is None:
-            signal_col = self._name_signal_column
-        if signal_col not in self._schema:
-            raise ValueError(
-                f"Signal column '{signal_col}' not found in data. Available columns: {list(self._schema.keys())}"
+
+        self._name_signal_column = validate_column(
+            signal_col, self._schema, default=self._name_signal_column
+        )
+        self._name_index_column = validate_column(index_col, self._schema, default="index")
+
+        if not self._schema[self._name_index_column].is_integer():
+            logger.info(
+                f"Index column '{self._name_index_column}' is not of integer type.\nCreating new index column with name 'index'"
             )
-        self._name_signal_column = signal_col
-        if index_col not in self._schema or not self._schema[index_col].is_integer():
-            if index_col != "index":
-                logger.info(
-                    f"Could not find index column '{index_col}' or the provided index column is not of integer type.\nCreating new index column with name 'index'",
-                )
             self._name_index_column = "index"
             if self._name_index_column in self._df.columns:
                 self._df.drop_in_place(self._name_index_column)
             self._df = self._df.with_row_index(self._name_index_column)
             self._schema = self._df.schema
-        else:
-            self._name_index_column = index_col
 
-        if info_col is not None and info_col not in self._schema:
-            raise ValueError(
-                f"Info column '{info_col}' not found in data. Available columns: {list(self._schema.keys())}"
-            )
-
-        self._name_info_column = info_col
+        if info_col:
+            self._name_info_column = validate_column(info_col, self._schema)
 
         self.endResetModel()
 

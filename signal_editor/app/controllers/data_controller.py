@@ -43,7 +43,7 @@ class DataController(QtCore.QObject):
 
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
-
+        self.has_data = False
         settings = QtCore.QSettings()
         self._sampling_rate = int(settings.value("Data/sampling_rate"))  # type: ignore
 
@@ -119,7 +119,12 @@ class DataController(QtCore.QObject):
         if isinstance(section, Section):
             self._active_section = section
             self.active_section_model.set_metadata(self.metadata)
-            self.active_section_model.set_dataframe(self._active_section.data)
+            self.active_section_model.set_dataframe(
+                data=self._active_section.data,
+                signal_col=self.metadata.signal_column, 
+                index_col="section_index",
+                info_col=self.metadata.info_column,
+            )
             has_peak_data = not self._active_section.peaks_local.is_empty()
             self.sig_active_section_changed.emit(has_peak_data)
 
@@ -218,33 +223,31 @@ class DataController(QtCore.QObject):
             columns.append(info_col)
         row_index_col = "index" if "index" not in columns else None
 
-        match suffix:
-            case ".csv":
-                df = pl.read_csv(file_path, columns=columns, row_index_name=row_index_col)
-            case ".txt":
-                df = pl.read_csv(
-                    file_path, columns=columns, separator=separator, row_index_name=row_index_col
-                )
-            case ".tsv":
-                df = pl.read_csv(
-                    file_path,
-                    columns=columns,
-                    separator=TextFileSeparator.Tab,
-                    row_index_name=row_index_col,
-                )
-            case ".feather":
-                df = pl.read_ipc(file_path, columns=columns, row_index_name=row_index_col)
-            case ".edf":
-                if info_col == "":
-                    info_col = "temperature"
-                df = read_edf(Path(file_path), data_channel=signal_col, info_channel=info_col)
-            case _:
-                raise NotImplementedError(f"Cant read file type: {suffix}")
+        if suffix == ".csv":
+            df = pl.read_csv(file_path, columns=columns, row_index_name=row_index_col)
+        elif suffix == ".txt":
+            df = pl.read_csv(
+            file_path, columns=columns, separator=separator, row_index_name=row_index_col
+            )
+        elif suffix == ".tsv":
+            df = pl.read_csv(
+            file_path,
+            columns=columns,
+            separator=TextFileSeparator.Tab,
+            row_index_name=row_index_col,
+            )
+        elif suffix == ".feather":
+            df = pl.read_ipc(file_path, columns=columns, row_index_name=row_index_col)
+        elif suffix == ".edf":
+            df = read_edf(Path(file_path), signal_col, info_col)
+        else:
+            raise NotImplementedError(f"Can't read file type: {suffix}")
 
         self.data_model.set_dataframe(df, signal_col, info_col=info_col)
         self._base_section = Section(df, self.metadata.signal_column)
         self.sections.add_section(self._base_section)
         self.set_active_section(self.base_section_index)
+        self.has_data = True
         self.sig_new_data.emit()
 
     def create_section(self, start: float | int, stop: float | int) -> None:

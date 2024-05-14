@@ -121,7 +121,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         cc_tb = QtWidgets.QToolBar()
         cc_tb.setObjectName("tool_bar_confirm_cancel")
         cc_tb.addActions([self.action_confirm_section, self.action_cancel_section])
-        self.addToolBar(QtCore.Qt.ToolBarArea.TopToolBarArea, cc_tb)
+        self.insertToolBar(self.tool_bar_help, cc_tb)
         self.tool_bar_cc = cc_tb
         self.tool_bar_cc.setVisible(False)
 
@@ -139,7 +139,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.collapsible_frame.setContent(data_tree_widget)
         self.data_tree_widget_import_metadata = data_tree_widget
 
-        dock_status_log = StatusMessageDock(self)
+        dock_status_log = StatusMessageDock()
         self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, dock_status_log)
         self.dock_status_log = dock_status_log
         self.dock_status_log.log_text_box.sig_log_message.connect(self.maybe_show_error_dialog)
@@ -181,12 +181,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.menuView.addActions(
             [self.dock_processing.toggleViewAction(), self.dock_peaks.toggleViewAction()]
         )
+        
         self.menuEdit.insertActions(
             self.action_show_section_overview,
             [self.dock_processing.toggleViewAction(), self.dock_peaks.toggleViewAction()],
         )
         self.menuEdit.insertSeparator(self.action_show_section_overview)
-
+        
         self.read_settings()
         self.setup_actions()
         self.connect_qt_signals()
@@ -194,7 +195,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_processing.hide()
         self.dock_peaks.hide()
         self.dock_sections.hide()
-        self.change_context_actions(0)
+        self._on_page_changed(0)
 
     def setup_actions(self) -> None:
         navigation_action_group = QtGui.QActionGroup(self.tool_bar_navigation)
@@ -236,7 +237,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_peaks.toggleViewAction().toggled.connect(self.dock_peaks.setVisible)
         self.dock_status_log.toggleViewAction().toggled.connect(self.dock_status_log.setVisible)
 
-        self.stackedWidget.currentChanged.connect(self.change_context_actions)
+        self.stackedWidget.currentChanged.connect(self._on_page_changed)
 
         self.spin_box_sampling_rate_import_page.valueChanged.connect(
             self.dialog_meta.spin_box_sampling_rate.setValue
@@ -258,22 +259,32 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         )
 
     @QtCore.Slot(int)
-    def change_context_actions(self, index: int) -> None:
+    def _on_page_changed(self, index: int) -> None:
         self.tool_bar_context_actions.clear()
         self.tool_bar_cc.setVisible(False)
         if index == 0:
             self.tool_bar_context_actions.addActions(self._context_actions["import"])
+            self.dock_processing.toggleViewAction().setChecked(False)
+            self.dock_peaks.toggleViewAction().setChecked(False)
         elif index == 1:
             self.tool_bar_context_actions.addActions(self._context_actions["edit"])
             self.tool_bar_context_actions.insertSeparator(self.action_show_section_overview)
             self.tool_bar_context_actions.insertSeparator(self.action_create_new_section)
             self.dock_sections.toggleViewAction().setChecked(True)
+            self.dock_processing.toggleViewAction().setChecked(True)
+            self.dock_peaks.toggleViewAction().setChecked(True)
         elif index == 2:
             self.tool_bar_context_actions.addActions(self._context_actions["result"])
+            self.dock_processing.toggleViewAction().setChecked(False)
+            self.dock_peaks.toggleViewAction().setChecked(False)
         elif index == 3:
             self.tool_bar_context_actions.addActions(self._context_actions["export"])
+            self.dock_processing.toggleViewAction().setChecked(False)
+            self.dock_peaks.toggleViewAction().setChecked(False)
         elif index == 4:
             self.tool_bar_context_actions.addActions(self._context_actions["info"])
+            self.dock_processing.toggleViewAction().setChecked(False)
+            self.dock_peaks.toggleViewAction().setChecked(False)
 
     def write_settings(self) -> None:
         settings = QtCore.QSettings()

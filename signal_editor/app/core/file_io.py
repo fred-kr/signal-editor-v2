@@ -6,8 +6,10 @@ from pathlib import Path
 
 import dateutil.parser as dt_parser
 import mne.io
+import numpy as np
 import polars as pl
 import polars.selectors as cs
+from loguru import logger
 
 from signal_editor.app.enum_defs import OxygenCondition
 
@@ -237,19 +239,37 @@ def detect_sampling_rate(
 def read_edf(
     file_path: Path,
     data_channel: str,
-    info_channel: str,
+    info_channel: str = "",
     *,
     start: int = 0,
     stop: int | None = None,
+    filter_all_zeros: bool = True,
 ) -> pl.DataFrame:
     raw_edf = mne.io.read_raw_edf(file_path, include=[data_channel, info_channel])
-    channel_names: list[str] = raw_edf.ch_names  # type: ignore
+    channel_names: list[str] = raw_edf.ch_names
+    data = raw_edf.get_data(start=start, stop=stop).squeeze()
+    out = pl.from_numpy(data, channel_names)  # type: ignore
+    if info_channel != "":
+        out = out.select(pl.col(data_channel), pl.col(info_channel))
+        if filter_all_zeros:
+            out = out.filter((pl.col(data_channel) != 0) & (pl.col(info_channel) != 0))
+    else:
+        out = out.select(pl.col(data_channel))
+        if filter_all_zeros:
+            # Find the last row with a non-zero value in the column
+            try:
+                last_non_zero = (
+                    out.with_row_index()
+                    .filter(pl.col(data_channel) != 0)
+                    .get_column("index")
+                    .item(-1)
+                )
+                logger.info(
+                    f"Found section of continuous zeros from row {last_non_zero + 1} to the end of the column."
+                )
+                out = out.head(last_non_zero + 1)
+            except IndexError:
+                logger.info("No section of continuous zeros found, keeping all rows.")
+            # Then remove that many rows from the end of the column
 
-    out = pl.from_numpy(raw_edf.get_data(start=start, stop=stop), schema=channel_names).select(  # type: ignore
-        pl.col(info_channel),
-        pl.col(data_channel),
-    )
-
-    return out.filter((pl.col(data_channel) != 0) & (pl.col(info_channel) != 0)).with_row_index(
-        offset=start
-    )
+    return out.with_row_index(offset=start)

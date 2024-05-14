@@ -73,7 +73,7 @@ output-format = "concise"
 line-length = 100
 
 [tool.ruff.lint.pydocstyle]
-convention = "google"
+convention = "numpy"
 
 [tool.ruff.lint]
 ignore = ["E501"]

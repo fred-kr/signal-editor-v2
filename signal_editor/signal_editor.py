@@ -13,7 +13,11 @@ from signal_editor.app import type_defs as _t
 from signal_editor.app.controllers.data_controller import DataController
 from signal_editor.app.controllers.plot_controller import PlotController
 from signal_editor.app.core.peak_detection import find_peaks
-from signal_editor.app.enum_defs import PeakDetectionMethod, PreprocessPipeline, StandardizationMethod
+from signal_editor.app.enum_defs import (
+    PeakDetectionMethod,
+    PreprocessPipeline,
+    StandardizationMethod,
+)
 from signal_editor.app.gui.main_window import MainWindow
 from signal_editor.app.utils import safe_disconnect, safe_multi_disconnect
 
@@ -46,6 +50,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.btn_open_file.clicked.connect(self.open_file)
         self.mw.action_close_file.triggered.connect(self.close_file)
         self.mw.btn_close_file.clicked.connect(self.close_file)
+        self.mw.action_about_qt.triggered.connect(self.aboutQt)
 
         self.mw.spin_box_sampling_rate_import_page.editingFinished.connect(
             self.update_sampling_rate
@@ -86,8 +91,8 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot()
     def clear_peaks(self) -> None:
-        self.data.active_section.reset_peaks()
         self.plot.clear_peaks()
+        self.data.active_section.reset_peaks()
 
     @QtCore.Slot()
     def find_peaks_in_selection(self) -> None:
@@ -117,20 +122,22 @@ class SignalEditor(QtWidgets.QApplication):
         peaks = peaks + b_left
         active_section.update_peaks("add", peaks)
         self.sig_peaks_updated.emit()
-        self.plot.set_peak_data(*active_section.get_peak_xy())
-        self.plot.set_rate_data(active_section.rate_instant_interpolated)
+        pos = self.data.active_section.get_peak_pos().to_numpy(structured=True)
+        self.plot.set_peak_data(pos["x"], pos["y"])
+        self.plot.set_rate_data(active_section.rate_instant)
 
     @QtCore.Slot(str, object)
     def handle_peak_edit(
-        self, action: t.Literal["add", "remove"], indices: npt.NDArray[np.int32]
+        self, action: _t.UpdatePeaksAction, indices: npt.NDArray[np.int32]
     ) -> None:
         self.data.active_section.update_peaks(action, indices)
         self.sig_peaks_updated.emit()
 
     @QtCore.Slot()
     def refresh_peak_data(self) -> None:
-        self.plot.set_peak_data(*self.data.active_section.get_peak_xy())
-        self.plot.set_rate_data(self.data.active_section.rate_instant_interpolated)
+        pos = self.data.active_section.get_peak_pos().to_numpy(structured=True)
+        self.plot.set_peak_data(pos["x"], pos["y"])
+        self.plot.set_rate_data(self.data.active_section.rate_instant)
 
     @QtCore.Slot(dict)
     def filter_active_signal(self, filter_params: _t.SignalFilterParameters) -> None:
@@ -233,6 +240,7 @@ class SignalEditor(QtWidgets.QApplication):
             bounds = s.global_bounds
             self.plot.remove_region(bounds=bounds)
         self.data.delete_section(index)
+        self.mw.dock_sections.list_view.setCurrentIndex(self.data.base_section_index)
         logger.success(f"Deleted section {index.row():03}")
 
     @QtCore.Slot(bool)
@@ -246,6 +254,9 @@ class SignalEditor(QtWidgets.QApplication):
         self.plot.clear_peaks()
         if has_peaks:
             self.sig_peaks_updated.emit()
+        # Update the table view to show the current sections' data
+        self.mw.table_view_import_data.setModel(self.data.active_section_model)
+        self.mw.label_showing_data_table.setText(f"Showing: {section.section_id.pretty_name()}")
 
     @QtCore.Slot(dict)
     def update_metadata(self, metadata_dict: _t.MetadataUpdateDict) -> None:
@@ -353,6 +364,10 @@ class SignalEditor(QtWidgets.QApplication):
         self.close_file()
 
         settings.setValue("Misc/data_folder", Path(file_path).parent.resolve().as_posix())
+        self._on_file_opened(file_path)
+
+    def _on_file_opened(self, file_path: str) -> None:
+        self.mw.line_edit_active_file.setText(file_path)
 
         self.mw.action_close_file.setEnabled(True)
         self.mw.action_edit_metadata.setEnabled(True)
@@ -365,6 +380,11 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot()
     def read_data(self) -> None:
+        if self.data.has_data:
+            loaded_file = self.mw.line_edit_active_file.text()
+            self.close_file()
+            self._on_file_opened(loaded_file)
+            
         self.data.load_data()
         for col in range(self.data.base_df.width):
             self.mw.table_view_import_data.horizontalHeader().setSectionResizeMode(
@@ -391,6 +411,10 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.action_edit_metadata.setEnabled(False)
         self.mw.btn_close_file.setEnabled(False)
         self.mw.btn_load_data.setEnabled(False)
+
+        self.mw.label_showing_data_table.setText("Showing: -")
+        self.mw.set_active_section_label("-")
+        self.mw.line_edit_active_file.clear()
 
     @QtCore.Slot(str, object)
     def _update_setting(self, name: str, value: QtGui.QColor | str | int | float | None) -> None:

@@ -45,6 +45,7 @@ PGBrush = t.Union[PGColor, "QtGui.QBrush", PGBrushKwargs, None]
 
 PGPointSymbols = t.Union[PointSymbols, "QtGui.QPainterPath"]
 
+UpdatePeaksAction = t.Literal["add", "remove"]
 
 class MetadataUpdateDict(t.TypedDict, total=False):
     sampling_rate: int

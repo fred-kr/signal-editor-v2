@@ -4,7 +4,6 @@ import typing as t
 import warnings
 from dataclasses import dataclass, field
 
-import attrs
 import numpy as np
 import numpy.typing as npt
 import polars as pl
@@ -25,14 +24,14 @@ from signal_editor.app.models.result_models import CompactSectionResult
 from signal_editor.app.utils import format_long_sequence
 
 
-@attrs.define
+@dataclass(slots=True)
 class ProcessingParameters:
-    sampling_rate: int = attrs.field(converter=int)
-    processing_pipeline: PreprocessPipeline = attrs.field(init=False)
-    filter_parameters: _t.SignalFilterParameters | None = attrs.field(init=False)
-    standardization_parameters: _t.StandardizationParameters | None = attrs.field(init=False)
-    peak_detection_method: PeakDetectionMethod = attrs.field(init=False)
-    peak_detection_method_parameters: _t.PeakDetectionMethodParameters = attrs.field(init=False)
+    sampling_rate: int = field()
+    processing_pipeline: PreprocessPipeline = field(init=False)
+    filter_parameters: _t.SignalFilterParameters | None = field(init=False)
+    standardization_parameters: _t.StandardizationParameters | None = field(init=False)
+    peak_detection_method: PeakDetectionMethod = field(init=False)
+    peak_detection_method_parameters: _t.PeakDetectionMethodParameters = field(init=False)
 
     def to_dict(self) -> _t.ProcessingParametersDict:
         return _t.ProcessingParametersDict(
@@ -99,7 +98,7 @@ class ManualPeakEdits:
 
 
 class SectionID(str):
-    def __init__(self, value: str):
+    def __init__(self, value: str) -> None:
         if not re.match(r"^Section_[a-zA-Z0-9]+_[0-9]{3}$", value):
             raise ValueError(
                 f"SectionID must be of the form 'Section_<signal_name>_000', got '{value}'"
@@ -111,25 +110,18 @@ class SectionID(str):
         return SectionID("Section_DEFAULT_000")
 
     def pretty_name(self) -> str:
-        """
-        Formats the section ID nicely for display in the UI.
-
-        Returns
-        -------
-        str
-            The formatted section ID.
-        """
+        """UI friendly name for the section"""
         sig_name = self.split("_")[1]
-        return f"Section {self[-3:]} ({sig_name.capitalize()})"
+        return f"Section {self[-3:]} ({sig_name.upper()})"
 
 
-@attrs.define
+@dataclass(slots=True)
 class SectionMetadata:
-    signal_name: str = attrs.field()
-    section_id: SectionID = attrs.field()
-    global_bounds: tuple[int, int] = attrs.field()
-    sampling_rate: int = attrs.field()
-    processing_parameters: ProcessingParameters = attrs.field()
+    signal_name: str = field()
+    section_id: SectionID = field()
+    global_bounds: tuple[int, int] = field()
+    sampling_rate: int = field()
+    processing_parameters: ProcessingParameters = field()
 
     def to_dict(self) -> _t.SectionMetadataDict:
         return _t.SectionMetadataDict(
@@ -161,6 +153,8 @@ class Section:
                 pl.col(signal_name).alias(self.processed_signal_name),
                 pl.lit(0, pl.Int8).alias("is_peak"),
                 pl.lit(0, pl.Int8).alias("is_manual"),
+                pl.lit(np.nan, pl.Float64).alias("rate_instant"),
+                # pl.lit(np.nan, pl.Float64).alias("rate_rolling"),
             )
             .collect()
         )
@@ -172,9 +166,6 @@ class Section:
             self.data.item(0, "index"),
             self.data.item(-1, "index"),
         )
-        self.rate_instant = np.empty(0, dtype=np.float64)
-        self.rate_instant_interpolated = np.zeros(data.height, dtype=np.float64)
-        self.rate_rolling: npt.NDArray[np.float64] | None = None
 
         self._processing_parameters = ProcessingParameters(self.sampling_rate)  # type: ignore
         self._manual_peak_edits = ManualPeakEdits()
@@ -186,6 +177,14 @@ class Section:
     @property
     def processed_signal(self) -> pl.Series:
         return self.data.get_column(self.processed_signal_name)
+
+    @property
+    def rate_instant(self) -> npt.NDArray[np.float64]:
+        return self.data.get_column("rate_instant").to_numpy(allow_copy=False)
+
+    # @property
+    # def rate_rolling(self) -> npt.NDArray[np.float64]:
+    #     return self.data.get_column("rate_rolling").to_numpy(allow_copy=False)
 
     @property
     def peaks_local(self) -> pl.Series:
@@ -258,6 +257,7 @@ class Section:
         self._processing_parameters.processing_pipeline = pipeline
         self._processing_parameters.filter_parameters = filter_params
         self.data = self.data.with_columns(pl.Series(self.processed_signal_name, filtered))
+        self._is_filtered = True
 
     def scale_signal(self, **kwargs: t.Unpack[_t.StandardizationParameters]) -> None:
         if self._is_standardized:
@@ -275,6 +275,7 @@ class Section:
             .backward_fill()
             .alias(self.processed_signal_name)
         )
+        self._is_standardized = True
 
         self._processing_parameters.standardization_parameters = kwargs
 
@@ -322,7 +323,7 @@ class Section:
 
     def update_peaks(
         self,
-        action: t.Literal["a", "r", "add", "remove"],
+        action: _t.UpdatePeaksAction,
         peaks: npt.NDArray[np.int32],
         update_rate: bool = True,
     ) -> None:
@@ -332,9 +333,11 @@ class Section:
 
         Parameters
         ----------
-        action : {"a", "r", "add", "remove"}
-            The action to perform. Must be one of "a"/"add" for adding peaks or "r"/"remove" for
-            removing peaks.
+        action : {"add", "remove"}
+            How the peaks should be updated:
+            - "add" : Set the `is_peak` column to 1 at the indices provided in `peaks`.
+            - "remove" : Set the `is_peak` column to 0 at the indices provided in `peaks`.
+
         peaks : ndarray
             A 1D array of integers representing the indices of the peaks in the processed signal.
         update_rate : bool
@@ -358,9 +361,9 @@ class Section:
 
         changed_indices = pl.arg_where(updated_data != self.data.get_column("is_peak"), eager=True)
 
-        self.data.replace("is_peak", updated_data)
+        self.data = self.data.with_columns(is_peak=updated_data)
 
-        if action in ["a", "add"]:
+        if action == "add":
             self._manual_peak_edits.new_added(changed_indices)
         else:
             self._manual_peak_edits.new_removed(changed_indices)
@@ -377,11 +380,14 @@ class Section:
             peaks = self.peaks_local.to_numpy(allow_copy=False)
         if desired_length is None:
             desired_length = self.data.height
-        self.rate_instant_interpolated = signal_rate(peaks, self.sampling_rate, desired_length)
+        inst_rate = signal_rate(peaks, self.sampling_rate, desired_length)
+        self.data = self.data.with_columns(
+            pl.Series("rate_instant", inst_rate).alias("rate_instant")
+        )
 
     def calculate_rolling_rate(
         self,
-        grp_col: str,
+        grp_col: str = "section_index",
         sec_new_window_every: int = 10,
         sec_window_length: int = 60,
         sec_start_at: int = 0,
@@ -431,7 +437,7 @@ class Section:
             .collect()
         )
 
-    def get_section_metadata(self) -> SectionMetadata:
+    def get_metadata(self) -> SectionMetadata:
         return SectionMetadata(
             signal_name=self.signal_name,
             section_id=self.section_id,
@@ -440,10 +446,16 @@ class Section:
             processing_parameters=self._processing_parameters,
         )
 
-    def get_peak_xy(self) -> tuple[npt.NDArray[np.int32], npt.NDArray[np.float64]]:
-        peaks = self.peaks_local.to_numpy(allow_copy=False)
-
-        return peaks, self.processed_signal.gather(peaks).to_numpy(allow_copy=False)
+    def get_peak_pos(self) -> pl.DataFrame:
+        return (
+            self.data.lazy()
+            .filter(pl.col("is_peak") == 1)
+            .select(
+                pl.col("section_index").alias("x"),
+                pl.col(self.processed_signal_name).alias("y"),
+            )
+            .collect()
+        )
 
     def get_focused_result(self) -> CompactSectionResult:
         section_peaks = self.peaks_local
@@ -480,19 +492,28 @@ class Section:
         )
 
     def reset_signal(self) -> None:
-        self.data.replace(self.processed_signal_name, self.raw_signal)
+        self.data = (
+            self.data.lazy()
+            .with_columns(
+                pl.col(self.signal_name).alias(self.processed_signal_name),
+                pl.lit(0, pl.Int8).alias("is_peak"),
+                pl.lit(0, pl.Int8).alias("is_manual"),
+                pl.lit(np.nan, pl.Float64).alias("rate_instant"),
+                # pl.lit(np.nan, pl.Float64).alias("rate_rolling"),
+            )
+            .collect()
+        )
+        self._manual_peak_edits.clear()
+
+    def reset_peaks(self) -> None:
         self.data = (
             self.data.lazy()
             .with_columns(
                 pl.lit(0, pl.Int8).alias("is_peak"),
                 pl.lit(0, pl.Int8).alias("is_manual"),
+                pl.lit(np.nan, pl.Float64).alias("rate_instant"),
+                # pl.lit(np.nan, pl.Float64).alias("rate_rolling"),
             )
             .collect()
         )
         self._manual_peak_edits.clear()
-        self.rate_instant_interpolated.fill(0.0)
-
-    def reset_peaks(self) -> None:
-        self.data.replace("is_peak", pl.repeat(0, self.data.height, dtype=pl.Int8, eager=True))
-        self._manual_peak_edits.clear()
-        self.rate_instant_interpolated.fill(0.0)

@@ -71,7 +71,9 @@ def get_app_dir() -> QtCore.QDir:
 
 
 def safe_disconnect(
-    sender: QtCore.QObject, signal: QtCore.SignalInstance, slot: QtCore.Slot | t.Callable[..., t.Any]
+    sender: QtCore.QObject,
+    signal: QtCore.SignalInstance,
+    slot: QtCore.Slot | t.Callable[..., t.Any],
 ) -> None:
     meta_signal = QtCore.QMetaMethod.fromSignal(signal)
     if sender.isSignalConnected(meta_signal):
@@ -79,7 +81,8 @@ def safe_disconnect(
 
 
 def safe_multi_disconnect(
-    sender: QtCore.QObject, signal_slot_pairs: list[tuple[QtCore.SignalInstance, QtCore.Slot | t.Callable[..., t.Any]]]
+    sender: QtCore.QObject,
+    signal_slot_pairs: list[tuple[QtCore.SignalInstance, QtCore.Slot | t.Callable[..., t.Any]]],
 ) -> None:
     for signal, slot in signal_slot_pairs:
         safe_disconnect(sender, signal, slot)
