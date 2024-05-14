@@ -35,10 +35,11 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw = MainWindow()
         self.data = DataController(self)
         self.plot = PlotController(self, self.mw)
+        self.recent_files = self._retrieve_recent_files()
 
-        self.connect_qt_signals()
+        self._connect_signals()
 
-    def connect_qt_signals(self) -> None:
+    def _connect_signals(self) -> None:
         self.sig_peaks_updated.connect(self.refresh_peak_data)
 
         self.mw.settings_editor.sig_setting_changed.connect(self._update_setting)
@@ -51,6 +52,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.action_close_file.triggered.connect(self.close_file)
         self.mw.btn_close_file.clicked.connect(self.close_file)
         self.mw.action_about_qt.triggered.connect(self.aboutQt)
+        self.mw.search_list_widget_recent_files.list_widget.itemDoubleClicked.connect(self._open_recent_file)
 
         self.mw.spin_box_sampling_rate_import_page.editingFinished.connect(
             self.update_sampling_rate
@@ -89,6 +91,15 @@ class SignalEditor(QtWidgets.QApplication):
         )
         self.plot.sig_scatter_data_changed.connect(self.handle_peak_edit)
 
+    def _retrieve_recent_files(self) -> list[str]:
+        settings = QtCore.QSettings()
+        recent_files: list[str] | None = settings.value("Internal/recent_files", None)
+        if recent_files is None:
+            recent_files = []
+        self.mw.search_list_widget_recent_files.clear()
+        self.mw.search_list_widget_recent_files.addItems(recent_files)
+        return recent_files
+    
     @QtCore.Slot()
     def clear_peaks(self) -> None:
         self.plot.clear_peaks()
@@ -207,7 +218,7 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot(bool)
     def maybe_new_section(self, checked: bool) -> None:
-        self.mw.tool_bar_cc.setVisible(checked)
+        self.mw.show_section_confirm_cancel(checked)
         if not checked:
             self.plot.hide_region_selector()
             return
@@ -223,14 +234,14 @@ class SignalEditor(QtWidgets.QApplication):
         start, stop = self.plot.region_selector.getRegion()
         self.data.create_section(start, stop)
         self.plot.hide_region_selector()
-        self.mw.tool_bar_cc.setVisible(False)
+        self.mw.show_section_confirm_cancel(False)
         self.mw.action_create_new_section.setChecked(False)
         self.plot.mark_region(start, stop)
 
     @QtCore.Slot()
     def _on_cancel_new_section(self) -> None:
         self.plot.hide_region_selector()
-        self.mw.tool_bar_cc.setVisible(False)
+        self.mw.show_section_confirm_cancel(False)
         self.mw.action_create_new_section.setChecked(False)
 
     @QtCore.Slot(QtCore.QModelIndex)
@@ -241,14 +252,18 @@ class SignalEditor(QtWidgets.QApplication):
             self.plot.remove_region(bounds=bounds)
         self.data.delete_section(index)
         self.mw.dock_sections.list_view.setCurrentIndex(self.data.base_section_index)
-        logger.success(f"Deleted section {index.row():03}")
+        logger.info(f"Deleted section {index.row():03}")
 
     @QtCore.Slot(bool)
     def _on_active_section_changed(self, has_peaks: bool) -> None:
         section = self.data.active_section
         is_base_section = section is self.data.get_base_section()
         self.mw.action_create_new_section.setEnabled(is_base_section)
+        self.mw.action_delete_section.setEnabled(not is_base_section)
         self.mw.action_show_section_overview.setEnabled(is_base_section)
+        self.mw.action_show_section_overview.setChecked(False)
+        self.mw.dock_processing.setEnabled(not is_base_section)
+        self.mw.dock_peaks.setEnabled(not is_base_section)
         self.mw.set_active_section_label(section.section_id.pretty_name())
         self.plot.set_signal_data(section.processed_signal.to_numpy())
         self.plot.clear_peaks()
@@ -366,6 +381,16 @@ class SignalEditor(QtWidgets.QApplication):
         settings.setValue("Misc/data_folder", Path(file_path).parent.resolve().as_posix())
         self._on_file_opened(file_path)
 
+    def update_recent_files(self, file_path: str) -> None:
+        if file_path in self.recent_files:
+            self.recent_files.remove(file_path)
+        self.recent_files.insert(0, file_path)
+        self.recent_files = self.recent_files[:10]
+        settings = QtCore.QSettings()
+        settings.setValue("Internal/recent_files", self.recent_files)
+        self.mw.search_list_widget_recent_files.list_widget.clear()
+        self.mw.search_list_widget_recent_files.list_widget.addItems(self.recent_files)
+        
     def _on_file_opened(self, file_path: str) -> None:
         self.mw.line_edit_active_file.setText(file_path)
 
@@ -377,14 +402,20 @@ class SignalEditor(QtWidgets.QApplication):
         self.data.open_file(file_path)
         self.mw.table_view_import_data.setModel(self.data.data_model)
         self._set_column_models()
+        self.update_recent_files(file_path)
 
+    def _open_recent_file(self, item: QtWidgets.QListWidgetItem) -> None:
+        file_path = item.text()
+        self.close_file()
+        self._on_file_opened(file_path)
+        
     @QtCore.Slot()
     def read_data(self) -> None:
         if self.data.has_data:
             loaded_file = self.mw.line_edit_active_file.text()
             self.close_file()
             self._on_file_opened(loaded_file)
-            
+
         self.data.load_data()
         for col in range(self.data.base_df.width):
             self.mw.table_view_import_data.horizontalHeader().setSectionResizeMode(

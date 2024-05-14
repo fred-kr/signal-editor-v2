@@ -14,6 +14,7 @@ if __name__ == "__main__":
     import pyqtgraph as pg
 
     # import qdarkstyle
+    from PySide6 import QtWidgets
     from loguru import logger
 
     from signal_editor.signal_editor import SignalEditor
@@ -42,6 +43,7 @@ if __name__ == "__main__":
     app = SignalEditor(sys.argv)
     # app.setStyleSheet(qdarkstyle.load_stylesheet())
     # Built-in styles: ['windows11', 'windowsvista', 'Windows', 'Fusion']
-    app.setStyle("windows11")
+    styles = QtWidgets.QStyleFactory.keys()
+    app.setStyle(styles[0])
     app.mw.show()
     sys.exit(app.exec())

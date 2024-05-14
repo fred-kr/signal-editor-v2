@@ -13,9 +13,6 @@
   <property name="windowTitle">
    <string>Signal Editor</string>
   </property>
-  <property name="locale">
-   <locale language="English" country="Germany"/>
-  </property>
   <property name="animated">
    <bool>true</bool>
   </property>
@@ -524,7 +521,6 @@
      <string>Help</string>
     </property>
     <addaction name="action_show_user_guide"/>
-    <addaction name="action_toggle_whats_this_mode"/>
     <addaction name="separator"/>
     <addaction name="action_about_app"/>
     <addaction name="action_about_qt"/>
@@ -567,7 +563,7 @@
    <addaction name="action_show_export_page"/>
    <addaction name="action_show_info_page"/>
   </widget>
-  <widget class="QToolBar" name="tool_bar_context_actions">
+  <widget class="QToolBar" name="tool_bar_file_actions">
    <property name="windowTitle">
     <string>Editing Toolbar</string>
    </property>
@@ -586,31 +582,6 @@
    <addaction name="action_open_file"/>
    <addaction name="action_edit_metadata"/>
    <addaction name="action_close_file"/>
-  </widget>
-  <widget class="QToolBar" name="tool_bar_help">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
-   <property name="windowTitle">
-    <string>User Guide + Documentation Toolbar</string>
-   </property>
-   <property name="movable">
-    <bool>false</bool>
-   </property>
-   <property name="allowedAreas">
-    <set>Qt::ToolBarArea::TopToolBarArea</set>
-   </property>
-   <property name="floatable">
-    <bool>false</bool>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>TopToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="action_show_user_guide"/>
-   <addaction name="action_toggle_whats_this_mode"/>
   </widget>
   <action name="action_open_file">
    <property name="icon">
@@ -783,7 +754,7 @@
     <string>New Section</string>
    </property>
    <property name="toolTip">
-    <string>Select a section of the signal data to work with</string>
+    <string>Create a new section</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
@@ -798,7 +769,7 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/filter_edit</normaloff>:/icons/filter_edit</iconset>
+     <normaloff>:/icons/filter</normaloff>:/icons/filter</iconset>
    </property>
    <property name="text">
     <string>Signal Processing Inputs</string>
@@ -834,7 +805,7 @@
   <action name="action_confirm_section">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/tick_button</normaloff>:/icons/tick_button</iconset>
+     <normaloff>:/icons/tick_mark</normaloff>:/icons/tick_mark</iconset>
    </property>
    <property name="text">
     <string>Confirm Section</string>
@@ -849,7 +820,7 @@
   <action name="action_cancel_section">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/delete</normaloff>:/icons/delete</iconset>
+     <normaloff>:/icons/cross</normaloff>:/icons/cross</iconset>
    </property>
    <property name="text">
     <string>Cancel Section</string>
@@ -928,7 +899,7 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/target_edit</normaloff>:/icons/target_edit</iconset>
+     <normaloff>:/icons/target</normaloff>:/icons/target</iconset>
    </property>
    <property name="text">
     <string>Peak Detection Inputs</string>
@@ -985,27 +956,6 @@
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
-  <action name="action_toggle_whats_this_mode">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/whats_this</normaloff>:/icons/whats_this</iconset>
-   </property>
-   <property name="text">
-    <string>What's This?</string>
-   </property>
-   <property name="toolTip">
-    <string>Toggle 'What's This?' mode</string>
-   </property>
-   <property name="shortcut">
-    <string>Shift+F1</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
-   </property>
-  </action>
   <action name="action_show_user_guide">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
@@ -1045,6 +995,21 @@
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::AboutRole</enum>
+   </property>
+  </action>
+  <action name="action_delete_section">
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/icons/section_remove</normaloff>:/icons/section_remove</iconset>
+   </property>
+   <property name="text">
+    <string>Delete Section</string>
+   </property>
+   <property name="toolTip">
+    <string>Delete the selected section</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
  </widget>

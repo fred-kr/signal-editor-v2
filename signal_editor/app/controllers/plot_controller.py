@@ -230,7 +230,8 @@ class PlotController(QtCore.QObject):
 
     @QtCore.Slot(bool)
     def toggle_regions(self, visible: bool) -> None:
-        for region in self.regions:
+        for i, region in enumerate(self.regions):
+            region.setToolTip(f"Section {i + 1:03}")
             region.setVisible(visible)
         self._show_regions = visible
 

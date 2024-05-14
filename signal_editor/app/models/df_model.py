@@ -24,7 +24,7 @@ def validate_column(
     return col_name
 
 
-class DataTableModel(QtCore.QAbstractTableModel):
+class DataFrameModel(QtCore.QAbstractTableModel):
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
         self._metadata: "QFileMetadata | None" = None

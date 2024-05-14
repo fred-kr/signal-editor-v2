@@ -1,5 +1,8 @@
 <RCC>
   <qresource prefix="icons">
+    <file alias="cross">fugue-icons/cross.png</file>
+    <file alias="minus_circle">fugue-icons/minus-circle.png</file>
+    <file alias="minus">fugue-icons/minus.png</file>
     <file alias="document_go">fugue-icons/document--arrow.png</file>
     <file alias="table_go">fugue-icons/table--arrow.png</file>
     <file alias="arrow_resize">fugue-icons/arrow-resize-045.png</file>

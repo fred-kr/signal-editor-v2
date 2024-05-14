@@ -39,7 +39,7 @@ class Ui_DockWidgetPeakDetection(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 353, 425))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 353, 435))
         self.verticalLayout = QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -80,12 +80,10 @@ class Ui_DockWidgetPeakDetection(object):
         self.peak_elgendi_ppg_peakwindow = QDoubleSpinBox(self.page_peak_elgendi_ppg)
         self.peak_elgendi_ppg_peakwindow.setObjectName(u"peak_elgendi_ppg_peakwindow")
         self.peak_elgendi_ppg_peakwindow.setMinimumSize(QSize(0, 31))
-        self.peak_elgendi_ppg_peakwindow.setAccelerated(True)
         self.peak_elgendi_ppg_peakwindow.setDecimals(3)
         self.peak_elgendi_ppg_peakwindow.setMinimum(0.050000000000000)
         self.peak_elgendi_ppg_peakwindow.setMaximum(5.000000000000000)
         self.peak_elgendi_ppg_peakwindow.setSingleStep(0.001000000000000)
-        self.peak_elgendi_ppg_peakwindow.setStepType(QAbstractSpinBox.StepType.AdaptiveDecimalStepType)
         self.peak_elgendi_ppg_peakwindow.setValue(0.111000000000000)
 
         self.formLayout_2.setWidget(1, QFormLayout.FieldRole, self.peak_elgendi_ppg_peakwindow)
@@ -104,7 +102,7 @@ class Ui_DockWidgetPeakDetection(object):
         self.peak_elgendi_ppg_beatwindow.setMinimum(0.100000000000000)
         self.peak_elgendi_ppg_beatwindow.setMaximum(5.000000000000000)
         self.peak_elgendi_ppg_beatwindow.setSingleStep(0.001000000000000)
-        self.peak_elgendi_ppg_beatwindow.setStepType(QAbstractSpinBox.StepType.AdaptiveDecimalStepType)
+        self.peak_elgendi_ppg_beatwindow.setStepType(QAbstractSpinBox.StepType.DefaultStepType)
         self.peak_elgendi_ppg_beatwindow.setValue(0.667000000000000)
 
         self.formLayout_2.setWidget(2, QFormLayout.FieldRole, self.peak_elgendi_ppg_beatwindow)
@@ -122,7 +120,7 @@ class Ui_DockWidgetPeakDetection(object):
         self.peak_elgendi_ppg_beatoffset.setDecimals(2)
         self.peak_elgendi_ppg_beatoffset.setMaximum(1.000000000000000)
         self.peak_elgendi_ppg_beatoffset.setSingleStep(0.010000000000000)
-        self.peak_elgendi_ppg_beatoffset.setStepType(QAbstractSpinBox.StepType.AdaptiveDecimalStepType)
+        self.peak_elgendi_ppg_beatoffset.setStepType(QAbstractSpinBox.StepType.DefaultStepType)
         self.peak_elgendi_ppg_beatoffset.setValue(0.020000000000000)
 
         self.formLayout_2.setWidget(3, QFormLayout.FieldRole, self.peak_elgendi_ppg_beatoffset)
@@ -140,7 +138,7 @@ class Ui_DockWidgetPeakDetection(object):
         self.peak_elgendi_ppg_mindelay.setDecimals(2)
         self.peak_elgendi_ppg_mindelay.setMaximum(10.000000000000000)
         self.peak_elgendi_ppg_mindelay.setSingleStep(0.010000000000000)
-        self.peak_elgendi_ppg_mindelay.setStepType(QAbstractSpinBox.StepType.AdaptiveDecimalStepType)
+        self.peak_elgendi_ppg_mindelay.setStepType(QAbstractSpinBox.StepType.DefaultStepType)
         self.peak_elgendi_ppg_mindelay.setValue(0.300000000000000)
 
         self.formLayout_2.setWidget(4, QFormLayout.FieldRole, self.peak_elgendi_ppg_mindelay)

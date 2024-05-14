@@ -453,9 +453,6 @@ class SettingsTree(QtWidgets.QTreeWidget):
             return
 
         safe_disconnect(self, self.itemChanged, self.update_setting)
-        # itemChangedSignal = QtCore.QMetaMethod.fromSignal(self.itemChanged)
-        # if self.isSignalConnected(itemChangedSignal):
-        #     self.itemChanged.disconnect(self.update_setting)
 
         self.settings.sync()
         self.update_child_items(None)
@@ -512,6 +509,8 @@ class SettingsTree(QtWidgets.QTreeWidget):
             return
 
         for group in self.settings.childGroups():
+            if group == "Internal":
+                continue
             child_index = self.find_child(parent, group, divider_index)
             if child_index != -1:
                 child = self.child_at(parent, child_index)

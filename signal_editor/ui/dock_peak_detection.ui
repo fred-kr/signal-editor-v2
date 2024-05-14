@@ -29,7 +29,7 @@
          <x>0</x>
          <y>0</y>
          <width>353</width>
-         <height>425</height>
+         <height>435</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -117,9 +117,6 @@ li.checked::marker { content: &quot;\2612&quot;; }
                 <height>31</height>
                </size>
               </property>
-              <property name="accelerated">
-               <bool>true</bool>
-              </property>
               <property name="suffix">
                <string> s</string>
               </property>
@@ -134,9 +131,6 @@ li.checked::marker { content: &quot;\2612&quot;; }
               </property>
               <property name="singleStep">
                <double>0.001000000000000</double>
-              </property>
-              <property name="stepType">
-               <enum>QAbstractSpinBox::StepType::AdaptiveDecimalStepType</enum>
               </property>
               <property name="value">
                <double>0.111000000000000</double>
@@ -186,7 +180,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                <double>0.001000000000000</double>
               </property>
               <property name="stepType">
-               <enum>QAbstractSpinBox::StepType::AdaptiveDecimalStepType</enum>
+               <enum>QAbstractSpinBox::StepType::DefaultStepType</enum>
               </property>
               <property name="value">
                <double>0.667000000000000</double>
@@ -233,7 +227,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                <double>0.010000000000000</double>
               </property>
               <property name="stepType">
-               <enum>QAbstractSpinBox::StepType::AdaptiveDecimalStepType</enum>
+               <enum>QAbstractSpinBox::StepType::DefaultStepType</enum>
               </property>
               <property name="value">
                <double>0.020000000000000</double>
@@ -280,7 +274,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
                <double>0.010000000000000</double>
               </property>
               <property name="stepType">
-               <enum>QAbstractSpinBox::StepType::AdaptiveDecimalStepType</enum>
+               <enum>QAbstractSpinBox::StepType::DefaultStepType</enum>
               </property>
               <property name="value">
                <double>0.300000000000000</double>

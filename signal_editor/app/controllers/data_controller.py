@@ -8,9 +8,9 @@ from PySide6 import QtCore
 from signal_editor.app.core.file_io import detect_sampling_rate, read_edf
 from signal_editor.app.core.section import Section
 from signal_editor.app.enum_defs import TextFileSeparator
-from signal_editor.app.models.data_table import DataTableModel
+from signal_editor.app.models.df_model import DataFrameModel
 from signal_editor.app.models.metadata import QFileMetadata
-from signal_editor.app.models.section_container import SectionListModel
+from signal_editor.app.models.section_list_model import SectionListModel
 
 
 class MissingDataError(Exception):
@@ -47,13 +47,13 @@ class DataController(QtCore.QObject):
         settings = QtCore.QSettings()
         self._sampling_rate = int(settings.value("Data/sampling_rate"))  # type: ignore
 
-        self.data_model = DataTableModel(self)
+        self.data_model = DataFrameModel(self)
 
         self._metadata: QFileMetadata | None = None
 
         self._sections = SectionListModel(parent=self)
         self._active_section: Section | None = None
-        self.active_section_model = DataTableModel(self)
+        self.active_section_model = DataFrameModel(self)
         self._base_section: Section | None = None
         try:
             self._txt_separator = TextFileSeparator(
@@ -121,7 +121,7 @@ class DataController(QtCore.QObject):
             self.active_section_model.set_metadata(self.metadata)
             self.active_section_model.set_dataframe(
                 data=self._active_section.data,
-                signal_col=self.metadata.signal_column, 
+                signal_col=self.metadata.signal_column,
                 index_col="section_index",
                 info_col=self.metadata.info_column,
             )
@@ -227,14 +227,14 @@ class DataController(QtCore.QObject):
             df = pl.read_csv(file_path, columns=columns, row_index_name=row_index_col)
         elif suffix == ".txt":
             df = pl.read_csv(
-            file_path, columns=columns, separator=separator, row_index_name=row_index_col
+                file_path, columns=columns, separator=separator, row_index_name=row_index_col
             )
         elif suffix == ".tsv":
             df = pl.read_csv(
-            file_path,
-            columns=columns,
-            separator=TextFileSeparator.Tab,
-            row_index_name=row_index_col,
+                file_path,
+                columns=columns,
+                separator=TextFileSeparator.Tab,
+                row_index_name=row_index_col,
             )
         elif suffix == ".feather":
             df = pl.read_ipc(file_path, columns=columns, row_index_name=row_index_col)
