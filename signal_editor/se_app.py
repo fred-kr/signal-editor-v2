@@ -103,9 +103,6 @@ class SignalEditor(QtWidgets.QApplication):
             recent_files = []
         self.mw.search_list_widget_recent_files.clear()
         self.mw.search_list_widget_recent_files.addItems(recent_files)
-        # for i in range(self.mw.search_list_widget_recent_files.list_widget.count()):
-        #     item = self.mw.search_list_widget_recent_files.list_widget.item(i)
-        #     item.setSizeHint(QtCore.QSize(0, 28))
         return recent_files
 
     @QtCore.Slot()

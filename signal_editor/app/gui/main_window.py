@@ -57,6 +57,7 @@ class ExportDialog(QtWidgets.QDialog, Ui_ExportDialog):
 
         self._initialize_widgets()
         self._connect_signals()
+        self.combo_box_result_type.setCurrentIndex(0)
 
     def _initialize_widgets(self) -> None:
         self.collapsible_extra_metadata.setText("Additional Details")
@@ -469,7 +470,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def show_data_view_context_menu(self, pos: QtCore.QPoint) -> None:
         menu = QtWidgets.QMenu(self.table_view_import_data)
         menu.addAction("Refresh", self.sig_table_refresh_requested.emit)
-        menu.exec(self.table_view_import_data.mapToGlobal(pos))
+        menu.exec(self.table_view_import_data.viewport().mapToGlobal(pos))
 
     @QtCore.Slot(int)
     def _on_page_changed(self, index: int) -> None:
