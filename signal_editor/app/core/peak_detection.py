@@ -4,11 +4,12 @@ import neurokit2 as nk
 import numpy as np
 import numpy.typing as npt
 import wfdb.processing as wp
+from loguru import logger
 from PySide6 import QtCore
 from scipy import ndimage, signal
 
-from signal_editor.app.enum_defs import SmoothingKernels, WFDBPeakDirection, PeakDetectionMethod
 from signal_editor.app import type_defs as _t
+from signal_editor.app.enum_defs import PeakDetectionMethod, SmoothingKernels, WFDBPeakDirection
 
 
 def _signal_smoothing_median(
@@ -280,6 +281,7 @@ def _handle_close_peaks(
     qrs_locations: npt.NDArray[np.int32],
     n_std: float,
     find_peak_func: t.Callable[..., np.intp],
+    min_peak_distance: int,
 ) -> npt.NDArray[np.int32]:
     qrs_diffs = np.diff(qrs_locations)
     settings = QtCore.QSettings()
@@ -300,11 +302,14 @@ def _handle_close_peaks(
 
 
 def _sanitize_qrs_locations(
-    sig: npt.NDArray[np.float64], qrs_locations: npt.NDArray[np.int32], n_std: float = 4.0
+    sig: npt.NDArray[np.float64],
+    qrs_locations: npt.NDArray[np.int32],
+    min_peak_distance: int,
+    n_std: float = 4.0,
 ) -> npt.NDArray[np.int32]:
     find_peak_func = np.argmax if np.mean(sig) < np.mean(sig[qrs_locations]) else np.argmin
 
-    peak_indices = _handle_close_peaks(sig, qrs_locations, n_std, find_peak_func)
+    peak_indices = _handle_close_peaks(sig, qrs_locations, n_std, find_peak_func, min_peak_distance)
     sorted_peak_indices = np.argsort(peak_indices)
 
     return peak_indices[
@@ -318,6 +323,7 @@ def _find_peaks_xqrs(
     sig: npt.NDArray[np.float64],
     sampling_rate: int,
     radius: int,
+    min_peak_distance: int,
     peak_dir: WFDBPeakDirection = WFDBPeakDirection.Up,
 ) -> npt.NDArray[np.int32]:
     xqrs_out = wp.XQRS(sig, sampling_rate)
@@ -327,7 +333,7 @@ def _find_peaks_xqrs(
         sig, peaks=qrs_locations, radius=radius, direction=peak_dir
     )
 
-    return _sanitize_qrs_locations(sig, peak_indices)
+    return _sanitize_qrs_locations(sig, peak_indices, min_peak_distance)
 
 
 def find_peaks(
@@ -335,41 +341,57 @@ def find_peaks(
     sampling_rate: int,
     method: PeakDetectionMethod,
     method_parameters: _t.PeakDetectionMethodParameters,
+    **kwargs: t.Unpack[_t.FindPeaksKwargs],
 ) -> npt.NDArray[np.int32]:
-    match method:
-        case PeakDetectionMethod.LocalMaxima:
-            return find_extrema(
-                sig,
-                search_radius=method_parameters.get("search_radius", sampling_rate // 2),
-                direction="up",
-            )
-        case PeakDetectionMethod.LocalMinima:
-            return find_extrema(
-                sig,
-                search_radius=method_parameters.get("search_radius", sampling_rate // 2),
-                direction="down",
-            )
-        case PeakDetectionMethod.PPGElgendi:
-            return _find_peaks_ppg_elgendi(
-                sig,
-                sampling_rate,
-                peakwindow=method_parameters.get("peakwindow", 0.111),
-                beatwindow=method_parameters.get("beatwindow", 0.667),
-                beatoffset=method_parameters.get("beatoffset", 0.02),
-                mindelay=method_parameters.get("mindelay", 0.3),
-            )
-        case PeakDetectionMethod.WFDBXQRS:
-            return _find_peaks_xqrs(
-                sig,
-                sampling_rate,
-                radius=method_parameters.get("search_radius", sampling_rate // 2),
-                peak_dir=method_parameters.get("peak_dir", WFDBPeakDirection.Up),
-            )
-        case PeakDetectionMethod.ECGNeuroKit2 | PeakDetectionMethod.PanTompkins:
-            return nk.ecg_peaks(
-                ecg_cleaned=sig,
-                sampling_rate=sampling_rate,
-                method=method,
-                correct_artifacts=method_parameters.get("correct_artifacts", False),
-                # **method_parameters
-            )[1]["ECG_R_Peaks"]
+    if method == PeakDetectionMethod.LocalMaxima:
+        return find_extrema(
+            sig,
+            search_radius=method_parameters.get("search_radius", sampling_rate // 2),
+            direction="up",
+        )
+    elif method == PeakDetectionMethod.LocalMinima:
+        return find_extrema(
+            sig,
+            search_radius=method_parameters.get("search_radius", sampling_rate // 2),
+            direction="down",
+        )
+    elif method == PeakDetectionMethod.PPGElgendi:
+        return _find_peaks_ppg_elgendi(
+            sig,
+            sampling_rate,
+            peakwindow=method_parameters.get("peakwindow", 0.111),
+            beatwindow=method_parameters.get("beatwindow", 0.667),
+            beatoffset=method_parameters.get("beatoffset", 0.02),
+            mindelay=method_parameters.get("mindelay", 0.3),
+        )
+    elif method == PeakDetectionMethod.WFDBXQRS:
+        return _find_peaks_xqrs(
+            sig,
+            sampling_rate,
+            radius=method_parameters.get("search_radius", sampling_rate // 2),
+            min_peak_distance=kwargs.get("min_peak_distance", 20),
+            peak_dir=method_parameters.get("peak_dir", WFDBPeakDirection.Up),
+        )
+    elif method == PeakDetectionMethod.ECGNeuroKit2:
+        assert "method" in method_parameters, "NeuroKit2 ECG peak detection method not specified"
+        return _find_peaks_nk_ecg(method_parameters, sig, sampling_rate)
+    else:
+        raise ValueError(f"Unsupported peak detection method: {method}")
+
+
+def _find_peaks_nk_ecg(
+    method_parameters: _t.PeaksECGNeuroKit2, sig: npt.NDArray[np.float64], sampling_rate: int
+) -> npt.NDArray[np.int32]:
+    nk_method = method_parameters["method"]
+    logger.info(f"Using NeuroKit2 ECG peak detection method: {nk_method}")
+    params = method_parameters["params"]
+    if params is None:
+        params = {}
+    
+    return nk.ecg_findpeaks(
+        ecg_cleaned=sig,
+        sampling_rate=sampling_rate,
+        method=nk_method,
+        show=False,
+        **params,
+    )["ECG_R_Peaks"]

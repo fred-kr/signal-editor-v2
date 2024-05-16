@@ -12,16 +12,19 @@ if __name__ == "__main__":
 
     import polars as pl
     import pyqtgraph as pg
-
     # import qdarkstyle
+
     from PySide6 import QtWidgets
     from loguru import logger
 
-    from signal_editor.signal_editor import SignalEditor
+    from signal_editor.se_app import SignalEditor
 
     parser = argparse.ArgumentParser(description="Signal Editor")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
     parser.add_argument("--no-opengl", action="store_false", help="Don't use OpenGL for rendering")
+    parser.add_argument(
+        "-c", "--enable-console", action="store_true", help="Enable Jupyter console"
+    )
     args = parser.parse_args()
 
     # os.environ["QT_LOGGING_RULES"] = "qt.pyside.libpyside.warning=true"
@@ -44,6 +47,7 @@ if __name__ == "__main__":
     # app.setStyleSheet(qdarkstyle.load_stylesheet())
     # Built-in styles: ['windows11', 'windowsvista', 'Windows', 'Fusion']
     styles = QtWidgets.QStyleFactory.keys()
-    app.setStyle(styles[0])
+    app.setStyle("Fusion")
     app.mw.show()
+
     sys.exit(app.exec())

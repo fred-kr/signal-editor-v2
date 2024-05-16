@@ -22,11 +22,25 @@ PEAK_DETECTION = {
         "radius": 100,
         "min_dist": 15,
     },
-    "peak_pantompkins": {
-        "correct_artifacts": False,
-    },
     "peak_xqrs": {
         "search_radius": 50,
         "peak_dir": WFDBPeakDirection.Up,
+    },
+    "peak_promac": {
+        "threshold": 0.33,
+        "gaussian_sd": 100,
+    },
+    "peak_gamboa": {
+        "tol": 0.002,
+    },
+    "peak_ssf": {
+        "threshold": 20,
+        "before": 0.03,
+        "after": 0.01,
+    },
+    "peak_emrich": {
+        "window_seconds": 2,
+        "window_overlap": 0.5,
+        "accelerated": True,
     },
 }

@@ -1,13 +1,13 @@
 import contextlib
 import re
 import typing as t
-import warnings
 from dataclasses import dataclass, field
 
 import numpy as np
 import numpy.typing as npt
 import polars as pl
 import polars.selectors as ps
+from loguru import logger
 from polars_standardize_series import standardize
 from PySide6 import QtCore
 
@@ -154,7 +154,6 @@ class Section:
                 pl.lit(0, pl.Int8).alias("is_peak"),
                 pl.lit(0, pl.Int8).alias("is_manual"),
                 pl.lit(np.nan, pl.Float64).alias("rate_instant"),
-                # pl.lit(np.nan, pl.Float64).alias("rate_rolling"),
             )
             .collect()
         )
@@ -181,6 +180,14 @@ class Section:
     @property
     def rate_instant(self) -> npt.NDArray[np.float64]:
         return self.data.get_column("rate_instant").to_numpy(allow_copy=False)
+
+    @property
+    def is_filtered(self) -> bool:
+        return self._is_filtered
+
+    @property
+    def is_standardized(self) -> bool:
+        return self._is_standardized
 
     # @property
     # def rate_rolling(self) -> npt.NDArray[np.float64]:
@@ -220,39 +227,46 @@ class Section:
     def filter_signal(
         self, pipeline: PreprocessPipeline, **kwargs: t.Unpack[_t.SignalFilterParameters]
     ) -> None:
+        settings = QtCore.QSettings()
+        allow_stacking = settings.value("Editing/allow_stacking_filters", False, type=bool)
+        if self.is_filtered and not allow_stacking:
+            logger.warning(
+                "Applying filter to raw signal. To apply to already processed signal, enable\n\n'Settings > Preferences > Editing > allow_stacking_filters'"
+            )
+            sig_data = self.raw_signal.to_numpy(allow_copy=False)
+        else:
+            sig_data = self.processed_signal.to_numpy(allow_copy=False)
         method = kwargs.get("method", FilterMethod.NoFilter)
-        raw_data = self.raw_signal.to_numpy(allow_copy=False)
-        filtered = np.empty_like(raw_data)
+        filtered = np.empty_like(sig_data)
         filter_params: _t.SignalFilterParameters | None = None
 
-        match pipeline:
-            case PreprocessPipeline.Custom:
-                if method == FilterMethod.NoFilter:
-                    filtered = raw_data
-                    filter_params = None
-                else:
-                    filtered, filter_params = filter_signal(raw_data, self.sampling_rate, **kwargs)
-            case PreprocessPipeline.PPGElgendi:
-                filtered = filter_elgendi(raw_data, self.sampling_rate)
-                filter_params = {
-                    "highcut": 8.0,
-                    "lowcut": 0.5,
-                    "method": FilterMethod.Butterworth,
-                    "order": 3,
-                    "window_size": "default",
-                    "powerline": 50,
-                }
-            case PreprocessPipeline.ECGNeuroKit2:
-                pow_line = kwargs.get("powerline", 50)
-                filtered = filter_neurokit2(raw_data, self.sampling_rate, powerline=pow_line)
-                filter_params = {
-                    "highcut": None,
-                    "lowcut": 0.5,
-                    "method": FilterMethod.Butterworth,
-                    "order": 5,
-                    "window_size": "default",
-                    "powerline": pow_line,
-                }
+        if pipeline == PreprocessPipeline.Custom:
+            if method == FilterMethod.NoFilter:
+                filtered = sig_data
+                filter_params = None
+            else:
+                filtered, filter_params = filter_signal(sig_data, self.sampling_rate, **kwargs)
+        elif pipeline == PreprocessPipeline.PPGElgendi:
+            filtered = filter_elgendi(sig_data, self.sampling_rate)
+            filter_params = {
+                "highcut": 8.0,
+                "lowcut": 0.5,
+                "method": FilterMethod.Butterworth,
+                "order": 3,
+                "window_size": "default",
+                "powerline": 50,
+            }
+        elif pipeline == PreprocessPipeline.ECGNeuroKit2:
+            pow_line = kwargs.get("powerline", 50)
+            filtered = filter_neurokit2(sig_data, self.sampling_rate, powerline=pow_line)
+            filter_params = {
+                "highcut": None,
+                "lowcut": 0.5,
+                "method": FilterMethod.Butterworth,
+                "order": 5,
+                "window_size": "default",
+                "powerline": pow_line,
+            }
 
         self._processing_parameters.processing_pipeline = pipeline
         self._processing_parameters.filter_parameters = filter_params
@@ -261,7 +275,7 @@ class Section:
 
     def scale_signal(self, **kwargs: t.Unpack[_t.StandardizationParameters]) -> None:
         if self._is_standardized:
-            warnings.warn("Signal is already standardized, skipping...", stacklevel=2)
+            logger.warning("Signal is already standardized. No action taken.")
             return
         window_size = kwargs.get("window_size", None)
         robust = kwargs.get("robust", False)
@@ -378,6 +392,12 @@ class Section:
     ) -> None:
         if peaks is None:
             peaks = self.peaks_local.to_numpy(allow_copy=False)
+        if peaks.shape[0] < 2:
+            logger.warning("The currently selected peak detection method finds less than 2 peaks. "
+                           "Please change the current methods parameters (if available), or use "
+                           "a different method.")
+            self.data = self.data.lazy().with_columns(pl.lit(np.nan).alias("rate_instant")).collect()
+            return
         if desired_length is None:
             desired_length = self.data.height
         inst_rate = signal_rate(peaks, self.sampling_rate, desired_length)
@@ -504,6 +524,8 @@ class Section:
             .collect()
         )
         self._manual_peak_edits.clear()
+        self._is_filtered = False
+        self._is_standardized = False
 
     def reset_peaks(self) -> None:
         self.data = (

@@ -11,7 +11,6 @@ pyarrow = "^16.0.0"
 pyopengl-accelerate = "^3.1.7"
 wfdb = "^4.1.2"
 polars = "^0.20.25"
-neurokit2 = "^0.2.7"
 pyopengl = "^3.1.7"
 mne = "^1.7.0"
 pywavelets = "^1.6.0"
@@ -23,7 +22,6 @@ xlsx2csv = "^0.8.2"
 pyinstaller = "^6.6.0"
 pyinstaller-hooks-contrib = "^2024.6"
 python-dateutil = "^2.9.0.post0"
-qtconsole = "^5.5.2"
 attrs = "^23.2.0"
 tables = "^3.9.2"
 numexpr = "^2.10.0"
@@ -31,40 +29,24 @@ numba = "^0.59.1"
 pyqtgraph = {git = "https://github.com/pyqtgraph/pyqtgraph.git", rev = "master"}
 statsmodels = "^0.14.2"
 ipykernel = "^6.29.4"
-superqt = "^0.6.5"
+ipython = "^8.24.0"
+superqt = "^0.6.6"
 pyside6 = "^6.7.0"
 loguru = "^0.7.2"
 polars-standardize-series = {path = "E:/dev-home/projects/rust/polars_standardize_series/target/wheels/polars_standardize_series-0.1.0-cp38-abi3-win_amd64.whl"}
+neurokit2 = {path = "E:/dev-home/github-forks/neurokit2/neuropsychology-NeuroKit-v0.2.8-4-g4fb624a/neuropsychology-NeuroKit-4fb624a"}
 
 [tool.poetry.group.dev.dependencies]
 sourcery = "^1.18.0"
 ruff = "^0.4.4"
-mypy = {extras = ["mypyc"], version = "^1.9.0"}
 python-dotenv = "^1.0.1"
 pytest = "^8.2.0"
 hypothesis = {extras = ["numpy"], version = "^6.100"}
 pyside6-examples = "^6.7.0"
 rich = {extras = ["jupyter"], version = "^13.7.1"}
 mkdocs-material = {git = "https://github.com/squidfunk/mkdocs-material.git", rev = "chore/update-to-mkdocs-1.6"}
-pyright = "^1.1.362"
-
-[tool.mypy]
-python_version = "3.12"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = true
-check_untyped_defs = true
-no_implicit_optional = true
-strict_optional = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-warn_no_return = true
-pretty = true
-follow_imports = "normal"
-disable_error_code = ["valid-type", "import-untyped"]
-plugins = [
-    "numpy.typing.mypy_plugin",
-]
+cython = "^3.0.10"
+pyright = "^1.1.363"
 
 [tool.ruff]
 target-version = "py312"
@@ -88,7 +70,6 @@ addopts = [
 pythonVersion = "3.12"
 reportMissingTypeStubs = false
 reportUnknownMemberType = false
-stubPath = "E:\\dev-home\\.config\\mypy\\python-type-stubs\\stubs"
 
 [build-system]
 requires = ["poetry-core"]

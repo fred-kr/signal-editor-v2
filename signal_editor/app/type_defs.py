@@ -6,6 +6,7 @@ import numpy.typing as npt
 
 from signal_editor.app.enum_defs import (
     FilterMethod,
+    NK2ECGPeakDetectionMethod,
     PeakDetectionMethod,
     PointSymbols,
     PreprocessPipeline,
@@ -47,6 +48,10 @@ PGPointSymbols = t.Union[PointSymbols, "QtGui.QPainterPath"]
 
 UpdatePeaksAction = t.Literal["add", "remove"]
 
+class FindPeaksKwargs(t.TypedDict, total=False):
+    min_peak_distance: int
+    n_std: float
+
 class MetadataUpdateDict(t.TypedDict, total=False):
     sampling_rate: int
     signal_column: str
@@ -69,6 +74,7 @@ class DefaultEditingSettings(t.TypedDict):
     search_around_click_radius: int
     minimum_peak_distance: int
     rate_computation_method: "RateComputationMethod"
+    allow_stacking_filters: bool
 
 
 class DefaultDataSettings(t.TypedDict):
@@ -257,13 +263,41 @@ class PeaksWFDBXQRS(t.TypedDict):
     peak_dir: WFDBPeakDirection
 
 
-class PeaksECGNeuroKit2(t.TypedDict):
+class NK2PeaksNeuroKit(t.TypedDict):
     smoothwindow: float
     avgwindow: float
     gradthreshweight: float
     minlenweight: float
     mindelay: float
-    correct_artifacts: bool
+
+
+# class NK2PeaksSSF(t.TypedDict):
+#     threshold: float
+#     before: float
+#     after: float
+
+
+class NK2PeaksGamboa(t.TypedDict):
+    tol: float
+
+
+# class NK2PeaksEmrich(t.TypedDict):
+#     window_seconds: float  # seconds
+#     window_overlap: float  # percentage (0-1)
+#     accelerated: bool
+
+
+class NK2PeaksPromac(t.TypedDict):
+    threshold: float
+    gaussian_sd: int  # milliseconds
+
+
+NK2PeakMethodParams = t.Union[NK2PeaksNeuroKit, NK2PeaksGamboa, NK2PeaksPromac]
+
+
+class PeaksECGNeuroKit2(t.TypedDict):
+    method: NK2ECGPeakDetectionMethod
+    params: t.Union[NK2PeakMethodParams, None]
 
 
 class PeaksPanTompkins(t.TypedDict):

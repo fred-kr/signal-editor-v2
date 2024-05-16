@@ -28,13 +28,16 @@ class PlotController(QtCore.QObject):
         super().__init__(parent)
 
         self._mw_ref = main_window
-        self._peak_search_radius_changed = False
-        self._line_click_width_changed = False
         self.regions: list[pg.LinearRegionItem] = []
         self._show_regions = False
         self._setup_plot_widgets()
         self._setup_plot_items()
         self._setup_plot_data_items()
+
+        settings = QtCore.QSettings()
+        self.search_around_click_radius: int = settings.value(
+            "Editing/search_around_click_radius", 20, type=int
+        )  # type: ignore
 
     def _setup_plot_widgets(self) -> None:
         widget_layout = QtWidgets.QVBoxLayout()
@@ -100,17 +103,20 @@ class PlotController(QtCore.QObject):
         self._setup_region_selector()
 
     def initialize_signal_curve(self, pen_color: _t.PGColor | None = None) -> None:
+        settings = QtCore.QSettings()
+
         if pen_color is None:
-            pen_color = QtCore.QSettings().value(  # type: ignore
+            pen_color = settings.value(  # type: ignore
                 "Plot/signal_line_color", "tomato", type=QtGui.QColor
             )
+        click_width = settings.value("Editing/click_width_signal_line", 20, type=int)
         signal = pg.PlotDataItem(
             pen=pen_color,
             skipFiniteCheck=True,
             autoDownsample=True,
             name="Signal",
-            clickable=True,
         )
+        signal.setCurveClickable(True, width=click_width)  # type: ignore
         signal.sigClicked.connect(self._on_curve_clicked)
         signal.sigPlotChanged.connect(self.set_view_limits)
         self.signal_curve = signal
@@ -366,26 +372,33 @@ class PlotController(QtCore.QObject):
         if x_data is None or y_data is None:
             return
 
-        scatter_search_radius = self._get_scatter_search_radius()
+        scatter_search_radius = self.search_around_click_radius
 
         left_index = np.searchsorted(x_data, click_x - scatter_search_radius, side="left")
         right_index = np.searchsorted(x_data, click_x + scatter_search_radius, side="right")
 
-        valid_x, valid_y = x_data[left_index:right_index], y_data[left_index:right_index]
+        valid_x = x_data[left_index:right_index]
+        valid_y = y_data[left_index:right_index]
 
-        closest_index_offset = np.argmin(np.abs(valid_x - click_x) + np.abs(valid_y - click_y))
-        closest_index = left_index + closest_index_offset
-        closest_x, closest_y = valid_x[closest_index_offset], valid_y[closest_index_offset]
+        # Find the index of the nearest extreme point to the click position
+        extreme_index = left_index + np.argmin(np.abs(valid_x - click_x))
+        extreme_value = valid_y[np.argmin(np.abs(valid_x - click_x))]
 
-        if closest_index in self.peak_scatter.data["x"]:
+        # Find the index of the nearest extreme point to the click position in the y direction
+        extreme_index_y = left_index + np.argmin(np.abs(valid_y - click_y))
+        extreme_value_y = valid_y[np.argmin(np.abs(valid_y - click_y))]
+
+        # Use the index of the nearest extreme point in the y direction if it is closer to the click position
+        if np.abs(extreme_value_y - click_y) < np.abs(extreme_value - click_y):
+            extreme_index = extreme_index_y
+            extreme_value = extreme_value_y
+
+        if extreme_index in self.peak_scatter.data["x"]:
             return
 
-        self.peak_scatter.addPoints(x=closest_x, y=closest_y)
-        self.sig_scatter_data_changed.emit("add", np.array([closest_x], dtype=np.int32))
-
-    def _get_scatter_search_radius(self) -> int:
-        settings = QtCore.QSettings()
-        return settings.value("Editing/search_around_click_radius", type=int)  # type: ignore
+        x_new, y_new = x_data[extreme_index], extreme_value
+        self.peak_scatter.addPoints(x=x_new, y=y_new)
+        self.sig_scatter_data_changed.emit("add", np.array([x_new], dtype=np.int32))
 
     @QtCore.Slot()
     def remove_peaks_in_selection(self) -> None:

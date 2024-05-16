@@ -295,8 +295,8 @@ class SettingsTree(QtWidgets.QTreeWidget):
             Plot=_t.DefaultPlotSettings(
                 background_color=pg.mkColor("black"),
                 foreground_color=pg.mkColor("lightgray"),
-                point_color=pg.mkColor("gold"),
-                signal_line_color=pg.mkColor("coral"),
+                point_color=pg.mkColor("darkgoldenrod"),
+                signal_line_color=pg.mkColor("tomato"),
                 rate_line_color=pg.mkColor("lightgreen"),
                 section_marker_color=pg.mkColor((100, 200, 150, 40)),
             ),
@@ -305,6 +305,7 @@ class SettingsTree(QtWidgets.QTreeWidget):
                 search_around_click_radius=20,
                 minimum_peak_distance=20,
                 rate_computation_method=RateComputationMethod.Instantaneous,
+                allow_stacking_filters=False,
             ),
             Data=_t.DefaultDataSettings(
                 sampling_rate=400,
@@ -332,6 +333,7 @@ class SettingsTree(QtWidgets.QTreeWidget):
             "search_around_click_radius": "The radius around the click in data coordinates to search for a potential peak",
             "minimum_peak_distance": "Sets the minimum allowed distance between two peaks when using any of the peak detection algorithms",
             "rate_computation_method": "Which method to use for computing the rate displayed in the lower plot on the editing page, either 'instantaneous' or 'rolling_window'",
+            "allow_stacking_filters": "Whether to allow applying multiple filters to the same signal",
             # "Data": "Settings related to input data",
             "sampling_rate": "The default sampling rate (in Hz) to use in cases where it can't be inferred or is not provided in the data itself (for example, EDF files usually have the sampling rate in the file header)",
             "txt_file_separator_character": "The character used to separate columns if reading from a '.txt' file",
@@ -656,7 +658,9 @@ class SettingsEditor(QtWidgets.QDialog):
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
-        self._type_handlers = {
+        self._type_handlers: dict[
+            str, t.Callable[[QtWidgets.QTreeWidgetItem], QtGui.QColor | str | int | float | None]
+        ] = {
             "QColor": self._handle_qcolor,
             "str": self._handle_str,
             "int": self._handle_int,
@@ -736,8 +740,7 @@ class SettingsEditor(QtWidgets.QDialog):
 
     @QtCore.Slot()
     def accept(self) -> None:
-        settings = QtCore.QSettings()
-        settings.sync()
+        self.settings_tree.refresh()
         super().accept()
 
     def get_color(self, initial: QtGui.QColor) -> QtGui.QColor | None:
@@ -792,15 +795,18 @@ class SettingsEditor(QtWidgets.QDialog):
         new_value = handler(item)
         if new_value is not None:
             self.sig_setting_changed.emit(item.text(0), new_value)
+            self.settings_tree.refresh()
 
-    def _handle_qcolor(self, item: QtWidgets.QTreeWidgetItem) -> None:
+    def _handle_qcolor(self, item: QtWidgets.QTreeWidgetItem) -> QtGui.QColor:
         new_value = self.get_color(item.data(2, QtCore.Qt.ItemDataRole.UserRole))
         if new_value is not None:
             item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
             item.setText(2, new_value.name())
             item.setBackground(2, new_value)
 
-    def _handle_str(self, item: QtWidgets.QTreeWidgetItem) -> None:
+        return new_value or item.data(2, QtCore.Qt.ItemDataRole.UserRole)
+
+    def _handle_str(self, item: QtWidgets.QTreeWidgetItem) -> str:
         setting_name = item.text(0)
         if setting_name in {"data_folder", "output_folder"}:
             if new_value := QtWidgets.QFileDialog.getExistingDirectory(
@@ -841,7 +847,9 @@ class SettingsEditor(QtWidgets.QDialog):
             item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
             item.setText(2, new_value)
 
-    def _handle_int(self, item: QtWidgets.QTreeWidgetItem) -> None:
+        return new_value
+
+    def _handle_int(self, item: QtWidgets.QTreeWidgetItem) -> int:
         setting_name = item.text(0)
         if setting_name in {
             "click_width_signal_line",
@@ -854,7 +862,9 @@ class SettingsEditor(QtWidgets.QDialog):
         item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
         item.setText(2, str(new_value))
 
-    def _handle_float(self, item: QtWidgets.QTreeWidgetItem) -> None:
+        return new_value
+
+    def _handle_float(self, item: QtWidgets.QTreeWidgetItem) -> float:
         setting_name = item.text(0)
         if setting_name == "sampling_rate":
             new_value = self.get_float(item.data(2, QtCore.Qt.ItemDataRole.UserRole), 1, 100_000)
@@ -864,7 +874,9 @@ class SettingsEditor(QtWidgets.QDialog):
         item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
         item.setText(2, str(new_value))
 
-    def _handle_bool(self, item: QtWidgets.QTreeWidgetItem) -> None:
+        return new_value
+
+    def _handle_bool(self, item: QtWidgets.QTreeWidgetItem) -> bool:
         options = ("True", "False")
         new_value, ok = QtWidgets.QInputDialog.getItem(
             self,
@@ -877,6 +889,8 @@ class SettingsEditor(QtWidgets.QDialog):
         if ok and new_value:
             item.setData(2, QtCore.Qt.ItemDataRole.UserRole, bool(new_value))
             item.setText(2, new_value)
+
+        return bool(new_value)
 
     def _handle_default(self, item: QtWidgets.QTreeWidgetItem) -> None:
         QtWidgets.QMessageBox.warning(

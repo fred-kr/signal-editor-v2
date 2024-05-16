@@ -22,7 +22,7 @@ from signal_editor.app.gui.main_window import MainWindow
 from signal_editor.app.utils import safe_disconnect, safe_multi_disconnect
 
 if t.TYPE_CHECKING:
-    from .app.models.metadata import QFileMetadata
+    from signal_editor.app.models.metadata import QFileMetadata
 
 
 class SignalEditor(QtWidgets.QApplication):
@@ -52,7 +52,10 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.action_close_file.triggered.connect(self.close_file)
         self.mw.btn_close_file.clicked.connect(self.close_file)
         self.mw.action_about_qt.triggered.connect(self.aboutQt)
-        self.mw.search_list_widget_recent_files.list_widget.itemDoubleClicked.connect(self._open_recent_file)
+        self.mw.search_list_widget_recent_files.list_widget.itemDoubleClicked.connect(
+            self._open_recent_file
+        )
+        self.mw.sig_table_refresh_requested.connect(self.refresh_data_view)
 
         self.mw.spin_box_sampling_rate_import_page.editingFinished.connect(
             self.update_sampling_rate
@@ -98,8 +101,11 @@ class SignalEditor(QtWidgets.QApplication):
             recent_files = []
         self.mw.search_list_widget_recent_files.clear()
         self.mw.search_list_widget_recent_files.addItems(recent_files)
+        # for i in range(self.mw.search_list_widget_recent_files.list_widget.count()):
+        #     item = self.mw.search_list_widget_recent_files.list_widget.item(i)
+        #     item.setSizeHint(QtCore.QSize(0, 28))
         return recent_files
-    
+
     @QtCore.Slot()
     def clear_peaks(self) -> None:
         self.plot.clear_peaks()
@@ -113,11 +119,7 @@ class SignalEditor(QtWidgets.QApplication):
         active_section = self.data.active_section
         left, right = int(rect.left()), int(rect.right())
         self.plot.remove_selection_rect()
-        peak_method: PeakDetectionMethod | None = (
-            self.mw.dock_peaks.enum_combo_peak_method.currentEnum()
-        )
-        if peak_method is None:
-            return
+        peak_method = PeakDetectionMethod(self.mw.dock_peaks.enum_combo_peak_method.currentEnum())
         peak_params = self.mw.dock_peaks.get_peak_detection_parameters(peak_method)
         edge_buffer = 10
         b_left, b_right = left + edge_buffer, right - edge_buffer
@@ -273,6 +275,10 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.table_view_import_data.setModel(self.data.active_section_model)
         self.mw.label_showing_data_table.setText(f"Showing: {section.section_id.pretty_name()}")
 
+    @QtCore.Slot()
+    def refresh_data_view(self) -> None:
+        self.data.active_section_model.set_dataframe(self.data.active_section.data)
+
     @QtCore.Slot(dict)
     def update_metadata(self, metadata_dict: _t.MetadataUpdateDict) -> None:
         sampling_rate = metadata_dict.get("sampling_rate", None)
@@ -390,7 +396,10 @@ class SignalEditor(QtWidgets.QApplication):
         settings.setValue("Internal/recent_files", self.recent_files)
         self.mw.search_list_widget_recent_files.list_widget.clear()
         self.mw.search_list_widget_recent_files.list_widget.addItems(self.recent_files)
-        
+        # for i in range(self.mw.search_list_widget_recent_files.list_widget.count()):
+        #     item = self.mw.search_list_widget_recent_files.list_widget.item(i)
+        #     item.setSizeHint(QtCore.QSize(0, 28))
+
     def _on_file_opened(self, file_path: str) -> None:
         self.mw.line_edit_active_file.setText(file_path)
 
@@ -408,7 +417,7 @@ class SignalEditor(QtWidgets.QApplication):
         file_path = item.text()
         self.close_file()
         self._on_file_opened(file_path)
-        
+
     @QtCore.Slot()
     def read_data(self) -> None:
         if self.data.has_data:
@@ -451,28 +460,32 @@ class SignalEditor(QtWidgets.QApplication):
     def _update_setting(self, name: str, value: QtGui.QColor | str | int | float | None) -> None:
         if value is None:
             return
-        match name:
-            case "background_color":
-                self.plot.set_background_color(value)
-            case "foreground_color":
-                self.plot.set_foreground_color(value)
-            case "point_color":
-                if self.plot.peak_scatter is not None:
-                    self.plot.peak_scatter.setBrush(value)
-            case "signal_line_color":
-                if self.plot.signal_curve is not None:
-                    self.plot.signal_curve.setPen(value)
-            case "rate_line_color":
-                if self.plot.rate_curve is not None:
-                    self.plot.rate_curve.setPen(value)
-            case "section_marker_color":
-                for r in self.plot.regions:
-                    r.setBrush(color=value)
-            case "float_visual_precision":
-                if isinstance(value, int):
-                    self.data.data_model.set_float_precision(value)
-            case _:
-                pass
+        logger.info(f"Setting changed: {name} -> {value}")
+        if name == "background_color":
+            self.plot.set_background_color(value)
+        elif name == "foreground_color":
+            self.plot.set_foreground_color(value)
+        elif name == "point_color":
+            if self.plot.peak_scatter is not None:
+                self.plot.peak_scatter.setBrush(value)
+        elif name == "signal_line_color":
+            if self.plot.signal_curve is not None:
+                self.plot.signal_curve.setPen(value)
+        elif name == "rate_line_color":
+            if self.plot.rate_curve is not None:
+                self.plot.rate_curve.setPen(value)
+        elif name == "section_marker_color":
+            for r in self.plot.regions:
+                r.setBrush(color=value)
+        elif name == "float_visual_precision":
+            if isinstance(value, int):
+                self.data.data_model.set_float_precision(value)
+        elif name == "click_width_signal_line":
+            if isinstance(value, int) and self.plot.signal_curve is not None:
+                self.plot.signal_curve.setCurveClickable(True, width=value)
+        elif name == "search_around_click_radius":
+            if isinstance(value, int):
+                self.plot.search_around_click_radius = value
 
     @QtCore.Slot()
     def apply_settings(self) -> None:

@@ -146,6 +146,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             "whats_this": QtGui.QIcon(":/icons/whats_this"),
             "confirm": QtGui.QIcon(":/icons/tick_mark"),
             "cancel": QtGui.QIcon(":/icons/cross"),
+            "refresh": QtGui.QIcon(":/icons/refresh"),
         }
 
     def _setup_widgets(self) -> None:
@@ -158,8 +159,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.table_view_import_data.horizontalHeader().setSectionResizeMode(
             QtWidgets.QHeaderView.ResizeMode.Stretch
         )
-        self.table_view_import_data.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
-        self.table_view_import_data.customContextMenuRequested.connect(self.show_data_view_context_menu)
+        self.table_view_import_data.setContextMenuPolicy(
+            QtCore.Qt.ContextMenuPolicy.CustomContextMenu
+        )
+        self.table_view_import_data.customContextMenuRequested.connect(
+            self.show_data_view_context_menu
+        )
         data_tree_widget = pg.DataTreeWidget(self.collapsible_frame)
         data_tree_widget.setSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding
@@ -170,6 +175,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.stackedWidget.setCurrentIndex(0)
         self.action_show_import_page.setChecked(True)
+
+        self.search_list_widget_recent_files.filter_widget.setPlaceholderText("Search Recent Files")
+        self.search_list_widget_recent_files.list_widget.setAlternatingRowColors(True)
+        self.search_list_widget_recent_files.list_widget.setSelectionMode(
+            QtWidgets.QAbstractItemView.SelectionMode.SingleSelection
+        )
+        self.search_list_widget_recent_files.list_widget.setSelectionBehavior(
+            QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows
+        )
+        self.search_list_widget_recent_files.list_widget.setSelectionRectVisible(True)
+        self.search_list_widget_recent_files.list_widget.setSpacing(2)
 
     def _setup_docks(self) -> None:
         dwa = QtCore.Qt.DockWidgetArea
@@ -269,7 +285,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         )
         self.menuView.addSeparator()
         self.menuView.addActions(
-            [self.dock_processing.toggleViewAction(), self.dock_peaks.toggleViewAction()]
+            [
+                self.dock_processing.toggleViewAction(),
+                self.dock_peaks.toggleViewAction(),
+            ]
         )
 
         self.menuEdit.insertActions(
@@ -348,9 +367,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_sections.btn_cancel.clicked.connect(self.action_cancel_section.trigger)
 
     @QtCore.Slot(QtCore.QPoint)
-    def show_data_view_context_menu(self, point: QtCore.QPoint) -> None:
-        menu = QtWidgets.QMenu(self)
-        menu.addAction()
+    def show_data_view_context_menu(self, pos: QtCore.QPoint) -> None:
+        menu = QtWidgets.QMenu(self.table_view_import_data)
+        menu.addAction("Refresh", self.sig_table_refresh_requested)
+        menu.exec(self.table_view_import_data.mapToGlobal(pos))
+
     @QtCore.Slot(int)
     def _on_page_changed(self, index: int) -> None:
         self.show_section_confirm_cancel(False)
@@ -432,7 +453,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         message: str,
         msg_log_level: int,
         plain_message: str,
-        threshold: LogLevel = LogLevel.ERROR,
+        threshold: LogLevel = LogLevel.WARNING,
     ) -> None:
         """
         Slot that listens for log messages and shows a QMessageBox if the message is above a certain

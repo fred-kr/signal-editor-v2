@@ -24,7 +24,8 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
         if not isinstance(sampling_rate, int) or sampling_rate <= 0:
             sampling_rate = 400
         freq_range = (0, sampling_rate // 2)
-        dbl_slider_lowcut = superqt.QLabeledDoubleSlider(QtCore.Qt.Orientation.Horizontal)
+
+        dbl_slider_lowcut = superqt.QLabeledDoubleSlider(QtCore.Qt.Orientation.Horizontal, self.grp_box_filter_parameters)
         dbl_slider_lowcut.setEdgeLabelMode(superqt.QLabeledDoubleSlider.EdgeLabelMode.LabelIsValue)
         dbl_slider_lowcut.setDecimals(1)
         dbl_slider_lowcut.setRange(*freq_range)
@@ -34,7 +35,7 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
             "Low-cut frequency", self.dbl_slider_lowcut
         )
 
-        dbl_slider_highcut = superqt.QLabeledDoubleSlider(QtCore.Qt.Orientation.Horizontal)
+        dbl_slider_highcut = superqt.QLabeledDoubleSlider(QtCore.Qt.Orientation.Horizontal, self.grp_box_filter_parameters)
         dbl_slider_highcut.setEdgeLabelMode(superqt.QLabeledDoubleSlider.EdgeLabelMode.LabelIsValue)
         dbl_slider_highcut.setDecimals(1)
         dbl_slider_highcut.setRange(*freq_range)
@@ -44,7 +45,7 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
             "High-cut frequency", self.dbl_slider_highcut
         )
 
-        slider_window_size_filter = superqt.QLabeledSlider(QtCore.Qt.Orientation.Horizontal)
+        slider_window_size_filter = superqt.QLabeledSlider(QtCore.Qt.Orientation.Horizontal, self.grp_box_filter_parameters)
         slider_window_size_filter.setEdgeLabelMode(
             superqt.QLabeledSlider.EdgeLabelMode.LabelIsValue
         )
@@ -65,13 +66,16 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
         self.combo_powerline = combo_powerline
         self.form_layout_grp_box_filter_parameters.addRow("Power line", self.combo_powerline)
 
-        slider_window_size_standardize = superqt.QLabeledSlider(QtCore.Qt.Orientation.Horizontal)
+        slider_window_size_standardize = superqt.QLabeledSlider(QtCore.Qt.Orientation.Horizontal, self.grp_box_standardize_rolling_window)
         slider_window_size_standardize.setEdgeLabelMode(
             superqt.QLabeledSlider.EdgeLabelMode.LabelIsValue
         )
 
         slider_window_size_standardize.setRange(3, 3_333)
         slider_window_size_standardize.setValue(300)
+        self.form_layout_standardize_roll_window.setRowWrapPolicy(
+            QtWidgets.QFormLayout.RowWrapPolicy.WrapAllRows
+        )
         self.form_layout_standardize_roll_window.setWidget(
             0, QtWidgets.QFormLayout.ItemRole.FieldRole, slider_window_size_standardize
         )
@@ -85,6 +89,10 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
 
         self._connect_qt_signals()
         self._set_filter_widget_states(self.enum_combo_filter_method.currentEnum())
+        self._set_frequency_slider_states(self.enum_combo_filter_type.currentEnum())    
+        self._set_rolling_window_checkbox_state(self.enum_combo_standardize_method.currentEnum())
+        self.update_frequency_sliders(sampling_rate)
+        self._restore_defaults()
 
     def _connect_qt_signals(self) -> None:
         self.btn_run_pipeline.clicked.connect(self._emit_pipeline_requested)
@@ -196,6 +204,7 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
 
     @QtCore.Slot(object)
     def _set_filter_widget_states(self, method_enum: FilterMethod) -> None:
+        method_enum = FilterMethod(method_enum)
         if method_enum in [
             FilterMethod.Butterworth,
             FilterMethod.ButterworthLegacy,
@@ -237,4 +246,3 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
             self.combo_powerline.setEnabled(False)
 
         self._set_frequency_slider_states(FilterType(self.enum_combo_filter_type.currentEnum()))
-        self._restore_defaults()

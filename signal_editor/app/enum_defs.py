@@ -63,9 +63,27 @@ class PeakDetectionMethod(enum.StrEnum):
     LocalMinima = "local_minima"
     PPGElgendi = "ppg_elgendi"
     WFDBXQRS = "wfdb_xqrs"
-    PanTompkins = "pantompkins"
+    # PanTompkins = "pantompkins"
     ECGNeuroKit2 = "neurokit"
 
+
+class NK2ECGPeakDetectionMethod(enum.StrEnum):
+    Default = "neurokit"
+    PanTompkins1985 = "pantompkins"
+    Nabian2018 = "nabian2018"
+    Gamboa2008 = "gamboa2008"
+    # Zong2003 = "zong2003"  # think this is the same as the method used in the `wfdb` package
+    Hamilton2002 = "hamilton2002"
+    Christov2004 = "christov2004"
+    Engzee2012 = "engzee2012"
+    Manikandan2012 = "manikandan2012"
+    Elgendi2010 = "elgendi2010"
+    Kalidas2017 = "kalidas2017"
+    Martinez2004 = "martinez2004"
+    Rodrigues2020 = "rodrigues2020"
+    # Emrich2023 = "emrich2023"
+    # SlopeSumFunction = "ssf"
+    All = "promac"
 
 class WFDBPeakDirection(enum.StrEnum):
     Up = "up"
@@ -138,5 +156,3 @@ class MouseButtons(enum.StrEnum):
     RightButtonWithControl = "right+control"
     MiddleButtonWithControl = "middle+control"
     Unknown = "unknown"
-
-
