@@ -20,26 +20,26 @@ from signal_editor.app.core.processing import (
     signal_rate,
 )
 from signal_editor.app.enum_defs import FilterMethod, PeakDetectionMethod, PreprocessPipeline
-from signal_editor.app.models.result_models import CompactSectionResult
+from signal_editor.app.models.result_models import CompactSectionResult, DetailedSectionResult
 from signal_editor.app.utils import format_long_sequence
 
 
 @dataclass(slots=True)
 class ProcessingParameters:
-    sampling_rate: int = field()
-    processing_pipeline: PreprocessPipeline = field(init=False)
-    filter_parameters: _t.SignalFilterParameters | None = field(init=False)
-    standardization_parameters: _t.StandardizationParameters | None = field(init=False)
+    sampling_rate: int
+    processing_pipeline: PreprocessPipeline = PreprocessPipeline.Custom
+    filter_parameters: _t.SignalFilterParameters | None = None
+    standardization_parameters: _t.StandardizationParameters | None = None
     peak_detection_method: PeakDetectionMethod = field(init=False)
     peak_detection_method_parameters: _t.PeakDetectionMethodParameters = field(init=False)
 
     def to_dict(self) -> _t.ProcessingParametersDict:
         return _t.ProcessingParametersDict(
             sampling_rate=self.sampling_rate,
-            processing_pipeline=self.processing_pipeline,
+            processing_pipeline=str(self.processing_pipeline),
             filter_parameters=self.filter_parameters,
             standardization_parameters=self.standardization_parameters,
-            peak_detection_method=self.peak_detection_method,
+            peak_detection_method=str(self.peak_detection_method),
             peak_detection_method_parameters=self.peak_detection_method_parameters,
         )
 
@@ -166,7 +166,7 @@ class Section:
             self.data.item(-1, "index"),
         )
 
-        self._processing_parameters = ProcessingParameters(self.sampling_rate)  # type: ignore
+        self._processing_parameters = ProcessingParameters(self.sampling_rate)
         self._manual_peak_edits = ManualPeakEdits()
 
     @property
@@ -223,6 +223,7 @@ class Section:
         with contextlib.suppress(Exception):
             peaks = self.peaks_local.to_numpy(allow_copy=False)
             self.calculate_rate(peaks)
+        self._processing_parameters.sampling_rate = sampling_rate
 
     def filter_signal(
         self, pipeline: PreprocessPipeline, **kwargs: t.Unpack[_t.SignalFilterParameters]
@@ -251,7 +252,7 @@ class Section:
             filter_params = {
                 "highcut": 8.0,
                 "lowcut": 0.5,
-                "method": FilterMethod.Butterworth,
+                "method": str(FilterMethod.Butterworth),
                 "order": 3,
                 "window_size": "default",
                 "powerline": 50,
@@ -262,7 +263,7 @@ class Section:
             filter_params = {
                 "highcut": None,
                 "lowcut": 0.5,
-                "method": FilterMethod.Butterworth,
+                "method": str(FilterMethod.Butterworth),
                 "order": 5,
                 "window_size": "default",
                 "powerline": pow_line,
@@ -393,10 +394,14 @@ class Section:
         if peaks is None:
             peaks = self.peaks_local.to_numpy(allow_copy=False)
         if peaks.shape[0] < 2:
-            logger.warning("The currently selected peak detection method finds less than 2 peaks. "
-                           "Please change the current methods parameters (if available), or use "
-                           "a different method.")
-            self.data = self.data.lazy().with_columns(pl.lit(np.nan).alias("rate_instant")).collect()
+            logger.warning(
+                "The currently selected peak detection method finds less than 2 peaks. "
+                "Please change the current methods parameters (if available), or use "
+                "a different method."
+            )
+            self.data = (
+                self.data.lazy().with_columns(pl.lit(np.nan).alias("rate_instant")).collect()
+            )
             return
         if desired_length is None:
             desired_length = self.data.height
@@ -477,7 +482,7 @@ class Section:
             .collect()
         )
 
-    def get_focused_result(self) -> CompactSectionResult:
+    def get_focused_result(self, info_column: str | None = None) -> CompactSectionResult:
         section_peaks = self.peaks_local
 
         if section_peaks.len() < 3:
@@ -491,14 +496,17 @@ class Section:
         global_time = global_peaks / sampling_rate
 
         peak_intervals = section_peaks.diff().fill_null(0)
-        temperature = self.data.get_column("temperature").gather(section_peaks)
+        if info_column in self.data.columns:
+            info_values = self.data.get_column("temperature").gather(section_peaks)
+        else:
+            info_values = None
 
         instantaneous_rate = pl.Series(
             "instantaneous_rate",
             signal_rate(section_peaks.to_numpy(allow_copy=False), sampling_rate),
             pl.Float64,
         )
-        roll_window = self.calculate_rolling_rate("section_index")
+        # roll_window = self.calculate_rolling_rate("section_index")
 
         return CompactSectionResult(
             peaks_global_index=global_peaks,
@@ -506,9 +514,25 @@ class Section:
             seconds_since_global_start=global_time,
             seconds_since_section_start=section_time,
             peak_intervals=peak_intervals,
-            instantaneous_rate=instantaneous_rate,
-            rolling_rate=roll_window,
-            temperature=temperature,
+            rate_instant=instantaneous_rate,
+            info_values=info_values,
+        )
+
+    def get_detailed_result(self, info_column: str | None = None) -> DetailedSectionResult:
+        metadata = self.get_metadata()
+        section_df = self.data
+        manual_edits = self._manual_peak_edits
+        compact_result = self.get_focused_result(info_column)
+        instant_rate = self.rate_instant
+        rolling_rate = self.calculate_rolling_rate().to_numpy()
+
+        return DetailedSectionResult(
+            metadata=metadata,
+            section_dataframe=section_df,
+            manual_peak_edits=manual_edits,
+            compact_result=compact_result,
+            rate_instant=instant_rate,
+            rate_rolling=rolling_rate,
         )
 
     def reset_signal(self) -> None:

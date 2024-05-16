@@ -1,15 +1,19 @@
+import datetime
 import functools
+import typing as t
 from pathlib import Path
 
 import mne.io
 import polars as pl
 from PySide6 import QtCore
 
+from signal_editor.app import type_defs as _t
 from signal_editor.app.core.file_io import detect_sampling_rate, read_edf
 from signal_editor.app.core.section import Section
 from signal_editor.app.enum_defs import TextFileSeparator
 from signal_editor.app.models.df_model import DataFrameModel
 from signal_editor.app.models.metadata import QFileMetadata
+from signal_editor.app.models.result_models import CompleteResult, SelectedFileMetadata
 from signal_editor.app.models.section_list_model import SectionListModel
 
 
@@ -261,3 +265,48 @@ class DataController(QtCore.QObject):
     def delete_section(self, idx: QtCore.QModelIndex) -> None:
         self.sections.remove_section(idx)
         self.set_active_section(self.base_section_index)
+
+    def get_complete_result(
+        self, **kwargs: t.Unpack[_t.MutableMetadataAttributes]
+    ) -> CompleteResult:
+        meas_date = kwargs.get("measured_date")
+        subject_id = kwargs.get("subject_id")
+        oxy_condition = kwargs.get("oxygen_condition")
+        optional_info: dict[str, str | datetime.datetime] = {}
+        if meas_date:
+            optional_info["meas_date"] = meas_date
+        if subject_id:
+            optional_info["subject_id"] = subject_id
+        if oxy_condition:
+            optional_info["oxygen_condition"] = oxy_condition
+
+        base_df = self.get_base_section().data
+
+        section_dfs = [section.data for section in self.sections.editable_sections]
+        combined_section_df = pl.concat(section_dfs)
+        global_df = base_df.lazy().update(
+            combined_section_df.lazy(), on=["index", self.metadata.signal_column], how="outer"
+        ).drop("section_index")
+
+        info_col = self.metadata.info_column
+        if info_col == "":
+            info_col = None
+        section_results = {
+            s.section_id: s.get_detailed_result(info_col) for s in self.sections.editable_sections
+        }
+
+        metadata = SelectedFileMetadata(
+            file_name=self.metadata.file_name,
+            file_format=str(self.metadata.file_format),
+            name_signal_column=self.metadata.signal_column,
+            sampling_rate=self.metadata.sampling_rate,
+            measured_date=meas_date,
+            subject_id=subject_id,
+            oxygen_condition=oxy_condition,
+        )
+
+        return CompleteResult(
+            metadata=metadata,
+            global_dataframe=global_df.collect(),
+            section_results=section_results,
+        )

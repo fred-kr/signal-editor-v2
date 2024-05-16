@@ -12,6 +12,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from signal_editor.app import type_defs as _t
 from signal_editor.app.controllers.data_controller import DataController
 from signal_editor.app.controllers.plot_controller import PlotController
+from signal_editor.app.core.file_io import write_hdf5
 from signal_editor.app.core.peak_detection import find_peaks
 from signal_editor.app.enum_defs import (
     PeakDetectionMethod,
@@ -52,6 +53,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.action_close_file.triggered.connect(self.close_file)
         self.mw.btn_close_file.clicked.connect(self.close_file)
         self.mw.action_about_qt.triggered.connect(self.aboutQt)
+        self.mw.dialog_export.sig_export_confirmed.connect(self.export_result)
         self.mw.search_list_widget_recent_files.list_widget.itemDoubleClicked.connect(
             self._open_recent_file
         )
@@ -396,9 +398,6 @@ class SignalEditor(QtWidgets.QApplication):
         settings.setValue("Internal/recent_files", self.recent_files)
         self.mw.search_list_widget_recent_files.list_widget.clear()
         self.mw.search_list_widget_recent_files.list_widget.addItems(self.recent_files)
-        # for i in range(self.mw.search_list_widget_recent_files.list_widget.count()):
-        #     item = self.mw.search_list_widget_recent_files.list_widget.item(i)
-        #     item.setSizeHint(QtCore.QSize(0, 28))
 
     def _on_file_opened(self, file_path: str) -> None:
         self.mw.line_edit_active_file.setText(file_path)
@@ -490,3 +489,20 @@ class SignalEditor(QtWidgets.QApplication):
     @QtCore.Slot()
     def apply_settings(self) -> None:
         self.plot.apply_settings()
+
+    @QtCore.Slot(dict)
+    def export_result(self, info_dict: _t.ExportInfoDict) -> None:
+        path = info_dict["out_path"]
+
+        result = self.data.get_complete_result(
+            measured_date=info_dict["measured_date"],
+            subject_id=info_dict["subject_id"],
+            oxygen_condition=info_dict["oxygen_condition"],
+        )
+        try:
+            write_hdf5(path, result)
+        except Exception as e:
+            logger.error(f"Error writing HDF5 file: {e}")
+            return
+        else:
+            logger.success(f"Result exported to {path}.")

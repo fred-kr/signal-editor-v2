@@ -1,5 +1,6 @@
 import enum
 
+
 class LogLevel(enum.IntEnum):
     DEBUG = 10
     INFO = 20
@@ -7,18 +8,28 @@ class LogLevel(enum.IntEnum):
     ERROR = 40
     CRITICAL = 50
     SUCCESS = 60
-    
+
+
 class RateComputationMethod(enum.StrEnum):
     Instantaneous = "instantaneous"
     RollingWindow = "rolling_window"
 
-    
+
 class TextFileSeparator(enum.StrEnum):
     Tab = "\t"
     Space = " "
     Comma = ","
     Semicolon = ";"
     Pipe = "|"
+
+
+class ExportFormatCompact(enum.StrEnum):
+    EXCEL = ".xlsx"
+    CSV = ".csv"
+
+
+class ExportFormatDetailed(enum.StrEnum):
+    HDF5 = ".hdf5"
 
 
 class FileFormat(enum.StrEnum):
@@ -29,7 +40,7 @@ class FileFormat(enum.StrEnum):
     FEATHER = ".feather"
     EDF = ".edf"
 
-    
+
 class FilterMethod(enum.StrEnum):
     Butterworth = "butterworth"
     ButterworthLegacy = "butterworth_ba"
@@ -84,6 +95,7 @@ class NK2ECGPeakDetectionMethod(enum.StrEnum):
     # Emrich2023 = "emrich2023"
     # SlopeSumFunction = "ssf"
     All = "promac"
+
 
 class WFDBPeakDirection(enum.StrEnum):
     Up = "up"

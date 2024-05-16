@@ -1,5 +1,6 @@
 import datetime
 import typing as t
+from pathlib import Path
 
 import numpy as np
 import numpy.typing as npt
@@ -7,9 +8,7 @@ import numpy.typing as npt
 from signal_editor.app.enum_defs import (
     FilterMethod,
     NK2ECGPeakDetectionMethod,
-    PeakDetectionMethod,
     PointSymbols,
-    PreprocessPipeline,
     StandardizationMethod,
     WFDBPeakDirection,
 )
@@ -48,9 +47,11 @@ PGPointSymbols = t.Union[PointSymbols, "QtGui.QPainterPath"]
 
 UpdatePeaksAction = t.Literal["add", "remove"]
 
+
 class FindPeaksKwargs(t.TypedDict, total=False):
     min_peak_distance: int
     n_std: float
+
 
 class MetadataUpdateDict(t.TypedDict, total=False):
     sampling_rate: int
@@ -110,7 +111,7 @@ class ReadFileKwargs(t.TypedDict, total=False):
 class SignalFilterParameters(t.TypedDict, total=False):
     lowcut: float | None
     highcut: float | None
-    method: FilterMethod
+    method: str
     order: int
     window_size: int | t.Literal["default"]
     powerline: int
@@ -271,16 +272,11 @@ class NK2PeaksNeuroKit(t.TypedDict):
     mindelay: float
 
 
-# class NK2PeaksSSF(t.TypedDict):
-#     threshold: float
-#     before: float
-#     after: float
-
-
 class NK2PeaksGamboa(t.TypedDict):
     tol: float
 
 
+# NOTE: Needs `ts2vg` package which currently doesnt work (py=3.12.3, windows)
 # class NK2PeaksEmrich(t.TypedDict):
 #     window_seconds: float  # seconds
 #     window_overlap: float  # percentage (0-1)
@@ -314,27 +310,28 @@ PeakDetectionMethodParameters = t.Union[
 ]
 
 
-class SelectedFileMetadataDict(t.TypedDict, total=False):
+class SelectedFileMetadataDict(t.TypedDict):
     file_name: str
     file_format: str
     name_signal_column: str
     sampling_rate: int
-    measured_date: str | datetime.datetime
+    measured_date: t.NotRequired[str | datetime.datetime | None]
+    subject_id: t.NotRequired[str | None]
+    oxygen_condition: t.NotRequired[str | None]
 
 
 class MutableMetadataAttributes(t.TypedDict, total=False):
-    sampling_rate: int
-    measured_date: str | datetime.datetime
-    subject_id: str
-    oxygen_condition: str
+    measured_date: str | datetime.datetime | None
+    subject_id: str | None
+    oxygen_condition: str | None
 
 
 class ProcessingParametersDict(t.TypedDict):
     sampling_rate: int
-    processing_pipeline: PreprocessPipeline
+    processing_pipeline: str
     filter_parameters: SignalFilterParameters | None
     standardization_parameters: StandardizationParameters | None
-    peak_detection_method: PeakDetectionMethod
+    peak_detection_method: str
     peak_detection_method_parameters: PeakDetectionMethodParameters
 
 
@@ -357,23 +354,28 @@ class CompactSectionResultDict(t.TypedDict):
     seconds_since_global_start: npt.NDArray[np.float64]
     seconds_since_section_start: npt.NDArray[np.float64]
     peak_intervals: npt.NDArray[np.int32]
-    temperature: npt.NDArray[np.float64]
-    instantaneous_rate: npt.NDArray[np.float64]
-    rolling_rate: npt.NDArray[np.float64]
+    rate_instant: npt.NDArray[np.float64]
+    # rolling_rate: npt.NDArray[np.float64]
+    info_values: t.NotRequired[npt.NDArray[np.float64]]
 
 
 class DetailedSectionResultDict(t.TypedDict):
     metadata: SectionMetadataDict
     section_dataframe: npt.NDArray[np.void]
     manual_peak_edits: ManualPeakEditsDict
-    compact_result: CompactSectionResultDict
-    rate_instantaneous: npt.NDArray[np.float64]
-    rate_rolling_window: npt.NDArray[np.float64]
+    compact_result: npt.NDArray[np.void]
+    rate_instant: npt.NDArray[np.float64]
+    rate_rolling: npt.NDArray[np.float64]
+
+
+class ExportInfoDict(t.TypedDict):
+    out_path: Path
+    subject_id: str | None
+    measured_date: str | None
+    oxygen_condition: str | None
 
 
 ##### Types for EDF files read with MNE-Python #####
-
-
 class EDFSubjectInfoDict(t.TypedDict, total=False):
     id: int
     his_id: str

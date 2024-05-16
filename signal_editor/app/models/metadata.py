@@ -97,3 +97,5 @@ class QFileMetadata(QtCore.QObject):
             "info_column": self.info_column,
             "column_names": self.column_names,
         }
+
+

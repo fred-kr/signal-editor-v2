@@ -6,12 +6,13 @@ from pathlib import Path
 
 import dateutil.parser as dt_parser
 import mne.io
-import numpy as np
 import polars as pl
 import polars.selectors as cs
+import tables as tb
 from loguru import logger
 
-from signal_editor.app.enum_defs import OxygenCondition
+from signal_editor.app.enum_defs import OxygenCondition, PeakDetectionMethod
+from signal_editor.app.models.result_models import CompleteResult
 
 
 def parse_file_name(
@@ -273,3 +274,198 @@ def read_edf(
             # Then remove that many rows from the end of the column
 
     return out.with_row_index(offset=start)
+
+
+def write_hdf5(file_path: Path, data: CompleteResult) -> None:
+    fp = file_path.resolve().as_posix()
+    res_dict = data.to_dict()
+    logger.info(f"Writing results to HDF5 file: {fp}")
+
+    with tb.open_file(fp, "w", title=f"Results_{file_path.stem}") as h5f:
+        # Metadata
+        logger.info("Writing metadata to HDF5 file...")
+        metadata = res_dict["metadata"]
+        for k, v in metadata.items():
+            h5f.set_node_attr(h5f.root, k, v)
+        logger.info("Metadata written successfully.")
+
+        # Global DF
+        logger.info("Writing global DataFrame to HDF5 file...")
+        global_df = res_dict["global_dataframe"]
+        h5f.create_table(
+            h5f.root,
+            name="global_dataframe",
+            description=global_df,
+            title="Global DataFrame",
+            expectedrows=global_df.shape[0],
+        )
+        logger.info("Global DataFrame written successfully.")
+
+        # Section results
+        logger.info("Writing section results to HDF5 file...")
+        section_res = res_dict["section_results"]
+        h5f.create_group(h5f.root, "focused_section_results", title="Focused Section Results")
+        h5f.create_group(h5f.root, "complete_section_results", title="Complete Section Results")
+        for section_id, detailed_result in section_res.items():
+            # Focused results
+            focused_arr = detailed_result["compact_result"]
+            logger.info(f"Writing focused result for section {section_id} to HDF5 file...")
+            h5f.create_table(
+                "/focused_section_results",
+                name=f"focused_result_{section_id}",
+                description=focused_arr,
+                title=f"Focused Result ({section_id})",
+                expectedrows=focused_arr.shape[0],
+            )
+            logger.info(f"Focused result for section {section_id} written successfully.")
+
+            # Complete results
+            logger.info(f"Writing complete result for section {section_id} to HDF5 file...")
+            h5f.create_group(
+                "/complete_section_results",
+                name=f"complete_result_{section_id}",
+                title=f"Complete Result ({section_id})",
+            )
+            complete_arr = detailed_result["section_dataframe"]
+            h5f.create_table(
+                f"/complete_section_results/complete_result_{section_id}",
+                name="section_dataframe",
+                description=complete_arr,
+                title=f"DataFrame ({section_id})",
+                expectedrows=complete_arr.shape[0],
+            )
+            logger.info(f"Complete result for section {section_id} written successfully.")
+
+            # Peaks
+            logger.info(f"Writing peaks for section {section_id} to HDF5 file...")
+            h5f.create_group(
+                f"/complete_section_results/complete_result_{section_id}",
+                name="peaks",
+                title="Peaks",
+            )
+            h5f.create_array(
+                f"/complete_section_results/complete_result_{section_id}/peaks",
+                name="peak_indices_section",
+                obj=focused_arr["peaks_section_index"],
+                title="Peak Indices (section)",
+            )
+            logger.info("Peaks (section) written successfully.")
+            h5f.create_array(
+                f"/complete_section_results/complete_result_{section_id}/peaks",
+                name="peak_indices_global",
+                obj=focused_arr["peaks_global_index"],
+                title="Peak Indices (global)",
+            )
+            logger.info("Peaks (global) written successfully.")
+            h5f.create_array(
+                f"/complete_section_results/complete_result_{section_id}/peaks",
+                name="manually_added_peak_indices",
+                obj=detailed_result["manual_peak_edits"]["added"],
+                title="Manually added (section)",
+            )
+            logger.info("Manually added peaks written successfully.")
+            h5f.create_array(
+                f"/complete_section_results/complete_result_{section_id}/peaks",
+                name="manually_removed_peak_indices",
+                obj=detailed_result["manual_peak_edits"]["removed"],
+                title="Manually removed (section)",
+            )
+            logger.info("Manually removed peaks written successfully.")
+
+            # Rates
+            logger.info(f"Writing rates for section {section_id} to HDF5 file...")
+            h5f.create_group(
+                f"/complete_section_results/complete_result_{section_id}",
+                name="rate",
+                title="Calculated rate",
+            )
+            h5f.create_array(
+                f"/complete_section_results/complete_result_{section_id}/rate",
+                name="instantaneous",
+                obj=detailed_result["rate_instant"],
+                title="Instantaneous (interpolated)",
+            )
+            logger.info("Instantaneous rate written successfully.")
+            h5f.create_array(
+                f"/complete_section_results/complete_result_{section_id}/rate",
+                name="rolling",
+                obj=detailed_result["rate_rolling"],
+                title="Rolling (window=60s, every=10s)",
+            )
+            logger.info("Rolling rate written successfully.")
+
+            # Processing parameters
+            logger.info(f"Writing processing parameters for section {section_id} to HDF5 file...")
+            h5f.create_group(
+                f"/complete_section_results/complete_result_{section_id}",
+                name="processing_parameters",
+                title=f"Processing Parameters ({section_id})",
+            )
+            h5f.set_node_attr(
+                f"/complete_section_results/complete_result_{section_id}/processing_parameters",
+                attrname="sampling_rate",
+                attrvalue=detailed_result["metadata"]["sampling_rate"],
+            )
+            h5f.set_node_attr(
+                f"/complete_section_results/complete_result_{section_id}/processing_parameters",
+                attrname="pipeline",
+                attrvalue=detailed_result["metadata"]["processing_parameters"][
+                    "processing_pipeline"
+                ],
+            )
+            # Filter parameters
+            filter_params = detailed_result["metadata"]["processing_parameters"][
+                "filter_parameters"
+            ] or {"attribute_name": "unknown"}
+            h5f.create_group(
+                f"/complete_section_results/complete_result_{section_id}/processing_parameters",
+                name="filter_parameters",
+                title="Filter Parameters",
+            )
+            for filt_param, filt_val in filter_params.items():
+                h5f.set_node_attr(
+                    f"/complete_section_results/complete_result_{section_id}/processing_parameters/filter_parameters",
+                    attrname=filt_param,
+                    attrvalue=filt_val,
+                )
+
+            # Standardize parameters
+            std_params = detailed_result["metadata"]["processing_parameters"]["standardization_parameters"] or {"attribute_name": "unknown"}
+            h5f.create_group(
+                f"/complete_section_results/complete_result_{section_id}/processing_parameters",
+                name="standardize_parameters",
+                title="Standardize Parameters",
+            )
+            for std_param, std_val in std_params.items():
+                h5f.set_node_attr(
+                    f"/complete_section_results/complete_result_{section_id}/processing_parameters/standardize_parameters",
+                    attrname=std_param,
+                    attrvalue=std_val,
+                )
+
+            # Peak detection parameters
+            peak_method = detailed_result["metadata"]["processing_parameters"][
+                "peak_detection_method"
+            ]
+            peak_params = detailed_result["metadata"]["processing_parameters"][
+                "peak_detection_method_parameters"
+            ]
+            if peak_method == PeakDetectionMethod.ECGNeuroKit2:
+                peak_method = f"{peak_method}_{peak_params.get("method", "unknown")}"
+                peak_params = peak_params.get("params") or {"attribute_name": "unknown"}
+            h5f.create_group(
+                f"/complete_section_results/complete_result_{section_id}/processing_parameters",
+                name="peak_detection_parameters",
+                title="Peak Detection Parameters",
+            )
+            h5f.set_node_attr(
+                f"/complete_section_results/complete_result_{section_id}/processing_parameters/peak_detection_parameters",
+                attrname="method",
+                attrvalue=peak_method,
+            )
+            for peak_param, peak_val in peak_params.items():
+                h5f.set_node_attr(
+                    f"/complete_section_results/complete_result_{section_id}/processing_parameters/peak_detection_parameters",
+                    attrname=peak_param,
+                    attrvalue=peak_val,
+                )
