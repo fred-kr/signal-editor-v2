@@ -112,19 +112,3 @@ class CompleteResult:
             global_dataframe=self.global_dataframe.to_numpy(structured=True),
             section_results=section_results,
         )
-
-
-# @dataclass(slots=True, frozen=True, repr=True)
-# class CompleteResult:
-#     metadata: "QFileMetadata" = field()
-#     global_dataframe: pl.DataFrame = field()
-#     section_results: dict["SectionID", DetailedSectionResult] = field()
-
-#     def to_dict(self) -> _t.CompleteResultDict:
-#         section_results = {k: v.to_dict() for k, v in self.section_results.items()}
-
-#         return _t.CompleteResultDict(
-#             metadata=self.metadata.to_dict(),
-#             global_dataframe=self.global_dataframe.to_numpy(structured=True),
-#             section_results=section_results,
-#         )

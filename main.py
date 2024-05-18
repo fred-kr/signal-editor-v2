@@ -8,23 +8,23 @@ if __name__ == "__main__":
     multiprocessing.freeze_support()  # This is needed for PyInstaller to work
     import argparse
     import os
+
     import sys
 
     import polars as pl
+    import PySide6  # type: ignore # noqa: F401
     import pyqtgraph as pg
-    # import qdarkstyle
-
-    from PySide6 import QtWidgets
     from loguru import logger
+
+    # import qdarkstyle
+    from PySide6 import QtWidgets
 
     from signal_editor.se_app import SignalEditor
 
     parser = argparse.ArgumentParser(description="Signal Editor")
     parser.add_argument("--debug", action="store_true", help="Enable debug mode")
     parser.add_argument("--no-opengl", action="store_false", help="Don't use OpenGL for rendering")
-    parser.add_argument(
-        "-c", "--enable-console", action="store_true", help="Enable Jupyter console"
-    )
+    parser.add_argument("-c", "--console", action="store_true", help="Enable Jupyter console")
     args = parser.parse_args()
 
     # os.environ["QT_LOGGING_RULES"] = "qt.pyside.libpyside.warning=true"
@@ -34,6 +34,9 @@ if __name__ == "__main__":
         logger.remove()
 
     use_opengl = args.no_opengl
+
+    # Check if running from executable (production) or via python script (development)
+    os.environ["DEV"] = "1" if getattr(sys, "frozen", False) else "0"
 
     pg.setConfigOptions(
         useOpenGL=use_opengl,

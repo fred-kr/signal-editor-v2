@@ -653,7 +653,7 @@ class SettingsTree(QtWidgets.QTreeWidget):
             self.delete_item(parent, new_index)
 
 
-class SettingsEditor(QtWidgets.QDialog):
+class SettingsDialog(QtWidgets.QDialog):
     sig_setting_changed = QtCore.Signal(str, object)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:

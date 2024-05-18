@@ -131,6 +131,8 @@ class DataFrameModel(QtCore.QAbstractTableModel):
                     return str(value)
             elif value is None:
                 return ""
+            elif isinstance(value, str) and value.lower() == "nan":
+                return "NaN"
             else:
                 return str(value)
         elif role == QtCore.Qt.ItemDataRole.UserRole:

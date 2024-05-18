@@ -26,6 +26,13 @@ if t.TYPE_CHECKING:
     from signal_editor.app.models.metadata import QFileMetadata
 
 
+# class ConsoleWorker(QtCore.QRunnable):
+    
+#     @QtCore.Slot()
+#     def run(self) -> None:
+#         pass
+
+    
 class SignalEditor(QtWidgets.QApplication):
     sig_peaks_updated: t.ClassVar[QtCore.Signal] = QtCore.Signal()
 
@@ -36,17 +43,20 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw = MainWindow()
         self.data = DataController(self)
         self.plot = PlotController(self, self.mw)
+
         self.recent_files = self._retrieve_recent_files()
+
+        # self.threadpool = QtCore.QThreadPool()
 
         self._connect_signals()
 
     def _connect_signals(self) -> None:
         self.sig_peaks_updated.connect(self.refresh_peak_data)
 
-        self.mw.settings_editor.sig_setting_changed.connect(self._update_setting)
+        self.mw.dialog_settings.sig_setting_changed.connect(self._update_setting)
         self.mw.action_open_file.triggered.connect(self.open_file)
         self.mw.action_edit_metadata.triggered.connect(lambda: self.show_metadata_dialog([]))
-        self.mw.settings_editor.finished.connect(self.apply_settings)
+        self.mw.dialog_settings.finished.connect(self.apply_settings)
         self.mw.btn_load_data.clicked.connect(self.read_data)
         self.mw.dialog_meta.sig_property_has_changed.connect(self.update_metadata)
         self.mw.btn_open_file.clicked.connect(self.open_file)
@@ -98,7 +108,7 @@ class SignalEditor(QtWidgets.QApplication):
 
     def _retrieve_recent_files(self) -> list[str]:
         settings = QtCore.QSettings()
-        recent_files: list[str] | None = settings.value("Internal/recent_files", None)
+        recent_files: list[str] | None = settings.value("Internal/recent_files", None)  # type: ignore
         if recent_files is None:
             recent_files = []
         self.mw.search_list_widget_recent_files.clear()

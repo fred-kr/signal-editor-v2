@@ -2,18 +2,50 @@ import os
 import typing as t
 from pathlib import Path
 
+from pyqtgraph.console import ConsoleWidget
 import pyqtgraph as pg
 from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from signal_editor.app.enum_defs import ExportFormatCompact, ExportFormatDetailed, LogLevel
+from signal_editor.app.gui.widgets.console import JediConsoleWidget
 from signal_editor.app.gui.widgets.log_viewer import StatusMessageDock
 from signal_editor.app.gui.widgets.peak_detection_inputs import PeakDetectionDock
 from signal_editor.app.gui.widgets.processing_inputs import ProcessingInputsDock
-from signal_editor.app.gui.widgets.settings_editor import SettingsEditor
+from signal_editor.app.gui.widgets.settings_editor import SettingsDialog
 from signal_editor.ui.ui_dialog_export_result import Ui_ExportDialog
 from signal_editor.ui.ui_dialog_metadata import Ui_MetadataDialog
 from signal_editor.ui.ui_main_window import Ui_MainWindow
+
+
+class ConsoleDock(QtWidgets.QDockWidget):
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setVisible(False)
+        self.setObjectName("DockWidgetConsole")
+        self.setFloating(True)
+        self.console = ConsoleWidget(self, namespace={"mw": parent}, editor="code-insiders --reuse-window --goto {fileName}:{lineNum}")
+
+        self.setWidget(self.console)
+        self.widget().show()
+
+    # def create_console(
+    #     self,
+    #     namespace: dict[str, object] | None = None,
+    #     text: str | None = None,
+    #     editor: str | None = None,
+    # ) -> None:
+    #     if namespace is None:
+    #         namespace = {}
+    #     if editor is None and os.environ.get("DEV") == "1":
+    #         editor = "code-insiders --reuse-window --goto {fileName}:{lineNum}"
+    #     self.console = ConsoleWidget(
+    #             namespace=namespace,
+    #             text=text,
+    #             editor=editor,
+    #     )
+    #     self.setWidget(self.console)
+        
 
 
 class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
@@ -57,7 +89,7 @@ class ExportDialog(QtWidgets.QDialog, Ui_ExportDialog):
 
         self._initialize_widgets()
         self._connect_signals()
-        self.combo_box_result_type.setCurrentIndex(0)
+        self._update_export_format("Detailed")
 
     def _initialize_widgets(self) -> None:
         self.collapsible_extra_metadata.setText("Additional Details")
@@ -89,8 +121,12 @@ class ExportDialog(QtWidgets.QDialog, Ui_ExportDialog):
     def _update_export_format(self, result_type: str) -> None:
         if result_type == "Compact":
             self.enum_combo_export_format.setEnumClass(ExportFormatCompact)
+            self.collapsible_extra_metadata.collapse()
+            self.collapsible_extra_metadata.setLocked(True)
         elif result_type == "Detailed":
             self.enum_combo_export_format.setEnumClass(ExportFormatDetailed)
+            self.collapsible_extra_metadata.setLocked(False)
+            self.collapsible_extra_metadata.expand()
 
     @QtCore.Slot()
     def _browse_output_dir(self) -> None:
@@ -248,7 +284,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _setup_widgets(self) -> None:
         self.dialog_meta = MetadataDialog(self)
-        self.settings_editor = SettingsEditor(self)
+        self.dialog_settings = SettingsDialog(self)
         self.dialog_export = ExportDialog(self)
 
         self.table_view_import_data.horizontalHeader().setDefaultAlignment(
@@ -304,6 +340,20 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.addDockWidget(dwa.RightDockWidgetArea, dock_peaks)
         self.dock_peaks = dock_peaks
 
+        dock_console = ConsoleDock(self)
+        dock_console.setVisible(False)
+        self.addDockWidget(dwa.BottomDockWidgetArea, dock_console)
+        self.dock_console = dock_console
+        # ns: dict[str, object] = {
+            # "mw": self,
+            # "qtc": QtCore,
+            # "qtg": QtGui,
+            # "qtw": QtWidgets,
+        # }
+        # text = "Console\n\n" "Type help() in the console to see the available commands.\n"
+        # self.dock_console.create_console(namespace=ns, text=text)
+        # self.dock_console.console.show()
+
     def _setup_actions(self) -> None:
         self.action_toggle_whats_this_mode = QtWidgets.QWhatsThis().createAction(self)
         self.action_toggle_whats_this_mode.setIcon(self._icons["whats_this"])
@@ -319,7 +369,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             ],
             "result": [],
             "export": [self.action_export_result],
-            "info": [],
+            "info": [self.dock_console.toggleViewAction()],
             "help": [
                 self.action_show_user_guide,
                 self.action_toggle_whats_this_mode,
@@ -386,8 +436,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             [
                 self.dock_processing.toggleViewAction(),
                 self.dock_peaks.toggleViewAction(),
+                self.dock_console.toggleViewAction(),
             ]
         )
+        self.menuView.insertSeparator(self.dock_console.toggleViewAction())
 
         self.menuEdit.insertActions(
             self.action_show_section_overview,
@@ -429,7 +481,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             lambda: self.stackedWidget.setCurrentWidget(self.stacked_page_test)
         )
 
-        self.action_show_settings.triggered.connect(self.show_settings)
+        self.action_show_settings.triggered.connect(self.show_settings_dialog)
         self.action_delete_section.triggered.connect(
             self.dock_sections.list_view.emit_delete_current_request
         )
@@ -468,9 +520,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @QtCore.Slot(QtCore.QPoint)
     def show_data_view_context_menu(self, pos: QtCore.QPoint) -> None:
-        menu = QtWidgets.QMenu(self.table_view_import_data)
+        menu = QtWidgets.QMenu(self)
         menu.addAction("Refresh", self.sig_table_refresh_requested.emit)
-        menu.exec(self.table_view_import_data.viewport().mapToGlobal(pos))
+        menu.exec(self.mapToGlobal(pos))
 
     @QtCore.Slot(int)
     def _on_page_changed(self, index: int) -> None:
@@ -505,7 +557,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         settings = QtCore.QSettings()
         settings.beginGroup("MainWindow")
         settings.setValue("geometry", self.saveGeometry())
-        settings.setValue("state", self.saveState())
+        # settings.setValue("state", self.saveState())
         settings.endGroup()
         settings.sync()
 
@@ -515,17 +567,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.restoreGeometry(
             settings.value("geometry", QtCore.QByteArray(), type=QtCore.QByteArray)  # type: ignore
         )
-        self.restoreState(settings.value("state", QtCore.QByteArray(), type=QtCore.QByteArray))  # type: ignore
+        # self.restoreState(settings.value("state", QtCore.QByteArray(), type=QtCore.QByteArray))  # type: ignore
         settings.endGroup()
 
     @QtCore.Slot()
-    def show_settings(self) -> None:
-        self.settings_editor.open()
+    def show_settings_dialog(self) -> None:
+        self.dialog_settings.open()
         settings = QtCore.QSettings()
         initial_setting_state = {k: settings.value(k) for k in settings.allKeys()}
-        self.settings_editor.rejected.connect(lambda: self._restore_settings(initial_setting_state))
-        self.settings_editor.accepted.connect(self.settings_editor.settings_tree.refresh)
-        self.settings_editor.settings_tree.set_settings_object(settings)
+        self.dialog_settings.rejected.connect(lambda: self._restore_settings(initial_setting_state))
+        self.dialog_settings.accepted.connect(self.dialog_settings.settings_tree.refresh)
+        self.dialog_settings.settings_tree.set_settings_object(settings)
 
     @QtCore.Slot(dict)
     def _restore_settings(self, initial_setting_state: dict[str, t.Any]) -> None:
@@ -534,7 +586,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         for k, v in initial_setting_state.items():
             if v != settings.value(k):
                 settings.setValue(k, v)
-        self.settings_editor.settings_tree.refresh()
+        self.dialog_settings.settings_tree.refresh()
 
     @QtCore.Slot()
     def show_export_dialog(self) -> None:
@@ -548,12 +600,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.write_settings()
-        if self.settings_editor.isVisible():
-            self.settings_editor.done(QtWidgets.QDialog.DialogCode.Rejected)
+        if self.dialog_settings.isVisible():
+            self.dialog_settings.done(QtWidgets.QDialog.DialogCode.Rejected)
         self.dock_status_log.close()
         self.dock_processing.close()
         self.dock_peaks.close()
         self.dock_sections.close()
+        self.dock_console.close()
         return super().closeEvent(event)
 
     @QtCore.Slot(str, int, str)

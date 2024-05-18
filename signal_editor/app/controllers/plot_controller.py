@@ -72,7 +72,7 @@ class PlotController(QtCore.QObject):
         self.set_background_color(settings.value("Plot/background_color"))
         self.set_foreground_color(settings.value("Plot/foreground_color"))
 
-    def _setup_region_selector(self):
+    def _setup_region_selector(self) -> None:
         settings = QtCore.QSettings()
         brush_col: QtGui.QColor = settings.value("Plot/section_marker_color", type=QtGui.QColor)  # type: ignore
         hover_brush_col = brush_col
@@ -90,7 +90,10 @@ class PlotController(QtCore.QObject):
 
         self.pw_main.addItem(self.region_selector)
 
-    def remove_region_selector(self):
+    def remove_region_selector(self) -> None:
+        """
+        Remove the region selector from the main plot widget.
+        """        
         if self.region_selector:
             self.pw_main.removeItem(self.region_selector)
             self.region_selector.setParent(None)
@@ -103,6 +106,14 @@ class PlotController(QtCore.QObject):
         self._setup_region_selector()
 
     def initialize_signal_curve(self, pen_color: _t.PGColor | None = None) -> None:
+        """
+        Create the PlotDataItem representing the signal curve.
+
+        Parameters
+        ----------
+        pen_color : 
+            The color of the pen used to draw the signal curve, by default None
+        """        
         settings = QtCore.QSettings()
 
         if pen_color is None:
@@ -299,9 +310,7 @@ class PlotController(QtCore.QObject):
             return
         if clear:
             self.signal_curve.clear()
-            if self.peak_scatter is not None and self.rate_curve is not None:
-                self.peak_scatter.clear()
-                self.rate_curve.clear()
+            self.clear_peaks()
 
         self.signal_curve.setData(y_data)
 
@@ -417,10 +426,6 @@ class PlotController(QtCore.QObject):
         self.sig_scatter_data_changed.emit("remove", scatter_x[~mask].astype(np.int32))
         vb.mapped_selection_rect = None
         vb.selection_box = None
-
-    @QtCore.Slot(object)
-    def _on_scatter_changed(self, sender: CustomScatterPlotItem) -> None:
-        self.sig_scatter_data_changed.emit("n", sender)
 
     def get_selection_area(self) -> QtCore.QRectF | None:
         return self.pw_main.plotItem.vb.mapped_selection_rect  # type: ignore
