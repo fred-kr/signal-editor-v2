@@ -1,3 +1,7 @@
+"""
+Default values input widgets.
+"""
+
 from signal_editor.app.enum_defs import WFDBPeakDirection
 
 PEAK_DETECTION = {

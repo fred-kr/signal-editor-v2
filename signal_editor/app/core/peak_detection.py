@@ -12,13 +12,49 @@ from signal_editor.app import type_defs as _t
 from signal_editor.app.enum_defs import PeakDetectionMethod, SmoothingKernels, WFDBPeakDirection
 
 
+def _fit_loess(
+    y: npt.NDArray[np.float64],
+    x: npt.NDArray[np.float64] | None = None,
+    alpha: float = 0.75,
+    order: int = 2,
+) -> npt.NDArray[np.float64]:
+    if x is None:
+        x = np.linspace(0, 100, len(y))
+    if order not in (1, 2):
+        raise ValueError("order must be 1 or 2")
+    if not 0 < alpha <= 1:
+        raise ValueError("alpha must be in the range (0, 1]")
+    if len(x) != len(y):
+        raise ValueError("x and y must have the same length")
+
+    n = len(x)
+    span = int(np.ceil(alpha * n))
+    y_predicted = np.zeros(n)
+
+    for i, val in enumerate(x):
+        distances = np.abs(x - val)
+        nearest_indices = np.argsort(distances)[:span]
+        nx, ny = x[nearest_indices], y[nearest_indices]
+        weights = (1 - (distances[nearest_indices] / distances[nearest_indices][-1]) ** 3) ** 3
+
+        A = np.vander(nx, N=order + 1)
+        W = np.diag(weights)
+        V = A.T @ W @ A
+        Y = A.T @ W @ ny
+        Q, R = np.linalg.qr(V)
+        p = np.linalg.solve(R, Q.T @ Y)
+
+        y_predicted[i] = np.polyval(p, val)
+
+    return y_predicted
+
+
 def _signal_smoothing_median(
     sig: npt.NDArray[np.float64], size: int = 5
 ) -> npt.NDArray[np.float64]:
     if size % 2 == 0:
         size += 1
     return ndimage.median_filter(sig, size=size)
-    # return signal.medfilt(sig, kernel_size=size)
 
 
 def _signal_smoothing(
@@ -46,7 +82,7 @@ def _signal_smooth(
         raise ValueError(f"Size must be between 1 and {length}")
 
     if method == "loess":
-        smoothed, _ = nk.fit_loess(sig, alpha=alpha)
+        smoothed = _fit_loess(sig, alpha=alpha)
     elif method == "convolution":
         if kernel == SmoothingKernels.BOXCAR:
             smoothed = ndimage.uniform_filter1d(sig, size=size, mode="nearest")
@@ -172,11 +208,10 @@ def _find_peaks_local_min(
 def find_extrema(
     sig: npt.NDArray[np.float64], search_radius: int, direction: t.Literal["up", "down"]
 ) -> npt.NDArray[np.int32]:
-    match direction:
-        case "up":
-            peaks = _find_peaks_local_max(sig, search_radius)
-        case "down":
-            peaks = _find_peaks_local_min(sig, search_radius)
+    if direction == "up":
+        peaks = _find_peaks_local_max(sig, search_radius)
+    else:
+        peaks = _find_peaks_local_min(sig, search_radius)
 
     settings = QtCore.QSettings()
 
@@ -387,11 +422,11 @@ def _find_peaks_nk_ecg(
     params = method_parameters["params"]
     if params is None:
         params = {}
-    
+
     return nk.ecg_findpeaks(
         ecg_cleaned=sig,
         sampling_rate=sampling_rate,
         method=nk_method,
         show=False,
         **params,
-    )["ECG_R_Peaks"]
+    )["ECG_R_Peaks"] # type: ignore

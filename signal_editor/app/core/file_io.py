@@ -247,8 +247,8 @@ def read_edf(
     filter_all_zeros: bool = True,
 ) -> pl.DataFrame:
     raw_edf = mne.io.read_raw_edf(file_path, include=[data_channel, info_channel])
-    channel_names: list[str] = raw_edf.ch_names
-    data = raw_edf.get_data(start=start, stop=stop).squeeze()
+    channel_names: list[str] = raw_edf.ch_names  # type: ignore
+    data = raw_edf.get_data(start=start, stop=stop).squeeze()  # type: ignore
     out = pl.from_numpy(data, channel_names)  # type: ignore
     if info_channel != "":
         out = out.select(pl.col(data_channel), pl.col(info_channel))

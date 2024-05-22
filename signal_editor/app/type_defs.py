@@ -21,7 +21,7 @@ if t.TYPE_CHECKING:
         TextFileSeparator,
     )
     from signal_editor.app.core.section import SectionID
-    from signal_editor.app.gui.widgets.settings_editor import RateComputationMethod
+    from signal_editor.app.gui.widgets.settings_dialog import RateComputationMethod
 
 
 PGColor = t.Union[str, int, float, tuple[int, int, int], tuple[int, int, int, int], "QtGui.QColor"]
@@ -308,7 +308,6 @@ PeakDetectionMethodParameters = t.Union[
     PeaksLocalMaxima,
     PeaksWFDBXQRS,
 ]
-
 
 class SelectedFileMetadataDict(t.TypedDict):
     file_name: str

@@ -1,4 +1,3 @@
-import os
 import typing as t
 
 from loguru import logger
@@ -74,14 +73,14 @@ class StatusMessageDock(QtWidgets.QDockWidget):
         self.setWindowIcon(QtGui.QIcon(":/icons/sys_monitor"))
         self.setWidget(self.log_text_box)
 
-        if os.environ.get("DEBUG") == "1":
-            self._test_button = QtWidgets.QPushButton("Test", self)
-            self._test_button.clicked.connect(self._on_test_button_clicked)
+    #     if os.environ.get("DEBUG") == "1":
+    #         self._test_button = QtWidgets.QPushButton("Test", self)
+    #         self._test_button.clicked.connect(self._on_test_button_clicked)
 
-    @QtCore.Slot()
-    def _on_test_button_clicked(self) -> None:
-        logger.debug("Debug message")
-        logger.info("Info message")
-        logger.warning("Warning message")
-        logger.error("Error message")
-        logger.critical("Critical message")
+    # @QtCore.Slot()
+    # def _on_test_button_clicked(self) -> None:
+    #     logger.debug("Debug message")
+    #     logger.info("Info message")
+    #     logger.warning("Warning message")
+    #     logger.error("Error message")
+    #     logger.critical("Critical message")

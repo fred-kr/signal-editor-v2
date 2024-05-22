@@ -26,13 +26,6 @@ if t.TYPE_CHECKING:
     from signal_editor.app.models.metadata import QFileMetadata
 
 
-# class ConsoleWorker(QtCore.QRunnable):
-    
-#     @QtCore.Slot()
-#     def run(self) -> None:
-#         pass
-
-    
 class SignalEditor(QtWidgets.QApplication):
     sig_peaks_updated: t.ClassVar[QtCore.Signal] = QtCore.Signal()
 
@@ -45,8 +38,6 @@ class SignalEditor(QtWidgets.QApplication):
         self.plot = PlotController(self, self.mw)
 
         self.recent_files = self._retrieve_recent_files()
-
-        # self.threadpool = QtCore.QThreadPool()
 
         self._connect_signals()
 

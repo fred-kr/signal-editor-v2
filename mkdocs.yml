@@ -3,9 +3,10 @@ site_url: https://fred-kr.github.io/
 theme:
   name: material
   palette:
-    primary: "blue"
-    accent: "light blue"
-    background: "white"
+    primary: "royalblue"
+    accent: "navy"
+    background: "floralwhite"
 nav:
   - Home: index.md
   - About: about.md
+  - References: references.md

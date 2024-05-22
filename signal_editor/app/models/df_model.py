@@ -9,7 +9,7 @@ from PySide6 import QtCore
 from signal_editor.app.utils import human_readable_timedelta
 
 if t.TYPE_CHECKING:
-    from .metadata import QFileMetadata
+    from signal_editor.app.models.metadata import QFileMetadata
 
 
 def validate_column(
