@@ -254,21 +254,20 @@ def _adjust_peak_positions(
     radius: int,
     direction: WFDBPeakDirection,
 ) -> npt.NDArray[np.int32]:
-    match direction:
-        case WFDBPeakDirection.Up:
-            return _shift_peaks(sig, peaks, radius, dir_is_up=True)
-        case WFDBPeakDirection.Down:
-            return _shift_peaks(sig, peaks, radius, dir_is_up=False)
-        case WFDBPeakDirection.Both:
-            return _shift_peaks(np.abs(sig), peaks, radius, dir_is_up=True)
-        case WFDBPeakDirection.Compare:
-            shifted_up = _shift_peaks(sig, peaks, radius, dir_is_up=True)
-            shifted_down = _shift_peaks(sig, peaks, radius, dir_is_up=False)
+    if direction == WFDBPeakDirection.Up:
+        return _shift_peaks(sig, peaks, radius, dir_is_up=True)
+    elif direction == WFDBPeakDirection.Down:
+        return _shift_peaks(sig, peaks, radius, dir_is_up=False)
+    elif direction == WFDBPeakDirection.Both:
+        return _shift_peaks(np.abs(sig), peaks, radius, dir_is_up=True)
+    elif direction == WFDBPeakDirection.Compare:
+        shifted_up = _shift_peaks(sig, peaks, radius, dir_is_up=True)
+        shifted_down = _shift_peaks(sig, peaks, radius, dir_is_up=False)
 
-            up_dist = np.mean(np.abs(sig[shifted_up]))
-            down_dist = np.mean(np.abs(sig[shifted_down]))
+        up_dist = np.mean(np.abs(sig[shifted_up]))
+        down_dist = np.mean(np.abs(sig[shifted_down]))
 
-            return shifted_up if np.greater_equal(up_dist, down_dist) else shifted_down
+        return shifted_up if np.greater_equal(up_dist, down_dist) else shifted_down
 
 
 def _get_comparison_func(find_peak_func: t.Callable[..., np.intp]) -> t.Callable[..., np.bool_]:

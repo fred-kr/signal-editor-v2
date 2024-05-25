@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'main_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.0
+## Created by: Qt User Interface Compiler version 6.7.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -41,7 +41,7 @@ class Ui_MainWindow(object):
         self.action_open_file = QAction(MainWindow)
         self.action_open_file.setObjectName(u"action_open_file")
         icon = QIcon()
-        icon.addFile(u":/icons/folder-open", QSize(), QIcon.Normal, QIcon.Off)
+        icon.addFile(u":/icons/folder_open", QSize(), QIcon.Normal, QIcon.Off)
         self.action_open_file.setIcon(icon)
         self.action_show_edit_page = QAction(MainWindow)
         self.action_show_edit_page.setObjectName(u"action_show_edit_page")
@@ -199,9 +199,9 @@ class Ui_MainWindow(object):
         self.action_delete_section.setMenuRole(QAction.MenuRole.NoRole)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        self.gridLayout_4 = QGridLayout(self.centralwidget)
-        self.gridLayout_4.setObjectName(u"gridLayout_4")
-        self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.h_layout_centralwidget = QHBoxLayout(self.centralwidget)
+        self.h_layout_centralwidget.setObjectName(u"h_layout_centralwidget")
+        self.h_layout_centralwidget.setContentsMargins(0, 0, 0, 0)
         self.stackedWidget = QStackedWidget(self.centralwidget)
         self.stackedWidget.setObjectName(u"stackedWidget")
         self.stacked_page_import = QWidget()
@@ -227,7 +227,9 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.btn_open_file.sizePolicy().hasHeightForWidth())
         self.btn_open_file.setSizePolicy(sizePolicy)
         self.btn_open_file.setMinimumSize(QSize(0, 48))
-        self.btn_open_file.setIcon(icon)
+        icon23 = QIcon()
+        icon23.addFile(u":/icons/folder-open", QSize(), QIcon.Normal, QIcon.Off)
+        self.btn_open_file.setIcon(icon23)
 
         self.gridLayout.addWidget(self.btn_open_file, 1, 0, 1, 3)
 
@@ -316,9 +318,9 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.btn_load_data.sizePolicy().hasHeightForWidth())
         self.btn_load_data.setSizePolicy(sizePolicy)
         self.btn_load_data.setMinimumSize(QSize(0, 48))
-        icon23 = QIcon()
-        icon23.addFile(u":/icons/table_go", QSize(), QIcon.Normal, QIcon.Off)
-        self.btn_load_data.setIcon(icon23)
+        icon24 = QIcon()
+        icon24.addFile(u":/icons/table_go", QSize(), QIcon.Normal, QIcon.Off)
+        self.btn_load_data.setIcon(icon24)
 
         self.gridLayout.addWidget(self.btn_load_data, 4, 0, 1, 2)
 
@@ -473,7 +475,7 @@ class Ui_MainWindow(object):
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.stackedWidget.addWidget(self.stacked_page_test)
 
-        self.gridLayout_4.addWidget(self.stackedWidget, 0, 0, 1, 1)
+        self.h_layout_centralwidget.addWidget(self.stackedWidget)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(MainWindow)
@@ -497,9 +499,9 @@ class Ui_MainWindow(object):
         self.tool_bar_navigation.setObjectName(u"tool_bar_navigation")
         self.tool_bar_navigation.setMinimumSize(QSize(0, 0))
         self.tool_bar_navigation.setMovable(False)
-        self.tool_bar_navigation.setAllowedAreas(Qt.ToolBarArea.LeftToolBarArea)
+        self.tool_bar_navigation.setAllowedAreas(Qt.ToolBarArea.RightToolBarArea)
         self.tool_bar_navigation.setFloatable(False)
-        MainWindow.addToolBar(Qt.ToolBarArea.LeftToolBarArea, self.tool_bar_navigation)
+        MainWindow.addToolBar(Qt.ToolBarArea.RightToolBarArea, self.tool_bar_navigation)
         self.tool_bar_file_actions = QToolBar(MainWindow)
         self.tool_bar_file_actions.setObjectName(u"tool_bar_file_actions")
         self.tool_bar_file_actions.setMovable(False)

@@ -2,6 +2,7 @@
 Main entry point for the application.
 """
 
+
 if __name__ == "__main__":
     import multiprocessing
 
@@ -12,12 +13,10 @@ if __name__ == "__main__":
     import sys
 
     import polars as pl
-    import PySide6  # type: ignore # noqa: F401
     import pyqtgraph as pg
     from loguru import logger
 
-    # import qdarkstyle
-    from PySide6 import QtWidgets
+    # from PySide6 import QtWidgets
 
     from signal_editor.se_app import SignalEditor
 
@@ -27,7 +26,6 @@ if __name__ == "__main__":
     parser.add_argument("-c", "--console", action="store_true", help="Enable Jupyter console")
     args = parser.parse_args()
 
-    # os.environ["QT_LOGGING_RULES"] = "qt.pyside.libpyside.warning=true"
     if args.debug:
         os.environ["DEBUG"] = "1"
     else:
@@ -47,10 +45,9 @@ if __name__ == "__main__":
     pl.Config().activate_decimals(True)
 
     app = SignalEditor(sys.argv)
-    # app.setStyleSheet(qdarkstyle.load_stylesheet())
     # Built-in styles: ['windows11', 'windowsvista', 'Windows', 'Fusion']
-    styles = QtWidgets.QStyleFactory.keys()
-    app.setStyle("Fusion")
+    # styles = QtWidgets.QStyleFactory.keys()
+    # app.setStyle("Fusion")
     app.mw.show()
 
     sys.exit(app.exec())

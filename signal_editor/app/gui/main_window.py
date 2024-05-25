@@ -6,10 +6,12 @@ import pyqtgraph as pg
 from loguru import logger
 from pyqtgraph.console import ConsoleWidget
 from PySide6 import QtCore, QtGui, QtWidgets
+from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 
 from signal_editor.app.enum_defs import LogLevel
+from signal_editor.app.gui.icons import FugueIcon as FI
 from signal_editor.app.gui.widgets import ExportDialog, MetadataDialog, SectionListDock
-from signal_editor.app.gui.widgets.log_msg_viewer import StatusMessageDock
+from signal_editor.app.gui.widgets.log_window import StatusMessageDock
 from signal_editor.app.gui.widgets.peak_detection_inputs import PeakDetectionDock
 from signal_editor.app.gui.widgets.processing_inputs import ProcessingInputsDock
 from signal_editor.app.gui.widgets.settings_dialog import SettingsDialog
@@ -17,12 +19,20 @@ from signal_editor.ui.ui_main_window import Ui_MainWindow
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
-    sig_metadata_changed: t.ClassVar[QtCore.Signal] = QtCore.Signal(dict)
-    sig_table_refresh_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal()
+    sig_metadata_changed = QtCore.Signal(dict)
+    sig_table_refresh_requested = QtCore.Signal()
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
+        self.new_central_widget = QtWidgets.QWidget()
+        self.hBoxLayout = QtWidgets.QHBoxLayout(self.new_central_widget)
+        self.navigation_interface = NavigationInterface(self, showMenuButton=False)
+
+        self._setup_layout()
+        self.setCentralWidget(self.new_central_widget)
+        self._setup_navigation()
+        self._setup_window()
 
         self._initialize_icons()
         self._setup_docks()
@@ -34,21 +44,76 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if os.environ.get("DEV", "0") == "1":
             self._add_console_dock()
 
+    def _setup_window(self) -> None:
+        self.setWindowTitle("Signal Editor")
+
+        desktop = QtWidgets.QApplication.primaryScreen().availableGeometry()
+        w, h = desktop.width(), desktop.height()
+        self.move(w // 2 - self.width() // 2, h // 2 - self.height() // 2)
+
+    def _setup_layout(self) -> None:
+        self.hBoxLayout.setSpacing(0)
+        self.hBoxLayout.setContentsMargins(0, 0, 0, 0)
+        self.hBoxLayout.addWidget(self.navigation_interface)
+        self.hBoxLayout.addWidget(self.stackedWidget)
+        self.hBoxLayout.setStretchFactor(self.stackedWidget, 1)
+
+    def _setup_navigation(self) -> None:
+        self.add_sub_interface(self.stacked_page_import, FI.FILE_IMPORT.icon(), "Data Import")
+        self.add_sub_interface(self.stacked_page_edit, FI.APP_WAVE.icon(), "View/Edit")
+        self.add_sub_interface(self.stacked_page_result, FI.REPORT.icon(), "Results")
+        self.add_sub_interface(self.stacked_page_export, FI.FILE_EXPORT.icon(), "Export")
+
+        self.navigation_interface.addSeparator()
+
+        self.add_sub_interface(
+            self.stacked_page_test,
+            FI.TERMINAL.icon(),
+            "Debug",
+            position=NavigationItemPosition.BOTTOM,
+        )
+        qrouter.setDefaultRouteKey(self.stackedWidget, self.stacked_page_import.objectName())
+        self.navigation_interface.setExpandWidth(300)
+
+        self.stackedWidget.currentChanged.connect(self._on_current_interface_changed)
+        self.stackedWidget.setCurrentIndex(0)
+        self.navigation_interface.setCurrentItem(self.stackedWidget.currentWidget().objectName())
+
+    def add_sub_interface(
+        self,
+        widget: QtWidgets.QWidget,
+        icon: QtGui.QIcon,
+        text: str,
+        position: NavigationItemPosition = NavigationItemPosition.TOP,
+    ) -> None:
+        if self.stackedWidget.indexOf(widget) == -1:
+            self.stackedWidget.addWidget(widget)
+        self.navigation_interface.addItem(
+            routeKey=widget.objectName(),
+            icon=icon,
+            text=text,
+            onClick=lambda: self.switch_to(widget),
+            position=position,
+            tooltip=text,
+        )
+
+    def switch_to(self, widget: QtWidgets.QWidget) -> None:
+        self.stackedWidget.setCurrentWidget(widget)
+
+    @QtCore.Slot(int)
+    def _on_current_interface_changed(self, index: int) -> None:
+        widget = self.stackedWidget.widget(index)
+        self.navigation_interface.setCurrentItem(widget.objectName())
+        qrouter.push(self.stackedWidget, widget.objectName())
+
     def _initialize_icons(self) -> None:
         self._msg_box_icons = {
-            LogLevel.DEBUG: QtGui.QIcon(":/icons/app_monitor"),
-            LogLevel.INFO: QtGui.QIcon(":/icons/info"),
-            LogLevel.WARNING: QtGui.QIcon(":/icons/warning"),
-            LogLevel.ERROR: QtGui.QIcon(":/icons/error"),
-            LogLevel.CRITICAL: QtGui.QIcon(":/icons/critical"),
-            LogLevel.SUCCESS: QtGui.QIcon(":/icons/success"),
-        }
-        self._icons = {
-            "navigation": QtGui.QIcon(":/icons/navigation"),
-            "whats_this": QtGui.QIcon(":/icons/whats_this"),
-            "confirm": QtGui.QIcon(":/icons/tick_mark"),
-            "cancel": QtGui.QIcon(":/icons/cross"),
-            "refresh": QtGui.QIcon(":/icons/refresh"),
+            LogLevel.DEBUG: FI.APP_MONITOR.icon(),
+            LogLevel.INFO: FI.INFO.icon(),
+            LogLevel.WARNING: FI.WARNING.icon(),
+            LogLevel.ERROR: FI.ERROR.icon(),
+            LogLevel.CRITICAL: FI.CRITICAL.icon(),
+            LogLevel.SUCCESS: FI.SUCCESS.icon(),
         }
 
     def _setup_widgets(self) -> None:
@@ -135,7 +200,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _setup_actions(self) -> None:
         self.action_toggle_whats_this_mode = QtWidgets.QWhatsThis().createAction(self)
-        self.action_toggle_whats_this_mode.setIcon(self._icons["whats_this"])
+        self.action_toggle_whats_this_mode.setIcon(FI.WHATS_THIS.icon())
         self._actions = {
             "import": [self.action_open_file, self.action_edit_metadata, self.action_close_file],
             "edit": [
@@ -161,19 +226,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             ],
         }
 
-        navigation_action_group = QtGui.QActionGroup(self.tool_bar_navigation)
-        navigation_action_group.setExclusive(True)
-
-        navigation_action_group.addAction(self.action_show_import_page)
-        navigation_action_group.addAction(self.action_show_edit_page)
-        navigation_action_group.addAction(self.action_show_result_page)
-        navigation_action_group.addAction(self.action_show_export_page)
-        navigation_action_group.addAction(self.action_show_info_page)
-
         self.action_toggle_auto_scaling.setChecked(True)
 
     def _setup_toolbars(self) -> None:
-        self.tool_bar_navigation.setWindowIcon(self._icons["navigation"])
+        self.tool_bar_navigation.hide()
 
         self.tool_bar_file_actions.addSeparator()
         self.tool_bar_file_actions.addAction(self.action_export_result)
@@ -328,7 +384,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def show_section_confirm_cancel(self, show: bool) -> None:
         self.dock_sections.btn_container.setVisible(show)
-        self.tool_bar_navigation.setEnabled(not show)
+        # self.tool_bar_navigation.setEnabled(not show)
 
     def write_settings(self) -> None:
         settings = QtCore.QSettings()

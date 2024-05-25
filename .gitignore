@@ -258,3 +258,4 @@ notes/
 NOTES.md
 docs/old_paper_ventilation_crabs.pdf
 build.ps1
+scripts/make_qrc_alias_dict.py

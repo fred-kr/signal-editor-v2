@@ -54,8 +54,8 @@
     <file alias="binoculars">fugue-icons/binocular.png</file>
     <file alias="toggle_autoscale">fugue-icons/arrow-resize-090.png</file>
     <file alias="new_section">fugue-icons/selection-select.png</file>
-    <file alias="folder-open">fugue-icons/folder-open.png</file>
-    <file alias="folder-close">fugue-icons/folder.png</file>
+    <file alias="folder_open">fugue-icons/folder-open.png</file>
+    <file alias="folder_close">fugue-icons/folder.png</file>
     <file alias="navigation">fugue-icons/application-sidebar-list.png</file>
     <file alias="terminal">fugue-icons/application-terminal.png</file>
     <file alias="view_settings">fugue-icons/gear.png</file>
@@ -113,5 +113,7 @@
     <file alias="nav_right">fugue-icons/navigation.png</file>
     <file alias="nav_left_btn">fugue-icons/navigation-180-button.png</file>
     <file alias="nav_right_btn">fugue-icons/navigation-000-button.png</file>
+    <file alias="menu">fugue-icons/ui-menu.png</file>
+    <file alias="menu_blue">fugue-icons/ui-menu-blue.png</file>
   </qresource>
 </RCC>

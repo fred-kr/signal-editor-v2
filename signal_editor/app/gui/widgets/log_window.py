@@ -4,7 +4,7 @@ from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
-class TextEditLoguru(QtWidgets.QTextEdit):
+class LoggingWindow(QtWidgets.QTextEdit):
     sig_log_message: t.ClassVar[QtCore.Signal] = QtCore.Signal(str, int, str)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
@@ -69,7 +69,7 @@ class StatusMessageDock(QtWidgets.QDockWidget):
         self.setVisible(False)
         self.toggleViewAction().setIcon(QtGui.QIcon(":/icons/report"))
 
-        self.log_text_box = TextEditLoguru(self)
+        self.log_text_box = LoggingWindow(self)
         self.setWindowIcon(QtGui.QIcon(":/icons/sys_monitor"))
         self.setWidget(self.log_text_box)
 

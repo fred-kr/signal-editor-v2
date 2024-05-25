@@ -26,7 +26,7 @@
    <set>QMainWindow::DockOption::AllowNestedDocks|QMainWindow::DockOption::AllowTabbedDocks|QMainWindow::DockOption::AnimatedDocks|QMainWindow::DockOption::VerticalTabs</set>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout_4">
+   <layout class="QHBoxLayout" name="h_layout_centralwidget">
     <property name="leftMargin">
      <number>0</number>
     </property>
@@ -39,7 +39,7 @@
     <property name="bottomMargin">
      <number>0</number>
     </property>
-    <item row="0" column="0">
+    <item>
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
        <number>0</number>
@@ -80,7 +80,7 @@
               <string> Select File</string>
              </property>
              <property name="icon">
-              <iconset resource="../resources/resources.qrc">
+              <iconset>
                <normaloff>:/icons/folder-open</normaloff>:/icons/folder-open</iconset>
              </property>
             </widget>
@@ -546,13 +546,13 @@
     <bool>false</bool>
    </property>
    <property name="allowedAreas">
-    <set>Qt::ToolBarArea::LeftToolBarArea</set>
+    <set>Qt::ToolBarArea::RightToolBarArea</set>
    </property>
    <property name="floatable">
     <bool>false</bool>
    </property>
    <attribute name="toolBarArea">
-    <enum>LeftToolBarArea</enum>
+    <enum>RightToolBarArea</enum>
    </attribute>
    <attribute name="toolBarBreak">
     <bool>false</bool>
@@ -586,7 +586,7 @@
   <action name="action_open_file">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/folder-open</normaloff>:/icons/folder-open</iconset>
+     <normaloff>:/icons/folder_open</normaloff>:/icons/folder_open</iconset>
    </property>
    <property name="text">
     <string>Open File</string>
