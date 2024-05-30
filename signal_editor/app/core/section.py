@@ -12,6 +12,9 @@ from polars_standardize_series import standardize
 from PySide6 import QtCore
 
 from .. import type_defs as _t
+from ..enum_defs import FilterMethod, PeakDetectionMethod, PreprocessPipeline, RateComputationMethod
+from ..models.result_models import CompactSectionResult, DetailedSectionResult
+from ..utils import format_long_sequence
 from .peak_detection import find_peaks
 from .processing import (
     filter_elgendi,
@@ -19,9 +22,6 @@ from .processing import (
     filter_signal,
     signal_rate,
 )
-from ..enum_defs import FilterMethod, PeakDetectionMethod, PreprocessPipeline
-from ..models.result_models import CompactSectionResult, DetailedSectionResult
-from ..utils import format_long_sequence
 
 
 @dataclass(slots=True)
@@ -134,9 +134,12 @@ class SectionMetadata:
 
 
 class Section:
-    def __init__(self, data: pl.DataFrame, signal_name: str) -> None:
+    def __init__(
+        self, data: pl.DataFrame, signal_name: str, info_column: str | None = None
+    ) -> None:
         self.signal_name = signal_name
         self.processed_signal_name = f"{self.signal_name}_processed"
+        self.info_name = info_column
         self.section_id = SectionID.default()
         self._is_filtered: bool = False
         self._is_standardized: bool = False
@@ -153,7 +156,6 @@ class Section:
                 pl.col(signal_name).alias(self.processed_signal_name),
                 pl.lit(0, pl.Int8).alias("is_peak"),
                 pl.lit(0, pl.Int8).alias("is_manual"),
-                pl.lit(np.nan, pl.Float64).alias("rate_instant"),
             )
             .collect()
         )
@@ -166,9 +168,16 @@ class Section:
             self.data.item(-1, "index"),
         )
 
+        self._rate_data = pl.DataFrame()
+        self._result_data = pl.DataFrame()
+
         self._processing_parameters = ProcessingParameters(self.sampling_rate)
         self._manual_peak_edits = ManualPeakEdits()
 
+    @property
+    def result_data(self) -> pl.DataFrame:
+        return self._result_data
+    
     @property
     def raw_signal(self) -> pl.Series:
         return self.data.get_column(self.signal_name)
@@ -178,22 +187,12 @@ class Section:
         return self.data.get_column(self.processed_signal_name)
 
     @property
-    def rate_instant(self) -> npt.NDArray[np.float64]:
-        return self.data.get_column("rate_instant").to_numpy(allow_copy=False)
-
-    @property
     def is_filtered(self) -> bool:
         return self._is_filtered
 
     @property
     def is_standardized(self) -> bool:
         return self._is_standardized
-
-    @property
-    def rate_rolling(self) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.int32]]:
-        x = self._rolling_rate_data.get_column("section_index").to_numpy(allow_copy=False)
-        y = self._rolling_rate_data.get_column("n_peaks").to_numpy(allow_copy=False)
-        return x, y
 
     @property
     def peaks_local(self) -> pl.Series:
@@ -224,7 +223,7 @@ class Section:
         self.sampling_rate = sampling_rate
         with contextlib.suppress(Exception):
             peaks = self.peaks_local.to_numpy(allow_copy=False)
-            self.calculate_rate(peaks)
+            self._calc_rate_instant(peaks)
         self._processing_parameters.sampling_rate = sampling_rate
 
     def filter_signal(
@@ -311,7 +310,11 @@ class Section:
 
         self.set_peaks(peaks)
 
-    def set_peaks(self, peaks: npt.NDArray[np.int32], update_rate: bool = True, mode: t.Literal["instant", "rolling"] = "rolling") -> None:
+    def set_peaks(
+        self,
+        peaks: npt.NDArray[np.int32],
+        update_rate: bool = True,
+    ) -> None:
         """
         Sets the `is_peak` column in `self.data` to 1 at the indices provided in `peaks`, and to 0
         everywhere else.
@@ -335,17 +338,14 @@ class Section:
         )
 
         self._manual_peak_edits.clear()
-        if update_rate and mode == "instant":
-            self.calculate_rate(peaks, desired_length=self.data.height)
-        elif update_rate and mode == "rolling":
-            self.calculate_rolling_rate()
+        if update_rate:
+            self.get_rate_data()
 
     def update_peaks(
         self,
         action: _t.UpdatePeaksAction,
         peaks: npt.NDArray[np.int32],
         update_rate: bool = True,
-        mode: t.Literal["instant", "rolling"] = "rolling",
     ) -> None:
         """
         Updates the `is_peak` column in `self.data` at the given indices according to the provided
@@ -389,16 +389,28 @@ class Section:
             self._manual_peak_edits.new_removed(changed_indices)
 
         if update_rate and self.peaks_local.len() > 3:
-            if mode == "instant":
-                self.calculate_rate(
-                    self.peaks_local.to_numpy(allow_copy=False), desired_length=self.data.height
-                )
-            elif mode == "rolling":
-                self.calculate_rolling_rate()
+            self.get_rate_data()
 
-    def calculate_rate(
+    def get_rate_data(
+        self,
+    ) -> pl.DataFrame:
+        method = RateComputationMethod(
+            QtCore.QSettings().value(
+                "Editing/rate_computation_method", RateComputationMethod.RollingWindow
+            )
+        )
+        if method == RateComputationMethod.RollingWindow:
+            rate_data = self._calc_rate_rolling()
+        elif method == RateComputationMethod.Instantaneous:
+            rate_data = self._calc_rate_instant()
+        else:
+            raise ValueError(f"Invalid rate computation method: {method}")
+
+        return rate_data
+
+    def _calc_rate_instant(
         self, peaks: npt.NDArray[np.int32] | None = None, desired_length: int | None = None
-    ) -> None:
+    ) -> pl.DataFrame:
         if peaks is None:
             peaks = self.peaks_local.to_numpy(allow_copy=False)
         if peaks.shape[0] < 2:
@@ -407,24 +419,23 @@ class Section:
                 "Please change the current methods parameters (if available), or use "
                 "a different method."
             )
-            self.data = (
-                self.data.lazy().with_columns(pl.lit(np.nan).alias("rate_instant")).collect()
-            )
-            return
+            return self._rate_data
         if desired_length is None:
             desired_length = self.data.height
         inst_rate = signal_rate(peaks, self.sampling_rate, desired_length)
-        self.data = self.data.with_columns(
-            pl.Series("rate_instant", inst_rate).alias("rate_instant")
-        )
 
-    def calculate_rolling_rate(
+        self._rate_data = pl.DataFrame(
+            {"x": pl.int_range(inst_rate.size, dtype=pl.Int32, eager=True), "y": inst_rate}
+        )
+        return self._rate_data
+
+    def _calc_rate_rolling(
         self,
         grp_col: str = "section_index",
         sec_new_window_every: int = 10,
         sec_window_length: int = 60,
         sec_start_at: int = 0,
-    ) -> None:
+    ) -> pl.DataFrame:
         sampling_rate = self.sampling_rate
 
         every = sec_new_window_every * sampling_rate
@@ -434,20 +445,42 @@ class Section:
             raise ValueError(f"Column '{grp_col}' must exist in the dataframe")
         if self.data.lazy().select(pl.col(grp_col)).dtypes[0] not in pl.INTEGER_DTYPES:
             raise ValueError(f"Column '{grp_col}' must be of integer type")
+        n_incomplete_windows = period // every
 
-        remove_tail_count = period // every
-        
-        rr_df = self.data.sort(grp_col).with_columns(pl.col(grp_col).cast(pl.Int64)).group_by_dynamic(
-            pl.col(grp_col),
-            every=f"{every}i",
-            period=f"{period}i",
-            offset=f"{offset}i",
-        ).agg(
-            pl.sum("is_peak").alias("n_peaks"),
-            pl.mean("temperature").round(1).suffix("_mean"),
-        )[:-remove_tail_count]
+        rr_df = (
+            self.data.lazy()
+            .sort(grp_col)
+            .with_columns(pl.col(grp_col).cast(pl.Int64))
+            .group_by_dynamic(
+                pl.col(grp_col),
+                every=f"{every}i",
+                period=f"{period}i",
+                offset=f"{offset}i",
+            )
+        )
+        if self.info_name in self.data.columns:
+            rr_df = rr_df.agg(
+                pl.sum("is_peak").alias("y"),
+                pl.mean(self.info_name).round(1).suffix("_mean"),
+            ).collect()[:-n_incomplete_windows]
+        else:
+            rr_df = rr_df.agg(
+                pl.sum("is_peak").alias("y"),
+            ).collect()[:-n_incomplete_windows]
 
-        self._rolling_rate_data = rr_df
+        self._rate_data = rr_df.rename({"section_index": "x"})
+        return self._rate_data
+
+    def get_mean_rate_per_temperature(self) -> pl.DataFrame:
+        info_col = self.info_name
+        self._result_data = self._rate_data.group_by(pl.col(f"{info_col}_mean")).agg(
+            pl.mean("y").alias("rate_mean"),
+            pl.median("y").alias("rate_median"),
+            pl.std("y").alias("rate_std"),
+            pl.min("y").alias("rate_min"),
+            pl.max("y").alias("rate_max"),
+        ).sort(f"{info_col}_mean")
+        return self._result_data
 
     def _add_manual_peak_edits_column(self) -> None:
         pl_added = pl.Series("added", self._manual_peak_edits.added, pl.Int32)
@@ -502,16 +535,9 @@ class Section:
 
         peak_intervals = section_peaks.diff().fill_null(0)
         if info_column in self.data.columns:
-            info_values = self.data.get_column("temperature").gather(section_peaks)
+            info_values = self.data.get_column(info_column).gather(section_peaks)
         else:
             info_values = None
-
-        instantaneous_rate = pl.Series(
-            "instantaneous_rate",
-            signal_rate(section_peaks.to_numpy(allow_copy=False), sampling_rate),
-            pl.Float64,
-        )
-        # roll_window = self.calculate_rolling_rate("section_index")
 
         return CompactSectionResult(
             peaks_global_index=global_peaks,
@@ -519,7 +545,7 @@ class Section:
             seconds_since_global_start=global_time,
             seconds_since_section_start=section_time,
             peak_intervals=peak_intervals,
-            rate_instant=instantaneous_rate,
+            rate_data=self._rate_data,
             info_values=info_values,
         )
 
@@ -528,16 +554,16 @@ class Section:
         section_df = self.data
         manual_edits = self._manual_peak_edits
         compact_result = self.get_focused_result(info_column)
-        instant_rate = self.rate_instant
-        rolling_rate = self.rate_rolling[1]
+        rate = self._rate_data
+        rate_per_temperature = self.get_mean_rate_per_temperature()
 
         return DetailedSectionResult(
             metadata=metadata,
             section_dataframe=section_df,
             manual_peak_edits=manual_edits,
             compact_result=compact_result,
-            rate_instant=instant_rate,
-            rate_rolling=rolling_rate,
+            rate_data=rate,
+            rate_per_temperature=rate_per_temperature,
         )
 
     def reset_signal(self) -> None:
@@ -547,8 +573,6 @@ class Section:
                 pl.col(self.signal_name).alias(self.processed_signal_name),
                 pl.lit(0, pl.Int8).alias("is_peak"),
                 pl.lit(0, pl.Int8).alias("is_manual"),
-                pl.lit(np.nan, pl.Float64).alias("rate_instant"),
-                # pl.lit(np.nan, pl.Float64).alias("rate_rolling"),
             )
             .collect()
         )
@@ -562,8 +586,6 @@ class Section:
             .with_columns(
                 pl.lit(0, pl.Int8).alias("is_peak"),
                 pl.lit(0, pl.Int8).alias("is_manual"),
-                pl.lit(np.nan, pl.Float64).alias("rate_instant"),
-                # pl.lit(np.nan, pl.Float64).alias("rate_rolling"),
             )
             .collect()
         )

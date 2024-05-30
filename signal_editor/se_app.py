@@ -135,9 +135,6 @@ class SignalEditor(QtWidgets.QApplication):
         peaks = peaks + b_left
         active_section.update_peaks("add", peaks)
         self.sig_peaks_updated.emit()
-        # pos = self.data.active_section.get_peak_pos().to_numpy(structured=True)
-        # self.plot.set_peak_data(pos["x"], pos["y"])
-        # self.plot.set_rate_data(active_section.rate_instant)
 
     @QtCore.Slot(str, object)
     def handle_peak_edit(
@@ -150,9 +147,8 @@ class SignalEditor(QtWidgets.QApplication):
     def refresh_peak_data(self) -> None:
         pos = self.data.active_section.get_peak_pos().to_numpy(structured=True)
         self.plot.set_peak_data(pos["x"], pos["y"])
-        rr_x, rr_y = self.data.active_section.rate_rolling
-        self.plot.set_rate_data(rr_y, rr_x)
-        # self.plot.set_rate_data(self.data.active_section.rate_instant)
+        rate_data = self.data.active_section.get_rate_data().to_numpy(structured=True)
+        self.plot.set_rate_data(x_data=rate_data["x"], y_data=rate_data["y"])
 
     @QtCore.Slot(dict)
     def filter_active_signal(self, filter_params: _t.SignalFilterParameters) -> None:
@@ -262,6 +258,8 @@ class SignalEditor(QtWidgets.QApplication):
     def _on_active_section_changed(self, has_peaks: bool) -> None:
         section = self.data.active_section
         is_base_section = section is self.data.get_base_section()
+        has_results = not section.result_data.is_empty()
+        
         self.mw.action_create_new_section.setEnabled(is_base_section)
         self.mw.action_delete_section.setEnabled(not is_base_section)
         self.mw.action_show_section_overview.setEnabled(is_base_section)
@@ -273,6 +271,9 @@ class SignalEditor(QtWidgets.QApplication):
         self.plot.clear_peaks()
         if has_peaks:
             self.sig_peaks_updated.emit()
+        if has_results:
+            result = section.result_data.to_numpy(structured=True)
+            self.plot.draw_rolling_rate(result["x"], result["y"])
         # Update the table view to show the current sections' data
         self.mw.table_view_import_data.setModel(self.data.active_section_model)
         self.mw.label_showing_data_table.setText(f"Showing: {section.section_id.pretty_name()}")

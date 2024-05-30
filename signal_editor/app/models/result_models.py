@@ -19,8 +19,7 @@ class CompactSectionResult:
     seconds_since_global_start: pl.Series = field()
     seconds_since_section_start: pl.Series = field()
     peak_intervals: pl.Series = field()
-    rate_instant: pl.Series = field()
-    # rolling_rate: pl.Series = field()
+    rate_data: pl.DataFrame = field()
     info_values: pl.Series | None = field()
 
     def to_polars_df(self) -> pl.DataFrame:
@@ -30,8 +29,6 @@ class CompactSectionResult:
             "seconds_since_global_start": pl.Float64,
             "seconds_since_section_start": pl.Float64,
             "peak_intervals": pl.Int32,
-            "rate_instant": pl.Float64,
-            # "rolling_rate": pl.Float64,
         }
         if self.info_values is not None:
             schema["info_values"] = pl.Float64
@@ -48,8 +45,7 @@ class CompactSectionResult:
             seconds_since_global_start=self.seconds_since_global_start.to_numpy(),
             seconds_since_section_start=self.seconds_since_section_start.to_numpy(),
             peak_intervals=self.peak_intervals.to_numpy(),
-            rate_instant=self.rate_instant.to_numpy(),
-            # rolling_rate=self.rolling_rate.to_numpy(),
+            rate_data=self.rate_data.to_numpy(structured=True),
         )
         if self.info_values is not None:
             out["info_values"] = self.info_values.to_numpy()
@@ -62,8 +58,8 @@ class DetailedSectionResult:
     section_dataframe: pl.DataFrame = field()
     manual_peak_edits: "ManualPeakEdits" = field()
     compact_result: CompactSectionResult = field()
-    rate_instant: npt.NDArray[np.float64] = field()
-    rate_rolling: npt.NDArray[np.float64] = field()
+    rate_data: pl.DataFrame = field()
+    rate_per_temperature: pl.DataFrame = field()
 
     def to_dict(self) -> _t.DetailedSectionResultDict:
         return _t.DetailedSectionResultDict(
@@ -71,8 +67,8 @@ class DetailedSectionResult:
             section_dataframe=self.section_dataframe.to_numpy(structured=True),
             manual_peak_edits=self.manual_peak_edits.to_dict(),
             compact_result=self.compact_result.to_structured_array(),
-            rate_instant=self.rate_instant,
-            rate_rolling=self.rate_rolling,
+            rate_data=self.rate_data.to_numpy(structured=True),
+            rate_per_temperature=self.rate_per_temperature.to_numpy(structured=True),
         )
 
 

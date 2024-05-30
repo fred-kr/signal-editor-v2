@@ -248,7 +248,7 @@ class DataController(QtCore.QObject):
             raise NotImplementedError(f"Can't read file type: {suffix}")
 
         self.data_model.set_dataframe(df, signal_col, info_col=info_col)
-        self._base_section = Section(df, self.metadata.signal_column)
+        self._base_section = Section(df, self.metadata.signal_column, info_column=info_col)
         self.sections.add_section(self._base_section)
         self.set_active_section(self.base_section_index)
         self.has_data = True
@@ -258,7 +258,7 @@ class DataController(QtCore.QObject):
         if self._metadata is None:
             return
         data = self.base_df.filter(pl.col("index").is_between(start, stop))
-        section = Section(data, self.metadata.signal_column)
+        section = Section(data, self.metadata.signal_column, info_column=self.metadata.info_column)
         self.sections.add_section(section)
         self.sig_section_added.emit(section.section_id)
 

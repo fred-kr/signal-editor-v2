@@ -377,20 +377,21 @@ def write_hdf5(file_path: Path, data: CompleteResult) -> None:
             h5f.create_group(
                 f"/complete_section_results/complete_result_{section_id}",
                 name="rate",
-                title="Calculated rate",
+                title="Rate Data",
             )
-            h5f.create_array(
+            h5f.create_table(
                 f"/complete_section_results/complete_result_{section_id}/rate",
-                name="instantaneous",
-                obj=detailed_result["rate_instant"],
-                title="Instantaneous (interpolated)",
+                name="rate_data",
+                description=detailed_result["rate_data"],
+                title=f"Calculated Rate Data ({section_id})",
+                expectedrows=detailed_result["rate_data"].shape[0],
             )
-            logger.info("Instantaneous rate written successfully.")
-            h5f.create_array(
+            h5f.create_table(
                 f"/complete_section_results/complete_result_{section_id}/rate",
-                name="rolling",
-                obj=detailed_result["rate_rolling"],
-                title="Rolling (window=60s, every=10s)",
+                name="rate_per_temperature",
+                description=detailed_result["rate_per_temperature"],
+                title=f"Rate per Temperature ({section_id})",
+                expectedrows=detailed_result["rate_per_temperature"].shape[0],
             )
             logger.info("Rolling rate written successfully.")
 
@@ -430,7 +431,9 @@ def write_hdf5(file_path: Path, data: CompleteResult) -> None:
                 )
 
             # Standardize parameters
-            std_params = detailed_result["metadata"]["processing_parameters"]["standardization_parameters"] or {"attribute_name": "unknown"}
+            std_params = detailed_result["metadata"]["processing_parameters"][
+                "standardization_parameters"
+            ] or {"attribute_name": "unknown"}
             h5f.create_group(
                 f"/complete_section_results/complete_result_{section_id}/processing_parameters",
                 name="standardize_parameters",

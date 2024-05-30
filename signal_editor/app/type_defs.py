@@ -309,6 +309,7 @@ PeakDetectionMethodParameters = t.Union[
     PeaksWFDBXQRS,
 ]
 
+
 class SelectedFileMetadataDict(t.TypedDict):
     file_name: str
     file_format: str
@@ -353,8 +354,7 @@ class CompactSectionResultDict(t.TypedDict):
     seconds_since_global_start: npt.NDArray[np.float64]
     seconds_since_section_start: npt.NDArray[np.float64]
     peak_intervals: npt.NDArray[np.int32]
-    rate_instant: npt.NDArray[np.float64]
-    # rolling_rate: npt.NDArray[np.float64]
+    rate_data: npt.NDArray[np.void]
     info_values: t.NotRequired[npt.NDArray[np.float64]]
 
 
@@ -363,8 +363,8 @@ class DetailedSectionResultDict(t.TypedDict):
     section_dataframe: npt.NDArray[np.void]
     manual_peak_edits: ManualPeakEditsDict
     compact_result: npt.NDArray[np.void]
-    rate_instant: npt.NDArray[np.float64]
-    rate_rolling: npt.NDArray[np.float64]
+    rate_data: npt.NDArray[np.void]
+    rate_per_temperature: npt.NDArray[np.void]
 
 
 class ExportInfoDict(t.TypedDict):

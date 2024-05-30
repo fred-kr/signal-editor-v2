@@ -441,7 +441,7 @@ class PlotController(QtCore.QObject):
         y: npt.NDArray[np.float_],
         color: str = "green",
         marker: str = "o",
-        linestyle: str | None = None,
+        linestyle: str = "-",
         linewidth: int = 2,
         markersize: int = 12,
     ) -> None:
@@ -453,7 +453,7 @@ class PlotController(QtCore.QObject):
             marker=marker,  # type: ignore
             linestyle=linestyle,
             linewidth=linewidth,
-            markersize=markersize,
+            # markersize=markersize,
         )
         subplot.set_xlabel("Temperature (°C)")
         subplot.set_ylabel("HR (bpm)")

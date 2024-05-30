@@ -172,7 +172,7 @@ class SettingsTree(TreeWidget):
                 click_width_signal_line=70,
                 search_around_click_radius=20,
                 minimum_peak_distance=20,
-                rate_computation_method=RateComputationMethod.Instantaneous,
+                rate_computation_method=RateComputationMethod.RollingWindow,
                 allow_stacking_filters=False,
             ),
             Data=_t.DefaultDataSettings(
