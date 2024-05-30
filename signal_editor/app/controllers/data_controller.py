@@ -287,7 +287,7 @@ class DataController(QtCore.QObject):
         global_df = (
             base_df.lazy()
             .update(
-                combined_section_df.lazy(), on=["index", self.metadata.signal_column], how="outer"
+                combined_section_df.lazy(), on=["index", self.metadata.signal_column], how="full"
             )
             .drop("section_index")
         )

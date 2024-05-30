@@ -189,9 +189,11 @@ class Section:
     def is_standardized(self) -> bool:
         return self._is_standardized
 
-    # @property
-    # def rate_rolling(self) -> npt.NDArray[np.float64]:
-    #     return self.data.get_column("rate_rolling").to_numpy(allow_copy=False)
+    @property
+    def rate_rolling(self) -> tuple[npt.NDArray[np.int64], npt.NDArray[np.int32]]:
+        x = self._rolling_rate_data.get_column("section_index").to_numpy(allow_copy=False)
+        y = self._rolling_rate_data.get_column("n_peaks").to_numpy(allow_copy=False)
+        return x, y
 
     @property
     def peaks_local(self) -> pl.Series:
@@ -309,7 +311,7 @@ class Section:
 
         self.set_peaks(peaks)
 
-    def set_peaks(self, peaks: npt.NDArray[np.int32], update_rate: bool = True) -> None:
+    def set_peaks(self, peaks: npt.NDArray[np.int32], update_rate: bool = True, mode: t.Literal["instant", "rolling"] = "rolling") -> None:
         """
         Sets the `is_peak` column in `self.data` to 1 at the indices provided in `peaks`, and to 0
         everywhere else.
@@ -333,14 +335,17 @@ class Section:
         )
 
         self._manual_peak_edits.clear()
-        if update_rate:
+        if update_rate and mode == "instant":
             self.calculate_rate(peaks, desired_length=self.data.height)
+        elif update_rate and mode == "rolling":
+            self.calculate_rolling_rate()
 
     def update_peaks(
         self,
         action: _t.UpdatePeaksAction,
         peaks: npt.NDArray[np.int32],
         update_rate: bool = True,
+        mode: t.Literal["instant", "rolling"] = "rolling",
     ) -> None:
         """
         Updates the `is_peak` column in `self.data` at the given indices according to the provided
@@ -384,9 +389,12 @@ class Section:
             self._manual_peak_edits.new_removed(changed_indices)
 
         if update_rate and self.peaks_local.len() > 3:
-            self.calculate_rate(
-                self.peaks_local.to_numpy(allow_copy=False), desired_length=self.data.height
-            )
+            if mode == "instant":
+                self.calculate_rate(
+                    self.peaks_local.to_numpy(allow_copy=False), desired_length=self.data.height
+                )
+            elif mode == "rolling":
+                self.calculate_rolling_rate()
 
     def calculate_rate(
         self, peaks: npt.NDArray[np.int32] | None = None, desired_length: int | None = None
@@ -416,7 +424,7 @@ class Section:
         sec_new_window_every: int = 10,
         sec_window_length: int = 60,
         sec_start_at: int = 0,
-    ) -> pl.Series:
+    ) -> None:
         sampling_rate = self.sampling_rate
 
         every = sec_new_window_every * sampling_rate
@@ -428,21 +436,18 @@ class Section:
             raise ValueError(f"Column '{grp_col}' must be of integer type")
 
         remove_tail_count = period // every
+        
+        rr_df = self.data.sort(grp_col).with_columns(pl.col(grp_col).cast(pl.Int64)).group_by_dynamic(
+            pl.col(grp_col),
+            every=f"{every}i",
+            period=f"{period}i",
+            offset=f"{offset}i",
+        ).agg(
+            pl.sum("is_peak").alias("n_peaks"),
+            pl.mean("temperature").round(1).suffix("_mean"),
+        )[:-remove_tail_count]
 
-        return (
-            self.data.sort(grp_col)
-            .with_columns(pl.col(grp_col).cast(pl.Int64))
-            .group_by_dynamic(
-                pl.col(grp_col),
-                every=f"{every}i",
-                period=f"{period}i",
-                offset=f"{offset}i",
-            )
-            .agg(
-                pl.len().alias("n_peaks_in_window"),
-            )[:-remove_tail_count]
-            .get_column("n_peaks_in_window")
-        )
+        self._rolling_rate_data = rr_df
 
     def _add_manual_peak_edits_column(self) -> None:
         pl_added = pl.Series("added", self._manual_peak_edits.added, pl.Int32)
@@ -524,7 +529,7 @@ class Section:
         manual_edits = self._manual_peak_edits
         compact_result = self.get_focused_result(info_column)
         instant_rate = self.rate_instant
-        rolling_rate = self.calculate_rolling_rate().to_numpy()
+        rolling_rate = self.rate_rolling[1]
 
         return DetailedSectionResult(
             metadata=metadata,

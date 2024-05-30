@@ -314,12 +314,16 @@ class PlotController(QtCore.QObject):
 
         self.signal_curve.setData(y_data)
 
-    def set_rate_data(self, y_data: npt.NDArray[np.float64], clear: bool = False) -> None:
+    def set_rate_data(self, y_data: npt.NDArray[np.float64 | np.intp], x_data: npt.NDArray[np.intp] | None = None, clear: bool = False) -> None:
         if self.rate_curve is None:
             return
         if clear:
             self.rate_curve.clear()
-        self.rate_curve.setData(y_data)
+
+        if x_data is not None:
+            self.rate_curve.setData(x_data, y_data)
+        else:
+            self.rate_curve.setData(y_data)
 
     def set_peak_data(
         self, x_data: npt.NDArray[np.intp | np.uintp], y_data: npt.NDArray[np.float64]

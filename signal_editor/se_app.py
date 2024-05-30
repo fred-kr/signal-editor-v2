@@ -135,9 +135,9 @@ class SignalEditor(QtWidgets.QApplication):
         peaks = peaks + b_left
         active_section.update_peaks("add", peaks)
         self.sig_peaks_updated.emit()
-        pos = self.data.active_section.get_peak_pos().to_numpy(structured=True)
-        self.plot.set_peak_data(pos["x"], pos["y"])
-        self.plot.set_rate_data(active_section.rate_instant)
+        # pos = self.data.active_section.get_peak_pos().to_numpy(structured=True)
+        # self.plot.set_peak_data(pos["x"], pos["y"])
+        # self.plot.set_rate_data(active_section.rate_instant)
 
     @QtCore.Slot(str, object)
     def handle_peak_edit(
@@ -150,7 +150,9 @@ class SignalEditor(QtWidgets.QApplication):
     def refresh_peak_data(self) -> None:
         pos = self.data.active_section.get_peak_pos().to_numpy(structured=True)
         self.plot.set_peak_data(pos["x"], pos["y"])
-        self.plot.set_rate_data(self.data.active_section.rate_instant)
+        rr_x, rr_y = self.data.active_section.rate_rolling
+        self.plot.set_rate_data(rr_y, rr_x)
+        # self.plot.set_rate_data(self.data.active_section.rate_instant)
 
     @QtCore.Slot(dict)
     def filter_active_signal(self, filter_params: _t.SignalFilterParameters) -> None:
