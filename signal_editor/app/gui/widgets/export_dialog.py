@@ -4,7 +4,7 @@ from pathlib import Path
 from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from signal_editor.app.enum_defs import ExportFormatCompact, ExportFormatDetailed
+from ...enum_defs import ExportFormatCompact, ExportFormatDetailed
 from signal_editor.ui.ui_dialog_export_result import Ui_ExportDialog
 
 

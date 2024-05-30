@@ -10,7 +10,7 @@ python = ">=3.12,<3.13"
 pyarrow = "^16.1.0"
 pyopengl-accelerate = "^3.1.7"
 wfdb = "^4.1.2"
-polars = "^0.20.29"
+polars = "^0.20.30"
 pyopengl = "^3.1.7"
 mne = "^1.7.0"
 pywavelets = "^1.6.0"
@@ -29,26 +29,23 @@ polars-standardize-series = {path = "E:/dev-home/projects/rust/polars_standardiz
 neurokit2 = "0.2.9"
 qtconsole = "^5.5.2"
 pyside6 = "^6.7.1"
-pyside6-fluent-widgets = "^1.5.6"
 darkdetect = "^0.8.0"
+pyside6-fluent-widgets = {extras = ["full"], version = "^1.5.6"}
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.24.0"
 pyinstaller = "^6.7.0"
 pyinstaller-hooks-contrib = "^2024.6"
 sourcery = "^1.18.0"
-ruff = "^0.4.5"
+ruff = "^0.4.6"
 python-dotenv = "^1.0.1"
 pytest = "^8.2.1"
 # hypothesis = {extras = ["numpy"], version = "^6.102.4"}
 rich = {extras = ["jupyter"], version = "^13.7.1"}
-mkdocs-material = "^9.5.24"
-pyright = "^1.1.364"
+mkdocs-material = "^9.5.25"
+pyright = "^1.1.365"
 jedi = "^0.19.1"
 pyside6-examples = "^6.7.1"
-ordered-set = "^4.1.0"
-zstandard = "^0.22.0"
-nuitka = "^2.2.3"
 xmltodict = "^0.13.0"
 
 [tool.ruff]

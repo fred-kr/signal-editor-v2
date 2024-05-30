@@ -6,10 +6,10 @@ import polars as pl
 from loguru import logger
 from PySide6 import QtCore
 
-from signal_editor.app.utils import human_readable_timedelta
+from ..utils import human_readable_timedelta
 
 if t.TYPE_CHECKING:
-    from signal_editor.app.models.metadata import QFileMetadata
+    from .metadata import FileMetadata
 
 
 def validate_column(
@@ -27,7 +27,7 @@ def validate_column(
 class DataFrameModel(QtCore.QAbstractTableModel):
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
-        self._metadata: "QFileMetadata | None" = None
+        self._metadata: "FileMetadata | None" = None
         self._df: pl.DataFrame | None = None
         self._schema: t.OrderedDict[str, pl.DataType] | None = None
         self._name_index_column: str = "index"
@@ -44,7 +44,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
         return self._df
 
     # TODO: Can probably be removed
-    def set_metadata(self, metadata: "QFileMetadata") -> None:
+    def set_metadata(self, metadata: "FileMetadata") -> None:
         self._metadata = metadata
         metadata_dict = metadata.to_dict()
         self._name_signal_column = metadata_dict["signal_column"]

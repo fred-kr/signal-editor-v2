@@ -11,8 +11,8 @@ import polars.selectors as cs
 import tables as tb
 from loguru import logger
 
-from signal_editor.app.enum_defs import OxygenCondition, PeakDetectionMethod
-from signal_editor.app.models.result_models import CompleteResult
+from ..enum_defs import OxygenCondition, PeakDetectionMethod
+from ..models.result_models import CompleteResult
 
 
 def parse_file_name(

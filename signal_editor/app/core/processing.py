@@ -9,8 +9,8 @@ import scipy.signal
 import scipy.stats
 from polars_standardize_series import standardize
 
-from signal_editor.app import type_defs as _t
-from signal_editor.app.enum_defs import FilterMethod
+from .. import type_defs as _t
+from ..enum_defs import FilterMethod
 
 
 def standardize_signal(

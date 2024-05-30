@@ -4,8 +4,8 @@ import superqt
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from signal_editor.ui.ui_dock_processing_input import Ui_DockWidgetProcessingInputs
-from signal_editor.app import type_defs as _t
-from signal_editor.app.enum_defs import FilterMethod, FilterType, PreprocessPipeline, StandardizationMethod
+from ... import type_defs as _t
+from ...enum_defs import FilterMethod, FilterType, PreprocessPipeline, StandardizationMethod
 
 
 class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs):
@@ -25,36 +25,33 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
             sampling_rate = 400
         freq_range = (0, sampling_rate // 2)
 
-        dbl_slider_lowcut = superqt.QLabeledDoubleSlider(QtCore.Qt.Orientation.Horizontal, self.grp_box_filter_parameters)
+        dbl_slider_lowcut = superqt.QLabeledDoubleSlider()
         dbl_slider_lowcut.setEdgeLabelMode(superqt.QLabeledDoubleSlider.EdgeLabelMode.LabelIsValue)
         dbl_slider_lowcut.setDecimals(1)
         dbl_slider_lowcut.setRange(*freq_range)
         dbl_slider_lowcut.setValue(1)
         self.dbl_slider_lowcut = dbl_slider_lowcut
-        self.form_layout_grp_box_filter_parameters.addRow(
-            "Low-cut frequency", self.dbl_slider_lowcut
-        )
+        self.v_layout_grp_box_filter_parameters.addWidget(QtWidgets.QLabel("Low-cut frequency"))
+        self.v_layout_grp_box_filter_parameters.addWidget(self.dbl_slider_lowcut)
 
-        dbl_slider_highcut = superqt.QLabeledDoubleSlider(QtCore.Qt.Orientation.Horizontal, self.grp_box_filter_parameters)
+        dbl_slider_highcut = superqt.QLabeledDoubleSlider()
         dbl_slider_highcut.setEdgeLabelMode(superqt.QLabeledDoubleSlider.EdgeLabelMode.LabelIsValue)
         dbl_slider_highcut.setDecimals(1)
         dbl_slider_highcut.setRange(*freq_range)
         dbl_slider_highcut.setValue(8)
         self.dbl_slider_highcut = dbl_slider_highcut
-        self.form_layout_grp_box_filter_parameters.addRow(
-            "High-cut frequency", self.dbl_slider_highcut
-        )
+        self.v_layout_grp_box_filter_parameters.addWidget(QtWidgets.QLabel("High-cut frequency"))
+        self.v_layout_grp_box_filter_parameters.addWidget(self.dbl_slider_highcut)
 
-        slider_window_size_filter = superqt.QLabeledSlider(QtCore.Qt.Orientation.Horizontal, self.grp_box_filter_parameters)
+        slider_window_size_filter = superqt.QLabeledSlider()
         slider_window_size_filter.setEdgeLabelMode(
             superqt.QLabeledSlider.EdgeLabelMode.LabelIsValue
         )
         slider_window_size_filter.setRange(5, 5_000)
         slider_window_size_filter.setValue(500)
         self.slider_window_size_filter = slider_window_size_filter
-        self.form_layout_grp_box_filter_parameters.addRow(
-            "Window size", self.slider_window_size_filter
-        )
+        self.v_layout_grp_box_filter_parameters.addWidget(QtWidgets.QLabel("Window size"))
+        self.v_layout_grp_box_filter_parameters.addWidget(self.slider_window_size_filter)
 
         combo_powerline = QtWidgets.QComboBox()
         combo_powerline.setMinimumHeight(31)
@@ -64,7 +61,8 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
         combo_powerline.setItemData(0, 50, QtCore.Qt.ItemDataRole.UserRole)
         combo_powerline.setItemData(1, 60, QtCore.Qt.ItemDataRole.UserRole)
         self.combo_powerline = combo_powerline
-        self.form_layout_grp_box_filter_parameters.addRow("Power line", self.combo_powerline)
+        self.v_layout_grp_box_filter_parameters.addWidget(QtWidgets.QLabel("Power line"))
+        self.v_layout_grp_box_filter_parameters.addWidget(self.combo_powerline)
 
         slider_window_size_standardize = superqt.QLabeledSlider(QtCore.Qt.Orientation.Horizontal, self.grp_box_standardize_rolling_window)
         slider_window_size_standardize.setEdgeLabelMode(
@@ -73,11 +71,8 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
 
         slider_window_size_standardize.setRange(3, 3_333)
         slider_window_size_standardize.setValue(300)
-        self.form_layout_standardize_roll_window.setRowWrapPolicy(
-            QtWidgets.QFormLayout.RowWrapPolicy.WrapAllRows
-        )
-        self.form_layout_standardize_roll_window.setWidget(
-            0, QtWidgets.QFormLayout.ItemRole.FieldRole, slider_window_size_standardize
+        self.v_layout_grp_box_standardize_rolling_window.addWidget(
+            slider_window_size_standardize
         )
 
         self.slider_window_size_standardize = slider_window_size_standardize

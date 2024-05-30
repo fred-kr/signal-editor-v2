@@ -3,13 +3,13 @@ import typing as t
 
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from signal_editor.app import type_defs as _t
-from signal_editor.app.enum_defs import (
+from ... import type_defs as _t
+from ...enum_defs import (
     NK2ECGPeakDetectionMethod,
     PeakDetectionMethod,
     WFDBPeakDirection,
 )
-from signal_editor.app.gui.widgets import _widget_defaults as _widget_defs
+from . import _widget_defaults as _widget_defs
 from signal_editor.ui.ui_dock_peak_detection import Ui_DockWidgetPeakDetection
 
 

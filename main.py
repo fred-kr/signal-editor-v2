@@ -33,8 +33,11 @@ if __name__ == "__main__":
 
     use_opengl = args.no_opengl
 
+    if args.console:
+        os.environ["DEV"] = "1"
+
     # Check if running from executable (production) or via python script (development)
-    os.environ["DEV"] = "1" if getattr(sys, "frozen", False) else "0"
+    # os.environ["DEV"] = "1" if getattr(sys, "frozen", False) else "0"
 
     pg.setConfigOptions(
         useOpenGL=use_opengl,

@@ -9,21 +9,21 @@ import superqt
 from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from signal_editor.app import type_defs as _t
-from signal_editor.app.controllers.data_controller import DataController
-from signal_editor.app.controllers.plot_controller import PlotController
-from signal_editor.app.core.file_io import write_hdf5
-from signal_editor.app.core.peak_detection import find_peaks
-from signal_editor.app.enum_defs import (
+from .app import type_defs as _t
+from .app.controllers.data_controller import DataController
+from .app.controllers.plot_controller import PlotController
+from .app.core.file_io import write_hdf5
+from .app.core.peak_detection import find_peaks
+from .app.enum_defs import (
     PeakDetectionMethod,
     PreprocessPipeline,
     StandardizationMethod,
 )
-from signal_editor.app.gui.main_window import MainWindow
-from signal_editor.app.utils import safe_disconnect, safe_multi_disconnect
+from .app.gui.main_window import MainWindow
+from .app.utils import safe_disconnect, safe_multi_disconnect
 
 if t.TYPE_CHECKING:
-    from signal_editor.app.models.metadata import QFileMetadata
+    from .app.models.metadata import FileMetadata
 
 
 class SignalEditor(QtWidgets.QApplication):
@@ -287,7 +287,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.data.update_metadata(sampling_rate, signal_col, info_col)
 
     @QtCore.Slot(object)
-    def update_metadata_widgets(self, metadata: "QFileMetadata") -> None:
+    def update_metadata_widgets(self, metadata: "FileMetadata") -> None:
         metadata_dict = metadata.to_dict()
         self.mw.data_tree_widget_import_metadata.setData(metadata_dict, hideRoot=True)
         self.mw.data_tree_widget_import_metadata.collapseAll()

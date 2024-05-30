@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import numpy.typing as npt
 
-from signal_editor.app.enum_defs import (
+from .enum_defs import (
     FilterMethod,
     NK2ECGPeakDetectionMethod,
     PointSymbols,
@@ -17,11 +17,11 @@ if t.TYPE_CHECKING:
     import mne
     from PySide6 import QtCore, QtGui
 
-    from signal_editor.app.controllers.data_controller import (
+    from ..app.controllers.data_controller import (
         TextFileSeparator,
     )
-    from signal_editor.app.core.section import SectionID
-    from signal_editor.app.gui.widgets.settings_dialog import RateComputationMethod
+    from ..app.core.section import SectionID
+    from ..app.gui.widgets.settings_dialog import RateComputationMethod
 
 
 PGColor = t.Union[str, int, float, tuple[int, int, int], tuple[int, int, int, int], "QtGui.QColor"]

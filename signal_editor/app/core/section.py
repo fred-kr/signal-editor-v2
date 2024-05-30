@@ -11,17 +11,17 @@ from loguru import logger
 from polars_standardize_series import standardize
 from PySide6 import QtCore
 
-from signal_editor.app import type_defs as _t
-from signal_editor.app.core.peak_detection import find_peaks
-from signal_editor.app.core.processing import (
+from .. import type_defs as _t
+from .peak_detection import find_peaks
+from .processing import (
     filter_elgendi,
     filter_neurokit2,
     filter_signal,
     signal_rate,
 )
-from signal_editor.app.enum_defs import FilterMethod, PeakDetectionMethod, PreprocessPipeline
-from signal_editor.app.models.result_models import CompactSectionResult, DetailedSectionResult
-from signal_editor.app.utils import format_long_sequence
+from ..enum_defs import FilterMethod, PeakDetectionMethod, PreprocessPipeline
+from ..models.result_models import CompactSectionResult, DetailedSectionResult
+from ..utils import format_long_sequence
 
 
 @dataclass(slots=True)

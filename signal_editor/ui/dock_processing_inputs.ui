@@ -32,7 +32,7 @@
          <x>0</x>
          <y>0</y>
          <width>364</width>
-         <height>362</height>
+         <height>372</height>
         </rect>
        </property>
        <layout class="QVBoxLayout" name="verticalLayout">
@@ -133,26 +133,35 @@
             <string>Custom Filters</string>
            </attribute>
            <layout class="QGridLayout" name="gridLayout_4">
-            <item row="4" column="0" colspan="2">
+            <item row="4" column="0" colspan="2" alignment="Qt::AlignmentFlag::AlignTop">
              <widget class="QGroupBox" name="grp_box_filter_parameters">
               <property name="title">
-               <string>Method Parameters</string>
+               <string> Method Parameters </string>
               </property>
-              <layout class="QFormLayout" name="form_layout_grp_box_filter_parameters">
-               <property name="rowWrapPolicy">
-                <enum>QFormLayout::RowWrapPolicy::WrapAllRows</enum>
-               </property>
-               <item row="0" column="0">
+              <property name="alignment">
+               <set>Qt::AlignmentFlag::AlignCenter</set>
+              </property>
+              <property name="flat">
+               <bool>true</bool>
+              </property>
+              <layout class="QVBoxLayout" name="v_layout_grp_box_filter_parameters">
+               <item>
                 <widget class="QLabel" name="label_9">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
                  <property name="text">
                   <string>Filter Type:</string>
                  </property>
                 </widget>
                </item>
-               <item row="0" column="1">
+               <item>
                 <widget class="QEnumComboBox" name="enum_combo_filter_type">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -165,17 +174,23 @@
                  </property>
                 </widget>
                </item>
-               <item row="1" column="0">
+               <item>
                 <widget class="QLabel" name="label_10">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
                  <property name="text">
                   <string>Filter Order</string>
                  </property>
                 </widget>
                </item>
-               <item row="1" column="1">
+               <item>
                 <widget class="QSpinBox" name="spin_box_filter_order">
                  <property name="sizePolicy">
-                  <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+                  <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
@@ -185,6 +200,9 @@
                    <width>0</width>
                    <height>31</height>
                   </size>
+                 </property>
+                 <property name="frame">
+                  <bool>false</bool>
                  </property>
                 </widget>
                </item>
@@ -289,7 +307,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
               </property>
              </widget>
             </item>
-            <item row="3" column="0" colspan="2">
+            <item row="3" column="0" colspan="2" alignment="Qt::AlignmentFlag::AlignTop">
              <widget class="QGroupBox" name="grp_box_standardize_rolling_window">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
@@ -309,9 +327,12 @@ li.checked::marker { content: &quot;\2612&quot;; }
               <property name="checked">
                <bool>false</bool>
               </property>
-              <layout class="QFormLayout" name="form_layout_standardize_roll_window">
-               <item row="0" column="0">
+              <layout class="QVBoxLayout" name="v_layout_grp_box_standardize_rolling_window">
+               <item>
                 <widget class="QLabel" name="label_11">
+                 <property name="locale">
+                  <locale language="English" country="UnitedStates"/>
+                 </property>
                  <property name="text">
                   <string>Window Size:</string>
                  </property>

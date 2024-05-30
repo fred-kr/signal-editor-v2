@@ -2,7 +2,7 @@
 Default values input widgets.
 """
 
-from signal_editor.app.enum_defs import WFDBPeakDirection
+from ...enum_defs import WFDBPeakDirection
 
 PEAK_DETECTION = {
     "peak_elgendi_ppg": {
@@ -47,4 +47,11 @@ PEAK_DETECTION = {
         "window_overlap": 0.5,
         "accelerated": True,
     },
+}
+
+
+PROCESSING = {
+    "dbl_slider_lowcut": 1,
+    "dbl_slider_highcut": 8,
+    "slider_window_size_filter": 500,
 }

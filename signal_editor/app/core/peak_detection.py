@@ -8,8 +8,8 @@ from loguru import logger
 from PySide6 import QtCore
 from scipy import ndimage, signal
 
-from signal_editor.app import type_defs as _t
-from signal_editor.app.enum_defs import PeakDetectionMethod, SmoothingKernels, WFDBPeakDirection
+from .. import type_defs as _t
+from ..enum_defs import PeakDetectionMethod, SmoothingKernels, WFDBPeakDirection
 
 
 def _fit_loess(

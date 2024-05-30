@@ -7,14 +7,14 @@ import mne.io
 import polars as pl
 from PySide6 import QtCore
 
-from signal_editor.app import type_defs as _t
-from signal_editor.app.core.file_io import detect_sampling_rate, read_edf
-from signal_editor.app.core.section import Section
-from signal_editor.app.enum_defs import TextFileSeparator
-from signal_editor.app.models.df_model import DataFrameModel
-from signal_editor.app.models.metadata import QFileMetadata
-from signal_editor.app.models.result_models import CompleteResult, SelectedFileMetadata
-from signal_editor.app.models.section_list_model import SectionListModel
+from .. import type_defs as _t
+from ..core.file_io import detect_sampling_rate, read_edf
+from ..core.section import Section
+from ..enum_defs import TextFileSeparator
+from ..models.df_model import DataFrameModel
+from ..models.metadata import FileMetadata
+from ..models.result_models import CompleteResult, SelectedFileMetadata
+from ..models.section_list_model import SectionListModel
 
 
 class MissingDataError(Exception):
@@ -53,7 +53,7 @@ class DataController(QtCore.QObject):
 
         self.data_model = DataFrameModel(self)
 
-        self._metadata: QFileMetadata | None = None
+        self._metadata: FileMetadata | None = None
 
         self._sections = SectionListModel(parent=self)
         self._active_section: Section | None = None
@@ -84,7 +84,7 @@ class DataController(QtCore.QObject):
         return self._sampling_rate
 
     @property
-    def metadata(self) -> QFileMetadata:
+    def metadata(self) -> FileMetadata:
         if self._metadata is None:
             raise MissingDataError("No data available.")
         return self._metadata
@@ -171,7 +171,7 @@ class DataController(QtCore.QObject):
         last_sampling_rate: int = settings.value("Data/sampling_rate", 0)  # type: ignore
         last_signal_col = settings.value("Misc/last_signal_column_name", None)
         last_info_col = settings.value("Misc/last_info_column_name", None)
-        metadata = QFileMetadata(file_path, self)
+        metadata = FileMetadata(file_path, self)
 
         match file_path.suffix:
             case ".edf":
@@ -284,9 +284,13 @@ class DataController(QtCore.QObject):
 
         section_dfs = [section.data for section in self.sections.editable_sections]
         combined_section_df = pl.concat(section_dfs)
-        global_df = base_df.lazy().update(
-            combined_section_df.lazy(), on=["index", self.metadata.signal_column], how="outer"
-        ).drop("section_index")
+        global_df = (
+            base_df.lazy()
+            .update(
+                combined_section_df.lazy(), on=["index", self.metadata.signal_column], how="outer"
+            )
+            .drop("section_index")
+        )
 
         info_col = self.metadata.info_column
         if info_col == "":

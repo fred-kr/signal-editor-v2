@@ -8,13 +8,13 @@ from pyqtgraph.console import ConsoleWidget
 from PySide6 import QtCore, QtGui, QtWidgets
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 
-from signal_editor.app.enum_defs import LogLevel
-from signal_editor.app.gui.icons import FugueIcon as FI
-from signal_editor.app.gui.widgets import ExportDialog, MetadataDialog, SectionListDock
-from signal_editor.app.gui.widgets.log_window import StatusMessageDock
-from signal_editor.app.gui.widgets.peak_detection_inputs import PeakDetectionDock
-from signal_editor.app.gui.widgets.processing_inputs import ProcessingInputsDock
-from signal_editor.app.gui.widgets.settings_dialog import SettingsDialog
+from ..enum_defs import LogLevel
+from .icons import FugueIcon as FI
+from .widgets import ExportDialog, MetadataDialog, SectionListDock
+from .widgets.log_window import StatusMessageDock
+from .widgets.peak_detection_inputs import PeakDetectionDock
+from .widgets.processing_inputs import ProcessingInputsDock
+from .widgets.settings_dialog import SettingsDialog
 from signal_editor.ui.ui_main_window import Ui_MainWindow
 
 
@@ -26,8 +26,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         super().__init__(parent)
         self.setupUi(self)
         self.new_central_widget = QtWidgets.QWidget()
-        self.hBoxLayout = QtWidgets.QHBoxLayout(self.new_central_widget)
-        self.navigation_interface = NavigationInterface(self, showMenuButton=False)
+        self._h_layout = QtWidgets.QHBoxLayout(self.new_central_widget)
+        self.navigation_interface = NavigationInterface(self, showMenuButton=True)
 
         self._setup_layout()
         self.setCentralWidget(self.new_central_widget)
@@ -52,15 +52,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.move(w // 2 - self.width() // 2, h // 2 - self.height() // 2)
 
     def _setup_layout(self) -> None:
-        self.hBoxLayout.setSpacing(0)
-        self.hBoxLayout.setContentsMargins(0, 0, 0, 0)
-        self.hBoxLayout.addWidget(self.navigation_interface)
-        self.hBoxLayout.addWidget(self.stackedWidget)
-        self.hBoxLayout.setStretchFactor(self.stackedWidget, 1)
+        self._h_layout.setSpacing(0)
+        self._h_layout.setContentsMargins(0, 0, 0, 0)
+        self._h_layout.addWidget(self.navigation_interface)
+        self._h_layout.addWidget(self.stackedWidget)
+        self._h_layout.setStretchFactor(self.stackedWidget, 1)
 
     def _setup_navigation(self) -> None:
         self.add_sub_interface(self.stacked_page_import, FI.FILE_IMPORT.icon(), "Data Import")
-        self.add_sub_interface(self.stacked_page_edit, FI.APP_WAVE.icon(), "View/Edit")
+        self.add_sub_interface(self.stacked_page_edit, FI.APP_WAVE.icon(), "View / Edit")
         self.add_sub_interface(self.stacked_page_result, FI.REPORT.icon(), "Results")
         self.add_sub_interface(self.stacked_page_export, FI.FILE_EXPORT.icon(), "Export")
 

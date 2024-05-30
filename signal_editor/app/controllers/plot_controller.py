@@ -5,16 +5,16 @@ import numpy.typing as npt
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from signal_editor.app import type_defs as _t
-from signal_editor.app.enum_defs import PointSymbols
-from signal_editor.app.gui.plot_items import CustomScatterPlotItem
-from signal_editor.app.gui.plot_items.editing_view_box import EditingViewBox
-from signal_editor.app.gui.plot_items.time_axis_item import TimeAxisItem
+from .. import type_defs as _t
+from ..enum_defs import PointSymbols
+from ..gui.plot_items import CustomScatterPlotItem
+from ..gui.plot_items.editing_view_box import EditingViewBox
+from ..gui.plot_items.time_axis_item import TimeAxisItem
 
 if t.TYPE_CHECKING:
     from pyqtgraph.GraphicsScene import mouseEvents
 
-    from signal_editor.app.gui.main_window import MainWindow
+    from ..gui.main_window import MainWindow
 
 
 class PlotController(QtCore.QObject):

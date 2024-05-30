@@ -4,10 +4,10 @@ from pathlib import Path
 from loguru import logger
 from PySide6 import QtCore
 
-from signal_editor.app.enum_defs import FileFormat
+from ..enum_defs import FileFormat
 
 
-class QFileMetadata(QtCore.QObject):
+class FileMetadata(QtCore.QObject):
     def __init__(self, file_path: Path | str, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
         self.required_fields = []
@@ -97,5 +97,3 @@ class QFileMetadata(QtCore.QObject):
             "info_column": self.info_column,
             "column_names": self.column_names,
         }
-
-

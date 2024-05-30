@@ -4,7 +4,7 @@ import numpy as np
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui
 
-from signal_editor.app import type_defs as _t
+from ... import type_defs as _t
 
 
 def _mk_pen(*args: _t.PGPen, **kwargs: t.Unpack[_t.PGPenKwargs]) -> QtGui.QPen:

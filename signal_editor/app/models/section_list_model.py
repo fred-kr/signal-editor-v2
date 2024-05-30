@@ -1,6 +1,6 @@
 from PySide6 import QtCore
 
-from signal_editor.app.core.section import Section, SectionID
+from ..core.section import Section, SectionID
 
 
 class SectionListModel(QtCore.QAbstractListModel):

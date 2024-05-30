@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'dock_processing_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.0
+## Created by: Qt User Interface Compiler version 6.7.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -15,10 +15,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QDockWidget, QFormLayout, QFrame,
-    QGridLayout, QGroupBox, QLabel, QPushButton,
-    QScrollArea, QSizePolicy, QSpinBox, QStackedWidget,
-    QTabWidget, QTextBrowser, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QDockWidget, QFrame, QGridLayout,
+    QGroupBox, QLabel, QPushButton, QScrollArea,
+    QSizePolicy, QSpinBox, QStackedWidget, QTabWidget,
+    QTextBrowser, QVBoxLayout, QWidget)
 
 from superqt import QEnumComboBox
 from . import resources_rc
@@ -39,7 +39,7 @@ class Ui_DockWidgetProcessingInputs(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 364, 362))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 364, 372))
         self.verticalLayout = QVBoxLayout(self.scrollAreaWidgetContents)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.verticalLayout.setContentsMargins(0, 0, 0, 0)
@@ -107,40 +107,49 @@ class Ui_DockWidgetProcessingInputs(object):
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.grp_box_filter_parameters = QGroupBox(self.tab_processing_filter)
         self.grp_box_filter_parameters.setObjectName(u"grp_box_filter_parameters")
-        self.form_layout_grp_box_filter_parameters = QFormLayout(self.grp_box_filter_parameters)
-        self.form_layout_grp_box_filter_parameters.setObjectName(u"form_layout_grp_box_filter_parameters")
-        self.form_layout_grp_box_filter_parameters.setRowWrapPolicy(QFormLayout.RowWrapPolicy.WrapAllRows)
+        self.grp_box_filter_parameters.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.grp_box_filter_parameters.setFlat(True)
+        self.v_layout_grp_box_filter_parameters = QVBoxLayout(self.grp_box_filter_parameters)
+        self.v_layout_grp_box_filter_parameters.setObjectName(u"v_layout_grp_box_filter_parameters")
         self.label_9 = QLabel(self.grp_box_filter_parameters)
         self.label_9.setObjectName(u"label_9")
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.label_9.sizePolicy().hasHeightForWidth())
+        self.label_9.setSizePolicy(sizePolicy3)
 
-        self.form_layout_grp_box_filter_parameters.setWidget(0, QFormLayout.LabelRole, self.label_9)
+        self.v_layout_grp_box_filter_parameters.addWidget(self.label_9)
 
         self.enum_combo_filter_type = QEnumComboBox(self.grp_box_filter_parameters)
         self.enum_combo_filter_type.setObjectName(u"enum_combo_filter_type")
-        sizePolicy2.setHeightForWidth(self.enum_combo_filter_type.sizePolicy().hasHeightForWidth())
-        self.enum_combo_filter_type.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.enum_combo_filter_type.sizePolicy().hasHeightForWidth())
+        self.enum_combo_filter_type.setSizePolicy(sizePolicy3)
         self.enum_combo_filter_type.setMinimumSize(QSize(0, 31))
 
-        self.form_layout_grp_box_filter_parameters.setWidget(0, QFormLayout.FieldRole, self.enum_combo_filter_type)
+        self.v_layout_grp_box_filter_parameters.addWidget(self.enum_combo_filter_type)
 
         self.label_10 = QLabel(self.grp_box_filter_parameters)
         self.label_10.setObjectName(u"label_10")
+        sizePolicy3.setHeightForWidth(self.label_10.sizePolicy().hasHeightForWidth())
+        self.label_10.setSizePolicy(sizePolicy3)
 
-        self.form_layout_grp_box_filter_parameters.setWidget(1, QFormLayout.LabelRole, self.label_10)
+        self.v_layout_grp_box_filter_parameters.addWidget(self.label_10)
 
         self.spin_box_filter_order = QSpinBox(self.grp_box_filter_parameters)
         self.spin_box_filter_order.setObjectName(u"spin_box_filter_order")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.spin_box_filter_order.sizePolicy().hasHeightForWidth())
-        self.spin_box_filter_order.setSizePolicy(sizePolicy3)
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.spin_box_filter_order.sizePolicy().hasHeightForWidth())
+        self.spin_box_filter_order.setSizePolicy(sizePolicy4)
         self.spin_box_filter_order.setMinimumSize(QSize(0, 31))
+        self.spin_box_filter_order.setFrame(False)
 
-        self.form_layout_grp_box_filter_parameters.setWidget(1, QFormLayout.FieldRole, self.spin_box_filter_order)
+        self.v_layout_grp_box_filter_parameters.addWidget(self.spin_box_filter_order)
 
 
-        self.gridLayout_4.addWidget(self.grp_box_filter_parameters, 4, 0, 1, 2)
+        self.gridLayout_4.addWidget(self.grp_box_filter_parameters, 4, 0, 1, 2, Qt.AlignmentFlag.AlignTop)
 
         self.label_6 = QLabel(self.tab_processing_filter)
         self.label_6.setObjectName(u"label_6")
@@ -164,11 +173,8 @@ class Ui_DockWidgetProcessingInputs(object):
 
         self.label_4 = QLabel(self.tab_processing_filter)
         self.label_4.setObjectName(u"label_4")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
-        self.label_4.setSizePolicy(sizePolicy4)
+        sizePolicy3.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
+        self.label_4.setSizePolicy(sizePolicy3)
         self.label_4.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignTop)
         self.label_4.setWordWrap(False)
 
@@ -213,15 +219,16 @@ class Ui_DockWidgetProcessingInputs(object):
         self.grp_box_standardize_rolling_window.setFlat(True)
         self.grp_box_standardize_rolling_window.setCheckable(True)
         self.grp_box_standardize_rolling_window.setChecked(False)
-        self.form_layout_standardize_roll_window = QFormLayout(self.grp_box_standardize_rolling_window)
-        self.form_layout_standardize_roll_window.setObjectName(u"form_layout_standardize_roll_window")
+        self.v_layout_grp_box_standardize_rolling_window = QVBoxLayout(self.grp_box_standardize_rolling_window)
+        self.v_layout_grp_box_standardize_rolling_window.setObjectName(u"v_layout_grp_box_standardize_rolling_window")
         self.label_11 = QLabel(self.grp_box_standardize_rolling_window)
         self.label_11.setObjectName(u"label_11")
+        self.label_11.setLocale(QLocale(QLocale.English, QLocale.UnitedStates))
 
-        self.form_layout_standardize_roll_window.setWidget(0, QFormLayout.LabelRole, self.label_11)
+        self.v_layout_grp_box_standardize_rolling_window.addWidget(self.label_11)
 
 
-        self.gridLayout_5.addWidget(self.grp_box_standardize_rolling_window, 3, 0, 1, 2)
+        self.gridLayout_5.addWidget(self.grp_box_standardize_rolling_window, 3, 0, 1, 2, Qt.AlignmentFlag.AlignTop)
 
         self.enum_combo_standardize_method = QEnumComboBox(self.tab_processing_standardize)
         self.enum_combo_standardize_method.setObjectName(u"enum_combo_standardize_method")
@@ -239,8 +246,8 @@ class Ui_DockWidgetProcessingInputs(object):
 
         self.stacked_apply_btns = QStackedWidget(self.dockWidgetContents)
         self.stacked_apply_btns.setObjectName(u"stacked_apply_btns")
-        sizePolicy4.setHeightForWidth(self.stacked_apply_btns.sizePolicy().hasHeightForWidth())
-        self.stacked_apply_btns.setSizePolicy(sizePolicy4)
+        sizePolicy3.setHeightForWidth(self.stacked_apply_btns.sizePolicy().hasHeightForWidth())
+        self.stacked_apply_btns.setSizePolicy(sizePolicy3)
         self.page_pipeline = QWidget()
         self.page_pipeline.setObjectName(u"page_pipeline")
         self.verticalLayout_2 = QVBoxLayout(self.page_pipeline)
@@ -309,8 +316,8 @@ class Ui_DockWidgetProcessingInputs(object):
 
         self.label = QLabel(self.dockWidgetContents)
         self.label.setObjectName(u"label")
-        sizePolicy4.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
-        self.label.setSizePolicy(sizePolicy4)
+        sizePolicy3.setHeightForWidth(self.label.sizePolicy().hasHeightForWidth())
+        self.label.setSizePolicy(sizePolicy3)
 
         self.gridLayout.addWidget(self.label, 0, 0, 1, 4)
 
@@ -332,7 +339,7 @@ class Ui_DockWidgetProcessingInputs(object):
         self.label_3.setText(QCoreApplication.translate("DockWidgetProcessingInputs", u"<html><head/><body><p><span style=\" font-size:10pt;\">Pre-processing pipelines, see </span><span style=\" font-size:10pt; font-weight:700;\">Description</span><span style=\" font-size:10pt;\"> for sources</span></p></body></html>", None))
         self.label_2.setText(QCoreApplication.translate("DockWidgetProcessingInputs", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:700;\">Description</span></p></body></html>", None))
         self.tab_widget_processing_inputs.setTabText(self.tab_widget_processing_inputs.indexOf(self.tab_processing_pipeline), QCoreApplication.translate("DockWidgetProcessingInputs", u"Pipeline", None))
-        self.grp_box_filter_parameters.setTitle(QCoreApplication.translate("DockWidgetProcessingInputs", u"Method Parameters", None))
+        self.grp_box_filter_parameters.setTitle(QCoreApplication.translate("DockWidgetProcessingInputs", u" Method Parameters ", None))
         self.label_9.setText(QCoreApplication.translate("DockWidgetProcessingInputs", u"Filter Type:", None))
         self.label_10.setText(QCoreApplication.translate("DockWidgetProcessingInputs", u"Filter Order", None))
         self.label_6.setText(QCoreApplication.translate("DockWidgetProcessingInputs", u"Filter Method:", None))
