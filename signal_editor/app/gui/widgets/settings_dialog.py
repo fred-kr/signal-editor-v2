@@ -4,6 +4,7 @@ import typing as t
 
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
+from qfluentwidgets import TreeWidget, TreeItemDelegate, ColorPickerButton
 
 from ... import type_defs as _t
 from ...controllers.data_controller import TextFileSeparator
@@ -16,8 +17,8 @@ def make_qcolor(*args: _t.PGColor) -> QtGui.QColor:
     return args[0] if isinstance(args[0], QtGui.QColor) else pg.mkColor(*args)
 
 
-class VariantDelegate(QtWidgets.QItemDelegate):
-    def __init__(self, type_checker: TypeChecker, parent: QtCore.QObject | None = None) -> None:
+class VariantDelegate(TreeItemDelegate):
+    def __init__(self, type_checker: TypeChecker, parent: QtWidgets.QTreeView) -> None:
         super().__init__(parent)
         self._type_checker = type_checker
 
@@ -154,7 +155,7 @@ class VariantDelegate(QtWidgets.QItemDelegate):
         return "<Invalid>" if value is None else f"<{value}>"
 
 
-class SettingsTree(QtWidgets.QTreeWidget):
+class SettingsTree(TreeWidget):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
 
@@ -227,22 +228,6 @@ class SettingsTree(QtWidgets.QTreeWidget):
         self.refresh_timer = QtCore.QTimer()
         self.refresh_timer.setInterval(2000)
         self.auto_refresh = False
-
-        self.group_icon = QtGui.QIcon()
-        self.group_icon.addPixmap(
-            QtGui.QPixmap(":/icons/expand_plus"),
-            QtGui.QIcon.Mode.Normal,
-            QtGui.QIcon.State.Off,
-        )
-        self.group_icon.addPixmap(
-            QtGui.QPixmap(":/icons/expand_minus"),
-            QtGui.QIcon.Mode.Normal,
-            QtGui.QIcon.State.On,
-        )
-        self.key_icon = QtGui.QIcon(":/icons/category_item")
-        self.color_icon = QtGui.QIcon(":/icons/color")
-        self.folder_import_icon = QtGui.QIcon(":/icons/folder_import")
-        self.folder_export_icon = QtGui.QIcon(":/icons/folder_export")
 
         self.refresh_timer.timeout.connect(self.maybe_refresh)
         self.itemExpanded.connect(self._resize_columns)
@@ -354,16 +339,6 @@ class SettingsTree(QtWidgets.QTreeWidget):
         if self.auto_refresh:
             self.refresh()
 
-    def determine_icon(self, key: str) -> QtGui.QIcon:
-        if "color" in key:
-            return self.color_icon
-        elif key == "data_folder":
-            return self.folder_import_icon
-        elif key == "output_folder":
-            return self.folder_export_icon
-        else:
-            return self.key_icon
-
     def adjust_colors(self, child: QtWidgets.QTreeWidgetItem, value: _t.PGColor) -> None:
         color = make_qcolor(value)
         child.setBackground(2, color)
@@ -390,7 +365,7 @@ class SettingsTree(QtWidgets.QTreeWidget):
             else:
                 child = self.create_item(group, parent, divider_index)
 
-            child.setIcon(0, self.group_icon)
+            # child.setIcon(0, self.group_icon)
             divider_index += 1
 
             self.settings.beginGroup(group)
@@ -401,14 +376,14 @@ class SettingsTree(QtWidgets.QTreeWidget):
             child_index = self.find_child(parent, key, 0)
             if child_index == -1:
                 child = self.create_item(key, parent, divider_index)
-                child.setIcon(0, self.determine_icon(key))
+                # child.setIcon(0, self.determine_icon(key))
                 divider_index += 1
             elif child_index >= divider_index:
                 child = self.child_at(parent, child_index)
                 for i in range(child.childCount()):
                     self.delete_item(child, i)
                 self.move_item_forward(parent, child_index, divider_index)
-                child.setIcon(0, self.determine_icon(key))
+                # child.setIcon(0, self.determine_icon(key))
                 divider_index += 1
             else:
                 child = self.child_at(parent, child_index)

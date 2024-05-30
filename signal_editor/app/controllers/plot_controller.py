@@ -77,16 +77,17 @@ class PlotController(QtCore.QObject):
         brush_col: QtGui.QColor = settings.value("Plot/section_marker_color", type=QtGui.QColor)  # type: ignore
         hover_brush_col = brush_col
         hover_brush_col.setAlpha(30)
+        line_pen = pg.mkPen(color="darkgreen", width=2)
         self.region_selector = pg.LinearRegionItem(
             brush=brush_col,
-            pen=(255, 255, 255, 255),
+            pen=line_pen,
             hoverBrush=hover_brush_col,
-            hoverPen={"color": "gray", "width": 2},
+            hoverPen={"color": "gray", "width": 3},
         )
         self.region_selector.setVisible(False)
         self.region_selector.setZValue(1e3)
         for line in self.region_selector.lines:
-            line.addMarker("<|>", position=0.5, size=12)
+            line.addMarker("<|>", position=0.5, size=13)
 
         self.pw_main.addItem(self.region_selector)
 
