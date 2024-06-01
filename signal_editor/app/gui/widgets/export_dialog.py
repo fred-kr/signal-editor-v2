@@ -25,7 +25,8 @@ class ExportDialog(QtWidgets.QDialog, Ui_ExportDialog):
     def _initialize_widgets(self) -> None:
         self.collapsible_extra_metadata.setText("Additional Details")
 
-        detail_form = QtWidgets.QFormLayout()
+        widget = QtWidgets.QWidget()
+        detail_form = QtWidgets.QFormLayout(widget)
         detail_form.setRowWrapPolicy(QtWidgets.QFormLayout.RowWrapPolicy.WrapAllRows)
         meas_date = QtWidgets.QLineEdit()
         meas_date.setPlaceholderText("YYYY-MM-DD")
@@ -42,7 +43,7 @@ class ExportDialog(QtWidgets.QDialog, Ui_ExportDialog):
         self.subject_id = subject_id
         self.oxy_cond = oxy_cond
 
-        self.collapsible_extra_metadata.content().setLayout(detail_form)
+        self.collapsible_extra_metadata.setContent(widget)
 
     def _connect_signals(self) -> None:
         self.combo_box_result_type.currentTextChanged.connect(self._update_export_format)
@@ -61,8 +62,9 @@ class ExportDialog(QtWidgets.QDialog, Ui_ExportDialog):
 
     @QtCore.Slot()
     def _browse_output_dir(self) -> None:
+        prev_dir = str(QtCore.QSettings().value("Misc/output_folder", QtCore.QDir.currentPath()))
         if output_dir := QtWidgets.QFileDialog.getExistingDirectory(
-            self, "Select Output Directory"
+            self, "Select Output Directory", prev_dir
         ):
             self.line_edit_output_dir.setText(output_dir)
 

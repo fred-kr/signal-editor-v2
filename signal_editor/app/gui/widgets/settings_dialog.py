@@ -4,7 +4,7 @@ import typing as t
 
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
-from qfluentwidgets import TreeWidget, TreeItemDelegate, ColorPickerButton
+from qfluentwidgets import TreeItemDelegate, TreeWidget
 
 from ... import type_defs as _t
 from ...controllers.data_controller import TextFileSeparator
@@ -218,9 +218,9 @@ class SettingsTree(TreeWidget):
 
         self.setColumnCount(4)
         self.setHeaderLabels(("Setting", "Type", "Value", "Description"))
-        self.header().setMinimumSectionSize(50)
-        self.header().setStretchLastSection(True)
-        self.header().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Interactive)
+        # self.header().setMinimumSectionSize(50)
+        # self.header().setStretchLastSection(True)
+        # self.header().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Interactive)
         self.setEditTriggers(QtWidgets.QTreeWidget.EditTrigger.NoEditTriggers)
         self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
 

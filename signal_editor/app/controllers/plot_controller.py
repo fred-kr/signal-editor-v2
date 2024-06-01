@@ -446,15 +446,7 @@ class PlotController(QtCore.QObject):
         markersize: int = 12,
     ) -> None:
         subplot = self.mpw_result.fig.add_subplot(111)
-        subplot.scatter(
-            x,
-            y,
-            color=color,
-            marker=marker,  # type: ignore
-            linestyle=linestyle,
-            linewidth=linewidth,
-            # markersize=markersize,
-        )
+        subplot.scatter(x, y, s=markersize, c=color, marker=marker)
         subplot.set_xlabel("Temperature (°C)")
         subplot.set_ylabel("HR (bpm)")
         self.mpw_result.fig.tight_layout()

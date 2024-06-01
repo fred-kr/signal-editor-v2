@@ -58,7 +58,7 @@ class FilterType(enum.StrEnum):
 
 
 class PreprocessPipeline(enum.StrEnum):
-    Custom = "custom"
+    # Custom = "custom"
     PPGElgendi = "ppg_elgendi"
     ECGNeuroKit2 = "ecg_neurokit2"
 

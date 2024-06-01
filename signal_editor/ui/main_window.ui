@@ -149,12 +149,15 @@
                </widget>
               </item>
               <item row="0" column="1">
-               <widget class="QSpinBox" name="spin_box_sampling_rate_import_page">
+               <widget class="SpinBox" name="spin_box_sampling_rate_import_page">
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
                   <height>31</height>
                  </size>
+                </property>
+                <property name="frame">
+                 <bool>false</bool>
                 </property>
                 <property name="suffix">
                  <string> Hz</string>
@@ -306,11 +309,7 @@
                 </widget>
                </item>
                <item>
-                <widget class="QSearchableListWidget" name="search_list_widget_recent_files" native="true">
-                 <property name="toolTip">
-                  <string>Double-click a file name to open it and set it as the active file</string>
-                 </property>
-                </widget>
+                <widget class="ListWidget" name="list_widget_recent_files"/>
                </item>
               </layout>
              </widget>
@@ -532,37 +531,6 @@
    <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <widget class="QToolBar" name="tool_bar_navigation">
-   <property name="minimumSize">
-    <size>
-     <width>0</width>
-     <height>0</height>
-    </size>
-   </property>
-   <property name="windowTitle">
-    <string>Navigation Toolbar</string>
-   </property>
-   <property name="movable">
-    <bool>false</bool>
-   </property>
-   <property name="allowedAreas">
-    <set>Qt::ToolBarArea::RightToolBarArea</set>
-   </property>
-   <property name="floatable">
-    <bool>false</bool>
-   </property>
-   <attribute name="toolBarArea">
-    <enum>RightToolBarArea</enum>
-   </attribute>
-   <attribute name="toolBarBreak">
-    <bool>false</bool>
-   </attribute>
-   <addaction name="action_show_import_page"/>
-   <addaction name="action_show_edit_page"/>
-   <addaction name="action_show_result_page"/>
-   <addaction name="action_show_export_page"/>
-   <addaction name="action_show_info_page"/>
-  </widget>
   <widget class="QToolBar" name="tool_bar_file_actions">
    <property name="windowTitle">
     <string>Editing Toolbar</string>
@@ -1032,14 +1000,35 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>QSearchableListWidget</class>
-   <extends>QWidget</extends>
-   <header>superqt</header>
-   <container>1</container>
+   <class>ListWidget</class>
+   <extends>QListWidget</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>SpinBox</class>
+   <extends>QSpinBox</extends>
+   <header>qfluentwidgets</header>
   </customwidget>
  </customwidgets>
  <resources>
   <include location="../resources/resources.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>line_edit_active_file</sender>
+   <signal>textChanged(QString)</signal>
+   <receiver>MainWindow</receiver>
+   <slot>setWindowTitle(QString)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>176</x>
+     <y>190</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>187</x>
+     <y>-11</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

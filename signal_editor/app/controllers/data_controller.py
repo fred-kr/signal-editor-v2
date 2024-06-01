@@ -282,7 +282,14 @@ class DataController(QtCore.QObject):
 
         base_df = self.get_base_section().data
 
-        section_dfs = [section.data for section in self.sections.editable_sections]
+        section_dfs: list[pl.DataFrame] = []
+        for s in self.sections.editable_sections:
+            section_df = s.data.with_columns(
+                pl.col("is_peak").cast(pl.Int8),
+                pl.col("is_manual").cast(pl.Int8),
+            )
+            section_dfs.append(section_df)
+        
         combined_section_df = pl.concat(section_dfs)
         global_df = (
             base_df.lazy()

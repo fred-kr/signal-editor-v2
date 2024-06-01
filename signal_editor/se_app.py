@@ -20,7 +20,7 @@ from .app.enum_defs import (
     StandardizationMethod,
 )
 from .app.gui.main_window import MainWindow
-from .app.utils import safe_disconnect, safe_multi_disconnect
+from .app.utils import safe_multi_disconnect
 
 if t.TYPE_CHECKING:
     from .app.models.metadata import FileMetadata
@@ -55,7 +55,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.btn_close_file.clicked.connect(self.close_file)
         self.mw.action_about_qt.triggered.connect(self.aboutQt)
         self.mw.dialog_export.sig_export_confirmed.connect(self.export_result)
-        self.mw.search_list_widget_recent_files.list_widget.itemDoubleClicked.connect(
+        self.mw.list_widget_recent_files.itemDoubleClicked.connect(
             self._open_recent_file
         )
         self.mw.sig_table_refresh_requested.connect(self.refresh_data_view)
@@ -102,8 +102,8 @@ class SignalEditor(QtWidgets.QApplication):
         recent_files: list[str] | None = settings.value("Internal/recent_files", None)  # type: ignore
         if recent_files is None:
             recent_files = []
-        self.mw.search_list_widget_recent_files.clear()
-        self.mw.search_list_widget_recent_files.addItems(recent_files)
+        self.mw.list_widget_recent_files.clear()
+        self.mw.list_widget_recent_files.addItems(recent_files)
         return recent_files
 
     @QtCore.Slot()
@@ -152,7 +152,9 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot(dict)
     def filter_active_signal(self, filter_params: _t.SignalFilterParameters) -> None:
-        self.data.active_section.filter_signal(pipeline=PreprocessPipeline.Custom, **filter_params)
+        self.data.active_section.filter_signal(
+            pipeline=PreprocessPipeline.PPGElgendi, **filter_params
+        )
         self.refresh_plot_data()
 
     @QtCore.Slot()
@@ -208,13 +210,9 @@ class SignalEditor(QtWidgets.QApplication):
             (sender.sig_new_metadata, self.update_metadata_widgets),
             (sender.sig_new_data, self._on_sig_new_data),
             (sender.sig_active_section_changed, self._on_active_section_changed),
+            (self.mw.dock_sections.list_view.pressed, sender.set_active_section),
         ]
         safe_multi_disconnect(sender, signal_slot_pairs)
-        safe_disconnect(
-            self.mw.dock_sections.list_view,
-            self.mw.dock_sections.list_view.pressed,
-            self.data.set_active_section,
-        )
 
     @QtCore.Slot(bool)
     def maybe_new_section(self, checked: bool) -> None:
@@ -259,7 +257,7 @@ class SignalEditor(QtWidgets.QApplication):
         section = self.data.active_section
         is_base_section = section is self.data.get_base_section()
         has_results = not section.result_data.is_empty()
-        
+
         self.mw.action_create_new_section.setEnabled(is_base_section)
         self.mw.action_delete_section.setEnabled(not is_base_section)
         self.mw.action_show_section_overview.setEnabled(is_base_section)
@@ -397,8 +395,8 @@ class SignalEditor(QtWidgets.QApplication):
         self.recent_files = self.recent_files[:10]
         settings = QtCore.QSettings()
         settings.setValue("Internal/recent_files", self.recent_files)
-        self.mw.search_list_widget_recent_files.list_widget.clear()
-        self.mw.search_list_widget_recent_files.list_widget.addItems(self.recent_files)
+        self.mw.list_widget_recent_files.clear()
+        self.mw.list_widget_recent_files.addItems(self.recent_files)
 
     def _on_file_opened(self, file_path: str) -> None:
         self.mw.line_edit_active_file.setText(file_path)

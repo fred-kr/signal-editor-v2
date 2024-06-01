@@ -27,7 +27,7 @@ from .processing import (
 @dataclass(slots=True)
 class ProcessingParameters:
     sampling_rate: int
-    processing_pipeline: PreprocessPipeline = PreprocessPipeline.Custom
+    processing_pipeline: PreprocessPipeline | None = None
     filter_parameters: _t.SignalFilterParameters | None = None
     standardization_parameters: _t.StandardizationParameters | None = None
     peak_detection_method: PeakDetectionMethod = field(init=False)
@@ -177,7 +177,7 @@ class Section:
     @property
     def result_data(self) -> pl.DataFrame:
         return self._result_data
-    
+
     @property
     def raw_signal(self) -> pl.Series:
         return self.data.get_column(self.signal_name)
@@ -227,7 +227,9 @@ class Section:
         self._processing_parameters.sampling_rate = sampling_rate
 
     def filter_signal(
-        self, pipeline: PreprocessPipeline, **kwargs: t.Unpack[_t.SignalFilterParameters]
+        self,
+        pipeline: PreprocessPipeline | None = None,
+        **kwargs: t.Unpack[_t.SignalFilterParameters],
     ) -> None:
         settings = QtCore.QSettings()
         allow_stacking = settings.value("Editing/allow_stacking_filters", False, type=bool)
@@ -242,7 +244,7 @@ class Section:
         filtered = np.empty_like(sig_data)
         filter_params: _t.SignalFilterParameters | None = None
 
-        if pipeline == PreprocessPipeline.Custom:
+        if pipeline is None:
             if method == FilterMethod.NoFilter:
                 filtered = sig_data
                 filter_params = None
@@ -334,6 +336,7 @@ class Section:
             pl.when(pl.col("section_index").is_in(pl_peaks))
             .then(pl.lit(1))
             .otherwise(pl.lit(0))
+            .cast(pl.Int8)
             .alias("is_peak")
         )
 
@@ -373,6 +376,7 @@ class Section:
                 pl.when(pl.col("section_index").is_in(pl_peaks))
                 .then(pl.lit(then_value))
                 .otherwise(pl.col("is_peak"))
+                .cast(pl.Int8)
                 .alias("is_peak")
             )
             .collect()
@@ -473,13 +477,17 @@ class Section:
 
     def get_mean_rate_per_temperature(self) -> pl.DataFrame:
         info_col = self.info_name
-        self._result_data = self._rate_data.group_by(pl.col(f"{info_col}_mean")).agg(
-            pl.mean("y").alias("rate_mean"),
-            pl.median("y").alias("rate_median"),
-            pl.std("y").alias("rate_std"),
-            pl.min("y").alias("rate_min"),
-            pl.max("y").alias("rate_max"),
-        ).sort(f"{info_col}_mean")
+        self._result_data = (
+            self._rate_data.group_by(pl.col(f"{info_col}_mean"))
+            .agg(
+                pl.mean("y").alias("rate_mean"),
+                pl.median("y").alias("rate_median"),
+                pl.std("y").alias("rate_std"),
+                pl.min("y").alias("rate_min"),
+                pl.max("y").alias("rate_max"),
+            )
+            .sort(f"{info_col}_mean")
+        )
         return self._result_data
 
     def _add_manual_peak_edits_column(self) -> None:

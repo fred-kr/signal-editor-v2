@@ -77,7 +77,7 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
 
         self.slider_window_size_standardize = slider_window_size_standardize
 
-        self.enum_combo_pipeline.setEnumClass(PreprocessPipeline)
+        self.enum_combo_pipeline.setEnumClass(PreprocessPipeline, allow_none=True)
         self.enum_combo_filter_method.setEnumClass(FilterMethod)
         self.enum_combo_filter_type.setEnumClass(FilterType)
         self.enum_combo_standardize_method.setEnumClass(StandardizationMethod)
@@ -110,7 +110,7 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
 
     @QtCore.Slot()
     def _restore_defaults(self) -> None:
-        self.enum_combo_pipeline.setCurrentEnum(PreprocessPipeline.Custom)
+        self.enum_combo_pipeline.setCurrentEnum(None)
         self.enum_combo_filter_method.setCurrentEnum(FilterMethod.Butterworth)
         self.enum_combo_filter_type.setCurrentEnum(FilterType.LowPass)
         self.dbl_slider_lowcut.setValue(1)
@@ -132,8 +132,10 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
 
     @QtCore.Slot()
     def _emit_pipeline_requested(self) -> None:
-        pipeline = PreprocessPipeline(self.enum_combo_pipeline.currentEnum())
-        self.sig_pipeline_requested.emit(pipeline)
+        pipeline = self.enum_combo_pipeline.currentEnum()
+        if pipeline is not None:
+            pipeline = PreprocessPipeline(pipeline)
+            self.sig_pipeline_requested.emit(pipeline)
 
     @QtCore.Slot()
     def _emit_filter_requested(self) -> None:

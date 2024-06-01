@@ -1,9 +1,10 @@
 import typing as t
 
+import qfluentwidgets as qfw
 from PySide6 import QtCore, QtGui, QtWidgets
 
 
-class SectionListView(QtWidgets.QListView):
+class SectionListView(qfw.ListView):
     sig_delete_current_item: t.ClassVar[QtCore.Signal] = QtCore.Signal(QtCore.QModelIndex)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
@@ -38,7 +39,7 @@ class SectionListDock(QtWidgets.QDockWidget):
         self.setVisible(False)
         self.setObjectName("SectionListDock")
         self.setWindowTitle("Section List")
-        self.list_view = SectionListView(self)
+        self.list_view = SectionListView()
         self.toggleViewAction().setIcon(QtGui.QIcon(":/icons/list_view"))
         main_widget = QtWidgets.QWidget(self)
         main_layout = QtWidgets.QVBoxLayout(main_widget)

@@ -19,14 +19,15 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
 from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplication, QComboBox,
     QFormLayout, QFrame, QGridLayout, QGroupBox,
     QHBoxLayout, QHeaderView, QLabel, QLineEdit,
-    QMainWindow, QMenu, QMenuBar, QPushButton,
-    QSizePolicy, QSpinBox, QSplitter, QStackedWidget,
+    QListWidgetItem, QMainWindow, QMenu, QMenuBar,
+    QPushButton, QSizePolicy, QSplitter, QStackedWidget,
     QStatusBar, QTableView, QTableWidgetItem, QToolBar,
     QVBoxLayout, QWidget)
 
 from pyqtgraph import TableWidget
 from pyqtgraph.widgets.MatplotlibWidget import MatplotlibWidget
-from superqt import (QCollapsible, QSearchableListWidget)
+from qfluentwidgets import (ListWidget, SpinBox)
+from superqt import QCollapsible
 from . import resources_rc
 
 class Ui_MainWindow(object):
@@ -265,9 +266,10 @@ class Ui_MainWindow(object):
 
         self.formLayout.setWidget(0, QFormLayout.LabelRole, self.samplingRateLabel)
 
-        self.spin_box_sampling_rate_import_page = QSpinBox(self.grp_box_required_info)
+        self.spin_box_sampling_rate_import_page = SpinBox(self.grp_box_required_info)
         self.spin_box_sampling_rate_import_page.setObjectName(u"spin_box_sampling_rate_import_page")
         self.spin_box_sampling_rate_import_page.setMinimumSize(QSize(0, 31))
+        self.spin_box_sampling_rate_import_page.setFrame(False)
         self.spin_box_sampling_rate_import_page.setMaximum(10000)
         self.spin_box_sampling_rate_import_page.setValue(0)
 
@@ -348,10 +350,10 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addWidget(self.label_3)
 
-        self.search_list_widget_recent_files = QSearchableListWidget(self.widget)
-        self.search_list_widget_recent_files.setObjectName(u"search_list_widget_recent_files")
+        self.list_widget_recent_files = ListWidget(self.widget)
+        self.list_widget_recent_files.setObjectName(u"list_widget_recent_files")
 
-        self.verticalLayout_2.addWidget(self.search_list_widget_recent_files)
+        self.verticalLayout_2.addWidget(self.list_widget_recent_files)
 
         self.splitter_2.addWidget(self.widget)
         self.widget_2 = QWidget(self.splitter_2)
@@ -495,13 +497,6 @@ class Ui_MainWindow(object):
         self.statusbar = QStatusBar(MainWindow)
         self.statusbar.setObjectName(u"statusbar")
         MainWindow.setStatusBar(self.statusbar)
-        self.tool_bar_navigation = QToolBar(MainWindow)
-        self.tool_bar_navigation.setObjectName(u"tool_bar_navigation")
-        self.tool_bar_navigation.setMinimumSize(QSize(0, 0))
-        self.tool_bar_navigation.setMovable(False)
-        self.tool_bar_navigation.setAllowedAreas(Qt.ToolBarArea.RightToolBarArea)
-        self.tool_bar_navigation.setFloatable(False)
-        MainWindow.addToolBar(Qt.ToolBarArea.RightToolBarArea, self.tool_bar_navigation)
         self.tool_bar_file_actions = QToolBar(MainWindow)
         self.tool_bar_file_actions.setObjectName(u"tool_bar_file_actions")
         self.tool_bar_file_actions.setMovable(False)
@@ -527,16 +522,12 @@ class Ui_MainWindow(object):
         self.menuHelp.addSeparator()
         self.menuHelp.addAction(self.action_about_app)
         self.menuHelp.addAction(self.action_about_qt)
-        self.tool_bar_navigation.addAction(self.action_show_import_page)
-        self.tool_bar_navigation.addAction(self.action_show_edit_page)
-        self.tool_bar_navigation.addAction(self.action_show_result_page)
-        self.tool_bar_navigation.addAction(self.action_show_export_page)
-        self.tool_bar_navigation.addAction(self.action_show_info_page)
         self.tool_bar_file_actions.addAction(self.action_open_file)
         self.tool_bar_file_actions.addAction(self.action_edit_metadata)
         self.tool_bar_file_actions.addAction(self.action_close_file)
 
         self.retranslateUi(MainWindow)
+        self.line_edit_active_file.textChanged.connect(MainWindow.setWindowTitle)
 
         self.stackedWidget.setCurrentIndex(0)
 
@@ -679,9 +670,6 @@ class Ui_MainWindow(object):
         self.btn_load_data.setText(QCoreApplication.translate("MainWindow", u" Load Data", None))
         self.btn_close_file.setText(QCoreApplication.translate("MainWindow", u" Close File", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:11pt; font-weight:700;\">Recent Files</span></p></body></html>", None))
-#if QT_CONFIG(tooltip)
-        self.search_list_widget_recent_files.setToolTip(QCoreApplication.translate("MainWindow", u"Double-click a file name to open it and set it as the active file", None))
-#endif // QT_CONFIG(tooltip)
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:11pt; font-weight:700;\">File Metadata</span></p></body></html>", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:14pt; font-weight:700;\">Data View</span></p></body></html>", None))
         self.label_showing_data_table.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:10pt;\">Showing</span><span style=\" font-size:10pt;\">: -</span></p></body></html>", None))
@@ -690,7 +678,6 @@ class Ui_MainWindow(object):
         self.menuView.setTitle(QCoreApplication.translate("MainWindow", u"View", None))
         self.menuEdit.setTitle(QCoreApplication.translate("MainWindow", u"Edit", None))
         self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))
-        self.tool_bar_navigation.setWindowTitle(QCoreApplication.translate("MainWindow", u"Navigation Toolbar", None))
         self.tool_bar_file_actions.setWindowTitle(QCoreApplication.translate("MainWindow", u"Editing Toolbar", None))
     # retranslateUi
 

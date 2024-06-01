@@ -3,10 +3,13 @@ import typing as t
 from pathlib import Path
 
 import pyqtgraph as pg
+import qfluentwidgets as qfw
 from loguru import logger
 from pyqtgraph.console import ConsoleWidget
 from PySide6 import QtCore, QtGui, QtWidgets
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
+
+from signal_editor.ui.ui_main_window import Ui_MainWindow
 
 from ..enum_defs import LogLevel
 from .icons import FugueIcon as FI
@@ -15,7 +18,6 @@ from .widgets.log_window import StatusMessageDock
 from .widgets.peak_detection_inputs import PeakDetectionDock
 from .widgets.processing_inputs import ProcessingInputsDock
 from .widgets.settings_dialog import SettingsDialog
-from signal_editor.ui.ui_main_window import Ui_MainWindow
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -28,6 +30,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.new_central_widget = QtWidgets.QWidget()
         self._h_layout = QtWidgets.QHBoxLayout(self.new_central_widget)
         self.navigation_interface = NavigationInterface(self, showMenuButton=True)
+        # self.section_card = SectionListWidget()
 
         self._setup_layout()
         self.setCentralWidget(self.new_central_widget)
@@ -56,6 +59,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._h_layout.setContentsMargins(0, 0, 0, 0)
         self._h_layout.addWidget(self.navigation_interface)
         self._h_layout.addWidget(self.stackedWidget)
+        # self._h_layout.addWidget(self.section_card)
         self._h_layout.setStretchFactor(self.stackedWidget, 1)
 
     def _setup_navigation(self) -> None:
@@ -144,16 +148,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.stackedWidget.setCurrentIndex(0)
         self.action_show_import_page.setChecked(True)
 
-        self.search_list_widget_recent_files.filter_widget.setPlaceholderText("Search Recent Files")
-        self.search_list_widget_recent_files.list_widget.setAlternatingRowColors(True)
-        self.search_list_widget_recent_files.list_widget.setSelectionMode(
-            QtWidgets.QAbstractItemView.SelectionMode.SingleSelection
-        )
-        self.search_list_widget_recent_files.list_widget.setSelectionBehavior(
-            QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows
-        )
-        self.search_list_widget_recent_files.list_widget.setSelectionRectVisible(True)
-        self.search_list_widget_recent_files.list_widget.setSpacing(2)
+        # self.list_widget_recent_files.filter_widget.setPlaceholderText("Search Recent Files")
+        # self.list_widget_recent_files.setAlternatingRowColors(True)
+        # self.list_widget_recent_files.setSelectionMode(
+        #     QtWidgets.QAbstractItemView.SelectionMode.SingleSelection
+        # )
+        # self.list_widget_recent_files.setSelectionBehavior(
+        #     QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows
+        # )
+        # self.list_widget_recent_files.setSelectionRectVisible(True)
+        # self.list_widget_recent_files.setSpacing(2)
 
     def _setup_docks(self) -> None:
         dwa = QtCore.Qt.DockWidgetArea
@@ -229,7 +233,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.action_toggle_auto_scaling.setChecked(True)
 
     def _setup_toolbars(self) -> None:
-        self.tool_bar_navigation.hide()
 
         self.tool_bar_file_actions.addSeparator()
         self.tool_bar_file_actions.addAction(self.action_export_result)
@@ -240,17 +243,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.tool_bar_help = self._setup_toolbar("tool_bar_help", self._actions["help"])
 
-        tb_section_list = QtWidgets.QToolBar()
-        tb_section_list.setMovable(False)
-        tb_section_list.setObjectName("tool_bar_section_list")
-        tb_section_list.addActions(self._actions["section_list"])
-        spacing = QtWidgets.QWidget()
-        spacing.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Preferred
-        )
-        tb_section_list.insertWidget(self.action_show_section_overview, spacing)
-        self.dock_sections.main_layout.insertWidget(1, tb_section_list)
-        self.tool_bar_section_list = tb_section_list
+        cb_section_list = qfw.CommandBar()
+        cb_section_list.setObjectName("command_bar_section_list")
+        cb_section_list.addActions(self._actions["section_list"])
+
+        cb_section_list.insertSeparator(2)
+        self.dock_sections.main_layout.insertWidget(1, cb_section_list)
+        self.tool_bar_section_list = cb_section_list
 
     def _setup_toolbar(
         self, name: str, actions: list[QtGui.QAction], movable: bool = False
