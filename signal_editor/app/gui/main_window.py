@@ -12,7 +12,7 @@ from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 from signal_editor.ui.ui_main_window import Ui_MainWindow
 
 from ..enum_defs import LogLevel
-from .icons import FugueIcon as FI
+from .icons import FluentIcon as FI
 from .widgets import ExportDialog, MetadataDialog, SectionListDock
 from .widgets.log_window import StatusMessageDock
 from .widgets.peak_detection_inputs import PeakDetectionDock
@@ -30,7 +30,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.new_central_widget = QtWidgets.QWidget()
         self._h_layout = QtWidgets.QHBoxLayout(self.new_central_widget)
         self.navigation_interface = NavigationInterface(self, showMenuButton=True)
-        # self.section_card = SectionListWidget()
 
         self._setup_layout()
         self.setCentralWidget(self.new_central_widget)
@@ -59,20 +58,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._h_layout.setContentsMargins(0, 0, 0, 0)
         self._h_layout.addWidget(self.navigation_interface)
         self._h_layout.addWidget(self.stackedWidget)
-        # self._h_layout.addWidget(self.section_card)
         self._h_layout.setStretchFactor(self.stackedWidget, 1)
 
     def _setup_navigation(self) -> None:
-        self.add_sub_interface(self.stacked_page_import, FI.FILE_IMPORT.icon(), "Data Import")
-        self.add_sub_interface(self.stacked_page_edit, FI.APP_WAVE.icon(), "View / Edit")
-        self.add_sub_interface(self.stacked_page_result, FI.REPORT.icon(), "Results")
-        self.add_sub_interface(self.stacked_page_export, FI.FILE_EXPORT.icon(), "Export")
+        self.add_sub_interface(self.stacked_page_import, FI.ArrowImport.icon(), "Data Import")
+        self.add_sub_interface(self.stacked_page_edit, FI.DesktopPulse.icon(), "View / Edit")
+        self.add_sub_interface(self.stacked_page_result, FI.DataScatter.icon(), "Results")
+        self.add_sub_interface(self.stacked_page_export, FI.ArrowExportLtr.icon(), "Export")
 
         self.navigation_interface.addSeparator()
 
         self.add_sub_interface(
             self.stacked_page_test,
-            FI.TERMINAL.icon(),
+            FI.WindowDevTools.icon(),
             "Debug",
             position=NavigationItemPosition.BOTTOM,
         )
@@ -112,12 +110,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _initialize_icons(self) -> None:
         self._msg_box_icons = {
-            LogLevel.DEBUG: FI.APP_MONITOR.icon(),
-            LogLevel.INFO: FI.INFO.icon(),
-            LogLevel.WARNING: FI.WARNING.icon(),
-            LogLevel.ERROR: FI.ERROR.icon(),
-            LogLevel.CRITICAL: FI.CRITICAL.icon(),
-            LogLevel.SUCCESS: FI.SUCCESS.icon(),
+            LogLevel.DEBUG: FI.Wrench.icon(),
+            LogLevel.INFO: FI.Info.icon(),
+            LogLevel.WARNING: FI.Warning.icon(),
+            LogLevel.ERROR: FI.ErrorCircle.icon(),
+            LogLevel.CRITICAL: FI.Important.icon(),
+            LogLevel.SUCCESS: FI.CheckmarkCircle.icon(),
         }
 
     def _setup_widgets(self) -> None:
@@ -126,7 +124,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dialog_export = ExportDialog(self)
 
         self.table_view_import_data.horizontalHeader().setDefaultAlignment(
-            QtCore.Qt.AlignmentFlag.AlignLeft
+            QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter
         )
         self.table_view_import_data.horizontalHeader().setSectionResizeMode(
             QtWidgets.QHeaderView.ResizeMode.Stretch
@@ -147,17 +145,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.stackedWidget.setCurrentIndex(0)
         self.action_show_import_page.setChecked(True)
-
-        # self.list_widget_recent_files.filter_widget.setPlaceholderText("Search Recent Files")
-        # self.list_widget_recent_files.setAlternatingRowColors(True)
-        # self.list_widget_recent_files.setSelectionMode(
-        #     QtWidgets.QAbstractItemView.SelectionMode.SingleSelection
-        # )
-        # self.list_widget_recent_files.setSelectionBehavior(
-        #     QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows
-        # )
-        # self.list_widget_recent_files.setSelectionRectVisible(True)
-        # self.list_widget_recent_files.setSpacing(2)
 
     def _setup_docks(self) -> None:
         dwa = QtCore.Qt.DockWidgetArea
@@ -204,7 +191,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _setup_actions(self) -> None:
         self.action_toggle_whats_this_mode = QtWidgets.QWhatsThis().createAction(self)
-        self.action_toggle_whats_this_mode.setIcon(FI.WHATS_THIS.icon())
+        self.action_toggle_whats_this_mode.setIcon(FI.Question.icon())
         self._actions = {
             "import": [self.action_open_file, self.action_edit_metadata, self.action_close_file],
             "edit": [
@@ -233,7 +220,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.action_toggle_auto_scaling.setChecked(True)
 
     def _setup_toolbars(self) -> None:
-
         self.tool_bar_file_actions.addSeparator()
         self.tool_bar_file_actions.addAction(self.action_export_result)
 
@@ -354,7 +340,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def show_data_view_context_menu(self, pos: QtCore.QPoint) -> None:
         menu = QtWidgets.QMenu(self)
         menu.addAction("Refresh", self.sig_table_refresh_requested.emit)
-        menu.exec(self.mapToGlobal(pos))
+        menu.exec(QtGui.QCursor.pos())
 
     @QtCore.Slot(int)
     def _on_page_changed(self, index: int) -> None:

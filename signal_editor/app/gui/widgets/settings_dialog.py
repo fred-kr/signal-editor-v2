@@ -4,12 +4,14 @@ import typing as t
 
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
-from qfluentwidgets import TreeItemDelegate, TreeWidget
+from qfluentwidgets import TreeItemDelegate, TreeWidget, MessageBox, CommandBar, Dialog, FluentTitleBar, MSFluentTitleBar, SplitTitleBar
+from qframelesswindow import FramelessDialog, StandardTitleBar
 
 from ... import type_defs as _t
 from ...controllers.data_controller import TextFileSeparator
 from ...enum_defs import RateComputationMethod
 from ...utils import get_app_dir, safe_disconnect
+from ..icons import FluentIcon as FI
 from ._qt_type_checker import TypeChecker
 
 
@@ -17,7 +19,7 @@ def make_qcolor(*args: _t.PGColor) -> QtGui.QColor:
     return args[0] if isinstance(args[0], QtGui.QColor) else pg.mkColor(*args)
 
 
-class VariantDelegate(TreeItemDelegate):
+class VariantDelegate(QtWidgets.QStyledItemDelegate):
     def __init__(self, type_checker: TypeChecker, parent: QtWidgets.QTreeView) -> None:
         super().__init__(parent)
         self._type_checker = type_checker
@@ -213,6 +215,11 @@ class SettingsTree(TreeWidget):
             "last_signal_column_name": "The name of the signal column in the last loaded data file. If a new data file is loaded that has a column with this name, the signal column will be automatically selected",
             "last_info_column_name": "The name of the info column in the last loaded data file. If a new data file is loaded that has a column with this name, the info column will be automatically selected",
         }
+        self.setBorderVisible(True)
+        self.header().setDefaultAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.setUniformRowHeights(True)
+        self.setTextElideMode(QtCore.Qt.TextElideMode.ElideRight)
+        self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self._type_checker = TypeChecker()
         self.setItemDelegate(VariantDelegate(self._type_checker, self))
 
@@ -265,15 +272,15 @@ class SettingsTree(TreeWidget):
         if self.settings is None:
             return
 
-        sure = QtWidgets.QMessageBox.question(
-            self,
-            "Restore Defaults",
-            "Are you sure you want to restore the default settings?\nThis will overwrite any changes you've made.",
-            QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
+        msg_box = MessageBox(
+            "Restore default settings?",
+            "Are you sure you want to restore all settings to their default values?",
+            parent=self.parent(),
         )
-        if sure != QtWidgets.QMessageBox.StandardButton.Yes:
+        sure = msg_box.exec()
+        if not sure:
             return
-
+            
         for grp, kvs in self.DEFAULT_VALUES.items():
             self.settings.remove(grp)
             self.settings.beginGroup(grp)
@@ -298,7 +305,7 @@ class SettingsTree(TreeWidget):
 
     @QtCore.Slot()
     def maybe_refresh(self) -> None:
-        if self.state() != QtWidgets.QAbstractItemView.State.EditingState:
+        if self.state() != TreeWidget.State.EditingState:
             self.refresh()
 
     @QtCore.Slot()
@@ -416,11 +423,8 @@ class SettingsTree(TreeWidget):
         description: str | None = None,
     ) -> QtWidgets.QTreeWidgetItem:
         after = self.child_at(parent, index - 1) if index != 0 else None
-
-        if parent is not None:
-            item = QtWidgets.QTreeWidgetItem(parent, after)  # type: ignore
-        else:
-            item = QtWidgets.QTreeWidgetItem(self, after)  # type: ignore
+        target = parent if parent is not None else self
+        item = QtWidgets.QTreeWidgetItem(target, after) if after is not None else QtWidgets.QTreeWidgetItem(target)
 
         item.setText(0, text)
         if description is not None:
@@ -440,14 +444,19 @@ class SettingsTree(TreeWidget):
 
     @QtCore.Slot()
     def delete_current_item(self) -> None:
-        sure = QtWidgets.QMessageBox.question(
-            self,
-            "Delete?",
-            "Are you sure you want to delete this item?",
-            QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
-        )
-        if sure != QtWidgets.QMessageBox.StandardButton.Yes:
+        msg_box = MessageBox("Delete?", "Are you sure you want to delete this item?", parent=self.parent())
+        sure = msg_box.exec()
+
+        if not sure:
             return
+        # sure = QtWidgets.QMessageBox.question(
+        #     self,
+        #     "Delete?",
+        #     "Are you sure you want to delete this item?",
+        #     QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
+        # )
+        # if sure != QtWidgets.QMessageBox.StandardButton.Yes:
+        #     return
         item = self.currentItem()
         if item.parent():
             self.delete_item(item.parent(), item.parent().indexOfChild(item))
@@ -495,11 +504,12 @@ class SettingsTree(TreeWidget):
             self.delete_item(parent, new_index)
 
 
-class SettingsDialog(QtWidgets.QDialog):
+class SettingsDialog(FramelessDialog):
     sig_setting_changed = QtCore.Signal(str, object)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
+        
         self._type_handlers: dict[
             str, t.Callable[[QtWidgets.QTreeWidgetItem], QtGui.QColor | str | int | float | None]
         ] = {
@@ -509,10 +519,11 @@ class SettingsDialog(QtWidgets.QDialog):
             "float": self._handle_float,
             "bool": self._handle_bool,
         }
-        self.setVisible(False)
+        # self.setVisible(False)
 
+        # self.setTitleBar(StandardTitleBar(self))
         self.setWindowTitle("Settings")
-        self.setWindowIcon(QtGui.QIcon(":/icons/view_settings"))
+        self.setWindowIcon(FI.Settings.icon())
         buttons = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.StandardButton.Ok
             | QtWidgets.QDialogButtonBox.StandardButton.Cancel
@@ -525,32 +536,32 @@ class SettingsDialog(QtWidgets.QDialog):
         settings = QtCore.QSettings()
         self.settings_tree.set_settings_object(settings)
 
-        toolbar = QtWidgets.QToolBar("Toolbar Settings", self)
+        toolbar = CommandBar(self)
 
         action_reset_selected_item = QtGui.QAction(
-            QtGui.QIcon(":/icons/restore_defaults"), "Reset Selected", self
+            FI.ArrowReset.icon(), "Reset Selected", self
         )
         action_reset_selected_item.triggered.connect(self.settings_tree.reset_current_item)
 
         if os.environ.get("DEBUG", "0") == "1":
             action_delete_selected_item = QtGui.QAction(
-                QtGui.QIcon(":/icons/delete"), "Delete Selected", self
+                FI.Delete.icon(), "Delete Selected", self
             )
             action_delete_selected_item.triggered.connect(self.settings_tree.delete_current_item)
             toolbar.addAction(action_delete_selected_item)
 
         action_restore_defaults = QtGui.QAction(
-            QtGui.QIcon(":/icons/reset_all"), "Restore Original Values", self
+            FI.TabDesktopArrowClockwise.icon(), "Restore Original Values", self
         )
         action_restore_defaults.triggered.connect(self.settings_tree.restore_defaults)
 
         action_edit_selected_item_value = QtGui.QAction(
-            QtGui.QIcon(":/icons/edit"), "Edit Selected Item Value", self
+            FI.EditSettings.icon(), "Edit Selected Item Value", self
         )
         action_edit_selected_item_value.triggered.connect(
             lambda: self._on_edit_selected_item_value(self.settings_tree.currentItem())
         )
-        action_refresh_settings = QtGui.QAction(QtGui.QIcon(":/icons/refresh"), "Refresh", self)
+        action_refresh_settings = QtGui.QAction(FI.ArrowSync.icon(), "Refresh", self)
         action_refresh_settings.triggered.connect(self.settings_tree.refresh)
 
         toolbar.addAction(action_reset_selected_item)
@@ -559,6 +570,7 @@ class SettingsDialog(QtWidgets.QDialog):
         toolbar.addAction(action_edit_selected_item_value)
 
         layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(MSFluentTitleBar(self))
         layout.addWidget(toolbar)
         layout.addWidget(self.settings_tree)
         layout.addWidget(buttons)

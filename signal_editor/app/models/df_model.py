@@ -148,10 +148,12 @@ class DataFrameModel(QtCore.QAbstractTableModel):
         orientation: QtCore.Qt.Orientation,
         role: int = QtCore.Qt.ItemDataRole.DisplayRole,
     ) -> str | None:
-        if role != QtCore.Qt.ItemDataRole.DisplayRole or self._df is None:
+        if self._df is None:
             return None
-        if orientation != QtCore.Qt.Orientation.Horizontal:
-            return None
-        name = self._df.columns[section]
-        dtype = self._df.schema[name]
-        return f"{name}\n---\n{dtype}"
+        if role == QtCore.Qt.ItemDataRole.DisplayRole:
+            if orientation == QtCore.Qt.Orientation.Horizontal:
+                return self._df.columns[section]
+        elif role == QtCore.Qt.ItemDataRole.ToolTipRole:
+            if orientation == QtCore.Qt.Orientation.Horizontal:
+                return str(self._df.schema[self._df.columns[section]])
+        return None

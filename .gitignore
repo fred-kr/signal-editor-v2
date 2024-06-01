@@ -253,6 +253,7 @@ fabric.properties
 # User-specific
 project-structure.txt
 **/resources/**/*.png
+**/resources/**/*.svg
 .ruff_cache/
 notes/
 NOTES.md

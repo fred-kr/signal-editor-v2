@@ -49,78 +49,36 @@
         <item>
          <widget class="QWidget" name="container_file_information" native="true">
           <layout class="QGridLayout" name="gridLayout">
-           <item row="0" column="0" colspan="2">
-            <widget class="QLabel" name="label_2">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:700;&quot;&gt;Data Import&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0" colspan="3">
-            <widget class="QPushButton" name="btn_open_file">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>48</height>
-              </size>
-             </property>
-             <property name="text">
-              <string> Select File</string>
-             </property>
-             <property name="icon">
-              <iconset>
-               <normaloff>:/icons/folder-open</normaloff>:/icons/folder-open</iconset>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_7">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>31</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Active File:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1" colspan="2">
-            <widget class="QLineEdit" name="line_edit_active_file">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>31</height>
-              </size>
-             </property>
-             <property name="frame">
+           <item row="3" column="0" colspan="2">
+            <widget class="PushButton" name="btn_load_data">
+             <property name="enabled">
               <bool>false</bool>
              </property>
-             <property name="readOnly">
-              <bool>true</bool>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>41</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>Load data from the selected file using the settings shown above</string>
+             </property>
+             <property name="text">
+              <string>Load Data</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../resources/resources.qrc">
+               <normaloff>:/icons/fluent-icons/ArrowImport.svg</normaloff>:/icons/fluent-icons/ArrowImport.svg</iconset>
              </property>
             </widget>
            </item>
-           <item row="3" column="0" colspan="3">
+           <item row="2" column="0" colspan="3">
             <widget class="QGroupBox" name="grp_box_required_info">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -184,7 +142,7 @@
                </widget>
               </item>
               <item row="1" column="1">
-               <widget class="QComboBox" name="combo_box_signal_column_import_page">
+               <widget class="ComboBox" name="combo_box_signal_column_import_page">
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
@@ -194,7 +152,7 @@
                </widget>
               </item>
               <item row="3" column="1">
-               <widget class="QComboBox" name="combo_box_info_column_import_page">
+               <widget class="ComboBox" name="combo_box_info_column_import_page">
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
@@ -233,95 +191,55 @@
              </layout>
             </widget>
            </item>
-           <item row="4" column="0" colspan="2">
-            <widget class="QPushButton" name="btn_load_data">
-             <property name="enabled">
+           <item row="1" column="1" colspan="2">
+            <widget class="LineEdit" name="line_edit_active_file">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
+             <property name="frame">
               <bool>false</bool>
              </property>
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="label_2">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
              </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>48</height>
-              </size>
-             </property>
-             <property name="toolTip">
-              <string>Load data from the selected file using the settings shown above</string>
-             </property>
              <property name="text">
-              <string> Load Data</string>
-             </property>
-             <property name="icon">
-              <iconset resource="../resources/resources.qrc">
-               <normaloff>:/icons/table_go</normaloff>:/icons/table_go</iconset>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:700;&quot;&gt;Data Import&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
-           <item row="4" column="2">
-            <widget class="QPushButton" name="btn_close_file">
-             <property name="enabled">
-              <bool>false</bool>
+           <item row="4" column="0" colspan="3">
+            <widget class="QTabWidget" name="tab_widget_files_properties">
+             <property name="currentIndex">
+              <number>0</number>
              </property>
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>48</height>
-              </size>
-             </property>
-             <property name="text">
-              <string> Close File</string>
-             </property>
-             <property name="icon">
-              <iconset resource="../resources/resources.qrc">
-               <normaloff>:/icons/cross_close</normaloff>:/icons/cross_close</iconset>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="0" colspan="3">
-            <widget class="QSplitter" name="splitter_2">
-             <property name="orientation">
-              <enum>Qt::Orientation::Vertical</enum>
-             </property>
-             <widget class="QWidget" name="widget" native="true">
-              <layout class="QVBoxLayout" name="verticalLayout_2">
-               <item>
-                <widget class="QLabel" name="label_3">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt; font-weight:700;&quot;&gt;Recent Files&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                </widget>
-               </item>
+             <widget class="QWidget" name="tab_recent_files">
+              <attribute name="title">
+               <string>Recent Files</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_3">
                <item>
                 <widget class="ListWidget" name="list_widget_recent_files"/>
                </item>
               </layout>
              </widget>
-             <widget class="QWidget" name="widget_2" native="true">
-              <layout class="QVBoxLayout" name="verticalLayout">
-               <item>
-                <widget class="QLabel" name="label_4">
-                 <property name="text">
-                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt; font-weight:700;&quot;&gt;File Metadata&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                 </property>
-                </widget>
-               </item>
+             <widget class="QWidget" name="tab_file_metadata">
+              <attribute name="title">
+               <string>File Metadata</string>
+              </attribute>
+              <layout class="QVBoxLayout" name="verticalLayout_4">
                <item>
                 <widget class="QCollapsible" name="collapsible_frame">
                  <property name="sizePolicy">
@@ -340,6 +258,49 @@
                </item>
               </layout>
              </widget>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="PushButton" name="btn_open_file">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>41</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Select File</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../resources/resources.qrc">
+               <normaloff>:/icons/fluent-icons/FolderOpen.svg</normaloff>:/icons/fluent-icons/FolderOpen.svg</iconset>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="2">
+            <widget class="PushButton" name="btn_close_file">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>41</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Close File</string>
+             </property>
+             <property name="icon">
+              <iconset resource="../resources/resources.qrc">
+               <normaloff>:/icons/fluent-icons/DeleteDismiss.svg</normaloff>:/icons/fluent-icons/DeleteDismiss.svg</iconset>
+             </property>
             </widget>
            </item>
           </layout>
@@ -375,7 +336,7 @@
             </widget>
            </item>
            <item row="1" column="0" colspan="2">
-            <widget class="QTableView" name="table_view_import_data">
+            <widget class="TableView" name="table_view_import_data">
              <property name="editTriggers">
               <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
              </property>
@@ -415,49 +376,43 @@
        </layout>
       </widget>
       <widget class="QWidget" name="stacked_page_result">
-       <layout class="QGridLayout" name="gridLayout_5">
-        <item row="0" column="0">
-         <widget class="QSplitter" name="splitter">
-          <property name="orientation">
-           <enum>Qt::Orientation::Horizontal</enum>
+       <layout class="QHBoxLayout" name="h_layout_result_page" stretch="4,6">
+        <item>
+         <widget class="TableView" name="table_widget_mpl_data">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
           </property>
-          <property name="childrenCollapsible">
-           <bool>false</bool>
+          <property name="sizeAdjustPolicy">
+           <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustToContents</enum>
           </property>
-          <widget class="TableWidget" name="table_widget_mpl_data">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="sizeAdjustPolicy">
-            <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustToContents</enum>
-           </property>
-           <property name="editTriggers">
-            <set>QAbstractItemView::EditTrigger::DoubleClicked|QAbstractItemView::EditTrigger::EditKeyPressed</set>
-           </property>
-           <property name="sortingEnabled">
-            <bool>true</bool>
-           </property>
-           <attribute name="horizontalHeaderCascadingSectionResizes">
-            <bool>true</bool>
-           </attribute>
-          </widget>
-          <widget class="MatplotlibWidget" name="mpl_widget" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>500</width>
-             <height>0</height>
-            </size>
-           </property>
-          </widget>
+          <property name="editTriggers">
+           <set>QAbstractItemView::EditTrigger::DoubleClicked|QAbstractItemView::EditTrigger::EditKeyPressed</set>
+          </property>
+          <property name="sortingEnabled">
+           <bool>true</bool>
+          </property>
+          <attribute name="horizontalHeaderHighlightSections">
+           <bool>true</bool>
+          </attribute>
+         </widget>
+        </item>
+        <item>
+         <widget class="MatplotlibWidget" name="mpl_widget" native="true">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>500</width>
+            <height>0</height>
+           </size>
+          </property>
          </widget>
         </item>
        </layout>
@@ -465,7 +420,7 @@
       <widget class="QWidget" name="stacked_page_export">
        <layout class="QGridLayout" name="gridLayout_3">
         <item row="0" column="0">
-         <widget class="QTableView" name="table_view_export_data"/>
+         <widget class="TableView" name="table_view_export_data"/>
         </item>
        </layout>
       </widget>
@@ -489,7 +444,15 @@
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuOpen_Recent">
+     <property name="title">
+      <string>Open Recent</string>
+     </property>
+     <addaction name="separator"/>
+     <addaction name="action_clear_recent_files"/>
+    </widget>
     <addaction name="action_open_file"/>
+    <addaction name="menuOpen_Recent"/>
     <addaction name="action_close_file"/>
     <addaction name="separator"/>
     <addaction name="action_edit_metadata"/>
@@ -554,10 +517,13 @@
   <action name="action_open_file">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/folder_open</normaloff>:/icons/folder_open</iconset>
+     <normaloff>:/icons/fluent-icons/FolderOpen.svg</normaloff>:/icons/fluent-icons/FolderOpen.svg</iconset>
    </property>
    <property name="text">
     <string>Open File</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
    </property>
   </action>
   <action name="action_show_edit_page">
@@ -653,7 +619,7 @@
   <action name="action_show_settings">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/view_settings</normaloff>:/icons/view_settings</iconset>
+     <normaloff>:/icons/fluent-icons/Settings.svg</normaloff>:/icons/fluent-icons/Settings.svg</iconset>
    </property>
    <property name="text">
     <string>Preferences</string>
@@ -671,10 +637,13 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/edit</normaloff>:/icons/edit</iconset>
+     <normaloff>:/icons/fluent-icons/EditSettings.svg</normaloff>:/icons/fluent-icons/EditSettings.svg</iconset>
    </property>
    <property name="text">
     <string>Edit Metadata</string>
+   </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
    </property>
   </action>
   <action name="action_close_file">
@@ -683,7 +652,7 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/cross_close</normaloff>:/icons/cross_close</iconset>
+     <normaloff>:/icons/fluent-icons/DeleteDismiss.svg</normaloff>:/icons/fluent-icons/DeleteDismiss.svg</iconset>
    </property>
    <property name="text">
     <string>Close File</string>
@@ -694,17 +663,20 @@
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
+   <property name="iconVisibleInMenu">
+    <bool>false</bool>
+   </property>
   </action>
   <action name="action_export_result">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/table_export</normaloff>:/icons/table_export</iconset>
+     <normaloff>:/icons/fluent-icons/ArrowExportLtr.svg</normaloff>:/icons/fluent-icons/ArrowExportLtr.svg</iconset>
    </property>
    <property name="text">
     <string>Export Result</string>
    </property>
    <property name="toolTip">
-    <string>Export results to the chosen file format</string>
+    <string>Open the export dialog</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -716,16 +688,13 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/section_add</normaloff>:/icons/section_add</iconset>
+     <normaloff>:/icons/fluent-icons/Add.svg</normaloff>:/icons/fluent-icons/Add.svg</iconset>
    </property>
    <property name="text">
     <string>New Section</string>
    </property>
    <property name="toolTip">
     <string>Create a new section</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+N</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -758,13 +727,13 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/toggle_autoscale</normaloff>:/icons/toggle_autoscale</iconset>
+     <normaloff>:/icons/fluent-icons/ArrowAutofitHeightDotted.svg</normaloff>:/icons/fluent-icons/ArrowAutofitHeightDotted.svg</iconset>
    </property>
    <property name="text">
     <string>Toggle Auto-Scaling</string>
    </property>
    <property name="toolTip">
-    <string>Enable / Disable automatic y-axis scaling</string>
+    <string>Automatically adjust the y-axis limits to the visible data</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -773,7 +742,7 @@
   <action name="action_confirm_section">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/tick_mark</normaloff>:/icons/tick_mark</iconset>
+     <normaloff>:/icons/fluent-icons/Checkmark.svg</normaloff>:/icons/fluent-icons/Checkmark.svg</iconset>
    </property>
    <property name="text">
     <string>Confirm Section</string>
@@ -788,7 +757,7 @@
   <action name="action_cancel_section">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/cross</normaloff>:/icons/cross</iconset>
+     <normaloff>:/icons/fluent-icons/Dismiss.svg</normaloff>:/icons/fluent-icons/Dismiss.svg</iconset>
    </property>
    <property name="text">
     <string>Cancel Section</string>
@@ -809,8 +778,8 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/eye_close</normaloff>
-     <normalon>:/icons/eye_open</normalon>:/icons/eye_close</iconset>
+     <normaloff>:/icons/fluent-icons/EyeHide.svg</normaloff>
+     <normalon>:/icons/fluent-icons/EyeShow.svg</normalon>:/icons/fluent-icons/EyeHide.svg</iconset>
    </property>
    <property name="text">
     <string>Show Section Overview</string>
@@ -828,7 +797,7 @@
   <action name="action_remove_peaks_in_selection">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/eraser</normaloff>:/icons/eraser</iconset>
+     <normaloff>:/icons/fluent-icons/Eraser.svg</normaloff>:/icons/fluent-icons/Eraser.svg</iconset>
    </property>
    <property name="text">
     <string>Remove Peaks in Selection</string>
@@ -846,7 +815,7 @@
   <action name="action_find_peaks_in_selection">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/search</normaloff>:/icons/search</iconset>
+     <normaloff>:/icons/fluent-icons/SearchSquare.svg</normaloff>:/icons/fluent-icons/SearchSquare.svg</iconset>
    </property>
    <property name="text">
     <string>Find Peaks in Selection</string>
@@ -888,7 +857,7 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/list_view</normaloff>:/icons/list_view</iconset>
+     <normaloff>:/icons/fluent-icons/List.svg</normaloff>:/icons/fluent-icons/List.svg</iconset>
    </property>
    <property name="text">
     <string>Available Sections</string>
@@ -909,7 +878,7 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/report</normaloff>:/icons/report</iconset>
+     <normaloff>:/icons/fluent-icons/Status.svg</normaloff>:/icons/fluent-icons/Status.svg</iconset>
    </property>
    <property name="text">
     <string>Application Output</string>
@@ -927,7 +896,7 @@
   <action name="action_show_user_guide">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/user_guide</normaloff>:/icons/user_guide</iconset>
+     <normaloff>:/icons/fluent-icons/BookQuestionMark.svg</normaloff>:/icons/fluent-icons/BookQuestionMark.svg</iconset>
    </property>
    <property name="text">
     <string>User Guide</string>
@@ -953,7 +922,7 @@
   <action name="action_about_app">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/info</normaloff>:/icons/info</iconset>
+     <normaloff>:/icons/fluent-icons/Info.svg</normaloff>:/icons/fluent-icons/Info.svg</iconset>
    </property>
    <property name="text">
     <string>About App</string>
@@ -968,7 +937,7 @@
   <action name="action_delete_section">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/section_remove</normaloff>:/icons/section_remove</iconset>
+     <normaloff>:/icons/fluent-icons/Delete.svg</normaloff>:/icons/fluent-icons/Delete.svg</iconset>
    </property>
    <property name="text">
     <string>Delete Section</string>
@@ -980,6 +949,11 @@
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
+  <action name="action_clear_recent_files">
+   <property name="text">
+    <string>Clear Recent Files</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>
@@ -987,11 +961,6 @@
    <extends>QWidget</extends>
    <header>pyqtgraph.widgets.MatplotlibWidget</header>
    <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>TableWidget</class>
-   <extends>QTableWidget</extends>
-   <header>pyqtgraph</header>
   </customwidget>
   <customwidget>
    <class>QCollapsible</class>
@@ -1009,6 +978,26 @@
    <extends>QSpinBox</extends>
    <header>qfluentwidgets</header>
   </customwidget>
+  <customwidget>
+   <class>TableView</class>
+   <extends>QTableView</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>LineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>ComboBox</class>
+   <extends>QComboBox</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>PushButton</class>
+   <extends>QPushButton</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
  </customwidgets>
  <resources>
   <include location="../resources/resources.qrc"/>
@@ -1021,8 +1010,8 @@
    <slot>setWindowTitle(QString)</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>176</x>
-     <y>190</y>
+     <x>363</x>
+     <y>152</y>
     </hint>
     <hint type="destinationlabel">
      <x>187</x>

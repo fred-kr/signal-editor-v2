@@ -77,8 +77,8 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.action_show_section_overview.toggled.connect(self.plot.toggle_regions)
 
         self.mw.action_toggle_auto_scaling.toggled.connect(self.plot.toggle_auto_scaling)
-        self.mw.action_show_processing_inputs.toggled.connect(self.mw.dock_processing.setVisible)
-        self.mw.action_show_peak_detection_inputs.toggled.connect(self.mw.dock_peaks.setVisible)
+        # self.mw.action_show_processing_inputs.toggled.connect(self.mw.dock_processing.setVisible)
+        # self.mw.action_show_peak_detection_inputs.toggled.connect(self.mw.dock_peaks.setVisible)
 
         self.mw.dock_sections.list_view.sig_delete_current_item.connect(self.delete_section)
         self.mw.dock_processing.sig_filter_requested.connect(self.filter_active_signal)
@@ -348,8 +348,8 @@ class SignalEditor(QtWidgets.QApplication):
         logger.info(f"Info column set to '{info_column}'.")
 
     def _set_column_models(self) -> None:
-        self.mw.combo_box_info_column_import_page.setModel(self.data.metadata.columns)
-        self.mw.combo_box_signal_column_import_page.setModel(self.data.metadata.columns)
+        self.mw.combo_box_info_column_import_page.addItems(self.data.metadata.columns.stringList())
+        self.mw.combo_box_signal_column_import_page.addItems(self.data.metadata.columns.stringList())
         self.mw.dialog_meta.combo_box_signal_column.setModel(self.data.metadata.columns)
         self.mw.dialog_meta.combo_box_info_column.setModel(self.data.metadata.columns)
 

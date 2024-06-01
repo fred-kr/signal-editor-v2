@@ -1,6 +1,8 @@
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from signal_editor.ui.ui_dialog_metadata import Ui_MetadataDialog
+
+from ..icons import FluentIcon
 
 
 class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
@@ -10,7 +12,7 @@ class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
         super().__init__(parent)
         self.setupUi(self)
 
-        self.setWindowIcon(QtGui.QIcon(":/icons/properties"))
+        self.setWindowIcon(FluentIcon.BookInformation.icon())
 
     @QtCore.Slot()
     def accept(self) -> None:
