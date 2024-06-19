@@ -99,6 +99,38 @@ class DefaultAppSettings(t.TypedDict):
     Misc: DefaultMiscSettings
 
 
+#region NewConfig
+class PlotConfigDict(t.TypedDict):
+    Background: "QtGui.QColor"
+    Foreground: "QtGui.QColor"
+    PointColor: "QtGui.QColor"
+    SectionColor: "QtGui.QColor"
+    LineClickWidth: int
+    ClickRadius: int
+
+class EditConfigDict(t.TypedDict):
+    FilterStacking: bool
+    RateComputationMethod: "RateComputationMethod"
+
+class DataConfigDict(t.TypedDict):
+    FloatPrecision: int
+
+class InternalConfigDict(t.TypedDict):
+    DataDir: str
+    OutputDir: str
+    RecentFiles: list[str]
+    LastSignalColumn: str
+    LastInfoColumn: str
+    WindowGeometry: "QtCore.QByteArray"
+    WindowState: "QtCore.QByteArray"
+    
+class ConfigDict(t.TypedDict):
+    Plot: PlotConfigDict
+    Edit: EditConfigDict
+    Data: DataConfigDict
+    Internal: t.NotRequired[InternalConfigDict]
+#endregion
+
 class ReadFileKwargs(t.TypedDict, total=False):
     columns: list[str]
     index_col: str | int | None

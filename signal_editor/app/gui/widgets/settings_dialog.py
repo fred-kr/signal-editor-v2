@@ -4,19 +4,14 @@ import typing as t
 
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
-from qfluentwidgets import TreeItemDelegate, TreeWidget, MessageBox, CommandBar, Dialog, FluentTitleBar, MSFluentTitleBar, SplitTitleBar
-from qframelesswindow import FramelessDialog, StandardTitleBar
+from qfluentwidgets import CommandBar, MessageBox, TreeWidget, TreeView, ColorPickerButton
 
 from ... import type_defs as _t
 from ...controllers.data_controller import TextFileSeparator
 from ...enum_defs import RateComputationMethod
-from ...utils import get_app_dir, safe_disconnect
+from ...utils import get_app_dir, make_qcolor, safe_disconnect
 from ..icons import FluentIcon as FI
 from ._qt_type_checker import TypeChecker
-
-
-def make_qcolor(*args: _t.PGColor) -> QtGui.QColor:
-    return args[0] if isinstance(args[0], QtGui.QColor) else pg.mkColor(*args)
 
 
 class VariantDelegate(QtWidgets.QStyledItemDelegate):
@@ -183,8 +178,8 @@ class SettingsTree(TreeWidget):
                 try_parse_dates=False,
             ),
             Misc=_t.DefaultMiscSettings(
-                data_folder=get_app_dir().canonicalPath(),
-                output_folder=get_app_dir().canonicalPath(),
+                data_folder=get_app_dir(False).canonicalPath(),
+                output_folder=get_app_dir(False).canonicalPath(),
                 float_visual_precision=3,
                 last_signal_column_name=None,
                 last_info_column_name=None,
@@ -216,7 +211,9 @@ class SettingsTree(TreeWidget):
             "last_info_column_name": "The name of the info column in the last loaded data file. If a new data file is loaded that has a column with this name, the info column will be automatically selected",
         }
         self.setBorderVisible(True)
-        self.header().setDefaultAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.header().setDefaultAlignment(
+            QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter
+        )
         self.setUniformRowHeights(True)
         self.setTextElideMode(QtCore.Qt.TextElideMode.ElideRight)
         self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
@@ -225,9 +222,6 @@ class SettingsTree(TreeWidget):
 
         self.setColumnCount(4)
         self.setHeaderLabels(("Setting", "Type", "Value", "Description"))
-        # self.header().setMinimumSectionSize(50)
-        # self.header().setStretchLastSection(True)
-        # self.header().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Interactive)
         self.setEditTriggers(QtWidgets.QTreeWidget.EditTrigger.NoEditTriggers)
         self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
 
@@ -280,7 +274,7 @@ class SettingsTree(TreeWidget):
         sure = msg_box.exec()
         if not sure:
             return
-            
+
         for grp, kvs in self.DEFAULT_VALUES.items():
             self.settings.remove(grp)
             self.settings.beginGroup(grp)
@@ -424,7 +418,11 @@ class SettingsTree(TreeWidget):
     ) -> QtWidgets.QTreeWidgetItem:
         after = self.child_at(parent, index - 1) if index != 0 else None
         target = parent if parent is not None else self
-        item = QtWidgets.QTreeWidgetItem(target, after) if after is not None else QtWidgets.QTreeWidgetItem(target)
+        item = (
+            QtWidgets.QTreeWidgetItem(target, after)
+            if after is not None
+            else QtWidgets.QTreeWidgetItem(target)
+        )
 
         item.setText(0, text)
         if description is not None:
@@ -444,19 +442,14 @@ class SettingsTree(TreeWidget):
 
     @QtCore.Slot()
     def delete_current_item(self) -> None:
-        msg_box = MessageBox("Delete?", "Are you sure you want to delete this item?", parent=self.parent())
+        msg_box = MessageBox(
+            "Delete?", "Are you sure you want to delete this item?", parent=self.parent()
+        )
         sure = msg_box.exec()
 
         if not sure:
             return
-        # sure = QtWidgets.QMessageBox.question(
-        #     self,
-        #     "Delete?",
-        #     "Are you sure you want to delete this item?",
-        #     QtWidgets.QMessageBox.StandardButton.Yes | QtWidgets.QMessageBox.StandardButton.No,
-        # )
-        # if sure != QtWidgets.QMessageBox.StandardButton.Yes:
-        #     return
+
         item = self.currentItem()
         if item.parent():
             self.delete_item(item.parent(), item.parent().indexOfChild(item))
@@ -504,12 +497,12 @@ class SettingsTree(TreeWidget):
             self.delete_item(parent, new_index)
 
 
-class SettingsDialog(FramelessDialog):
+class SettingsDialog(QtWidgets.QDialog):
     sig_setting_changed = QtCore.Signal(str, object)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
-        
+
         self._type_handlers: dict[
             str, t.Callable[[QtWidgets.QTreeWidgetItem], QtGui.QColor | str | int | float | None]
         ] = {
@@ -538,15 +531,11 @@ class SettingsDialog(FramelessDialog):
 
         toolbar = CommandBar(self)
 
-        action_reset_selected_item = QtGui.QAction(
-            FI.ArrowReset.icon(), "Reset Selected", self
-        )
+        action_reset_selected_item = QtGui.QAction(FI.ArrowReset.icon(), "Reset Selected", self)
         action_reset_selected_item.triggered.connect(self.settings_tree.reset_current_item)
 
         if os.environ.get("DEBUG", "0") == "1":
-            action_delete_selected_item = QtGui.QAction(
-                FI.Delete.icon(), "Delete Selected", self
-            )
+            action_delete_selected_item = QtGui.QAction(FI.Delete.icon(), "Delete Selected", self)
             action_delete_selected_item.triggered.connect(self.settings_tree.delete_current_item)
             toolbar.addAction(action_delete_selected_item)
 
@@ -570,7 +559,6 @@ class SettingsDialog(FramelessDialog):
         toolbar.addAction(action_edit_selected_item_value)
 
         layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(MSFluentTitleBar(self))
         layout.addWidget(toolbar)
         layout.addWidget(self.settings_tree)
         layout.addWidget(buttons)

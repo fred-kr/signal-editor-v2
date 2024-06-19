@@ -1,7 +1,9 @@
 import datetime
 import typing as t
 
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets, QtGui
+import pyqtgraph as pg
+from . import type_defs as _t
 
 MICRO: t.Final = "\u03bc"
 
@@ -60,14 +62,20 @@ def human_readable_timedelta(
 
     return f"{day_str}{hours:02d}h {minutes:02d}m {seconds:02d}s {microseconds:06d}{MICRO}s"
 
-
-def get_app_dir() -> QtCore.QDir:
+@t.overload
+def get_app_dir(as_string: t.Literal[False]) -> QtCore.QDir: ...
+@t.overload
+def get_app_dir(as_string: t.Literal[True]) -> str: ...
+def get_app_dir(as_string: bool = False) -> QtCore.QDir | str:
     app_instance = QtWidgets.QApplication.instance()
     import sys
 
     if hasattr(sys, "frozen") and app_instance is not None:
-        return QtCore.QDir(app_instance.applicationDirPath())
-    return QtCore.QDir.current()
+        out = QtCore.QDir(app_instance.applicationDirPath())
+    else:
+        out = QtCore.QDir.current()
+
+    return out.canonicalPath() if as_string else out
 
 
 def safe_disconnect(
@@ -93,3 +101,7 @@ def format_long_sequence(seq: t.Sequence[int | float]) -> str:
         return f"[{', '.join(map(str, seq[:5]))}, ..., {', '.join(map(str, seq[-5:]))}]"
     else:
         return str(seq)
+
+
+def make_qcolor(*args: _t.PGColor) -> QtGui.QColor:
+    return args[0] if isinstance(args[0], QtGui.QColor) else pg.mkColor(*args)

@@ -339,7 +339,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.Slot(QtCore.QPoint)
     def show_data_view_context_menu(self, pos: QtCore.QPoint) -> None:
         menu = QtWidgets.QMenu(self)
-        menu.addAction("Refresh", self.sig_table_refresh_requested.emit)
+        action = QtGui.QAction(FI.ArrowSync.icon(), "Refresh", self.table_view_import_data)
+        action.triggered.connect(self.sig_table_refresh_requested.emit)
+        menu.addAction(action)
         menu.exec(QtGui.QCursor.pos())
 
     @QtCore.Slot(int)
