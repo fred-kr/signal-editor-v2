@@ -152,6 +152,40 @@ def rolling_rate(
     )
 
 
+def rolling_rate_no_overlap(
+    df: pl.DataFrame,
+    grp_col: str,
+    temperature_col: str,
+    sampling_rate: int,
+    sec_new_window_every: int = 60,
+    sec_window_length: int = 60,
+    sec_start_at: int = 0,
+) -> pl.DataFrame:
+    every = sec_new_window_every * sampling_rate
+    period = sec_window_length * sampling_rate
+    offset = sec_start_at * sampling_rate
+    remove_row_count = period // every
+
+    if grp_col not in df.columns or temperature_col not in df.columns:
+        raise ValueError(f"Columns '{grp_col}' and '{temperature_col}' must exist in the dataframe")
+    if df.get_column(grp_col).dtype not in pl.INTEGER_DTYPES:
+        raise ValueError(f"Column '{grp_col}' must be of integer type")
+    return (
+        df.sort(grp_col)
+        .with_columns(pl.col(grp_col).cast(pl.Int64))
+        .groupby_dynamic(
+            pl.col(grp_col),
+            include_boundaries=True,
+            every=f"{every}i",
+            period=f"{period}i",
+            offset=f"{offset}i",
+        )
+        .agg(
+            pl.count().alias("n_peaks"),
+            pl.mean(temperature_col).round(1).suffix("_mean"),
+        )[:-remove_row_count]
+    )
+
 def mean_bpm_per_temperature(
     df: pl.DataFrame,
     grp_col: str,

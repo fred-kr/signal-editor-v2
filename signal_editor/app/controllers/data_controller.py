@@ -17,22 +17,6 @@ from ..models.result_models import CompleteResult, SelectedFileMetadata
 from ..models.section_list_model import SectionListModel
 
 
-class MissingDataError(Exception):
-    """
-    Raised if any function is called that requires data to be loaded, while no data is available.
-    """
-
-    pass
-
-
-class MissingSectionError(Exception):
-    """
-    Raised when trying to access a section (using a valid ID) that does not exist.
-    """
-
-    pass
-
-
 class DataController(QtCore.QObject):
     sig_non_ascii_in_file_name = QtCore.Signal(list, bool)
     sig_user_input_required = QtCore.Signal(list)
@@ -86,7 +70,7 @@ class DataController(QtCore.QObject):
     @property
     def metadata(self) -> FileMetadata:
         if self._metadata is None:
-            raise MissingDataError("No data available.")
+            raise ValueError("No data available.")
         return self._metadata
 
     def _set_sampling_rate(self, value: int) -> None:
@@ -106,7 +90,7 @@ class DataController(QtCore.QObject):
             try:
                 self._base_section = Section(self.base_df, self.metadata.signal_column)
             except Exception as e:
-                raise MissingDataError(
+                raise ValueError(
                     "No data available. Select a valid file to load, and try again."
                 ) from e
         return self._base_section
@@ -289,7 +273,7 @@ class DataController(QtCore.QObject):
                 pl.col("is_manual").cast(pl.Int8),
             )
             section_dfs.append(section_df)
-        
+
         combined_section_df = pl.concat(section_dfs)
         global_df = (
             base_df.lazy()

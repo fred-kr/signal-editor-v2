@@ -58,7 +58,7 @@ def _signal_smoothing_median(
 
 
 def _signal_smoothing(
-    sig: npt.NDArray[np.float_], kernel: SmoothingKernels, size: int = 5
+    sig: npt.NDArray[np.float64], kernel: SmoothingKernels, size: int = 5
 ) -> npt.NDArray[np.float64]:
     window: npt.NDArray[np.float64] = signal.get_window(kernel, size)
     w: npt.NDArray[np.float64] = window / window.sum()
@@ -428,4 +428,4 @@ def _find_peaks_nk_ecg(
         method=nk_method,
         show=False,
         **params,
-    )["ECG_R_Peaks"] # type: ignore
+    )["ECG_R_Peaks"]  # type: ignore

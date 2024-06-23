@@ -405,6 +405,8 @@ class Section:
         )
         if method == RateComputationMethod.RollingWindow:
             rate_data = self._calc_rate_rolling()
+        elif method == RateComputationMethod.RollingWindowNoOverlap:
+            rate_data = self._calc_rate_rolling_no_overlap()
         elif method == RateComputationMethod.Instantaneous:
             rate_data = self._calc_rate_instant()
         else:
@@ -474,6 +476,20 @@ class Section:
 
         self._rate_data = rr_df.rename({"section_index": "x"})
         return self._rate_data
+
+    def _calc_rate_rolling_no_overlap(
+        self,
+        grp_col: str = "section_index",
+        sec_new_window_every: int = 60,
+        sec_window_length: int = 60,
+        sec_start_at: int = 0,
+    ) -> pl.DataFrame:
+        return self._calc_rate_rolling(
+            grp_col=grp_col,
+            sec_new_window_every=sec_new_window_every,
+            sec_window_length=sec_window_length,
+            sec_start_at=sec_start_at,
+        )
 
     def get_mean_rate_per_temperature(self) -> pl.DataFrame:
         info_col = self.info_name

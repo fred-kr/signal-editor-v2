@@ -371,7 +371,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def show_section_confirm_cancel(self, show: bool) -> None:
         self.dock_sections.btn_container.setVisible(show)
-        # self.tool_bar_navigation.setEnabled(not show)
 
     def write_settings(self) -> None:
         settings = QtCore.QSettings()

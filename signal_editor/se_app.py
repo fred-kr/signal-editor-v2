@@ -17,6 +17,7 @@ from .app.core.peak_detection import find_peaks
 from .app.enum_defs import (
     PeakDetectionMethod,
     PreprocessPipeline,
+    RateComputationMethod,
     StandardizationMethod,
 )
 from .app.gui.main_window import MainWindow
@@ -77,8 +78,6 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.action_show_section_overview.toggled.connect(self.plot.toggle_regions)
 
         self.mw.action_toggle_auto_scaling.toggled.connect(self.plot.toggle_auto_scaling)
-        # self.mw.action_show_processing_inputs.toggled.connect(self.mw.dock_processing.setVisible)
-        # self.mw.action_show_peak_detection_inputs.toggled.connect(self.mw.dock_peaks.setVisible)
 
         self.mw.dock_sections.list_view.sig_delete_current_item.connect(self.delete_section)
         self.mw.dock_processing.sig_filter_requested.connect(self.filter_active_signal)
@@ -116,11 +115,14 @@ class SignalEditor(QtWidgets.QApplication):
         rect = self.plot.get_selection_area()
         if rect is None:
             return
+        
         active_section = self.data.active_section
         left, right = int(rect.left()), int(rect.right())
         self.plot.remove_selection_rect()
+        
         peak_method = PeakDetectionMethod(self.mw.dock_peaks.enum_combo_peak_method.currentEnum())
         peak_params = self.mw.dock_peaks.get_peak_detection_parameters(peak_method)
+        
         edge_buffer = 10
         b_left, b_right = left + edge_buffer, right - edge_buffer
         b_left = np.maximum(b_left, 0)
@@ -484,6 +486,9 @@ class SignalEditor(QtWidgets.QApplication):
         elif name == "search_around_click_radius":
             if isinstance(value, int):
                 self.plot.search_around_click_radius = value
+        # elif name == "rate_computation_method":
+        #     if isinstance(value, RateComputationMethod):
+        #         self.
 
     @QtCore.Slot()
     def apply_settings(self) -> None:

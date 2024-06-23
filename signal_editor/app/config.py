@@ -10,19 +10,19 @@ from .utils import get_app_dir, make_qcolor
 
 @attrs.define
 class Config:
-    PlotBackground: QtGui.QColor = attrs.field(default="black", converter=make_qcolor)
-    PlotForeground: QtGui.QColor = attrs.field(default="grey", converter=make_qcolor)
-    PlotPointColor: QtGui.QColor = attrs.field(default="darkgoldenrod", converter=make_qcolor)
-    PlotSectionColor: QtGui.QColor = attrs.field(default="tomato", converter=make_qcolor)
-    PlotLineClickWidth: int = attrs.field(default=70)
-    PlotClickRadius: int = attrs.field(default=20)
+    PlotBackground: QtGui.QColor = attrs.field(default="black", converter=make_qcolor, metadata={"Description": "The background color of the interactive plot."})
+    PlotForeground: QtGui.QColor = attrs.field(default="grey", converter=make_qcolor, metadata={"Description": "The foreground (text, axis, etc) color of the interactive plot."})
+    PlotPointColor: QtGui.QColor = attrs.field(default="darkgoldenrod", converter=make_qcolor, metadata={"Description": "The color of the points in the interactive plot."})
+    PlotSectionColor: QtGui.QColor = attrs.field(default="tomato", converter=make_qcolor, metadata={"Description": "The color of the section markers in the interactive plot."})
+    PlotLineClickWidth: int = attrs.field(default=70, metadata={"Description": "The area around the signal line in pixels that is considered to be a click on the line."})
+    PlotClickRadius: int = attrs.field(default=20, metadata={"Description": "The radius around the click in data coordinates to search for a potential peak."})
 
-    EditFilterStacking: bool = attrs.field(default=False)
+    EditFilterStacking: bool = attrs.field(default=False, metadata={"Description": "Whether to allow applying multiple filters to the same signal."})
     EditRateComputationMethod: RateComputationMethod = attrs.field(
-        default=RateComputationMethod.RollingWindow
+        default=RateComputationMethod.RollingWindow, metadata={"Description": "Which method to use for computing the rate displayed in the lower plot on the editing page, either 'instantaneous' or 'rolling_window'."}
     )
 
-    DataFloatPrecision: int = attrs.field(default=3)
+    DataFloatPrecision: int = attrs.field(default=3, metadata={"Description": "The number of decimal places to show in the data table."})
 
     DataDir: str = attrs.field(factory=partial(get_app_dir, True))
     OutputDir: str = attrs.field(factory=partial(get_app_dir, True))
@@ -101,3 +101,5 @@ class Config:
             )
             config["Internal"] = internal_settings
         return config
+
+

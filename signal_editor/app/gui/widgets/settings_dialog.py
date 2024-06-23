@@ -4,7 +4,7 @@ import typing as t
 
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
-from qfluentwidgets import CommandBar, MessageBox, TreeWidget, TreeView, ColorPickerButton
+from qfluentwidgets import CommandBar, MessageBox, TreeWidget, TreeItemDelegate
 
 from ... import type_defs as _t
 from ...controllers.data_controller import TextFileSeparator
@@ -14,7 +14,7 @@ from ..icons import FluentIcon as FI
 from ._qt_type_checker import TypeChecker
 
 
-class VariantDelegate(QtWidgets.QStyledItemDelegate):
+class VariantDelegate(TreeItemDelegate):
     def __init__(self, type_checker: TypeChecker, parent: QtWidgets.QTreeView) -> None:
         super().__init__(parent)
         self._type_checker = type_checker
@@ -120,7 +120,7 @@ class VariantDelegate(QtWidgets.QStyledItemDelegate):
         if isinstance(value, str):
             if value in {" ", "\t", ";", ",", "|"}:
                 return TextFileSeparator(value).name
-            if value in {"instantaneous", "rolling_window"}:
+            if value in {"instantaneous", "rolling_window", "rolling_window_no_overlap"}:
                 return RateComputationMethod(value).name
             return value
         if isinstance(value, bool):
@@ -657,7 +657,7 @@ class SettingsDialog(QtWidgets.QDialog):
                 item.setData(2, QtCore.Qt.ItemDataRole.UserRole, new_value)
                 item.setText(2, new_value)
         elif setting_name == "rate_computation_method":
-            items = ("instantaneous", "rolling_window")
+            items = [RateComputationMethod(c).value for c in RateComputationMethod]
             current_value = item.data(2, QtCore.Qt.ItemDataRole.UserRole)
             new_value, ok = QtWidgets.QInputDialog.getItem(
                 self,

@@ -94,7 +94,7 @@ class PlotController(QtCore.QObject):
     def remove_region_selector(self) -> None:
         """
         Remove the region selector from the main plot widget.
-        """        
+        """
         if self.region_selector:
             self.pw_main.removeItem(self.region_selector)
             self.region_selector.setParent(None)
@@ -112,9 +112,9 @@ class PlotController(QtCore.QObject):
 
         Parameters
         ----------
-        pen_color : 
+        pen_color :
             The color of the pen used to draw the signal curve, by default None
-        """        
+        """
         settings = QtCore.QSettings()
 
         if pen_color is None:
@@ -315,7 +315,12 @@ class PlotController(QtCore.QObject):
 
         self.signal_curve.setData(y_data)
 
-    def set_rate_data(self, y_data: npt.NDArray[np.float64 | np.intp], x_data: npt.NDArray[np.intp] | None = None, clear: bool = False) -> None:
+    def set_rate_data(
+        self,
+        y_data: npt.NDArray[np.float64 | np.intp],
+        x_data: npt.NDArray[np.intp] | None = None,
+        clear: bool = False,
+    ) -> None:
         if self.rate_curve is None:
             return
         if clear:
@@ -437,8 +442,8 @@ class PlotController(QtCore.QObject):
 
     def draw_rolling_rate(
         self,
-        x: npt.NDArray[np.float_],
-        y: npt.NDArray[np.float_],
+        x: npt.NDArray[np.float64],
+        y: npt.NDArray[np.float64],
         color: str = "green",
         marker: str = "o",
         linestyle: str = "-",

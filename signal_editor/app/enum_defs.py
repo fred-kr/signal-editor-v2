@@ -13,6 +13,7 @@ class LogLevel(enum.IntEnum):
 class RateComputationMethod(enum.StrEnum):
     Instantaneous = "instantaneous"
     RollingWindow = "rolling_window"
+    RollingWindowNoOverlap = "rolling_window_no_overlap"
 
 
 class TextFileSeparator(enum.StrEnum):

@@ -99,7 +99,7 @@ class DefaultAppSettings(t.TypedDict):
     Misc: DefaultMiscSettings
 
 
-#region NewConfig
+# region NewConfig
 class PlotConfigDict(t.TypedDict):
     Background: "QtGui.QColor"
     Foreground: "QtGui.QColor"
@@ -108,12 +108,15 @@ class PlotConfigDict(t.TypedDict):
     LineClickWidth: int
     ClickRadius: int
 
+
 class EditConfigDict(t.TypedDict):
     FilterStacking: bool
     RateComputationMethod: "RateComputationMethod"
 
+
 class DataConfigDict(t.TypedDict):
     FloatPrecision: int
+
 
 class InternalConfigDict(t.TypedDict):
     DataDir: str
@@ -123,13 +126,17 @@ class InternalConfigDict(t.TypedDict):
     LastInfoColumn: str
     WindowGeometry: "QtCore.QByteArray"
     WindowState: "QtCore.QByteArray"
-    
+
+
 class ConfigDict(t.TypedDict):
     Plot: PlotConfigDict
     Edit: EditConfigDict
     Data: DataConfigDict
     Internal: t.NotRequired[InternalConfigDict]
-#endregion
+
+
+# endregion
+
 
 class ReadFileKwargs(t.TypedDict, total=False):
     columns: list[str]
@@ -165,9 +172,9 @@ class SpotDict(t.TypedDict):
 
 class SpotItemSetDataKwargs(t.TypedDict, total=False):
     spots: list[SpotDict]
-    x: npt.NDArray[np.float_ | np.intp | np.uintp] | t.Sequence[float | int]
-    y: npt.NDArray[np.float_ | np.intp | np.uintp] | t.Sequence[float | int]
-    pos: npt.NDArray[np.float_ | np.intp] | list[tuple[float, float]]
+    x: npt.NDArray[np.float64 | np.intp | np.uintp] | t.Sequence[float | int]
+    y: npt.NDArray[np.float64 | np.intp | np.uintp] | t.Sequence[float | int]
+    pos: npt.NDArray[np.float64 | np.intp] | list[tuple[float, float]]
     pxMode: bool
     symbol: PGPointSymbols
     pen: PGPen
@@ -204,8 +211,8 @@ class PGConfigOptions(t.TypedDict):
 
 
 class PlotDataItemKwargs(t.TypedDict, total=False):
-    x: npt.NDArray[np.float_ | np.intp | np.uintp]
-    y: npt.NDArray[np.float_ | np.intp | np.uintp]
+    x: npt.NDArray[np.float64 | np.intp | np.uintp]
+    y: npt.NDArray[np.float64 | np.intp | np.uintp]
     connect: t.Literal["all", "pairs", "finite", "auto"] | npt.NDArray[np.int32]
     pen: PGPen | None
     shadowPen: PGPen | None
@@ -431,7 +438,7 @@ class EDFChannelDict(t.TypedDict, total=False):
     coord_frame: int
     coil_type: int
     kind: int
-    loc: npt.NDArray[np.float_]  # shape (12,)
+    loc: npt.NDArray[np.float64]  # shape (12,)
 
 
 class EDFInfoDict(t.TypedDict, total=False):
