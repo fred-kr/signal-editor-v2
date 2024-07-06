@@ -4,7 +4,7 @@ import typing as t
 
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
-from qfluentwidgets import CommandBar, MessageBox, TreeWidget, TreeItemDelegate
+from qfluentwidgets import CommandBar, MessageBox, TreeItemDelegate, TreeWidget
 
 from ... import type_defs as _t
 from ...controllers.data_controller import TextFileSeparator
@@ -12,6 +12,8 @@ from ...enum_defs import RateComputationMethod
 from ...utils import get_app_dir, make_qcolor, safe_disconnect
 from ..icons import FluentIcon as FI
 from ._qt_type_checker import TypeChecker
+
+type Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 
 
 class VariantDelegate(TreeItemDelegate):
@@ -39,7 +41,7 @@ class VariantDelegate(TreeItemDelegate):
         self,
         lineedit: QtWidgets.QLineEdit,
         model: QtCore.QAbstractItemModel,
-        index: QtCore.QModelIndex | QtCore.QPersistentModelIndex,
+        index: Index,
     ) -> t.Any:
         if not lineedit.isModified():
             return None
@@ -58,7 +60,7 @@ class VariantDelegate(TreeItemDelegate):
         self,
         editor: QtWidgets.QWidget,
         model: QtCore.QAbstractItemModel,
-        index: QtCore.QModelIndex | QtCore.QPersistentModelIndex,
+        index: Index,
     ) -> None:
         value = None
         if isinstance(editor, QtWidgets.QCheckBox):
