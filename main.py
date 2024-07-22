@@ -12,7 +12,6 @@ if __name__ == "__main__":
 
     import sys
 
-    import polars as pl
     import pyqtgraph as pg
     from loguru import logger
 
@@ -45,7 +44,7 @@ if __name__ == "__main__":
         useNumba=use_opengl,
         segmentedLineMode="on",
     )
-    pl.Config().activate_decimals(True)
+    
 
     app = SignalEditor(sys.argv)
     # Built-in styles: ['windows11', 'windowsvista', 'Windows', 'Fusion']

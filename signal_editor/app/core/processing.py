@@ -7,7 +7,7 @@ import polars as pl
 import scipy.interpolate
 import scipy.signal
 import scipy.stats
-from polars_standardize_series import standardize
+# from polars_standardize_series import standardize
 
 from .. import type_defs as _t
 from ..enum_defs import FilterMethod
@@ -18,6 +18,11 @@ def standardize_signal(
 ) -> pl.Series:
     if robust and window_size:
         raise ValueError("Windowed MAD scaling is not supported for robust scaling")
+    try:
+        from polars_standardize_series import standardize
+    except ImportError as e:
+        print("Error importing polars_standardize_series")
+        raise e
     return (
         sig.to_frame("signal")
         .with_columns(

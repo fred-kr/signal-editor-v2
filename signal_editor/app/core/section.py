@@ -8,7 +8,7 @@ import numpy.typing as npt
 import polars as pl
 import polars.selectors as ps
 from loguru import logger
-from polars_standardize_series import standardize
+# from polars_standardize_series import standardize
 from PySide6 import QtCore
 
 from .. import type_defs as _t
@@ -151,7 +151,8 @@ class Section:
             data.with_row_index("section_index")
             .lazy()
             .select(ps.by_name("index", "section_index"), ~ps.by_name("index", "section_index"))
-            .set_sorted(["index", "section_index"])
+            .set_sorted("index")
+            .set_sorted("section_index")
             .with_columns(
                 pl.col(signal_name).alias(self.processed_signal_name),
                 pl.lit(0, pl.Int8).alias("is_peak"),

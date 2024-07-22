@@ -109,7 +109,7 @@ class PlotConfigDict(t.TypedDict):
     ClickRadius: int
 
 
-class EditConfigDict(t.TypedDict):
+class EditingConfigDict(t.TypedDict):
     FilterStacking: bool
     RateComputationMethod: "RateComputationMethod"
 
@@ -119,7 +119,7 @@ class DataConfigDict(t.TypedDict):
 
 
 class InternalConfigDict(t.TypedDict):
-    DataDir: str
+    InputDir: str
     OutputDir: str
     RecentFiles: list[str]
     LastSignalColumn: str
@@ -130,12 +130,12 @@ class InternalConfigDict(t.TypedDict):
 
 class ConfigDict(t.TypedDict):
     Plot: PlotConfigDict
-    Edit: EditConfigDict
+    Editing: EditingConfigDict
     Data: DataConfigDict
     Internal: t.NotRequired[InternalConfigDict]
 
 
-# endregion
+# endregion NewConfig
 
 
 class ReadFileKwargs(t.TypedDict, total=False):
