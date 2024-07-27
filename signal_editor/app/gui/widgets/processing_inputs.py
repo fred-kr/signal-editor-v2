@@ -44,9 +44,7 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
         self.v_layout_grp_box_filter_parameters.addWidget(self.dbl_slider_highcut)
 
         slider_window_size_filter = superqt.QLabeledSlider()
-        slider_window_size_filter.setEdgeLabelMode(
-            superqt.QLabeledSlider.EdgeLabelMode.LabelIsValue
-        )
+        slider_window_size_filter.setEdgeLabelMode(superqt.QLabeledSlider.EdgeLabelMode.LabelIsValue)
         slider_window_size_filter.setRange(5, 5_000)
         slider_window_size_filter.setValue(500)
         self.slider_window_size_filter = slider_window_size_filter
@@ -64,16 +62,14 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
         self.v_layout_grp_box_filter_parameters.addWidget(QtWidgets.QLabel("Power line"))
         self.v_layout_grp_box_filter_parameters.addWidget(self.combo_powerline)
 
-        slider_window_size_standardize = superqt.QLabeledSlider(QtCore.Qt.Orientation.Horizontal, self.grp_box_standardize_rolling_window)
-        slider_window_size_standardize.setEdgeLabelMode(
-            superqt.QLabeledSlider.EdgeLabelMode.LabelIsValue
+        slider_window_size_standardize = superqt.QLabeledSlider(
+            QtCore.Qt.Orientation.Horizontal, self.grp_box_standardize_rolling_window
         )
+        slider_window_size_standardize.setEdgeLabelMode(superqt.QLabeledSlider.EdgeLabelMode.LabelIsValue)
 
         slider_window_size_standardize.setRange(3, 3_333)
         slider_window_size_standardize.setValue(300)
-        self.v_layout_grp_box_standardize_rolling_window.addWidget(
-            slider_window_size_standardize
-        )
+        self.v_layout_grp_box_standardize_rolling_window.addWidget(slider_window_size_standardize)
 
         self.slider_window_size_standardize = slider_window_size_standardize
 
@@ -84,7 +80,7 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
 
         self._connect_qt_signals()
         self._set_filter_widget_states(self.enum_combo_filter_method.currentEnum())
-        self._set_frequency_slider_states(self.enum_combo_filter_type.currentEnum())    
+        self._set_frequency_slider_states(self.enum_combo_filter_type.currentEnum())
         self._set_rolling_window_checkbox_state(self.enum_combo_standardize_method.currentEnum())
         self.update_frequency_sliders(sampling_rate)
         self._restore_defaults()
@@ -99,9 +95,7 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
         self.enum_combo_filter_method.currentEnumChanged.connect(self._set_filter_widget_states)
         self.enum_combo_filter_type.currentEnumChanged.connect(self._set_frequency_slider_states)
 
-        self.enum_combo_standardize_method.currentEnumChanged.connect(
-            self._set_rolling_window_checkbox_state
-        )
+        self.enum_combo_standardize_method.currentEnumChanged.connect(self._set_rolling_window_checkbox_state)
 
     def update_frequency_sliders(self, sampling_rate: int) -> None:
         freq_range = (0, sampling_rate // 2)

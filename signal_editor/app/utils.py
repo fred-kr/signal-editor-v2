@@ -35,9 +35,7 @@ def check_string_for_non_ascii(string: str) -> NonAsciiResult:
         detected non-ASCII characters and their positions in the input string.
     """
 
-    non_ascii_chars = [
-        NonAsciiCharAndPosition(char, idx) for idx, char in enumerate(string) if ord(char) > 127
-    ]
+    non_ascii_chars = [NonAsciiCharAndPosition(char, idx) for idx, char in enumerate(string) if ord(char) > 127]
 
     return NonAsciiResult(has_non_ascii=bool(non_ascii_chars), non_ascii_chars=non_ascii_chars)
 
@@ -49,9 +47,7 @@ def human_readable_timedelta(
 ) -> str:
     if time_delta is None:
         if seconds is None or microseconds is None:
-            raise ValueError(
-                "Either 'time_delta' or 'seconds' and 'microseconds' must be provided."
-            )
+            raise ValueError("Either 'time_delta' or 'seconds' and 'microseconds' must be provided.")
         time_delta = datetime.timedelta(seconds=seconds, microseconds=microseconds)
 
     days = time_delta.days
@@ -61,6 +57,7 @@ def human_readable_timedelta(
     day_str = f"{days}d " if days > 0 else ""
 
     return f"{day_str}{hours:02d}h {minutes:02d}m {seconds:02d}s {microseconds:06d}{MICRO}s"
+
 
 @t.overload
 def get_app_dir(as_string: t.Literal[False]) -> QtCore.QDir: ...

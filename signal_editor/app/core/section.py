@@ -8,7 +8,8 @@ import numpy.typing as npt
 import polars as pl
 import polars.selectors as ps
 from loguru import logger
-# from polars_standardize_series import standardize
+
+from polars_standardize_series import standardize
 from PySide6 import QtCore
 
 from .. import type_defs as _t
@@ -100,9 +101,7 @@ class ManualPeakEdits:
 class SectionID(str):
     def __init__(self, value: str) -> None:
         if not re.match(r"^Section_[a-zA-Z0-9]+_[0-9]{3}$", value):
-            raise ValueError(
-                f"SectionID must be of the form 'Section_<signal_name>_000', got '{value}'"
-            )
+            raise ValueError(f"SectionID must be of the form 'Section_<signal_name>_000', got '{value}'")
         super().__init__()
 
     @staticmethod
@@ -134,9 +133,7 @@ class SectionMetadata:
 
 
 class Section:
-    def __init__(
-        self, data: pl.DataFrame, signal_name: str, info_column: str | None = None
-    ) -> None:
+    def __init__(self, data: pl.DataFrame, signal_name: str, info_column: str | None = None) -> None:
         self.signal_name = signal_name
         self.processed_signal_name = f"{self.signal_name}_processed"
         self.info_name = info_column
@@ -207,13 +204,7 @@ class Section:
 
     @property
     def peaks_global(self) -> pl.Series:
-        return (
-            self.data.lazy()
-            .filter(pl.col("is_peak") == 1)
-            .select("index")
-            .collect()
-            .get_column("index")
-        )
+        return self.data.lazy().filter(pl.col("is_peak") == 1).select("index").collect().get_column("index")
 
     @property
     def manual_peak_edits(self) -> ManualPeakEdits:
@@ -298,9 +289,7 @@ class Section:
 
         self._processing_parameters.standardization_parameters = kwargs
 
-    def detect_peaks(
-        self, method: PeakDetectionMethod, method_parameters: _t.PeakDetectionMethodParameters
-    ) -> None:
+    def detect_peaks(self, method: PeakDetectionMethod, method_parameters: _t.PeakDetectionMethodParameters) -> None:
         peaks = find_peaks(
             self.processed_signal.to_numpy(allow_copy=False),
             self.sampling_rate,
@@ -400,9 +389,7 @@ class Section:
         self,
     ) -> pl.DataFrame:
         method = RateComputationMethod(
-            QtCore.QSettings().value(
-                "Editing/rate_computation_method", RateComputationMethod.RollingWindow
-            )
+            QtCore.QSettings().value("Editing/rate_computation_method", RateComputationMethod.RollingWindow)
         )
         if method == RateComputationMethod.RollingWindow:
             rate_data = self._calc_rate_rolling()
@@ -431,9 +418,7 @@ class Section:
             desired_length = self.data.height
         inst_rate = signal_rate(peaks, self.sampling_rate, desired_length)
 
-        self._rate_data = pl.DataFrame(
-            {"x": pl.int_range(inst_rate.size, dtype=pl.Int32, eager=True), "y": inst_rate}
-        )
+        self._rate_data = pl.DataFrame({"x": pl.int_range(inst_rate.size, dtype=pl.Int32, eager=True), "y": inst_rate})
         return self._rate_data
 
     def _calc_rate_rolling(
@@ -450,7 +435,7 @@ class Section:
         offset = sec_start_at * sampling_rate
         if grp_col not in self.data.columns:
             raise ValueError(f"Column '{grp_col}' must exist in the dataframe")
-        if self.data.lazy().select(pl.col(grp_col)).dtypes[0] not in pl.INTEGER_DTYPES:
+        if self.data.lazy().select(pl.col(grp_col)).collect_schema().dtypes()[0] not in pl.INTEGER_DTYPES:
             raise ValueError(f"Column '{grp_col}' must be of integer type")
         n_incomplete_windows = period // every
 
@@ -468,7 +453,7 @@ class Section:
         if self.info_name in self.data.columns:
             rr_df = rr_df.agg(
                 pl.sum("is_peak").alias("y"),
-                pl.mean(self.info_name).round(1).suffix("_mean"),
+                pl.mean(self.info_name).round(1).name.suffix("_mean"),
             ).collect()[:-n_incomplete_windows]
         else:
             rr_df = rr_df.agg(
@@ -549,9 +534,7 @@ class Section:
         section_peaks = self.peaks_local
 
         if section_peaks.len() < 3:
-            raise RuntimeError(
-                f"Need at least 3 detected peaks to create a result, got {section_peaks.len()}"
-            )
+            raise RuntimeError(f"Need at least 3 detected peaks to create a result, got {section_peaks.len()}")
         sampling_rate = self.sampling_rate
 
         global_peaks = self.peaks_global

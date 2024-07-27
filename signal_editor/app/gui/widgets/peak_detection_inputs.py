@@ -41,9 +41,7 @@ class PeakDetectionDock(QtWidgets.QDockWidget, Ui_DockWidgetPeakDetection):
 
     def connect_qt_signals(self) -> None:
         self.enum_combo_peak_method.currentEnumChanged.connect(self._show_method_parameters)
-        self.peak_neurokit2_algorithm_used.currentEnumChanged.connect(
-            self._show_nk_peak_algorithm_inputs
-        )
+        self.peak_neurokit2_algorithm_used.currentEnumChanged.connect(self._show_nk_peak_algorithm_inputs)
         self.btn_run_peak_detection.clicked.connect(self._emit_peak_detection_requested)
         self.btn_reset_peak_inputs.clicked.connect(self._restore_defaults)
         self.btn_clear_peaks.clicked.connect(self.sig_clear_peaks_requested)
@@ -54,9 +52,7 @@ class PeakDetectionDock(QtWidgets.QDockWidget, Ui_DockWidgetPeakDetection):
             self.stacked_peak_parameters.setCurrentWidget(self.page_peak_elgendi_ppg)
         elif method == PeakDetectionMethod.ECGNeuroKit2:
             self.stacked_peak_parameters.setCurrentWidget(self.page_peak_neurokit2)
-            current_nk2_method = NK2ECGPeakDetectionMethod(
-                self.peak_neurokit2_algorithm_used.currentEnum()
-            )
+            current_nk2_method = NK2ECGPeakDetectionMethod(self.peak_neurokit2_algorithm_used.currentEnum())
             self._show_nk_peak_algorithm_inputs(current_nk2_method)
         elif method == PeakDetectionMethod.LocalMaxima:
             self.stacked_peak_parameters.setCurrentWidget(self.page_peak_local_max)
@@ -98,9 +94,7 @@ class PeakDetectionDock(QtWidgets.QDockWidget, Ui_DockWidgetPeakDetection):
         peak_params = self.get_peak_detection_parameters(method)
         self.sig_peak_detection_requested.emit(method, peak_params)
 
-    def get_peak_detection_parameters(
-        self, method: PeakDetectionMethod
-    ) -> _t.PeakDetectionMethodParameters:
+    def get_peak_detection_parameters(self, method: PeakDetectionMethod) -> _t.PeakDetectionMethodParameters:
         if method == PeakDetectionMethod.PPGElgendi:
             peak_params = _t.PeaksPPGElgendi(
                 peakwindow=self.peak_elgendi_ppg_peakwindow.value(),
@@ -154,12 +148,8 @@ class PeakDetectionDock(QtWidgets.QDockWidget, Ui_DockWidgetPeakDetection):
                 min_distance=self.peak_local_min_min_dist.value(),
             )
         elif method == PeakDetectionMethod.WFDBXQRS:
-            peak_dir: WFDBPeakDirection = (
-                self.peak_xqrs_peak_dir.currentEnum() or WFDBPeakDirection.Up
-            )
-            peak_params = _t.PeaksWFDBXQRS(
-                search_radius=self.peak_xqrs_search_radius.value(), peak_dir=peak_dir
-            )
+            peak_dir: WFDBPeakDirection = self.peak_xqrs_peak_dir.currentEnum() or WFDBPeakDirection.Up
+            peak_params = _t.PeaksWFDBXQRS(search_radius=self.peak_xqrs_search_radius.value(), peak_dir=peak_dir)
         else:
             raise ValueError(f"Unknown peak detection method: {method}")
 

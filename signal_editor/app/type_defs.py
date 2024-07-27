@@ -103,6 +103,7 @@ class DefaultAppSettings(t.TypedDict):
 class PlotConfigDict(t.TypedDict):
     Background: "QtGui.QColor"
     Foreground: "QtGui.QColor"
+    LineColor: "QtGui.QColor"
     PointColor: "QtGui.QColor"
     SectionColor: "QtGui.QColor"
     LineClickWidth: int

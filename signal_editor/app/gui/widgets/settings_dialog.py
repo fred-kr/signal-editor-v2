@@ -13,7 +13,7 @@ from ...utils import get_app_dir, make_qcolor, safe_disconnect
 from ..icons import FluentIcon as FI
 from ._qt_type_checker import TypeChecker
 
-type Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
+type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 
 
 class VariantDelegate(TreeItemDelegate):
@@ -25,7 +25,7 @@ class VariantDelegate(TreeItemDelegate):
         self,
         painter: QtGui.QPainter,
         option: QtWidgets.QStyleOptionViewItem,
-        index: QtCore.QModelIndex | QtCore.QPersistentModelIndex,
+        index: _Index,
     ) -> None:
         if index.column() == 2:
             value = index.model().data(index, QtCore.Qt.ItemDataRole.UserRole)
@@ -41,7 +41,7 @@ class VariantDelegate(TreeItemDelegate):
         self,
         lineedit: QtWidgets.QLineEdit,
         model: QtCore.QAbstractItemModel,
-        index: Index,
+        index: _Index,
     ) -> t.Any:
         if not lineedit.isModified():
             return None
@@ -60,7 +60,7 @@ class VariantDelegate(TreeItemDelegate):
         self,
         editor: QtWidgets.QWidget,
         model: QtCore.QAbstractItemModel,
-        index: Index,
+        index: _Index,
     ) -> None:
         value = None
         if isinstance(editor, QtWidgets.QCheckBox):
@@ -213,9 +213,7 @@ class SettingsTree(TreeWidget):
             "last_info_column_name": "The name of the info column in the last loaded data file. If a new data file is loaded that has a column with this name, the info column will be automatically selected",
         }
         self.setBorderVisible(True)
-        self.header().setDefaultAlignment(
-            QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter
-        )
+        self.header().setDefaultAlignment(QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.setUniformRowHeights(True)
         self.setTextElideMode(QtCore.Qt.TextElideMode.ElideRight)
         self.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
@@ -317,9 +315,7 @@ class SettingsTree(TreeWidget):
         self.itemChanged.connect(self.update_setting)
 
     def event(self, e: QtCore.QEvent) -> bool:
-        if e.type() == QtCore.QEvent.Type.WindowActivate and (
-            self.isActiveWindow() and self.auto_refresh
-        ):
+        if e.type() == QtCore.QEvent.Type.WindowActivate and (self.isActiveWindow() and self.auto_refresh):
             self.maybe_refresh()
 
         return super().event(e)
@@ -396,9 +392,7 @@ class SettingsTree(TreeWidget):
                 child.setText(1, "Invalid")
             else:
                 # Try to convert to type unless a QByteArray is received
-                if isinstance(value, str) and (
-                    value_type := self._type_checker.type_from_text(value)
-                ):
+                if isinstance(value, str) and (value_type := self._type_checker.type_from_text(value)):
                     value = self.settings.value(key, type=value_type)
                 child.setText(1, value.__class__.__name__)
             child.setText(2, VariantDelegate.display_text(value))
@@ -420,11 +414,7 @@ class SettingsTree(TreeWidget):
     ) -> QtWidgets.QTreeWidgetItem:
         after = self.child_at(parent, index - 1) if index != 0 else None
         target = parent if parent is not None else self
-        item = (
-            QtWidgets.QTreeWidgetItem(target, after)
-            if after is not None
-            else QtWidgets.QTreeWidgetItem(target)
-        )
+        item = QtWidgets.QTreeWidgetItem(target, after) if after is not None else QtWidgets.QTreeWidgetItem(target)
 
         item.setText(0, text)
         if description is not None:
@@ -444,9 +434,7 @@ class SettingsTree(TreeWidget):
 
     @QtCore.Slot()
     def delete_current_item(self) -> None:
-        msg_box = MessageBox(
-            "Delete?", "Are you sure you want to delete this item?", parent=self.parent()
-        )
+        msg_box = MessageBox("Delete?", "Are you sure you want to delete this item?", parent=self.parent())
         sure = msg_box.exec()
 
         if not sure:
@@ -472,29 +460,19 @@ class SettingsTree(TreeWidget):
         item.setText(2, VariantDelegate.display_text(default_value))
         self.update_setting(item)
 
-    def child_at(
-        self, parent: QtWidgets.QTreeWidgetItem | None, index: int
-    ) -> QtWidgets.QTreeWidgetItem:
+    def child_at(self, parent: QtWidgets.QTreeWidgetItem | None, index: int) -> QtWidgets.QTreeWidgetItem:
         return parent.child(index) if parent is not None else self.topLevelItem(index)
 
     def child_count(self, parent: QtWidgets.QTreeWidgetItem | None) -> int:
         return parent.childCount() if parent is not None else self.topLevelItemCount()
 
-    def find_child(
-        self, parent: QtWidgets.QTreeWidgetItem | None, text: str, start_index: int
-    ) -> int:
+    def find_child(self, parent: QtWidgets.QTreeWidgetItem | None, text: str, start_index: int) -> int:
         return next(
-            (
-                i
-                for i in range(self.child_count(parent))
-                if self.child_at(parent, i).text(0) == text
-            ),
+            (i for i in range(self.child_count(parent)) if self.child_at(parent, i).text(0) == text),
             -1,
         )
 
-    def move_item_forward(
-        self, parent: QtWidgets.QTreeWidgetItem | None, old_index: int, new_index: int
-    ) -> None:
+    def move_item_forward(self, parent: QtWidgets.QTreeWidgetItem | None, old_index: int, new_index: int) -> None:
         for _ in range(old_index - new_index):
             self.delete_item(parent, new_index)
 
@@ -520,8 +498,7 @@ class SettingsDialog(QtWidgets.QDialog):
         self.setWindowTitle("Settings")
         self.setWindowIcon(FI.Settings.icon())
         buttons = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.StandardButton.Ok
-            | QtWidgets.QDialogButtonBox.StandardButton.Cancel
+            QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel
         )
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
@@ -541,14 +518,10 @@ class SettingsDialog(QtWidgets.QDialog):
             action_delete_selected_item.triggered.connect(self.settings_tree.delete_current_item)
             toolbar.addAction(action_delete_selected_item)
 
-        action_restore_defaults = QtGui.QAction(
-            FI.TabDesktopArrowClockwise.icon(), "Restore Original Values", self
-        )
+        action_restore_defaults = QtGui.QAction(FI.TabDesktopArrowClockwise.icon(), "Restore Original Values", self)
         action_restore_defaults.triggered.connect(self.settings_tree.restore_defaults)
 
-        action_edit_selected_item_value = QtGui.QAction(
-            FI.EditSettings.icon(), "Edit Selected Item Value", self
-        )
+        action_edit_selected_item_value = QtGui.QAction(FI.EditSettings.icon(), "Edit Selected Item Value", self)
         action_edit_selected_item_value.triggered.connect(
             lambda: self._on_edit_selected_item_value(self.settings_tree.currentItem())
         )
@@ -607,9 +580,7 @@ class SettingsDialog(QtWidgets.QDialog):
         )
         return val if ok else initial
 
-    def get_int(
-        self, initial: int, min_allowed: int = -10_000_000, max_allowed: int = 10_000_000
-    ) -> int:
+    def get_int(self, initial: int, min_allowed: int = -10_000_000, max_allowed: int = 10_000_000) -> int:
         val, ok = QtWidgets.QInputDialog.getInt(
             self,
             "Edit Setting",
@@ -620,9 +591,7 @@ class SettingsDialog(QtWidgets.QDialog):
         )
         return val if ok else initial
 
-    def get_float(
-        self, initial: float, min_allowed: float = -10e6, max_allowed: float = 10e6
-    ) -> float:
+    def get_float(self, initial: float, min_allowed: float = -10e6, max_allowed: float = 10e6) -> float:
         val, ok = QtWidgets.QInputDialog.getDouble(
             self,
             "Edit Setting",

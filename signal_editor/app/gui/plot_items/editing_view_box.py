@@ -60,9 +60,7 @@ class EditingViewBox(pg.ViewBox):
         self.addItem(selection_box, ignoreBounds=True)
         return
 
-    def mouseDragEvent(
-        self, ev: "mouseEvents.MouseDragEvent", axis: int | float | None = None
-    ) -> None:
+    def mouseDragEvent(self, ev: "mouseEvents.MouseDragEvent", axis: int | float | None = None) -> None:
         ev.accept()
 
         pos = ev.pos()

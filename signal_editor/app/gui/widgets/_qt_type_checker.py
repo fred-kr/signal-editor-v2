@@ -16,9 +16,7 @@ class TypeChecker:
     def __init__(self) -> None:
         self.bool_expr = QtCore.QRegularExpression("^(true)|(false)$")
         assert self.bool_expr.isValid()
-        self.bool_expr.setPatternOptions(
-            QtCore.QRegularExpression.PatternOption.CaseInsensitiveOption
-        )
+        self.bool_expr.setPatternOptions(QtCore.QRegularExpression.PatternOption.CaseInsensitiveOption)
 
         self.byte_array_expr = QtCore.QRegularExpression(r"^[\x00-\xff]*$")
         assert self.byte_array_expr.isValid()
@@ -35,9 +33,7 @@ class TypeChecker:
         self.point_expr = QtCore.QRegularExpression(r"^\((-?[0-9]*),(-?[0-9]*)\)$")
         assert self.point_expr.isValid()
 
-        self.rect_expr = QtCore.QRegularExpression(
-            r"^\((-?[0-9]*),(-?[0-9]*),(-?[0-9]*),(-?[0-9]*)\)$"
-        )
+        self.rect_expr = QtCore.QRegularExpression(r"^\((-?[0-9]*),(-?[0-9]*),(-?[0-9]*),(-?[0-9]*)\)$")
         assert self.rect_expr.isValid()
 
         self.size_expr = QtCore.QRegularExpression(self.point_expr)
@@ -55,18 +51,7 @@ class TypeChecker:
 
     def type_from_text(
         self, text: str
-    ) -> (
-        t.Type[
-            bool
-            | int
-            | QtCore.QByteArray
-            | QtGui.QColor
-            | QtCore.QDate
-            | QtCore.QTime
-            | QtCore.QDateTime
-        ]
-        | None
-    ):
+    ) -> t.Type[bool | int | QtCore.QByteArray | QtGui.QColor | QtCore.QDate | QtCore.QTime | QtCore.QDateTime] | None:
         """
         Determines the data type based on the given text.
 

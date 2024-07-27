@@ -7,36 +7,25 @@ import polars as pl
 import scipy.interpolate
 import scipy.signal
 import scipy.stats
-# from polars_standardize_series import standardize
+from polars_standardize_series import standardize
 
 from .. import type_defs as _t
 from ..enum_defs import FilterMethod
 
 
-def standardize_signal(
-    sig: pl.Series, robust: bool = False, window_size: int | None = None
-) -> pl.Series:
+def standardize_signal(sig: pl.Series, robust: bool = False, window_size: int | None = None) -> pl.Series:
     if robust and window_size:
         raise ValueError("Windowed MAD scaling is not supported for robust scaling")
-    try:
-        from polars_standardize_series import standardize
-    except ImportError as e:
-        print("Error importing polars_standardize_series")
-        raise e
     return (
         sig.to_frame("signal")
-        .with_columns(
-            signal_std=standardize(pl.col("signal"), robust=robust, window_size=window_size)
-        )
+        .with_columns(signal_std=standardize(pl.col("signal"), robust=robust, window_size=window_size))
         .get_column("signal_std")
         .fill_nan(None)
         .fill_null(strategy="backward")
     )
 
 
-def filter_neurokit2(
-    sig: npt.NDArray[np.float64], sampling_rate: int, powerline: int = 50
-) -> npt.NDArray[np.float64]:
+def filter_neurokit2(sig: npt.NDArray[np.float64], sampling_rate: int, powerline: int = 50) -> npt.NDArray[np.float64]:
     clean = nk.signal_filter(
         signal=sig,
         sampling_rate=sampling_rate,
@@ -44,9 +33,7 @@ def filter_neurokit2(
         method=FilterMethod.Butterworth,
         order=5,
     )
-    return nk.signal_filter(
-        clean, sampling_rate=sampling_rate, method=FilterMethod.Powerline, powerline=powerline
-    )
+    return nk.signal_filter(clean, sampling_rate=sampling_rate, method=FilterMethod.Powerline, powerline=powerline)
 
 
 def filter_elgendi(sig: npt.NDArray[np.float64], sampling_rate: int) -> npt.NDArray[np.float64]:
@@ -143,7 +130,7 @@ def rolling_rate(
     return (
         df.sort(grp_col)
         .with_columns(pl.col(grp_col).cast(pl.Int64))
-        .groupby_dynamic(
+        .group_by_dynamic(
             pl.col(grp_col),
             include_boundaries=True,
             every=f"{every}i",
@@ -152,7 +139,7 @@ def rolling_rate(
         )
         .agg(
             pl.count().alias("n_peaks"),
-            pl.mean(temperature_col).round(1).suffix("_mean"),
+            pl.mean(temperature_col).round(1).name.suffix("_mean"),
         )[:-remove_row_count]
     )
 
@@ -178,7 +165,7 @@ def rolling_rate_no_overlap(
     return (
         df.sort(grp_col)
         .with_columns(pl.col(grp_col).cast(pl.Int64))
-        .groupby_dynamic(
+        .group_by_dynamic(
             pl.col(grp_col),
             include_boundaries=True,
             every=f"{every}i",
@@ -187,9 +174,10 @@ def rolling_rate_no_overlap(
         )
         .agg(
             pl.count().alias("n_peaks"),
-            pl.mean(temperature_col).round(1).suffix("_mean"),
+            pl.mean(temperature_col).round(1).name.suffix("_mean"),
         )[:-remove_row_count]
     )
+
 
 def mean_bpm_per_temperature(
     df: pl.DataFrame,
@@ -209,4 +197,4 @@ def mean_bpm_per_temperature(
         sec_window_length,
         sec_start_at,
     )
-    return rr.group_by(pl.col(f"{temperature_col}_mean")).agg(pl.mean("n_peaks").suffix("_mean"))
+    return rr.group_by(pl.col(f"{temperature_col}_mean")).agg(pl.mean("n_peaks").name.suffix("_mean"))

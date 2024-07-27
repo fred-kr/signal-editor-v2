@@ -25,13 +25,18 @@ class PlotConfig:
         converter=make_qcolor,
         metadata={"Description": "The foreground (text, axis, etc) color of the plot."},
     )
+    LineColor: QtGui.QColor = attrs.field(
+        default="royalblue",
+        converter=make_qcolor,
+        metadata={"Description": "The color of the lines in the plot."},
+    )
     PointColor: QtGui.QColor = attrs.field(
         default="goldenrod",
         converter=make_qcolor,
         metadata={"Description": "The color of the points in the plot."},
     )
     SectionColor: QtGui.QColor = attrs.field(
-        default="tomato",
+        default="lime",
         converter=make_qcolor,
         metadata={"Description": "The color of the section markers in the plot."},
     )
@@ -57,8 +62,9 @@ class PlotConfig:
         settings.beginGroup("Plot")
         bg = settings.value("Background", make_qcolor("black"), type=QtGui.QColor)
         fg = settings.value("Foreground", make_qcolor("grey"), type=QtGui.QColor)
+        lc = settings.value("LineColor", make_qcolor("royalblue"), type=QtGui.QColor)
         pc = settings.value("PointColor", make_qcolor("goldenrod"), type=QtGui.QColor)
-        sc = settings.value("SectionColor", make_qcolor("tomato"), type=QtGui.QColor)
+        sc = settings.value("SectionColor", make_qcolor("lime"), type=QtGui.QColor)
         lcw = settings.value("LineClickWidth", 70, type=int)
         cr = settings.value("ClickRadius", 20, type=int)
         settings.endGroup()
@@ -66,6 +72,7 @@ class PlotConfig:
         return cls(
             Background=bg,  # type: ignore
             Foreground=fg,  # type: ignore
+            LineColor=lc,  # type: ignore
             PointColor=pc,  # type: ignore
             SectionColor=sc,  # type: ignore
             LineClickWidth=lcw,  # type: ignore
@@ -94,9 +101,7 @@ class EditingConfig:
         settings = QtCore.QSettings()
         settings.beginGroup("Editing")
         fs = settings.value("FilterStacking", False, type=bool)
-        rm = RateComputationMethod(
-            settings.value("RateMethod", RateComputationMethod.RollingWindow)
-        )
+        rm = RateComputationMethod(settings.value("RateMethod", RateComputationMethod.RollingWindow))
         settings.endGroup()
 
         return cls(
@@ -129,21 +134,13 @@ class DataConfig:
 
 @attrs.define
 class InternalConfig:
-    InputDir: str = attrs.field(
-        factory=functools.partial(get_app_dir, True), metadata={"allow_user_edits": True}
-    )
-    OutputDir: str = attrs.field(
-        factory=functools.partial(get_app_dir, True), metadata={"allow_user_edits": True}
-    )
+    InputDir: str = attrs.field(factory=functools.partial(get_app_dir, True), metadata={"allow_user_edits": True})
+    OutputDir: str = attrs.field(factory=functools.partial(get_app_dir, True), metadata={"allow_user_edits": True})
     RecentFiles: list[str] = attrs.field(factory=list, metadata={"allow_user_edits": False})
     LastSignalColumn: str = attrs.field(default="", metadata={"allow_user_edits": False})
     LastInfoColumn: str = attrs.field(default="", metadata={"allow_user_edits": False})
-    WindowGeometry: QtCore.QByteArray = attrs.field(
-        factory=QtCore.QByteArray, metadata={"allow_user_edits": False}
-    )
-    WindowState: QtCore.QByteArray = attrs.field(
-        factory=QtCore.QByteArray, metadata={"allow_user_edits": False}
-    )
+    WindowGeometry: QtCore.QByteArray = attrs.field(factory=QtCore.QByteArray, metadata={"allow_user_edits": False})
+    WindowState: QtCore.QByteArray = attrs.field(factory=QtCore.QByteArray, metadata={"allow_user_edits": False})
 
     def to_dict(self) -> _t.InternalConfigDict:
         return _t.InternalConfigDict(**attrs.asdict(self))
@@ -157,9 +154,7 @@ class InternalConfig:
         recent_files = settings.value("RecentFiles", [], type=list)
         last_signal_column = settings.value("LastSignalColumn", "", type=str)
         last_info_column = settings.value("LastInfoColumn", "", type=str)
-        window_geometry = settings.value(
-            "WindowGeometry", QtCore.QByteArray(), type=QtCore.QByteArray
-        )
+        window_geometry = settings.value("WindowGeometry", QtCore.QByteArray(), type=QtCore.QByteArray)
         window_state = settings.value("WindowState", QtCore.QByteArray(), type=QtCore.QByteArray)
         settings.endGroup()
 
@@ -174,30 +169,78 @@ class InternalConfig:
         )
 
 
-@attrs.define
+# @attrs.define
+# class Config:
+#     Plot: PlotConfig = attrs.field(factory=PlotConfig)
+#     Editing: EditingConfig = attrs.field(factory=EditingConfig)
+#     Data: DataConfig = attrs.field(factory=DataConfig)
+#     Internal: InternalConfig = attrs.field(factory=InternalConfig)
+
+#     def to_dict(self) -> _t.ConfigDict:
+#         return _t.ConfigDict(**attrs.asdict(self))
+
+#     @classmethod
+#     def from_qsettings(cls) -> "Config":
+#         return cls(
+#             Plot=PlotConfig.from_qsettings(),
+#             Editing=EditingConfig.from_qsettings(),
+#             Data=DataConfig.from_qsettings(),
+#             Internal=InternalConfig.from_qsettings(),
+#         )
+
+
 class Config:
-    Plot: PlotConfig = attrs.field(factory=PlotConfig)
-    Editing: EditingConfig = attrs.field(factory=EditingConfig)
-    Data: DataConfig = attrs.field(factory=DataConfig)
-    Internal: InternalConfig = attrs.field(factory=InternalConfig)
+    _instance: "Config | None" = None
+
+    def __new__(cls, use_qsettings: bool = True) -> "Config":
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+
+    def __init__(self, use_qsettings: bool = True) -> None:
+        if use_qsettings:
+            self._plot_config = PlotConfig.from_qsettings()
+            self._editing_config = EditingConfig.from_qsettings()
+            self._data_config = DataConfig.from_qsettings()
+            self._internal_config = InternalConfig.from_qsettings()
+        else:
+            self._plot_config = PlotConfig()
+            self._editing_config = EditingConfig()
+            self._data_config = DataConfig()
+            self._internal_config = InternalConfig()
+        
+    @property
+    def plot(self) -> PlotConfig:
+        return self._plot_config
+
+    @property
+    def editing(self) -> EditingConfig:
+        return self._editing_config
+
+    @property
+    def data(self) -> DataConfig:
+        return self._data_config
+
+    @property
+    def internal(self) -> InternalConfig:
+        return self._internal_config
 
     def to_dict(self) -> _t.ConfigDict:
-        return _t.ConfigDict(**attrs.asdict(self))
+        plot_dict = self.plot.to_dict()
+        editing_dict = self.editing.to_dict()
+        data_dict = self.data.to_dict()
+        internal_dict = self.internal.to_dict()
 
-    @classmethod
-    def from_qsettings(cls) -> "Config":
-        return cls(
-            Plot=PlotConfig.from_qsettings(),
-            Editing=EditingConfig.from_qsettings(),
-            Data=DataConfig.from_qsettings(),
-            Internal=InternalConfig.from_qsettings(),
+        return _t.ConfigDict(
+            Plot=plot_dict,
+            Editing=editing_dict,
+            Data=data_dict,
+            Internal=internal_dict,
         )
 
 
 class TreeItem:
-    def __init__(
-        self, name: str, value: t.Any | None = None, parent: "TreeItem | None" = None
-    ) -> None:
+    def __init__(self, name: str, value: t.Any | None = None, parent: "TreeItem | None" = None) -> None:
         self.name = name
         self.value = value
         self.parent = parent
@@ -238,18 +281,18 @@ class TreeItem:
         elif isinstance(self.value, (list, tuple, StrEnum)):
             widget = qfw.ComboBox()
             widget.addItems([str(item) for item in self.value])
+            for i, list_item in enumerate(widget.items):
+                widget.setItemData(i, list_item)
         else:
             widget = qfw.LineEdit()
             widget.setText(str(self.value))
             widget.setReadOnly(True)
         return widget
-            
-
 
     def set_value(self, value: t.Any | None) -> None:
         self.value = value
         self.display_widget = self._determine_editor_widget()
-    
+
     def add_child(self, name: str, value: t.Any | None = None) -> None:
         child = TreeItem(name, value, self)
         if child not in self.children:
@@ -265,27 +308,21 @@ class TreeItem:
         return next((child for child in self.children if child.name == name), None)
 
 
-
 class ConfigTreeWidget(QtWidgets.QTreeWidget):
-    def __init__(
-        self, config: Config | None = None, parent: QtWidgets.QWidget | None = None
-    ) -> None:
+    def __init__(self, config: Config | None = None, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         if config is None:
             config = Config()
         self._config = config
         self._headers = ("Name", "Value")
         self._plot_children = [
-            QtWidgets.QTreeWidgetItem([pk, str(pv)])
-            for pk, pv in self._config.Plot.to_dict().items()
+            QtWidgets.QTreeWidgetItem([pk, str(pv)]) for pk, pv in self._config.Plot.to_dict().items()
         ]
         self._editing_children = [
-            QtWidgets.QTreeWidgetItem([ek, str(ev)])
-            for ek, ev in self._config.Editing.to_dict().items()
+            QtWidgets.QTreeWidgetItem([ek, str(ev)]) for ek, ev in self._config.Editing.to_dict().items()
         ]
         self._data_children = [
-            QtWidgets.QTreeWidgetItem([dk, str(dv)])
-            for dk, dv in self._config.Data.to_dict().items()
+            QtWidgets.QTreeWidgetItem([dk, str(dv)]) for dk, dv in self._config.Data.to_dict().items()
         ]
 
         self.setColumnCount(len(self._headers))

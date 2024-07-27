@@ -90,9 +90,7 @@ class DataController(QtCore.QObject):
             try:
                 self._base_section = Section(self.base_df, self.metadata.signal_column)
             except Exception as e:
-                raise ValueError(
-                    "No data available. Select a valid file to load, and try again."
-                ) from e
+                raise ValueError("No data available. Select a valid file to load, and try again.") from e
         return self._base_section
 
     @property
@@ -164,7 +162,7 @@ class DataController(QtCore.QObject):
                 metadata.column_names = edf_info.ch_names
             case ".feather":
                 lf = pl.scan_ipc(file_path)
-                metadata.column_names = lf.columns
+                metadata.column_names = lf.collect_schema().names()
                 try:
                     metadata.sampling_rate = detect_sampling_rate(lf)
                 except Exception:
@@ -179,9 +177,7 @@ class DataController(QtCore.QObject):
                     metadata.sampling_rate = last_sampling_rate
 
             case _:
-                raise ValueError(
-                    f"Unsupported file format: {file_path.suffix}. Please select a valid file format."
-                )
+                raise ValueError(f"Unsupported file format: {file_path.suffix}. Please select a valid file format.")
 
         if last_signal_col in metadata.column_names:
             metadata.signal_column = str(last_signal_col)
@@ -200,9 +196,7 @@ class DataController(QtCore.QObject):
         suffix = self.metadata.file_format
         file_path = self.metadata.file_path
         settings = QtCore.QSettings()
-        separator = TextFileSeparator(
-            settings.value("Data/txt_file_separator_character", TextFileSeparator.Tab)
-        )
+        separator = TextFileSeparator(settings.value("Data/txt_file_separator_character", TextFileSeparator.Tab))
 
         signal_col = self.metadata.signal_column
         info_col = self.metadata.info_column
@@ -214,9 +208,7 @@ class DataController(QtCore.QObject):
         if suffix == ".csv":
             df = pl.read_csv(file_path, columns=columns, row_index_name=row_index_col)
         elif suffix == ".txt":
-            df = pl.read_csv(
-                file_path, columns=columns, separator=separator, row_index_name=row_index_col
-            )
+            df = pl.read_csv(file_path, columns=columns, separator=separator, row_index_name=row_index_col)
         elif suffix == ".tsv":
             df = pl.read_csv(
                 file_path,
@@ -250,9 +242,7 @@ class DataController(QtCore.QObject):
         self.sections.remove_section(idx)
         self.set_active_section(self.base_section_index)
 
-    def get_complete_result(
-        self, **kwargs: t.Unpack[_t.MutableMetadataAttributes]
-    ) -> CompleteResult:
+    def get_complete_result(self, **kwargs: t.Unpack[_t.MutableMetadataAttributes]) -> CompleteResult:
         meas_date = kwargs.get("measured_date")
         subject_id = kwargs.get("subject_id")
         oxy_condition = kwargs.get("oxygen_condition")
@@ -277,18 +267,14 @@ class DataController(QtCore.QObject):
         combined_section_df = pl.concat(section_dfs)
         global_df = (
             base_df.lazy()
-            .update(
-                combined_section_df.lazy(), on=["index", self.metadata.signal_column], how="full"
-            )
+            .update(combined_section_df.lazy(), on=["index", self.metadata.signal_column], how="full")
             .drop("section_index")
         )
 
         info_col = self.metadata.info_column
         if info_col == "":
             info_col = None
-        section_results = {
-            s.section_id: s.get_detailed_result(info_col) for s in self.sections.editable_sections
-        }
+        section_results = {s.section_id: s.get_detailed_result(info_col) for s in self.sections.editable_sections}
 
         metadata = SelectedFileMetadata(
             file_name=self.metadata.file_name,

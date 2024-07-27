@@ -126,9 +126,7 @@ type Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 
 
 class ConfigTreeWidget(qfw.TreeWidget):
-    def __init__(
-        self, config: _c.Config | None = None, parent: QtWidgets.QWidget | None = None
-    ) -> None:
+    def __init__(self, config: _c.Config | None = None, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         if config is None:
             config = _c.Config()
@@ -137,21 +135,15 @@ class ConfigTreeWidget(qfw.TreeWidget):
 
     def add_items(self) -> None:
         self.plot_root = QtWidgets.QTreeWidgetItem(["Plot"])
-        self.plot_root.addChildren(
-            [QtWidgets.QTreeWidgetItem([p]) for p in self._config.Plot.to_dict()]
-        )
+        self.plot_root.addChildren([QtWidgets.QTreeWidgetItem([p]) for p in self._config.Plot.to_dict()])
         self.addTopLevelItem(self.plot_root)
 
         self.editing_root = QtWidgets.QTreeWidgetItem(["Editing"])
-        self.editing_root.addChildren(
-            [QtWidgets.QTreeWidgetItem([p]) for p in self._config.Editing.to_dict()]
-        )
+        self.editing_root.addChildren([QtWidgets.QTreeWidgetItem([p]) for p in self._config.Editing.to_dict()])
         self.addTopLevelItem(self.editing_root)
 
         self.data_root = QtWidgets.QTreeWidgetItem(["Data"])
-        self.data_root.addChildren(
-            [QtWidgets.QTreeWidgetItem([p]) for p in self._config.Data.to_dict()]
-        )
+        self.data_root.addChildren([QtWidgets.QTreeWidgetItem([p]) for p in self._config.Data.to_dict()])
         self.addTopLevelItem(self.data_root)
 
 

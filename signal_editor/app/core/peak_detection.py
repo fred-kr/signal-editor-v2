@@ -49,17 +49,13 @@ def _fit_loess(
     return y_predicted
 
 
-def _signal_smoothing_median(
-    sig: npt.NDArray[np.float64], size: int = 5
-) -> npt.NDArray[np.float64]:
+def _signal_smoothing_median(sig: npt.NDArray[np.float64], size: int = 5) -> npt.NDArray[np.float64]:
     if size % 2 == 0:
         size += 1
     return ndimage.median_filter(sig, size=size)
 
 
-def _signal_smoothing(
-    sig: npt.NDArray[np.float64], kernel: SmoothingKernels, size: int = 5
-) -> npt.NDArray[np.float64]:
+def _signal_smoothing(sig: npt.NDArray[np.float64], kernel: SmoothingKernels, size: int = 5) -> npt.NDArray[np.float64]:
     window: npt.NDArray[np.float64] = signal.get_window(kernel, size)
     w: npt.NDArray[np.float64] = window / window.sum()
 
@@ -143,14 +139,10 @@ def _find_peaks_ppg_elgendi(
     sig_clipped_squared = np.clip(sig, 0, None) ** 2
 
     peakwindow_samples = np.rint(peakwindow * sampling_rate).astype(np.int32)
-    ma_peak = _signal_smooth(
-        sig_clipped_squared, kernel=SmoothingKernels.BOXCAR, size=peakwindow_samples
-    )
+    ma_peak = _signal_smooth(sig_clipped_squared, kernel=SmoothingKernels.BOXCAR, size=peakwindow_samples)
 
     beatwindow_samples = np.rint(beatwindow * sampling_rate).astype(np.int32)
-    ma_beat = _signal_smooth(
-        sig_clipped_squared, kernel=SmoothingKernels.BOXCAR, size=beatwindow_samples
-    )
+    ma_beat = _signal_smooth(sig_clipped_squared, kernel=SmoothingKernels.BOXCAR, size=beatwindow_samples)
 
     thr1 = ma_beat + beatoffset * np.mean(sig_clipped_squared)
 
@@ -185,9 +177,7 @@ def _find_peaks_ppg_elgendi(
     return np.array(peaks, dtype=np.int32)
 
 
-def _find_peaks_local_max(
-    sig: npt.NDArray[np.float64], search_radius: int
-) -> npt.NDArray[np.int32]:
+def _find_peaks_local_max(sig: npt.NDArray[np.float64], search_radius: int) -> npt.NDArray[np.int32]:
     if sig.size == 0 or np.min(sig) == np.max(sig):
         return np.array([], dtype=np.int32)
 
@@ -195,9 +185,7 @@ def _find_peaks_local_max(
     return np.flatnonzero(sig == max_vals)
 
 
-def _find_peaks_local_min(
-    sig: npt.NDArray[np.float64], search_radius: int
-) -> npt.NDArray[np.int32]:
+def _find_peaks_local_min(sig: npt.NDArray[np.float64], search_radius: int) -> npt.NDArray[np.int32]:
     if sig.size == 0 or np.min(sig) == np.max(sig):
         return np.array([], dtype=np.int32)
 
@@ -327,8 +315,7 @@ def _handle_close_peaks(
 
     comparison_func = _get_comparison_func(find_peak_func)
     to_remove = [
-        i if comparison_func(sig[qrs_locations[i]], sig[qrs_locations[i + 1]]) else i + 1
-        for i in close_indices
+        i if comparison_func(sig[qrs_locations[i]], sig[qrs_locations[i + 1]]) else i + 1 for i in close_indices
     ]
 
     qrs_locations = np.delete(qrs_locations, to_remove)
@@ -347,9 +334,7 @@ def _sanitize_qrs_locations(
     sorted_peak_indices = np.argsort(peak_indices)
 
     return peak_indices[
-        sorted_peak_indices[
-            (peak_indices[sorted_peak_indices] > 0) & (peak_indices[sorted_peak_indices] < sig.size)
-        ]
+        sorted_peak_indices[(peak_indices[sorted_peak_indices] > 0) & (peak_indices[sorted_peak_indices] < sig.size)]
     ]
 
 
@@ -363,9 +348,7 @@ def _find_peaks_xqrs(
     xqrs_out = wp.XQRS(sig, sampling_rate)
     xqrs_out.detect()
     qrs_locations = np.array(xqrs_out.qrs_inds, dtype=np.int32)
-    peak_indices = _adjust_peak_positions(
-        sig, peaks=qrs_locations, radius=radius, direction=peak_dir
-    )
+    peak_indices = _adjust_peak_positions(sig, peaks=qrs_locations, radius=radius, direction=peak_dir)
 
     return _sanitize_qrs_locations(sig, peak_indices, min_peak_distance)
 

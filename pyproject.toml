@@ -7,45 +7,44 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.12,<3.13"
-pyarrow = "^16.1.0"
+pyarrow = "^17.0.0"
 pyopengl-accelerate = "^3.1.7"
 wfdb = "^4.1.2"
-polars = "^1.1.0"
+polars = "^1.2.1"
 pyopengl = "^3.1.7"
 mne = "^1.7.1"
 pywavelets = "^1.6.0"
-# numpy = "^2.0.0"
-numpy = "^1.26.4"
+numpy = "==1.26.4"
 scipy = "^1.14.0"
 xlsxwriter = "^3.2.0"
 xlsx2csv = "^0.8.2"
 python-dateutil = "^2.9.0.post0"
-tables = "^3.9.2"
+tables = {version = "^3.9.2", allow-prereleases = true}
 numexpr = "^2.10.1"
 numba = "^0.60.0"
 pyqtgraph = {git = "https://github.com/pyqtgraph/pyqtgraph.git", rev = "master"}
 superqt = "^0.6.7"
 loguru = "^0.7.2"
-# polars-standardize-series = {path = "E:/dev-home/projects/rust/polars_standardize_series/target/wheels/polars_standardize_series-0.1.0-cp38-abi3-win_amd64.whl"}
+polars-standardize-series = {path = "E:/dev-home/projects/rust/polars_standardize_series/target/wheels/polars_standardize_series-0.1.0-cp38-abi3-win_amd64.whl"}
 neurokit2 = "0.2.9"
 qtconsole = "^5.5.2"
 pyside6 = "^6.7.2"
 darkdetect = "^0.8.0"
-pyside6-fluent-widgets = "^1.5.8"
+pyside6-fluent-widgets = "^1.6.0"
 attrs = "^23.2.0"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.26.0"
 pyinstaller = "^6.9.0"
 pyinstaller-hooks-contrib = "^2024.7"
-sourcery = "^1.20.0"
-ruff = "^0.5.1"
+sourcery = "^1.21.0"
+ruff = "^0.5.5"
 python-dotenv = "^1.0.1"
-pytest = "^8.2.2"
+pytest = "^8.3.2"
 # hypothesis = {extras = ["numpy"], version = "^6.102.4"}
 rich = {extras = ["jupyter"], version = "^13.7.1"}
-mkdocs-material = "^9.5.28"
-pyright = "^1.1.370"
+mkdocs-material = "^9.5.30"
+pyright = "^1.1.373"
 jedi = "^0.19.1"
 pyside6-examples = "^6.7.2"
 xmltodict = "^0.13.0"
@@ -54,7 +53,7 @@ xmltodict = "^0.13.0"
 target-version = "py312"
 show-fixes = true
 output-format = "concise"
-line-length = 100
+line-length = 120
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

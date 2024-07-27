@@ -109,13 +109,10 @@ class TimeUnitDataTypeMismatchError(Exception):
 
 def _infer_time_column(lf: pl.LazyFrame, contains: t.Sequence[str] | None = None) -> list[str]:
     if contains is None:
-        contains = ["time", "ts"]
+        contains = ("time", "ts")
     return lf.select(
-        cs.contains(contains)
-        | cs.datetime()
-        | cs.duration()
-        | (cs.integer() & ~cs.contains("index"))
-    ).columns
+        cs.contains(*contains) | cs.datetime() | cs.duration() | (cs.integer() & ~cs.contains("index"))
+    ).collect_schema().names()
 
 
 def _infer_time_unit(
@@ -151,11 +148,7 @@ def _get_target_for_time_unit(
         return 1_000_000
     if time_unit == "ns" and time_col_dtype in (pl.INTEGER_DTYPES | {pl.Duration("ns")}):
         return 1_000_000_000
-    if (
-        time_unit == "datetime"
-        and time_col_dtype.base_type().is_(pl.Datetime)
-        and start_val is not None
-    ):
+    if time_unit == "datetime" and time_col_dtype.base_type().is_(pl.Datetime) and start_val is not None:
         return start_val + datetime.timedelta(seconds=1)
     raise TimeUnitDataTypeMismatchError(time_unit, time_col_dtype)
 
@@ -216,15 +209,13 @@ def detect_sampling_rate(
     if time_column == "auto":
         possible_columns = _infer_time_column(lf)
         if not possible_columns:
-            raise NoValidTimeColumnDetectedError(
-                "Could not find a column containing time information."
-            )
+            raise NoValidTimeColumnDetectedError("Could not find a column containing time information.")
         if len(possible_columns) == 1 or first_column_is_time:
             time_column = possible_columns[0]
         else:
             raise MultipleValidTimeColumnsDetectedError(possible_columns)
 
-    time_col_dtype = lf.schema[time_column]
+    time_col_dtype = lf.collect_schema()[time_column]
 
     if time_unit == "auto":
         time_unit = _infer_time_unit(time_col_dtype, interpret_integers_as)
@@ -259,15 +250,8 @@ def read_edf(
         if filter_all_zeros:
             # Find the last row with a non-zero value in the column
             try:
-                last_non_zero = (
-                    out.with_row_index()
-                    .filter(pl.col(data_channel) != 0)
-                    .get_column("index")
-                    .item(-1)
-                )
-                logger.info(
-                    f"Found section of continuous zeros from row {last_non_zero + 1} to the end of the column."
-                )
+                last_non_zero = out.with_row_index().filter(pl.col(data_channel) != 0).get_column("index").item(-1)
+                logger.info(f"Found section of continuous zeros from row {last_non_zero + 1} to the end of the column.")
                 out = out.head(last_non_zero + 1)
             except IndexError:
                 logger.info("No section of continuous zeros found, keeping all rows.")
@@ -410,14 +394,12 @@ def write_hdf5(file_path: Path, data: CompleteResult) -> None:
             h5f.set_node_attr(
                 f"/complete_section_results/complete_result_{section_id}/processing_parameters",
                 attrname="pipeline",
-                attrvalue=detailed_result["metadata"]["processing_parameters"][
-                    "processing_pipeline"
-                ],
+                attrvalue=detailed_result["metadata"]["processing_parameters"]["processing_pipeline"],
             )
             # Filter parameters
-            filter_params = detailed_result["metadata"]["processing_parameters"][
-                "filter_parameters"
-            ] or {"attribute_name": "unknown"}
+            filter_params = detailed_result["metadata"]["processing_parameters"]["filter_parameters"] or {
+                "attribute_name": "unknown"
+            }
             h5f.create_group(
                 f"/complete_section_results/complete_result_{section_id}/processing_parameters",
                 name="filter_parameters",
@@ -431,9 +413,9 @@ def write_hdf5(file_path: Path, data: CompleteResult) -> None:
                 )
 
             # Standardize parameters
-            std_params = detailed_result["metadata"]["processing_parameters"][
-                "standardization_parameters"
-            ] or {"attribute_name": "unknown"}
+            std_params = detailed_result["metadata"]["processing_parameters"]["standardization_parameters"] or {
+                "attribute_name": "unknown"
+            }
             h5f.create_group(
                 f"/complete_section_results/complete_result_{section_id}/processing_parameters",
                 name="standardize_parameters",
@@ -447,12 +429,8 @@ def write_hdf5(file_path: Path, data: CompleteResult) -> None:
                 )
 
             # Peak detection parameters
-            peak_method = detailed_result["metadata"]["processing_parameters"][
-                "peak_detection_method"
-            ]
-            peak_params = detailed_result["metadata"]["processing_parameters"][
-                "peak_detection_method_parameters"
-            ]
+            peak_method = detailed_result["metadata"]["processing_parameters"]["peak_detection_method"]
+            peak_params = detailed_result["metadata"]["processing_parameters"]["peak_detection_method_parameters"]
             if peak_method == PeakDetectionMethod.ECGNeuroKit2:
                 peak_method = f"{peak_method}_{peak_params.get("method", "unknown")}"
                 peak_params = peak_params.get("params") or {"attribute_name": "unknown"}

@@ -126,19 +126,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.table_view_import_data.horizontalHeader().setDefaultAlignment(
             QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter
         )
-        self.table_view_import_data.horizontalHeader().setSectionResizeMode(
-            QtWidgets.QHeaderView.ResizeMode.Stretch
-        )
-        self.table_view_import_data.setContextMenuPolicy(
-            QtCore.Qt.ContextMenuPolicy.CustomContextMenu
-        )
-        self.table_view_import_data.customContextMenuRequested.connect(
-            self.show_data_view_context_menu
-        )
+        self.table_view_import_data.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.table_view_import_data.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.table_view_import_data.customContextMenuRequested.connect(self.show_data_view_context_menu)
         data_tree_widget = pg.DataTreeWidget(self.collapsible_frame)
-        data_tree_widget.setSizePolicy(
-            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding
-        )
+        data_tree_widget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         self.collapsible_frame.setText("File Metadata")
         self.collapsible_frame.setContent(data_tree_widget)
         self.data_tree_widget_import_metadata = data_tree_widget
@@ -237,9 +229,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_sections.main_layout.insertWidget(1, cb_section_list)
         self.tool_bar_section_list = cb_section_list
 
-    def _setup_toolbar(
-        self, name: str, actions: list[QtGui.QAction], movable: bool = False
-    ) -> QtWidgets.QToolBar:
+    def _setup_toolbar(self, name: str, actions: list[QtGui.QAction], movable: bool = False) -> QtWidgets.QToolBar:
         tb = QtWidgets.QToolBar()
         tb.setObjectName(name)
         tb.setMovable(movable)
@@ -248,9 +238,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         return tb
 
     def _setup_menus(self) -> None:
-        self.menuView.addActions(
-            [self.dock_sections.toggleViewAction(), self.dock_status_log.toggleViewAction()]
-        )
+        self.menuView.addActions([self.dock_sections.toggleViewAction(), self.dock_status_log.toggleViewAction()])
         self.menuView.addSeparator()
         self.menuView.addActions(
             [
@@ -300,9 +288,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         )
 
         self.action_show_settings.triggered.connect(self.show_settings_dialog)
-        self.action_delete_section.triggered.connect(
-            self.dock_sections.list_view.emit_delete_current_request
-        )
+        self.action_delete_section.triggered.connect(self.dock_sections.list_view.emit_delete_current_request)
 
         self.dock_sections.toggleViewAction().toggled.connect(self.dock_sections.setVisible)
         self.dock_processing.toggleViewAction().toggled.connect(self.dock_processing.setVisible)
@@ -311,18 +297,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self.stackedWidget.currentChanged.connect(self._on_page_changed)
 
-        self.spin_box_sampling_rate_import_page.valueChanged.connect(
-            self.dialog_meta.spin_box_sampling_rate.setValue
-        )
+        self.spin_box_sampling_rate_import_page.valueChanged.connect(self.dialog_meta.spin_box_sampling_rate.setValue)
         self.combo_box_info_column_import_page.currentTextChanged.connect(
             self.dialog_meta.combo_box_info_column.setCurrentText
         )
         self.combo_box_signal_column_import_page.currentTextChanged.connect(
             self.dialog_meta.combo_box_signal_column.setCurrentText
         )
-        self.dialog_meta.spin_box_sampling_rate.valueChanged.connect(
-            self.spin_box_sampling_rate_import_page.setValue
-        )
+        self.dialog_meta.spin_box_sampling_rate.valueChanged.connect(self.spin_box_sampling_rate_import_page.setValue)
         self.dialog_meta.combo_box_info_column.currentTextChanged.connect(
             self.combo_box_info_column_import_page.setCurrentText
         )

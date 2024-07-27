@@ -16,9 +16,7 @@ class SectionListModel(QtCore.QAbstractListModel):
     def editable_sections(self) -> list[Section]:
         return list(self._sections)[1:]
 
-    def rowCount(
-        self, parent: QtCore.QModelIndex | QtCore.QPersistentModelIndex | None = None
-    ) -> int:
+    def rowCount(self, parent: QtCore.QModelIndex | QtCore.QPersistentModelIndex | None = None) -> int:
         return len(self._sections)
 
     def data(

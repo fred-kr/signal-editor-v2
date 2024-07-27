@@ -12,15 +12,11 @@ if t.TYPE_CHECKING:
     from .metadata import FileMetadata
 
 
-def validate_column(
-    col_name: str | None, schema: t.OrderedDict[str, pl.DataType], default: str | None = None
-) -> str:
+def validate_column(col_name: str | None, schema: t.OrderedDict[str, pl.DataType], default: str | None = None) -> str:
     if not col_name:
         col_name = default
     if col_name not in schema and col_name != "":
-        raise ValueError(
-            f"Column '{col_name}' not found in data. Available columns: {", ".join(schema.keys())}"
-        )
+        raise ValueError(f"Column '{col_name}' not found in data. Available columns: {", ".join(schema.keys())}")
     return col_name
 
 
@@ -52,9 +48,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
 
     def set_float_precision(self, precision: int) -> None:
         self._float_precision = precision
-        self.set_dataframe(
-            self.df, self._name_signal_column, self._name_index_column, self._name_info_column
-        )
+        self.set_dataframe(self.df, self._name_signal_column, self._name_index_column, self._name_info_column)
 
     def set_dataframe(
         self,
@@ -67,9 +61,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
         self._df = data
         self._schema = data.schema
 
-        self._name_signal_column = validate_column(
-            signal_col, self._schema, default=self._name_signal_column
-        )
+        self._name_signal_column = validate_column(signal_col, self._schema, default=self._name_signal_column)
         self._name_index_column = validate_column(index_col, self._schema, default="index")
 
         if not self._schema[self._name_index_column].is_integer():
@@ -87,14 +79,10 @@ class DataFrameModel(QtCore.QAbstractTableModel):
 
         self.endResetModel()
 
-    def rowCount(
-        self, parent: QtCore.QModelIndex | QtCore.QPersistentModelIndex | None = None
-    ) -> int:
+    def rowCount(self, parent: QtCore.QModelIndex | QtCore.QPersistentModelIndex | None = None) -> int:
         return self._df.height if self._df is not None else 0
 
-    def columnCount(
-        self, parent: QtCore.QModelIndex | QtCore.QPersistentModelIndex | None = None
-    ) -> int:
+    def columnCount(self, parent: QtCore.QModelIndex | QtCore.QPersistentModelIndex | None = None) -> int:
         return self._df.width if self._df is not None else 0
 
     def data(
@@ -121,9 +109,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
             if value_type.is_integer():
                 return f"{value:_}"
             elif value_type.is_float():
-                return np.format_float_positional(
-                    value, trim="0", precision=self._float_precision, fractional=True
-                )
+                return np.format_float_positional(value, trim="0", precision=self._float_precision, fractional=True)
             elif value_type.is_temporal():
                 if isinstance(value, datetime.timedelta):
                     return human_readable_timedelta(value)
