@@ -25,7 +25,6 @@ numba = "^0.60.0"
 pyqtgraph = {git = "https://github.com/pyqtgraph/pyqtgraph.git", rev = "master"}
 superqt = "^0.6.7"
 loguru = "^0.7.2"
-polars-standardize-series = {path = "E:/dev-home/projects/rust/polars_standardize_series/target/wheels/polars_standardize_series-0.1.0-cp38-abi3-win_amd64.whl"}
 neurokit2 = "0.2.9"
 qtconsole = "^5.5.2"
 pyside6 = "^6.7.2"

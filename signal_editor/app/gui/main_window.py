@@ -12,6 +12,7 @@ from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 from signal_editor.ui.ui_main_window import Ui_MainWindow
 
 from ..enum_defs import LogLevel
+from ..config import Config
 from .icons import FluentIcon as FI
 from .widgets import ExportDialog, MetadataDialog, SectionListDock
 from .widgets.log_window import StatusMessageDock
@@ -355,21 +356,31 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_sections.btn_container.setVisible(show)
 
     def write_settings(self) -> None:
-        settings = QtCore.QSettings()
-        settings.beginGroup("MainWindow")
-        settings.setValue("geometry", self.saveGeometry())
-        settings.setValue("state", self.saveState())
-        settings.endGroup()
-        settings.sync()
+        config = Config()
+        config.internal.WindowGeometry = self.saveGeometry()
+        config.internal.WindowState = self.saveState()
+
+        config.save_to_qsettings()
+        
+        # settings = QtCore.QSettings()
+        # settings.beginGroup("MainWindow")
+        # settings.setValue("geometry", self.saveGeometry())
+        # settings.setValue("state", self.saveState())
+        # settings.endGroup()
+        # settings.sync()
 
     def read_settings(self) -> None:
-        settings = QtCore.QSettings()
-        settings.beginGroup("MainWindow")
-        self.restoreGeometry(
-            settings.value("geometry", QtCore.QByteArray(), type=QtCore.QByteArray)  # type: ignore
-        )
-        self.restoreState(settings.value("state", QtCore.QByteArray(), type=QtCore.QByteArray))  # type: ignore
-        settings.endGroup()
+        config = Config()
+        self.restoreGeometry(config.internal.WindowGeometry)
+        self.restoreState(config.internal.WindowState)
+        
+        # settings = QtCore.QSettings()
+        # settings.beginGroup("MainWindow")
+        # self.restoreGeometry(
+        #     settings.value("geometry", QtCore.QByteArray(), type=QtCore.QByteArray)  # type: ignore
+        # )
+        # self.restoreState(settings.value("state", QtCore.QByteArray(), type=QtCore.QByteArray))  # type: ignore
+        # settings.endGroup()
 
     @QtCore.Slot()
     def show_settings_dialog(self) -> None:

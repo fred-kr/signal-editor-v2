@@ -1828,20 +1828,6 @@ xlsx2csv = ["xlsx2csv (>=0.8.0)"]
 xlsxwriter = ["xlsxwriter"]
 
 [[package]]
-name = "polars-standardize-series"
-version = "0.1.0"
-description = ""
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "polars_standardize_series-0.1.0-cp38-abi3-win_amd64.whl", hash = "sha256:6c9c9aca7790d6c092792782fb01af9b09edb9dc0a6a648f846d1e6def76e223"},
-]
-
-[package.source]
-type = "file"
-url = "../rust/polars_standardize_series/target/wheels/polars_standardize_series-0.1.0-cp38-abi3-win_amd64.whl"
-
-[[package]]
 name = "pooch"
 version = "1.8.2"
 description = "A friend to fetch your data files"
@@ -6164,4 +6150,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.12,<3.13"
-content-hash = "7455596ed3282766c626d0a9c26f694d6e2b9fa47ab805ce21e80caa61bb5aa8"
+content-hash = "8a6fec532732586f139cc8ef85da9c98b9d561c01396eda0166828c9e20c48b2"
