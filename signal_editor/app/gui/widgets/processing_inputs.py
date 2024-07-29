@@ -164,7 +164,7 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
     @QtCore.Slot()
     def _emit_standardization_requested(self) -> None:
         method = StandardizationMethod(self.enum_combo_standardize_method.currentEnum())
-        window_size = self.slider_window_size_standardize.value()
+        window_size = self.slider_window_size_standardize.value() if self.grp_box_standardize_rolling_window.isChecked() else None
         standardization_params: _t.StandardizationParameters = {
             "method": method,
             "window_size": window_size,
