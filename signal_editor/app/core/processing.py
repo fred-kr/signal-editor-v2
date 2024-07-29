@@ -7,22 +7,39 @@ import polars as pl
 import scipy.interpolate
 import scipy.signal
 import scipy.stats
-from polars_standardize_series import standardize
 
 from .. import type_defs as _t
 from ..enum_defs import FilterMethod
 
 
-def standardize_signal(sig: pl.Series, robust: bool = False, window_size: int | None = None) -> pl.Series:
+def rolling_standardize[T: (pl.Expr | pl.Series)](sig: T, window_size: int) -> T:
+    roll_mean = sig.rolling_mean(window_size, min_periods=0)
+    roll_std = sig.rolling_std(window_size, min_periods=0)
+    return (sig - roll_mean) / roll_std
+
+
+def calculate_mad(sig: pl.Series, constant: float = 1.4826) -> np.float64:
+    sig_median = sig.median()
+    mad = np.median(np.abs(sig - sig_median))
+    return constant * mad
+
+
+def standardize_signal(
+    sig: pl.Series, robust: bool = False, window_size: int | None = None
+) -> pl.Series:
     if robust and window_size:
         raise ValueError("Windowed MAD scaling is not supported for robust scaling")
-    return (
-        sig.to_frame("signal")
-        .with_columns(signal_std=standardize(pl.col("signal"), robust=robust, window_size=window_size))
-        .get_column("signal_std")
-        .fill_nan(None)
-        .fill_null(strategy="backward")
-    )
+    if window_size:
+        # print(f"Standardizing signal with windowed Z-score. Window size: {window_size}")
+        result = rolling_standardize(sig, window_size)
+    elif robust:
+        # print("Standardizing signal with robust Z-score")
+        result = (sig - sig.median()) / calculate_mad(sig)
+    else:
+        # print("Standardizing signal with Z-score")
+        result = (sig - sig.mean()) / sig.std(ddof=1)
+
+    return result.fill_nan(None).fill_null(strategy="backward")
 
 
 def filter_neurokit2(sig: npt.NDArray[np.float64], sampling_rate: int, powerline: int = 50) -> npt.NDArray[np.float64]:

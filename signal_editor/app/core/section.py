@@ -1,15 +1,13 @@
 import contextlib
 import re
 import typing as t
-from dataclasses import dataclass, field
 
+import attrs
 import numpy as np
 import numpy.typing as npt
 import polars as pl
 import polars.selectors as ps
 from loguru import logger
-
-from polars_standardize_series import standardize
 from PySide6 import QtCore
 
 from .. import type_defs as _t
@@ -22,17 +20,37 @@ from .processing import (
     filter_neurokit2,
     filter_signal,
     signal_rate,
+    standardize_signal,
 )
 
+# @dataclass(slots=True)
+# class ProcessingParameters:
+#     sampling_rate: int
+#     processing_pipeline: PreprocessPipeline | None = None
+#     filter_parameters: _t.SignalFilterParameters | None = None
+#     standardization_parameters: _t.StandardizationParameters | None = None
+#     peak_detection_method: PeakDetectionMethod = field(init=False)
+#     peak_detection_method_parameters: _t.PeakDetectionMethodParameters = field(init=False)
 
-@dataclass(slots=True)
+#     def to_dict(self) -> _t.ProcessingParametersDict:
+#         return _t.ProcessingParametersDict(
+#             sampling_rate=self.sampling_rate,
+#             processing_pipeline=str(self.processing_pipeline),
+#             filter_parameters=self.filter_parameters,
+#             standardization_parameters=self.standardization_parameters,
+#             peak_detection_method=str(self.peak_detection_method),
+#             peak_detection_method_parameters=self.peak_detection_method_parameters,
+#         )
+
+
+@attrs.define
 class ProcessingParameters:
-    sampling_rate: int
-    processing_pipeline: PreprocessPipeline | None = None
-    filter_parameters: _t.SignalFilterParameters | None = None
-    standardization_parameters: _t.StandardizationParameters | None = None
-    peak_detection_method: PeakDetectionMethod = field(init=False)
-    peak_detection_method_parameters: _t.PeakDetectionMethodParameters = field(init=False)
+    sampling_rate: int = attrs.field()
+    processing_pipeline: PreprocessPipeline | None = attrs.field(default=None)
+    filter_parameters: _t.SignalFilterParameters | None = attrs.field(default=None)
+    standardization_parameters: _t.StandardizationParameters | None = attrs.field(default=None)
+    peak_detection_method: PeakDetectionMethod = attrs.field(init=False)
+    peak_detection_method_parameters: _t.PeakDetectionMethodParameters = attrs.field(init=False)
 
     def to_dict(self) -> _t.ProcessingParametersDict:
         return _t.ProcessingParametersDict(
@@ -45,10 +63,10 @@ class ProcessingParameters:
         )
 
 
-@dataclass(slots=True)
+@attrs.define
 class ManualPeakEdits:
-    added: list[int] = field(default_factory=list)
-    removed: list[int] = field(default_factory=list)
+    added: list[int] = attrs.field(factory=list)
+    removed: list[int] = attrs.field(factory=list)
 
     def __repr__(self) -> str:
         return f"Added Peaks [{len(self.added)}]: {format_long_sequence(self.added)}\nRemoved Peaks [{len(self.removed)}]: {format_long_sequence(self.removed)}"
@@ -88,7 +106,7 @@ class ManualPeakEdits:
         self.removed = sorted(set(self.removed))
 
     def get_joined(self) -> list[int]:
-        return sorted(set(self.added + self.removed))
+        return sorted(set(self.added) | set(self.removed))
 
     def to_dict(self) -> _t.ManualPeakEditsDict:
         self.sort_and_deduplicate()
@@ -114,13 +132,13 @@ class SectionID(str):
         return f"Section {self[-3:]} ({sig_name.upper()})"
 
 
-@dataclass(slots=True)
+@attrs.define
 class SectionMetadata:
-    signal_name: str = field()
-    section_id: SectionID = field()
-    global_bounds: tuple[int, int] = field()
-    sampling_rate: int = field()
-    processing_parameters: ProcessingParameters = field()
+    signal_name: str = attrs.field()
+    section_id: SectionID = attrs.field()
+    global_bounds: tuple[int, int] = attrs.field()
+    sampling_rate: int = attrs.field()
+    processing_parameters: ProcessingParameters = attrs.field()
 
     def to_dict(self) -> _t.SectionMetadataDict:
         return _t.SectionMetadataDict(
@@ -271,18 +289,19 @@ class Section:
 
     def scale_signal(self, **kwargs: t.Unpack[_t.StandardizationParameters]) -> None:
         if self._is_standardized:
-            logger.warning("Signal is already standardized. No action taken.")
+            logger.warning("Signal is already standardized. To restandardize, reset the signal.")
             return
         window_size = kwargs.get("window_size", None)
         robust = kwargs.get("robust", False)
         if robust and window_size:
             window_size = None
 
+        standardized = standardize_signal(self.processed_signal, robust=robust, window_size=window_size)
+
         self.data = self.data.with_columns(
-            standardize(self.processed_signal_name, robust=robust, window_size=window_size)
-            .replace([float("inf"), float("-inf")], None)
+            standardized.replace([float("inf"), float("-inf")], None)
             .fill_nan(None)
-            .backward_fill()
+            .fill_null(strategy="backward")
             .alias(self.processed_signal_name)
         )
         self._is_standardized = True
