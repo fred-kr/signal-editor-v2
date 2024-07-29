@@ -73,17 +73,15 @@ class PlotController(QtCore.QObject):
         self.set_foreground_color(Config().plot.Foreground)
 
     def _setup_region_selector(self) -> None:
-        # settings = QtCore.QSettings()
-        # brush_col: QtGui.QColor = settings.value("Plot/section_marker_color", type=QtGui.QColor)  # type: ignore
         brush_col = Config().plot.SectionColor
         hover_brush_col = brush_col
-        hover_brush_col.setAlpha(30)
-        line_pen = pg.mkPen(color=brush_col.darker(120), width=2)
+        hover_brush_col.setAlpha(90)
+        line_pen = pg.mkPen(color="red", width=2)
         self.region_selector = pg.LinearRegionItem(
             brush=brush_col,
             pen=line_pen,
             hoverBrush=hover_brush_col,
-            hoverPen={"color": "gray", "width": 3},
+            hoverPen={"color": "darkred", "width": 3},
         )
         self.region_selector.setVisible(False)
         self.region_selector.setZValue(1e3)
@@ -119,11 +117,7 @@ class PlotController(QtCore.QObject):
         # settings = QtCore.QSettings()
 
         if pen_color is None:
-            # pen_color = settings.value(  # type: ignore
-            #     "Plot/signal_line_color", "tomato", type=QtGui.QColor
-            # )
             pen_color = Config().plot.LineColor
-        # click_width = settings.value("Editing/click_width_signal_line", 20, type=int)
         click_width = Config().plot.LineClickWidth
         signal = pg.PlotDataItem(
             pen=pen_color,
@@ -131,7 +125,7 @@ class PlotController(QtCore.QObject):
             autoDownsample=True,
             name="Signal",
         )
-        signal.setCurveClickable(True, width=click_width)  # type: ignore
+        signal.setCurveClickable(True, width=click_width)
         signal.sigClicked.connect(self._on_curve_clicked)
         signal.sigPlotChanged.connect(self.set_view_limits)
         self.signal_curve = signal
@@ -153,9 +147,6 @@ class PlotController(QtCore.QObject):
         hover_brush: _t.PGColor = "red",
     ) -> None:
         if brush_color is None:
-            # brush_color = QtCore.QSettings().value(  # type: ignore
-            #     "Plot/point_color", "darkgoldenrod", type=QtGui.QColor
-            # )
             brush_color = Config().plot.PointColor
         scatter = CustomScatterPlotItem(
             pxMode=True,
@@ -186,9 +177,7 @@ class PlotController(QtCore.QObject):
 
     def initialize_rate_curve(self, pen_color: _t.PGColor | None = None) -> None:
         if pen_color is None:
-            pen_color = QtCore.QSettings().value(  # type: ignore
-                "Plot/rate_line_color", "lightgreen", type=QtGui.QColor
-            )
+            pen_color = "crimson"
         rate_curve = pg.PlotDataItem(
             pen=pen_color,
             skipFiniteCheck=True,
@@ -485,7 +474,7 @@ class PlotController(QtCore.QObject):
         fg_color = Config().plot.Foreground
         point_color = Config().plot.PointColor
         signal_line_color = Config().plot.LineColor
-        rate_line_color = Config().plot.LineColor.lighter(150)
+        # rate_line_color = "crimson"
         section_marker_color = Config().plot.SectionColor
 
         self.set_background_color(bg_color)
@@ -495,7 +484,7 @@ class PlotController(QtCore.QObject):
         if self.signal_curve is not None:
             self.signal_curve.setPen(color=signal_line_color)
         if self.rate_curve is not None:
-            self.rate_curve.setPen(color=rate_line_color)
+            self.rate_curve.setPen(color="crimson")
         for r in self.regions:
             r.setBrush(color=section_marker_color)
 
