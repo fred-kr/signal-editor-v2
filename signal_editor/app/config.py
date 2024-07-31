@@ -5,7 +5,7 @@ import attrs
 from PySide6 import QtCore, QtGui
 
 from . import type_defs as _t
-from .enum_defs import RateComputationMethod, SVGColors
+from .enum_defs import RateComputationMethod, SVGColors, TextFileSeparator
 from .utils import get_app_dir, make_qcolor
 
 type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
@@ -16,27 +16,27 @@ ItemDataRole = QtCore.Qt.ItemDataRole
 @attrs.define
 class _PlotConfig:
     Background: QtGui.QColor = attrs.field(
-        default=SVGColors.Black,
+        default=QtGui.QColor(SVGColors.Black),
         converter=make_qcolor,
         metadata={"Description": "The background color of the plot."},
     )
     Foreground: QtGui.QColor = attrs.field(
-        default=SVGColors.Grey,
+        default=QtGui.QColor(SVGColors.Grey),
         converter=make_qcolor,
         metadata={"Description": "The foreground (text, axis, etc) color of the plot."},
     )
     LineColor: QtGui.QColor = attrs.field(
-        default=SVGColors.RoyalBlue,
+        default=QtGui.QColor(SVGColors.RoyalBlue),
         converter=make_qcolor,
         metadata={"Description": "The color of the lines in the plot."},
     )
     PointColor: QtGui.QColor = attrs.field(
-        default=SVGColors.GoldenRod,
+        default=QtGui.QColor(SVGColors.GoldenRod),
         converter=make_qcolor,
         metadata={"Description": "The color of the points in the plot."},
     )
     SectionColor: QtGui.QColor = attrs.field(
-        default=SVGColors.Lime,
+        default=QtGui.QColor(SVGColors.Lime),
         converter=make_qcolor,
         metadata={"Description": "The color of the section markers in the plot."},
     )
@@ -141,6 +141,10 @@ class _DataConfig:
         default=3,
         metadata={"Description": "The number of decimal places to show in the data table."},
     )
+    TextSeparatorChar: TextFileSeparator = attrs.field(
+        default=TextFileSeparator.Tab,
+        metadata={"Description": "Character used to separate fields when reading from a text (.txt) file."},
+    )
 
     def to_dict(self) -> _t.DataConfigDict:
         return _t.DataConfigDict(**attrs.asdict(self))
@@ -150,16 +154,19 @@ class _DataConfig:
         settings = QtCore.QSettings()
         settings.beginGroup("Data")
         fp = settings.value("FloatPrecision", 3, type=int)
+        tfs = TextFileSeparator(settings.value("TextSeparatorChar", TextFileSeparator.Tab))
         settings.endGroup()
 
         return cls(
             FloatPrecision=fp,  # type: ignore
+            TextSeparatorChar=tfs,
         )
 
     def save_to_qsettings(self) -> None:
         settings = QtCore.QSettings()
         settings.beginGroup("Data")
         settings.setValue("FloatPrecision", self.FloatPrecision)
+        settings.setValue("TextSeparatorChar", self.TextSeparatorChar.value)
         settings.endGroup()
 
         settings.sync()
@@ -169,6 +176,7 @@ class _DataConfig:
 class _InternalConfig:
     InputDir: str = attrs.field(factory=functools.partial(get_app_dir, True), metadata={"allow_user_edits": True})
     OutputDir: str = attrs.field(factory=functools.partial(get_app_dir, True), metadata={"allow_user_edits": True})
+    LastSamplingRate: int = attrs.field(default=0, metadata={"allow_user_edits": True})
     RecentFiles: list[str] = attrs.field(factory=list, metadata={"allow_user_edits": False})
     LastSignalColumn: str = attrs.field(default="", metadata={"allow_user_edits": False})
     LastInfoColumn: str = attrs.field(default="", metadata={"allow_user_edits": False})
@@ -184,6 +192,7 @@ class _InternalConfig:
         settings.beginGroup("Internal")
         input_dir = settings.value("InputDir", get_app_dir(True), type=str)
         output_dir = settings.value("OutputDir", get_app_dir(True), type=str)
+        last_sampling_rate = settings.value("LastSamplingRate", 0, type=int)
         recent_files = settings.value("RecentFiles", [], type=list)
         last_signal_column = settings.value("LastSignalColumn", "", type=str)
         last_info_column = settings.value("LastInfoColumn", "", type=str)
@@ -194,6 +203,7 @@ class _InternalConfig:
         return cls(
             InputDir=input_dir,  # type: ignore
             OutputDir=output_dir,  # type: ignore
+            LastSamplingRate=last_sampling_rate,  # type: ignore
             RecentFiles=recent_files,  # type: ignore
             LastSignalColumn=last_signal_column,  # type: ignore
             LastInfoColumn=last_info_column,  # type: ignore
@@ -206,6 +216,7 @@ class _InternalConfig:
         settings.beginGroup("Internal")
         settings.setValue("InputDir", self.InputDir)
         settings.setValue("OutputDir", self.OutputDir)
+        settings.setValue("LastSamplingRate", self.LastSamplingRate)
         settings.setValue("RecentFiles", self.RecentFiles)
         settings.setValue("LastSignalColumn", self.LastSignalColumn)
         settings.setValue("LastInfoColumn", self.LastInfoColumn)
@@ -284,7 +295,7 @@ class Config:
             else:
                 raise ValueError(f"Unknown internal config key: {key}")
 
-        self.save_to_qsettings()
+        self.save()
 
     def to_dict(self) -> _t.ConfigDict:
         plot_dict = self.plot.to_dict()
@@ -299,7 +310,7 @@ class Config:
             Internal=internal_dict,
         )
 
-    def save_to_qsettings(self) -> None:
+    def save(self) -> None:
         self.plot.save_to_qsettings()
         self.editing.save_to_qsettings()
         self.data.save_to_qsettings()

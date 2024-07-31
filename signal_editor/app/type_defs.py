@@ -118,6 +118,7 @@ class EditingConfigDict(t.TypedDict):
 
 class DataConfigDict(t.TypedDict):
     FloatPrecision: int
+    TextSeparatorChar: "TextFileSeparator"
 
 
 class InternalConfigDict(t.TypedDict):
@@ -126,6 +127,7 @@ class InternalConfigDict(t.TypedDict):
     RecentFiles: list[str]
     LastSignalColumn: str
     LastInfoColumn: str
+    LastSamplingRate: int
     WindowGeometry: "QtCore.QByteArray"
     WindowState: "QtCore.QByteArray"
 

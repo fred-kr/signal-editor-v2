@@ -11,14 +11,14 @@ from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 
 from signal_editor.ui.ui_main_window import Ui_MainWindow
 
-from ..enum_defs import LogLevel
 from ..config import Config
+from ..enum_defs import LogLevel
 from .icons import FluentIcon as FI
-from .widgets import ExportDialog, MetadataDialog, SectionListDock
+from .widgets import ExportDialog, MetadataDialog, SectionListDock, ConfigDialog
 from .widgets.log_window import StatusMessageDock
 from .widgets.peak_detection_inputs import PeakDetectionDock
 from .widgets.processing_inputs import ProcessingInputsDock
-from .widgets.settings_dialog import SettingsDialog
+# from .widgets.settings_dialog import ConfigDialog, SettingsDialog
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -121,7 +121,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _setup_widgets(self) -> None:
         self.dialog_meta = MetadataDialog(self)
-        self.dialog_settings = SettingsDialog(self)
+        # self.dialog_settings = SettingsDialog(self)
+        self.dialog_config = ConfigDialog(self)
         self.dialog_export = ExportDialog(self)
 
         self.table_view_import_data.horizontalHeader().setDefaultAlignment(
@@ -360,8 +361,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         config.internal.WindowGeometry = self.saveGeometry()
         config.internal.WindowState = self.saveState()
 
-        config.save_to_qsettings()
-        
+        config.save()
+
         # settings = QtCore.QSettings()
         # settings.beginGroup("MainWindow")
         # settings.setValue("geometry", self.saveGeometry())
@@ -373,7 +374,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         config = Config()
         self.restoreGeometry(config.internal.WindowGeometry)
         self.restoreState(config.internal.WindowState)
-        
+
         # settings = QtCore.QSettings()
         # settings.beginGroup("MainWindow")
         # self.restoreGeometry(
@@ -384,21 +385,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @QtCore.Slot()
     def show_settings_dialog(self) -> None:
-        self.dialog_settings.open()
-        settings = QtCore.QSettings()
-        initial_setting_state = {k: settings.value(k) for k in settings.allKeys()}
-        self.dialog_settings.rejected.connect(lambda: self._restore_settings(initial_setting_state))
-        self.dialog_settings.accepted.connect(self.dialog_settings.settings_tree.refresh)
-        self.dialog_settings.settings_tree.set_settings_object(settings)
+        self.dialog_config.open()
+        self.dialog_config.config_tree.show()
+        
+        # self.dialog_settings.open()
+        # settings = QtCore.QSettings()
+        # initial_setting_state = {k: settings.value(k) for k in settings.allKeys()}
+        # self.dialog_settings.rejected.connect(lambda: self._restore_settings(initial_setting_state))
+        # self.dialog_settings.accepted.connect(self.dialog_settings.settings_tree.refresh)
+        # self.dialog_settings.settings_tree.set_settings_object(settings)
 
-    @QtCore.Slot(dict)
-    def _restore_settings(self, initial_setting_state: dict[str, t.Any]) -> None:
-        logger.info("Changes to settings weren't saved, restoring previous values.")
-        settings = QtCore.QSettings()
-        for k, v in initial_setting_state.items():
-            if v != settings.value(k):
-                settings.setValue(k, v)
-        self.dialog_settings.settings_tree.refresh()
+    # @QtCore.Slot(dict)
+    # def _restore_settings(self, initial_setting_state: dict[str, t.Any]) -> None:
+    #     logger.info("Changes to settings weren't saved, restoring previous values.")
+    #     settings = QtCore.QSettings()
+    #     for k, v in initial_setting_state.items():
+    #         if v != settings.value(k):
+    #             settings.setValue(k, v)
+    #     self.dialog_settings.settings_tree.refresh()
 
     @QtCore.Slot()
     def show_export_dialog(self) -> None:
@@ -412,8 +416,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.write_settings()
-        if self.dialog_settings.isVisible():
-            self.dialog_settings.done(QtWidgets.QDialog.DialogCode.Rejected)
+        if self.dialog_config.isVisible():
+            self.dialog_config.done(QtWidgets.QDialog.DialogCode.Accepted)
+        # if self.dialog_settings.isVisible():
+            # self.dialog_settings.done(QtWidgets.QDialog.DialogCode.Rejected)
         self.dock_status_log.close()
         self.dock_processing.close()
         self.dock_peaks.close()

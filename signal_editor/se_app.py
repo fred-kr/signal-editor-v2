@@ -7,7 +7,7 @@ import numpy as np
 import numpy.typing as npt
 import superqt
 from loguru import logger
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
 from .app import type_defs as _t
 from .app.config import Config
@@ -18,7 +18,6 @@ from .app.core.peak_detection import find_peaks
 from .app.enum_defs import (
     PeakDetectionMethod,
     PreprocessPipeline,
-    RateComputationMethod,
     StandardizationMethod,
 )
 from .app.gui.main_window import MainWindow
@@ -38,6 +37,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw = MainWindow()
         self.data = DataController(self)
         self.plot = PlotController(self, self.mw)
+        self.config = Config()
 
         self.recent_files = self._retrieve_recent_files()
 
@@ -46,10 +46,10 @@ class SignalEditor(QtWidgets.QApplication):
     def _connect_signals(self) -> None:
         self.sig_peaks_updated.connect(self.refresh_peak_data)
 
-        self.mw.dialog_settings.sig_setting_changed.connect(self._update_setting)
+        # self.mw.dialog_settings.sig_setting_changed.connect(self._update_setting)
         self.mw.action_open_file.triggered.connect(self.open_file)
         self.mw.action_edit_metadata.triggered.connect(lambda: self.show_metadata_dialog([]))
-        self.mw.dialog_settings.finished.connect(self.apply_settings)
+        self.mw.dialog_config.finished.connect(self.apply_settings)
         self.mw.btn_load_data.clicked.connect(self.read_data)
         self.mw.dialog_meta.sig_property_has_changed.connect(self.update_metadata)
         self.mw.btn_open_file.clicked.connect(self.open_file)
@@ -57,20 +57,12 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.btn_close_file.clicked.connect(self.close_file)
         self.mw.action_about_qt.triggered.connect(self.aboutQt)
         self.mw.dialog_export.sig_export_confirmed.connect(self.export_result)
-        self.mw.list_widget_recent_files.itemDoubleClicked.connect(
-            self._open_recent_file
-        )
+        self.mw.list_widget_recent_files.itemDoubleClicked.connect(self._open_recent_file)
         self.mw.sig_table_refresh_requested.connect(self.refresh_data_view)
 
-        self.mw.spin_box_sampling_rate_import_page.editingFinished.connect(
-            self.update_sampling_rate
-        )
-        self.mw.combo_box_info_column_import_page.currentTextChanged.connect(
-            self.update_info_column
-        )
-        self.mw.combo_box_signal_column_import_page.currentTextChanged.connect(
-            self.update_signal_column
-        )
+        self.mw.spin_box_sampling_rate_import_page.editingFinished.connect(self.update_sampling_rate)
+        self.mw.combo_box_info_column_import_page.currentTextChanged.connect(self.update_info_column)
+        self.mw.combo_box_signal_column_import_page.currentTextChanged.connect(self.update_signal_column)
 
         # Section actions
         self.mw.action_create_new_section.toggled.connect(self.maybe_new_section)
@@ -83,24 +75,20 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.dock_sections.list_view.sig_delete_current_item.connect(self.delete_section)
         self.mw.dock_processing.sig_filter_requested.connect(self.filter_active_signal)
         self.mw.dock_processing.sig_pipeline_requested.connect(self.run_preprocess_pipeline)
-        self.mw.dock_processing.sig_standardization_requested.connect(
-            self.standardize_active_signal
-        )
+        self.mw.dock_processing.sig_standardization_requested.connect(self.standardize_active_signal)
         self.mw.dock_processing.sig_data_reset_requested.connect(self.restore_original_signal)
 
         self.mw.dock_peaks.sig_peak_detection_requested.connect(self.run_peak_detection)
         self.mw.dock_peaks.sig_clear_peaks_requested.connect(self.clear_peaks)
 
         self.mw.action_find_peaks_in_selection.triggered.connect(self.find_peaks_in_selection)
-        self.mw.action_remove_peaks_in_selection.triggered.connect(
-            self.plot.remove_peaks_in_selection
-        )
+        self.mw.action_remove_peaks_in_selection.triggered.connect(self.plot.remove_peaks_in_selection)
         self.plot.sig_scatter_data_changed.connect(self.handle_peak_edit)
 
     def _retrieve_recent_files(self) -> list[str]:
         # settings = QtCore.QSettings()
         # recent_files: list[str] | None = settings.value("Internal/recent_files", None)  # type: ignore
-        recent_files = Config().internal.RecentFiles
+        recent_files = self.config.internal.RecentFiles
         # if recent_files is None:
         #     recent_files = []
         self.mw.list_widget_recent_files.clear()
@@ -117,14 +105,14 @@ class SignalEditor(QtWidgets.QApplication):
         rect = self.plot.get_selection_area()
         if rect is None:
             return
-        
+
         active_section = self.data.active_section
         left, right = int(rect.left()), int(rect.right())
         self.plot.remove_selection_rect()
-        
+
         peak_method = PeakDetectionMethod(self.mw.dock_peaks.enum_combo_peak_method.currentEnum())
         peak_params = self.mw.dock_peaks.get_peak_detection_parameters(peak_method)
-        
+
         edge_buffer = 10
         b_left, b_right = left + edge_buffer, right - edge_buffer
         b_left = np.maximum(b_left, 0)
@@ -141,9 +129,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.sig_peaks_updated.emit()
 
     @QtCore.Slot(str, object)
-    def handle_peak_edit(
-        self, action: _t.UpdatePeaksAction, indices: npt.NDArray[np.int32]
-    ) -> None:
+    def handle_peak_edit(self, action: _t.UpdatePeaksAction, indices: npt.NDArray[np.int32]) -> None:
         self.data.active_section.update_peaks(action, indices)
         self.sig_peaks_updated.emit()
 
@@ -156,9 +142,7 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot(dict)
     def filter_active_signal(self, filter_params: _t.SignalFilterParameters) -> None:
-        self.data.active_section.filter_signal(
-            pipeline=PreprocessPipeline.PPGElgendi, **filter_params
-        )
+        self.data.active_section.filter_signal(pipeline=PreprocessPipeline.PPGElgendi, **filter_params)
         self.refresh_plot_data()
 
     @QtCore.Slot()
@@ -175,9 +159,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.refresh_plot_data()
 
     @QtCore.Slot(dict)
-    def standardize_active_signal(
-        self, standardization_params: _t.StandardizationParameters
-    ) -> None:
+    def standardize_active_signal(self, standardization_params: _t.StandardizationParameters) -> None:
         method = standardization_params.pop("method")
         window_size = standardization_params.pop("window_size")
         robust = method == StandardizationMethod.ZScoreRobust
@@ -188,9 +170,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.plot.set_signal_data(self.data.active_section.processed_signal.to_numpy())
 
     @QtCore.Slot(enum.StrEnum, dict)
-    def run_peak_detection(
-        self, method: PeakDetectionMethod, params: _t.PeakDetectionMethodParameters
-    ) -> None:
+    def run_peak_detection(self, method: PeakDetectionMethod, params: _t.PeakDetectionMethodParameters) -> None:
         self.data.active_section.detect_peaks(method, params)
         self.sig_peaks_updated.emit()
 
@@ -359,9 +339,7 @@ class SignalEditor(QtWidgets.QApplication):
 
         with contextlib.suppress(Exception):
             self.mw.combo_box_info_column_import_page.setCurrentText(self.data.metadata.info_column)
-            self.mw.combo_box_signal_column_import_page.setCurrentText(
-                self.data.metadata.signal_column
-            )
+            self.mw.combo_box_signal_column_import_page.setCurrentText(self.data.metadata.signal_column)
 
     def _clear_column_models(self) -> None:
         with QtCore.QSignalBlocker(self.mw.combo_box_info_column_import_page):
@@ -378,7 +356,7 @@ class SignalEditor(QtWidgets.QApplication):
     def open_file(self) -> None:
         # settings = QtCore.QSettings()
         # default_data_dir = str(settings.value("Misc/data_folder", self.applicationDirPath()))
-        default_data_dir = Config().internal.InputDir
+        default_data_dir = self.config.internal.InputDir
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self.mw,
             "Open File",
@@ -390,7 +368,8 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.close_file()
 
-        Config().internal.InputDir = Path(file_path).parent.resolve().as_posix()
+        self.config.internal.InputDir = Path(file_path).parent.resolve().as_posix()
+        self.config.save()
         # settings.setValue("Misc/data_folder", Path(file_path).parent.resolve().as_posix())
         self._on_file_opened(file_path)
 
@@ -399,7 +378,8 @@ class SignalEditor(QtWidgets.QApplication):
             self.recent_files.remove(file_path)
         self.recent_files.insert(0, file_path)
         self.recent_files = self.recent_files[:10]
-        Config().internal.RecentFiles = self.recent_files
+        self.config.internal.RecentFiles = self.recent_files
+        self.config.save()
         # settings = QtCore.QSettings()
         # settings.setValue("Internal/recent_files", self.recent_files)
         self.mw.list_widget_recent_files.clear()
@@ -461,39 +441,39 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.set_active_section_label("-")
         self.mw.line_edit_active_file.clear()
 
-    @QtCore.Slot(str, object)
-    def _update_setting(self, name: str, value: QtGui.QColor | str | int | float | None) -> None:
-        if value is None:
-            return
-        logger.info(f"Setting changed: {name} -> {value}")
-        if name == "background_color":
-            self.plot.set_background_color(value)
-        elif name == "foreground_color":
-            self.plot.set_foreground_color(value)
-        elif name == "point_color":
-            if self.plot.peak_scatter is not None:
-                self.plot.peak_scatter.setBrush(value)
-        elif name == "signal_line_color":
-            if self.plot.signal_curve is not None:
-                self.plot.signal_curve.setPen(value)
-        elif name == "rate_line_color":
-            if self.plot.rate_curve is not None:
-                self.plot.rate_curve.setPen(value)
-        elif name == "section_marker_color":
-            for r in self.plot.regions:
-                r.setBrush(color=value)
-        elif name == "float_visual_precision":
-            if isinstance(value, int):
-                self.data.data_model.set_float_precision(value)
-        elif name == "click_width_signal_line":
-            if isinstance(value, int) and self.plot.signal_curve is not None:
-                self.plot.signal_curve.setCurveClickable(True, width=value)
-        elif name == "search_around_click_radius":
-            if isinstance(value, int):
-                self.plot.search_around_click_radius = value
-        # elif name == "rate_computation_method":
-        #     if isinstance(value, RateComputationMethod):
-        #         self.
+    # @QtCore.Slot(str, object)
+    # def _update_setting(self, name: str, value: QtGui.QColor | str | int | float | None) -> None:
+    #     if value is None:
+    #         return
+    #     logger.info(f"Setting changed: {name} -> {value}")
+    #     if name == "background_color":
+    #         self.plot.set_background_color(value)
+    #     elif name == "foreground_color":
+    #         self.plot.set_foreground_color(value)
+    #     elif name == "point_color":
+    #         if self.plot.peak_scatter is not None:
+    #             self.plot.peak_scatter.setBrush(value)
+    #     elif name == "signal_line_color":
+    #         if self.plot.signal_curve is not None:
+    #             self.plot.signal_curve.setPen(value)
+    #     elif name == "rate_line_color":
+    #         if self.plot.rate_curve is not None:
+    #             self.plot.rate_curve.setPen(value)
+    #     elif name == "section_marker_color":
+    #         for r in self.plot.regions:
+    #             r.setBrush(color=value)
+    #     elif name == "float_visual_precision":
+    #         if isinstance(value, int):
+    #             self.data.data_model.set_float_precision(value)
+    #     elif name == "click_width_signal_line":
+    #         if isinstance(value, int) and self.plot.signal_curve is not None:
+    #             self.plot.signal_curve.setCurveClickable(True, width=value)
+    #     elif name == "search_around_click_radius":
+    #         if isinstance(value, int):
+    #             self.plot.search_around_click_radius = value
+    #     # elif name == "rate_computation_method":
+    #     #     if isinstance(value, RateComputationMethod):
+    #     #         self.
 
     @QtCore.Slot()
     def apply_settings(self) -> None:

@@ -7,6 +7,7 @@ from loguru import logger
 from PySide6 import QtCore
 
 from ..utils import human_readable_timedelta
+from ..config import Config
 
 if t.TYPE_CHECKING:
     from .metadata import FileMetadata
@@ -29,9 +30,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
         self._name_index_column: str = "index"
         self._name_signal_column: str | None = None
         self._name_info_column: str | None = None
-        self._float_precision: int = QtCore.QSettings().value(  # type: ignore
-            "Misc/float_visual_precision", 4, type=int
-        )
+        self._float_precision = Config().data.FloatPrecision
 
     @property
     def df(self) -> pl.DataFrame:

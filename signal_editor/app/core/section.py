@@ -11,6 +11,7 @@ from loguru import logger
 from PySide6 import QtCore
 
 from .. import type_defs as _t
+from ..config import Config
 from ..enum_defs import FilterMethod, PeakDetectionMethod, PreprocessPipeline, RateComputationMethod
 from ..models.result_models import CompactSectionResult, DetailedSectionResult
 from ..utils import format_long_sequence
@@ -176,9 +177,10 @@ class Section:
             .collect()
         )
 
-        settings = QtCore.QSettings()
+        # settings = QtCore.QSettings()
 
-        self.sampling_rate: int = settings.value("Data/sampling_rate")  # type: ignore
+        # self.sampling_rate: int = settings.value("Data/sampling_rate")  # type: ignore
+        self.sampling_rate = Config().internal.LastSamplingRate
         self.global_bounds: tuple[int, int] = (
             self.data.item(0, "index"),
             self.data.item(-1, "index"),
@@ -241,8 +243,9 @@ class Section:
         pipeline: PreprocessPipeline | None = None,
         **kwargs: t.Unpack[_t.SignalFilterParameters],
     ) -> None:
-        settings = QtCore.QSettings()
-        allow_stacking = settings.value("Editing/allow_stacking_filters", False, type=bool)
+        # settings = QtCore.QSettings()
+        # allow_stacking = settings.value("Editing/allow_stacking_filters", False, type=bool)
+        allow_stacking = Config().editing.FilterStacking
         if self.is_filtered and not allow_stacking:
             logger.warning(
                 "Applying filter to raw signal. To apply to already processed signal, enable\n\n'Settings > Preferences > Editing > allow_stacking_filters'"
@@ -407,9 +410,10 @@ class Section:
     def get_rate_data(
         self,
     ) -> pl.DataFrame:
-        method = RateComputationMethod(
-            QtCore.QSettings().value("Editing/rate_computation_method", RateComputationMethod.RollingWindow)
-        )
+        # method = RateComputationMethod(
+            # QtCore.QSettings().value("Editing/rate_computation_method", RateComputationMethod.RollingWindow)
+        # )
+        method = Config().editing.RateMethod
         if method == RateComputationMethod.RollingWindow:
             rate_data = self._calc_rate_rolling()
         elif method == RateComputationMethod.RollingWindowNoOverlap:

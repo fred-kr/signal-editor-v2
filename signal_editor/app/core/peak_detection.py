@@ -5,7 +5,6 @@ import numpy as np
 import numpy.typing as npt
 import wfdb.processing as wp
 from loguru import logger
-from PySide6 import QtCore
 from scipy import ndimage, signal
 
 from .. import type_defs as _t
@@ -194,24 +193,24 @@ def _find_peaks_local_min(sig: npt.NDArray[np.float64], search_radius: int) -> n
 
 
 def find_extrema(
-    sig: npt.NDArray[np.float64], search_radius: int, direction: t.Literal["up", "down"]
+    sig: npt.NDArray[np.float64], search_radius: int, direction: t.Literal["up", "down"], min_peak_distance: int = 10
 ) -> npt.NDArray[np.int32]:
     if direction == "up":
         peaks = _find_peaks_local_max(sig, search_radius)
     else:
         peaks = _find_peaks_local_min(sig, search_radius)
 
-    settings = QtCore.QSettings()
+    # settings = QtCore.QSettings()
 
-    min_dist = settings.value("Editing/minimum_peak_distance")
+    # min_dist = settings.value("Editing/minimum_peak_distance")
     peak_diffs = np.diff(peaks)
-    close_peaks = np.where(peak_diffs < min_dist)[0]
+    close_peaks = np.where(peak_diffs < min_peak_distance)[0]
     while len(close_peaks) > 0:
         for i in close_peaks:
             peaks[i] = (peaks[i] + peaks[i + 1]) // 2
         peaks = np.delete(peaks, close_peaks + 1)
         peak_diffs = np.diff(peaks)
-        close_peaks = np.where(peak_diffs < min_dist)[0]
+        close_peaks = np.where(peak_diffs < min_peak_distance)[0]
 
     return peaks
 
@@ -303,12 +302,12 @@ def _handle_close_peaks(
     qrs_locations: npt.NDArray[np.int32],
     n_std: float,
     find_peak_func: t.Callable[..., np.intp],
-    min_peak_distance: int,
+    min_peak_distance: int = 10,
 ) -> npt.NDArray[np.int32]:
     qrs_diffs = np.diff(qrs_locations)
-    settings = QtCore.QSettings()
-    min_dist = settings.value("Editing/minimum_peak_distance")
-    close_indices = np.where(qrs_diffs <= min_dist)[0]
+    # settings = QtCore.QSettings()
+    # min_dist = settings.value("Editing/minimum_peak_distance")
+    close_indices = np.where(qrs_diffs <= min_peak_distance)[0]
 
     if not close_indices.size:
         return qrs_locations

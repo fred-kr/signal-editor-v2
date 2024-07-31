@@ -5,6 +5,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 
 from signal_editor.ui.ui_dock_processing_input import Ui_DockWidgetProcessingInputs
 from ... import type_defs as _t
+from ...config import Config
 from ...enum_defs import FilterMethod, FilterType, PreprocessPipeline, StandardizationMethod
 
 
@@ -19,9 +20,9 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
         self.setupUi(self)
         self.setVisible(False)
         self.toggleViewAction().setIcon(QtGui.QIcon(":/icons/filter_edit"))
-        settings = QtCore.QSettings()
-        sampling_rate = settings.value("Data/sampling_rate", 400, type=int)
-        if not isinstance(sampling_rate, int) or sampling_rate <= 0:
+        # settings = QtCore.QSettings()
+        sampling_rate = Config().internal.LastSamplingRate
+        if sampling_rate <= 0:
             sampling_rate = 400
         freq_range = (0, sampling_rate // 2)
 

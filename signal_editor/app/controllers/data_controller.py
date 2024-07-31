@@ -8,6 +8,7 @@ import polars as pl
 from PySide6 import QtCore
 
 from .. import type_defs as _t
+from ..config import Config
 from ..core.file_io import detect_sampling_rate, read_edf
 from ..core.section import Section
 from ..enum_defs import TextFileSeparator
@@ -32,8 +33,9 @@ class DataController(QtCore.QObject):
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
         self.has_data = False
-        settings = QtCore.QSettings()
-        self._sampling_rate = int(settings.value("Data/sampling_rate"))  # type: ignore
+        # settings = QtCore.QSettings()
+        # self._sampling_rate = int(settings.value("Data/sampling_rate"))  # type: ignore
+        self._sampling_rate = Config().internal.LastSamplingRate
 
         self.data_model = DataFrameModel(self)
 
@@ -44,15 +46,14 @@ class DataController(QtCore.QObject):
         self.active_section_model = DataFrameModel(self)
         self._base_section: Section | None = None
         try:
-            self._txt_separator = TextFileSeparator(
-                QtCore.QSettings().value("Data/txt_file_separator_character", TextFileSeparator.Tab)
-            ).value
+            self._txt_separator = Config().data.TextSeparatorChar
         except Exception:
             self._txt_separator = TextFileSeparator.Tab
         self._reader_funcs = {
             ".csv": functools.partial(pl.scan_csv, separator=TextFileSeparator.Comma),
             ".txt": functools.partial(pl.scan_csv, separator=self._txt_separator),
             ".tsv": functools.partial(pl.scan_csv, separator=TextFileSeparator.Tab),
+            ".feather": pl.scan_ipc,
         }
 
     @property
@@ -148,39 +149,58 @@ class DataController(QtCore.QObject):
             raise ValueError(
                 f"Unsupported file format: {file_path.suffix}. Allowed formats: {', '.join(self.SUPPORTED_FILE_FORMATS)}"
             )
-        settings = QtCore.QSettings()
 
-        last_sampling_rate: int = settings.value("Data/sampling_rate", 0)  # type: ignore
-        last_signal_col = settings.value("Misc/last_signal_column_name", None)
-        last_info_col = settings.value("Misc/last_info_column_name", None)
+        config = Config()
+        last_sampling_rate = config.internal.LastSamplingRate
+        last_signal_col = config.internal.LastSignalColumn
+        last_info_col = config.internal.LastInfoColumn
+
+        # settings = QtCore.QSettings()
+
+        # last_sampling_rate: int = settings.value("Data/sampling_rate", 0)  # type: ignore
+        # last_signal_col = settings.value("Misc/last_signal_column_name", None)
+        # last_info_col = settings.value("Misc/last_info_column_name", None)
         metadata = FileMetadata(file_path, self)
 
-        match file_path.suffix:
-            case ".edf":
-                edf_info = mne.io.read_raw_edf(file_path, preload=False)
-                metadata.sampling_rate = edf_info.info["sfreq"]
-                metadata.column_names = edf_info.ch_names
-            case ".feather":
-                lf = pl.scan_ipc(file_path)
-                metadata.column_names = lf.collect_schema().names()
-                try:
-                    metadata.sampling_rate = detect_sampling_rate(lf)
-                except Exception:
-                    metadata.sampling_rate = last_sampling_rate
+        if file_path.suffix == ".edf":
+            edf_info = mne.io.read_raw_edf(file_path, preload=False)
+            metadata.sampling_rate = edf_info.info["sfreq"]
+            metadata.column_names = edf_info.ch_names
+        elif file_path.suffix in {".feather", ".csv", ".txt", ".tsv"}:
+            lf = self._reader_funcs[file_path.suffix](file_path)
+            metadata.column_names = lf.collect_schema().names()
+            try:
+                metadata.sampling_rate = detect_sampling_rate(lf)
+            except Exception:
+                metadata.sampling_rate = last_sampling_rate
+        else:
+            raise ValueError(f"Unsupported file format: {file_path.suffix}. Please select a valid file format.")
+        # match file_path.suffix:
+        #     case ".edf":
+        #         edf_info = mne.io.read_raw_edf(file_path, preload=False)
+        #         metadata.sampling_rate = edf_info.info["sfreq"]
+        #         metadata.column_names = edf_info.ch_names
+        #     case ".feather":
+        #         lf = pl.scan_ipc(file_path)
+        #         metadata.column_names = lf.collect_schema().names()
+        #         try:
+        #             metadata.sampling_rate = detect_sampling_rate(lf)
+        #         except Exception:
+        #             metadata.sampling_rate = last_sampling_rate
 
-            case ".csv" | ".txt" | ".tsv":
-                lf = self._reader_funcs[file_path.suffix](file_path)
-                metadata.column_names = lf.columns
-                try:
-                    metadata.sampling_rate = detect_sampling_rate(lf)
-                except Exception:
-                    metadata.sampling_rate = last_sampling_rate
+        #     case ".csv" | ".txt" | ".tsv":
+        #         lf = self._reader_funcs[file_path.suffix](file_path)
+        #         metadata.column_names = lf.columns
+        #         try:
+        #             metadata.sampling_rate = detect_sampling_rate(lf)
+        #         except Exception:
+        #             metadata.sampling_rate = last_sampling_rate
 
-            case _:
-                raise ValueError(f"Unsupported file format: {file_path.suffix}. Please select a valid file format.")
+        #     case _:
+        #         raise ValueError(f"Unsupported file format: {file_path.suffix}. Please select a valid file format.")
 
         if last_signal_col in metadata.column_names:
-            metadata.signal_column = str(last_signal_col)
+            metadata.signal_column = last_signal_col
         if last_info_col in metadata.column_names:
             metadata.info_column = str(last_info_col)
         self._metadata = metadata
@@ -195,8 +215,9 @@ class DataController(QtCore.QObject):
             return
         suffix = self.metadata.file_format
         file_path = self.metadata.file_path
-        settings = QtCore.QSettings()
-        separator = TextFileSeparator(settings.value("Data/txt_file_separator_character", TextFileSeparator.Tab))
+        separator = Config().data.TextSeparatorChar
+        # settings = QtCore.QSettings()
+        # separator = TextFileSeparator(settings.value("Data/txt_file_separator_character", TextFileSeparator.Tab))
 
         signal_col = self.metadata.signal_column
         info_col = self.metadata.info_column

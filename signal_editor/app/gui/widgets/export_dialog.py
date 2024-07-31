@@ -5,6 +5,7 @@ from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from ...enum_defs import ExportFormatCompact, ExportFormatDetailed
+from ...config import Config
 from signal_editor.ui.ui_dialog_export_result import Ui_ExportDialog
 
 
@@ -62,7 +63,8 @@ class ExportDialog(QtWidgets.QDialog, Ui_ExportDialog):
 
     @QtCore.Slot()
     def _browse_output_dir(self) -> None:
-        prev_dir = str(QtCore.QSettings().value("Misc/output_folder", QtCore.QDir.currentPath()))
+        # prev_dir = str(QtCore.QSettings().value("Misc/output_folder", QtCore.QDir.currentPath()))
+        prev_dir = Config().internal.OutputDir
         if output_dir := QtWidgets.QFileDialog.getExistingDirectory(self, "Select Output Directory", prev_dir):
             self.line_edit_output_dir.setText(output_dir)
 

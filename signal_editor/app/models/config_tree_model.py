@@ -1,34 +1,51 @@
-from types import NoneType
+import os
 import typing as t
+from types import NoneType
 
 import attrs
 from PySide6 import QtCore, QtGui
 
 from ..config import Config
-from ..enum_defs import RateComputationMethod, SVGColors
+from ..enum_defs import RateComputationMethod, SVGColors, TextFileSeparator
 
 type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 
-_ConfigType = t.Union[QtGui.QColor, int, bool, RateComputationMethod, str, None, list[str], QtCore.QByteArray]
+_ConfigType = t.Union[QtGui.QColor, int, bool, RateComputationMethod, TextFileSeparator, str, None, list[str], QtCore.QByteArray]
 
 ItemDataRole = QtCore.Qt.ItemDataRole
 
 
 @attrs.define
 class ItemData:
+    """
+    A data structure to store the data for a single item in the tree model.
+    """
+
     name: str = attrs.field(default="")
     value: _ConfigType = attrs.field(
         default=None,
-        validator=attrs.validators.instance_of((QtGui.QColor, int, bool, RateComputationMethod, str, NoneType, list, QtCore.QByteArray)),
+        validator=attrs.validators.instance_of(
+            (QtGui.QColor, int, bool, RateComputationMethod, TextFileSeparator, str, NoneType, list, QtCore.QByteArray)
+        ),
     )
     description: str | None = attrs.field(default=None)
+    default_value: _ConfigType = attrs.field(
+        default=None,
+        validator=attrs.validators.instance_of(
+            (QtGui.QColor, int, bool, RateComputationMethod, TextFileSeparator, str, NoneType, list, QtCore.QByteArray)
+        ),
+    )
 
 
-class TreeItem:
-    def __init__(self, data: ItemData, parent: "TreeItem | None" = None, _allow_edits: bool | None = None) -> None:
+class ConfigTreeItem:
+    "Class representing a config item in a tree model"
+
+    def __init__(
+        self, data: ItemData, parent: "ConfigTreeItem | None" = None, _allow_edits: bool | None = None
+    ) -> None:
         self.item_data = data
         self.parent_item = parent
-        self.child_items: list[TreeItem] = []
+        self.child_items: list[ConfigTreeItem] = []
         self._allow_edits = _allow_edits
 
     @property
@@ -67,12 +84,16 @@ class TreeItem:
     def description(self, value: str | None) -> None:
         self.item_data.description = value
 
+    @property
+    def default_value(self) -> _ConfigType:
+        return self.item_data.default_value
+
     def is_editable(self) -> bool:
         if self._allow_edits is not None:
             return self._allow_edits
         return self.value is not None and self.description != ""
 
-    def child(self, number: int) -> "TreeItem | None":
+    def child(self, number: int) -> "ConfigTreeItem | None":
         if 0 <= number < len(self.child_items):
             return self.child_items[number]
         return None
@@ -88,7 +109,7 @@ class TreeItem:
     def column_count(self) -> int:
         return 3
 
-    def parent(self) -> "TreeItem | None":
+    def parent(self) -> "ConfigTreeItem | None":
         return self.parent_item
 
     def set_value(self, value: _ConfigType) -> bool:
@@ -97,6 +118,14 @@ class TreeItem:
 
         self.value = value
         Config().update_value(self.category, self.name, value)
+        return True
+
+    def reset_to_default(self) -> bool:
+        if self.value == self.default_value:
+            return False
+
+        self.value = self.default_value
+        Config().update_value(self.category, self.name, self.default_value)
         return True
 
     def __repr__(self) -> str:
@@ -111,15 +140,16 @@ class ConfigTreeModel(QtCore.QAbstractItemModel):
         super().__init__(parent)
         self._config = Config()
         self._headers = ["Name", "Value", "Description"]
-        self.root_item = TreeItem(ItemData("Name", "Value", "Description"))
+        self.root_item = ConfigTreeItem(ItemData("Name", "Value", "Description"))
 
-        self._plot_root = TreeItem(ItemData("Plot", None, None), self.root_item)
-        self._editing_root = TreeItem(ItemData("Editing", None, None), self.root_item)
-        self._data_root = TreeItem(ItemData("Data", None, None), self.root_item)
+        self._plot_root = ConfigTreeItem(ItemData("Plot", None, None), self.root_item)
+        self._editing_root = ConfigTreeItem(ItemData("Editing", None, None), self.root_item)
+        self._data_root = ConfigTreeItem(ItemData("Data", None, None), self.root_item)
 
         self.root_item.child_items.extend([self._plot_root, self._editing_root, self._data_root])
 
-        self.setup_model_data(include_internal=False)
+        include_internal = os.environ.get("DEBUG", "0") == "1"
+        self.setup_model_data(include_internal=include_internal)
 
     def columnCount(self, parent: _Index | None = None) -> int:
         return self.root_item.column_count()
@@ -137,13 +167,15 @@ class ConfigTreeModel(QtCore.QAbstractItemModel):
             elif col == 1:
                 if isinstance(item.value, QtGui.QColor):
                     return SVGColors(item.value.name()).name
+                elif isinstance(item.value, TextFileSeparator):
+                    return item.value.name
                 elif isinstance(item.value, bool) or item.value is None:
                     return ""
                 elif isinstance(item.value, QtCore.QByteArray):
                     return "<Binary data>"
                 elif isinstance(item.value, list):
                     return ", ".join(str(v) for v in item.value)
-                
+
                 return str(item.value)
             elif col == 2:
                 desc = item.description
@@ -178,7 +210,7 @@ class ConfigTreeModel(QtCore.QAbstractItemModel):
                 return "\n".join(str(v) for v in item.value)
             else:
                 return item.description or ""
-            
+
         return None
 
     def setData(self, index: _Index, value: _ConfigType, role: int = ItemDataRole.EditRole) -> bool:
@@ -217,7 +249,7 @@ class ConfigTreeModel(QtCore.QAbstractItemModel):
 
         return flags
 
-    def get_item(self, index: _Index) -> TreeItem:
+    def get_item(self, index: _Index) -> ConfigTreeItem:
         if index.isValid():
             if item := index.internalPointer():
                 return item
@@ -277,9 +309,12 @@ class ConfigTreeModel(QtCore.QAbstractItemModel):
     def setup_model_data(self, include_internal: bool = False) -> None:
         for field in attrs.fields(self._config.plot.__class__):
             self._plot_root.child_items.append(
-                TreeItem(
+                ConfigTreeItem(
                     ItemData(
-                        field.name, getattr(self._config.plot, field.name), field.metadata.get("Description", None)
+                        field.name,
+                        getattr(self._config.plot, field.name),
+                        field.metadata.get("Description", None),
+                        field.default,
                     ),
                     self._plot_root,
                 )
@@ -287,9 +322,12 @@ class ConfigTreeModel(QtCore.QAbstractItemModel):
 
         for field in attrs.fields(self._config.editing.__class__):
             self._editing_root.child_items.append(
-                TreeItem(
+                ConfigTreeItem(
                     ItemData(
-                        field.name, getattr(self._config.editing, field.name), field.metadata.get("Description", None)
+                        field.name,
+                        getattr(self._config.editing, field.name),
+                        field.metadata.get("Description", None),
+                        field.default,
                     ),
                     self._editing_root,
                 )
@@ -297,25 +335,29 @@ class ConfigTreeModel(QtCore.QAbstractItemModel):
 
         for field in attrs.fields(self._config.data.__class__):
             self._data_root.child_items.append(
-                TreeItem(
+                ConfigTreeItem(
                     ItemData(
-                        field.name, getattr(self._config.data, field.name), field.metadata.get("Description", None)
+                        field.name,
+                        getattr(self._config.data, field.name),
+                        field.metadata.get("Description", None),
+                        field.default,
                     ),
                     self._data_root,
                 )
             )
 
         if include_internal:
-            self._internal_root = TreeItem(ItemData("Internal", None, None), self.root_item)
+            self._internal_root = ConfigTreeItem(ItemData("Internal", None, None), self.root_item)
             self.root_item.child_items.append(self._internal_root)
 
             for field in attrs.fields(self._config.internal.__class__):
                 self._internal_root.child_items.append(
-                    TreeItem(
+                    ConfigTreeItem(
                         ItemData(
                             field.name,
                             getattr(self._config.internal, field.name),
                             field.metadata.get("Description", None),
+                            field.default,
                         ),
                         self._internal_root,
                         field.metadata.get("allow_user_edits", False),
@@ -324,3 +366,24 @@ class ConfigTreeModel(QtCore.QAbstractItemModel):
 
     def __repr__(self) -> str:
         return f"<config_tree_model.ConfigTreeModel at 0x{id(self):x}>"
+
+    def restore_defaults(self) -> None:
+        self.beginResetModel()
+        for item in self._plot_root.child_items:
+            item.reset_to_default()
+        for item in self._editing_root.child_items:
+            item.reset_to_default()
+        for item in self._data_root.child_items:
+            item.reset_to_default()
+        if hasattr(self, "_internal_root"):
+            for item in self._internal_root.child_items:
+                item.reset_to_default()
+        self.endResetModel()
+
+    def reset_item(self, index: _Index) -> bool:
+        item = self.get_item(index)
+        result = item.reset_to_default()
+        if result:
+            self.dataChanged.emit(index, index)
+
+        return result
