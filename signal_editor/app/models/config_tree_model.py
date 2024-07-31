@@ -1,34 +1,75 @@
+from types import NoneType
 import typing as t
 
 import attrs
 from PySide6 import QtCore, QtGui
 
 from ..config import Config
-from ..enum_defs import SVGColors
+from ..enum_defs import RateComputationMethod, SVGColors
 
 type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
+
+_ConfigType = t.Union[QtGui.QColor, int, bool, RateComputationMethod, str, None, list[str], QtCore.QByteArray]
+
 ItemDataRole = QtCore.Qt.ItemDataRole
 
 
+@attrs.define
+class ItemData:
+    name: str = attrs.field(default="")
+    value: _ConfigType = attrs.field(
+        default=None,
+        validator=attrs.validators.instance_of((QtGui.QColor, int, bool, RateComputationMethod, str, NoneType, list, QtCore.QByteArray)),
+    )
+    description: str | None = attrs.field(default=None)
+
+
 class TreeItem:
-    def __init__(self, data: list[str | t.Any], parent: "TreeItem | None" = None) -> None:
+    def __init__(self, data: ItemData, parent: "TreeItem | None" = None, _allow_edits: bool | None = None) -> None:
         self.item_data = data
         self.parent_item = parent
         self.child_items: list[TreeItem] = []
+        self._allow_edits = _allow_edits
+
+    @property
+    def full_path(self) -> str:
+        if self.parent_item is None:
+            return self.name
+        return f"{self.parent_item.full_path}.{self.name}"
+
+    @property
+    def category(self) -> str | None:
+        if self.parent_item and self.parent_item.name in {"Plot", "Editing", "Data", "Internal"}:
+            return self.parent_item.name.lower()
+        return None
 
     @property
     def name(self) -> str:
-        return self.item_data[0]
+        return self.item_data.name
+
+    @name.setter
+    def name(self, value: str) -> None:
+        self.item_data.name = value
 
     @property
-    def value(self) -> t.Any | None:
-        return self.item_data[1]
+    def value(self) -> _ConfigType:
+        return self.item_data.value
+
+    @value.setter
+    def value(self, value: _ConfigType) -> None:
+        self.item_data.value = value
 
     @property
     def description(self) -> str | None:
-        return self.item_data[2]
+        return self.item_data.description
+
+    @description.setter
+    def description(self, value: str | None) -> None:
+        self.item_data.description = value
 
     def is_editable(self) -> bool:
+        if self._allow_edits is not None:
+            return self._allow_edits
         return self.value is not None and self.description != ""
 
     def child(self, number: int) -> "TreeItem | None":
@@ -45,34 +86,22 @@ class TreeItem:
         return 0
 
     def column_count(self) -> int:
-        return len(self.item_data)
-
-    def data(self, column: int) -> t.Any:
-        return self.item_data[column] if 0 <= column < len(self.item_data) else None
-
-    def insert_children(self, position: int, count: int, columns: int) -> bool:
-        if position < 0 or position > len(self.child_items):
-            return False
-
-        for _ in range(count):
-            data = [None] * columns
-            child = TreeItem(data.copy(), self)
-            self.child_items.insert(position, child)
-
-        return True
+        return 3
 
     def parent(self) -> "TreeItem | None":
         return self.parent_item
 
-    def set_data(self, column: int, value: t.Any) -> bool:
-        if 0 <= column < len(self.item_data):
-            self.item_data[column] = value
-            return True
-        return False
+    def set_value(self, value: _ConfigType) -> bool:
+        if self.value == value:
+            return False
+
+        self.value = value
+        Config().update_value(self.category, self.name, value)
+        return True
 
     def __repr__(self) -> str:
         parts = [f"<config_tree_model.TreeItem at 0x{id(self):x}>\n"]
-        parts.extend(f' "{d}"' if d else " <None>" for d in self.item_data)
+        parts.extend(f' "{d}"' if d else " <None>" for d in [self.name, self.value, self.description])
         parts.append(f", {len(self.child_items)} children")
         return "".join(parts)
 
@@ -82,11 +111,11 @@ class ConfigTreeModel(QtCore.QAbstractItemModel):
         super().__init__(parent)
         self._config = Config()
         self._headers = ["Name", "Value", "Description"]
-        self.root_item = TreeItem(self._headers.copy())
+        self.root_item = TreeItem(ItemData("Name", "Value", "Description"))
 
-        self._plot_root = TreeItem(["Plot", None, ""], self.root_item)
-        self._editing_root = TreeItem(["Editing", None, ""], self.root_item)
-        self._data_root = TreeItem(["Data", None, ""], self.root_item)
+        self._plot_root = TreeItem(ItemData("Plot", None, None), self.root_item)
+        self._editing_root = TreeItem(ItemData("Editing", None, None), self.root_item)
+        self._data_root = TreeItem(ItemData("Data", None, None), self.root_item)
 
         self.root_item.child_items.extend([self._plot_root, self._editing_root, self._data_root])
 
@@ -101,20 +130,21 @@ class ConfigTreeModel(QtCore.QAbstractItemModel):
 
         col = index.column()
         item = self.get_item(index)
-        type_ = type(item.value)
 
         if role == ItemDataRole.DisplayRole:
             if col == 0:
                 return item.name
             elif col == 1:
-                val = item.value
-                if isinstance(val, QtGui.QColor):
-                    return SVGColors(val.name()).name
-                elif isinstance(val, bool):
-                    return "✓" if val else "☐"
-                elif val is None:
+                if isinstance(item.value, QtGui.QColor):
+                    return SVGColors(item.value.name()).name
+                elif isinstance(item.value, bool) or item.value is None:
                     return ""
-                return str(val)
+                elif isinstance(item.value, QtCore.QByteArray):
+                    return "<Binary data>"
+                elif isinstance(item.value, list):
+                    return ", ".join(str(v) for v in item.value)
+                
+                return str(item.value)
             elif col == 2:
                 desc = item.description
                 return "" if desc is None else desc
@@ -128,30 +158,62 @@ class ConfigTreeModel(QtCore.QAbstractItemModel):
         elif role == ItemDataRole.DecorationRole:
             if col == 1 and isinstance(item.value, QtGui.QColor):
                 return item.value
-                # pixmap = QtGui.QPixmap(16, 16)
-                # pixmap.fill(item.value)
-                # return pixmap
         elif role == ItemDataRole.EditRole:
             if col == 1:
                 return item.value
+        elif role == ItemDataRole.CheckStateRole:
+            if col == 1 and isinstance(item.value, bool):
+                return QtCore.Qt.CheckState.Checked if item.value else QtCore.Qt.CheckState.Unchecked
         elif role == ItemDataRole.SizeHintRole:
             if col == 0:
-                return QtCore.QSize(170, 31)
+                return QtCore.QSize(150, 31)
             elif col == 1:
-                return QtCore.QSize(170, 31)
+                return QtCore.QSize(180, 31)
             elif col == 2:
                 return QtCore.QSize(250, 31)
-
+        elif role == QtCore.Qt.ItemDataRole.ToolTipRole:
+            if isinstance(item.value, QtCore.QByteArray):
+                return str(item.value)
+            elif isinstance(item.value, list):
+                return "\n".join(str(v) for v in item.value)
+            else:
+                return item.description or ""
+            
         return None
+
+    def setData(self, index: _Index, value: _ConfigType, role: int = ItemDataRole.EditRole) -> bool:
+        if (
+            role not in {ItemDataRole.EditRole, ItemDataRole.UserRole, ItemDataRole.CheckStateRole}
+            or not index.isValid()
+        ):
+            return False
+
+        col = index.column()
+        if col != 1:
+            return False
+
+        item = self.get_item(index)
+
+        if isinstance(value, QtCore.Qt.CheckState):
+            value = value == QtCore.Qt.CheckState.Checked
+
+        result = item.set_value(value)
+        if result:
+            self.dataChanged.emit(index, index)
+
+        return result
 
     def flags(self, index: _Index) -> QtCore.Qt.ItemFlag:
         if not index.isValid():
             return QtCore.Qt.ItemFlag.NoItemFlags
         flags = QtCore.QAbstractItemModel.flags(self, index)
-        item = self.get_item(index)
 
-        if index.column() == 1 and item.is_editable():
-            flags |= QtCore.Qt.ItemFlag.ItemIsEditable
+        if index.column() == 1:
+            item = self.get_item(index)
+            if item.is_editable():
+                flags |= QtCore.Qt.ItemFlag.ItemIsEditable
+            if isinstance(item.value, bool):
+                flags |= QtCore.Qt.ItemFlag.ItemIsUserCheckable
 
         return flags
 
@@ -212,57 +274,51 @@ class ConfigTreeModel(QtCore.QAbstractItemModel):
         parent_item = self.get_item(parent)
         return parent_item.child_count() if parent_item else 0
 
-    def setData(self, index: _Index, value: t.Any, role: int = ItemDataRole.EditRole) -> bool:
-        if role not in {ItemDataRole.EditRole, ItemDataRole.UserRole} or not index.isValid() or index.column() != 1:
-            return False
-
-        item = self.get_item(index)
-        # if role != ItemDataRole.CheckStateRole and isinstance(item.value, bool):
-        # return False
-
-        result = item.set_data(index.column(), value)
-        if result:
-            self.dataChanged.emit(index, index)
-
-        return result
-
     def setup_model_data(self, include_internal: bool = False) -> None:
-        # Add Plot Config items
         for field in attrs.fields(self._config.plot.__class__):
             self._plot_root.child_items.append(
                 TreeItem(
-                    [field.name, getattr(self._config.plot, field.name), field.metadata.get("Description", "")],
+                    ItemData(
+                        field.name, getattr(self._config.plot, field.name), field.metadata.get("Description", None)
+                    ),
                     self._plot_root,
                 )
             )
 
-        # Add Editing Config items
         for field in attrs.fields(self._config.editing.__class__):
             self._editing_root.child_items.append(
                 TreeItem(
-                    [field.name, getattr(self._config.editing, field.name), field.metadata.get("Description", "")],
+                    ItemData(
+                        field.name, getattr(self._config.editing, field.name), field.metadata.get("Description", None)
+                    ),
                     self._editing_root,
                 )
             )
 
-        # Add Data Config items
         for field in attrs.fields(self._config.data.__class__):
             self._data_root.child_items.append(
                 TreeItem(
-                    [field.name, getattr(self._config.data, field.name), field.metadata.get("Description", "")],
+                    ItemData(
+                        field.name, getattr(self._config.data, field.name), field.metadata.get("Description", None)
+                    ),
                     self._data_root,
                 )
             )
 
         if include_internal:
-            self._internal_root = TreeItem(["Internal", None, ""], self.root_item)
+            self._internal_root = TreeItem(ItemData("Internal", None, None), self.root_item)
             self.root_item.child_items.append(self._internal_root)
 
             for field in attrs.fields(self._config.internal.__class__):
                 self._internal_root.child_items.append(
                     TreeItem(
-                        [field.name, getattr(self._config.internal, field.name), field.metadata.get("Description", "")],
+                        ItemData(
+                            field.name,
+                            getattr(self._config.internal, field.name),
+                            field.metadata.get("Description", None),
+                        ),
                         self._internal_root,
+                        field.metadata.get("allow_user_edits", False),
                     )
                 )
 

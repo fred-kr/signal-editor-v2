@@ -2,8 +2,7 @@ import functools
 import typing as t
 
 import attrs
-import qfluentwidgets as qfw
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtGui
 
 from . import type_defs as _t
 from .enum_defs import RateComputationMethod, SVGColors
@@ -128,7 +127,9 @@ class _EditingConfig:
         settings = QtCore.QSettings()
         settings.beginGroup("Editing")
         settings.setValue("FilterStacking", self.FilterStacking)
-        settings.setValue("RateMethod", self.RateMethod.value)  # the stored value is a string (RateComputationMethod.RollingWindow.value)
+        settings.setValue(
+            "RateMethod", self.RateMethod.value
+        )  # the stored value is a string (RateComputationMethod.RollingWindow.value)
         settings.endGroup()
 
         settings.sync()
@@ -255,6 +256,36 @@ class Config:
     def internal(self) -> _InternalConfig:
         return self._internal_config
 
+    def update_value(self, group: str | None, key: str, value: t.Any) -> None:
+        if group is None:
+            return
+        group = group.lower()
+        if group not in {"plot", "editing", "data", "internal"}:
+            raise ValueError(f"Unknown config group: {group}")
+
+        if group == "plot":
+            if hasattr(self._plot_config, key):
+                setattr(self._plot_config, key, value)
+            else:
+                raise ValueError(f"Unknown plot config key: {key}")
+        elif group == "editing":
+            if hasattr(self._editing_config, key):
+                setattr(self._editing_config, key, value)
+            else:
+                raise ValueError(f"Unknown editing config key: {key}")
+        elif group == "data":
+            if hasattr(self._data_config, key):
+                setattr(self._data_config, key, value)
+            else:
+                raise ValueError(f"Unknown data config key: {key}")
+        elif group == "internal":
+            if hasattr(self._internal_config, key):
+                setattr(self._internal_config, key, value)
+            else:
+                raise ValueError(f"Unknown internal config key: {key}")
+
+        self.save_to_qsettings()
+
     def to_dict(self) -> _t.ConfigDict:
         plot_dict = self.plot.to_dict()
         editing_dict = self.editing.to_dict()
@@ -273,5 +304,3 @@ class Config:
         self.editing.save_to_qsettings()
         self.data.save_to_qsettings()
         self.internal.save_to_qsettings()
-
-

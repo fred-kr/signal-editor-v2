@@ -11,6 +11,9 @@ class LogLevel(enum.IntEnum):
 
 
 class RateComputationMethod(enum.StrEnum):
+    """
+    Method with which the rate is calculated after peak detection.
+    """
     Instantaneous = "instantaneous"
     RollingWindow = "rolling_window"
     RollingWindowNoOverlap = "rolling_window_no_overlap"
