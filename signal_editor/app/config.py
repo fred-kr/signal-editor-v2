@@ -1,45 +1,43 @@
 import functools
 import typing as t
-from enum import StrEnum
 
 import attrs
 import qfluentwidgets as qfw
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .gui.widgets.config_tree import ConfigItemDelegate
-
 from . import type_defs as _t
-from .enum_defs import RateComputationMethod
+from .enum_defs import RateComputationMethod, SVGColors
 from .utils import get_app_dir, make_qcolor
 
 type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 
 ItemDataRole = QtCore.Qt.ItemDataRole
 
+
 @attrs.define
 class _PlotConfig:
     Background: QtGui.QColor = attrs.field(
-        default="black",
+        default=SVGColors.Black,
         converter=make_qcolor,
         metadata={"Description": "The background color of the plot."},
     )
     Foreground: QtGui.QColor = attrs.field(
-        default="grey",
+        default=SVGColors.Grey,
         converter=make_qcolor,
         metadata={"Description": "The foreground (text, axis, etc) color of the plot."},
     )
     LineColor: QtGui.QColor = attrs.field(
-        default="royalblue",
+        default=SVGColors.RoyalBlue,
         converter=make_qcolor,
         metadata={"Description": "The color of the lines in the plot."},
     )
     PointColor: QtGui.QColor = attrs.field(
-        default="goldenrod",
+        default=SVGColors.GoldenRod,
         converter=make_qcolor,
         metadata={"Description": "The color of the points in the plot."},
     )
     SectionColor: QtGui.QColor = attrs.field(
-        default="lime",
+        default=SVGColors.Lime,
         converter=make_qcolor,
         metadata={"Description": "The color of the section markers in the plot."},
     )
@@ -63,11 +61,11 @@ class _PlotConfig:
     def from_qsettings(cls) -> "_PlotConfig":
         settings = QtCore.QSettings()
         settings.beginGroup("Plot")
-        bg = settings.value("Background", make_qcolor("black"), type=QtGui.QColor)
-        fg = settings.value("Foreground", make_qcolor("grey"), type=QtGui.QColor)
-        lc = settings.value("LineColor", make_qcolor("royalblue"), type=QtGui.QColor)
-        pc = settings.value("PointColor", make_qcolor("goldenrod"), type=QtGui.QColor)
-        sc = settings.value("SectionColor", make_qcolor("lime"), type=QtGui.QColor)
+        bg = settings.value("Background", make_qcolor(SVGColors.Black), type=QtGui.QColor)
+        fg = settings.value("Foreground", make_qcolor(SVGColors.Grey), type=QtGui.QColor)
+        lc = settings.value("LineColor", make_qcolor(SVGColors.RoyalBlue), type=QtGui.QColor)
+        pc = settings.value("PointColor", make_qcolor(SVGColors.GoldenRod), type=QtGui.QColor)
+        sc = settings.value("SectionColor", make_qcolor(SVGColors.Lime), type=QtGui.QColor)
         lcw = settings.value("LineClickWidth", 70, type=int)
         cr = settings.value("ClickRadius", 20, type=int)
         settings.endGroup()
@@ -130,7 +128,7 @@ class _EditingConfig:
         settings = QtCore.QSettings()
         settings.beginGroup("Editing")
         settings.setValue("FilterStacking", self.FilterStacking)
-        settings.setValue("RateMethod", self.RateMethod)
+        settings.setValue("RateMethod", self.RateMethod.value)  # the stored value is a string (RateComputationMethod.RollingWindow.value)
         settings.endGroup()
 
         settings.sync()
@@ -240,7 +238,7 @@ class Config:
     def __repr__(self) -> str:
         out = self.to_dict()
         return str(out)
-        
+
     @property
     def plot(self) -> _PlotConfig:
         return self._plot_config
@@ -277,92 +275,3 @@ class Config:
         self.internal.save_to_qsettings()
 
 
-
-# class ConfigModel(QtCore.QAbstractItemModel):
-#     def __init__(self, config: Config | None = None, parent: QtCore.QObject | None = None) -> None:
-#         super().__init__(parent)
-        
-#         self._config = Config().to_dict()
-#         self._headers = ("Setting", "Value", "Description")
-
-#     def columnCount(self, parent: _Index | None = None) -> int:
-#         return len(self._headers)
-
-#     def data(self, index: _Index, role: int = ItemDataRole.DisplayRole) -> t.Any:
-#         if not index or not index.isValid():
-#             return None
-
-#         if role not in [
-#             QtCore.Qt.ItemDataRole.DisplayRole,
-#             QtCore.Qt.ItemDataRole.UserRole,
-#         ]:
-#             return None
-
-#         row = index.row()
-#         col = index.column()
-
-#         if col != 2:
-#             return None
-
-
-def test_config() -> None:
-    import sys
-    
-    class MW(QtWidgets.QMainWindow):
-        def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
-            super().__init__(parent)
-
-            self.config = Config()
-            self._standard_model = QtGui.QStandardItemModel(self)
-            self._tree_view = qfw.TreeView(self)
-            # self._tree_view.setItemDelegate(ConfigItemDelegate(self._tree_view))
-            self.setCentralWidget(self._tree_view)
-            root = self._standard_model.invisibleRootItem()
-
-            # Prepare Plot config rows
-            plot_config = self.config.plot
-            plot_root = QtGui.QStandardItem("Plot")
-            root.appendRow(plot_root)
-            for field in attrs.fields(plot_config.__class__):
-                name = field.name
-                value = getattr(plot_config, name)
-                description = field.metadata.get("Description", "")
-                row = self.prepare_item_row(name, value, description)
-                plot_root.appendRow(row)
-
-            # Prepare Editing config rows
-            editing_config = self.config.editing
-            editing_root = QtGui.QStandardItem("Editing")
-            root.appendRow(editing_root)
-            for field in attrs.fields(editing_config.__class__):
-                name = field.name
-                value = getattr(editing_config, name)
-                description = field.metadata.get("Description", "")
-                row = self.prepare_item_row(name, value, description)
-                editing_root.appendRow(row)
-
-            # Prepare Data config rows
-            data_config = self.config.data
-            data_root = QtGui.QStandardItem("Data")
-            root.appendRow(data_root)
-            for field in attrs.fields(data_config.__class__):
-                name = field.name
-                value = getattr(data_config, name)
-                description = field.metadata.get("Description", "")
-                row = self.prepare_item_row(name, value, description)
-                data_root.appendRow(row)
-
-            self._tree_view.setModel(self._standard_model)
-            self._tree_view.expandAll()
-
-        def prepare_item_row(self, name: str, value: t.Any, description: str) -> list[QtGui.QStandardItem]:
-            item_name = QtGui.QStandardItem(name)
-            item_value = QtGui.QStandardItem(str(value))
-            item_description = QtGui.QStandardItem(description)
-
-            return [item_name, item_value, item_description]
-
-    app = QtWidgets.QApplication(sys.argv)
-    mw = MW()
-    mw.show()
-    sys.exit(app.exec())

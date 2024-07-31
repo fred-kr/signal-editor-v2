@@ -10,6 +10,7 @@ from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from .app import type_defs as _t
+from .app.config import Config
 from .app.controllers.data_controller import DataController
 from .app.controllers.plot_controller import PlotController
 from .app.core.file_io import write_hdf5
@@ -97,10 +98,11 @@ class SignalEditor(QtWidgets.QApplication):
         self.plot.sig_scatter_data_changed.connect(self.handle_peak_edit)
 
     def _retrieve_recent_files(self) -> list[str]:
-        settings = QtCore.QSettings()
-        recent_files: list[str] | None = settings.value("Internal/recent_files", None)  # type: ignore
-        if recent_files is None:
-            recent_files = []
+        # settings = QtCore.QSettings()
+        # recent_files: list[str] | None = settings.value("Internal/recent_files", None)  # type: ignore
+        recent_files = Config().internal.RecentFiles
+        # if recent_files is None:
+        #     recent_files = []
         self.mw.list_widget_recent_files.clear()
         self.mw.list_widget_recent_files.addItems(recent_files)
         return recent_files
@@ -374,8 +376,9 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot()
     def open_file(self) -> None:
-        settings = QtCore.QSettings()
-        default_data_dir = str(settings.value("Misc/data_folder", self.applicationDirPath()))
+        # settings = QtCore.QSettings()
+        # default_data_dir = str(settings.value("Misc/data_folder", self.applicationDirPath()))
+        default_data_dir = Config().internal.InputDir
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self.mw,
             "Open File",
@@ -387,7 +390,8 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.close_file()
 
-        settings.setValue("Misc/data_folder", Path(file_path).parent.resolve().as_posix())
+        Config().internal.InputDir = Path(file_path).parent.resolve().as_posix()
+        # settings.setValue("Misc/data_folder", Path(file_path).parent.resolve().as_posix())
         self._on_file_opened(file_path)
 
     def update_recent_files(self, file_path: str) -> None:
@@ -395,8 +399,9 @@ class SignalEditor(QtWidgets.QApplication):
             self.recent_files.remove(file_path)
         self.recent_files.insert(0, file_path)
         self.recent_files = self.recent_files[:10]
-        settings = QtCore.QSettings()
-        settings.setValue("Internal/recent_files", self.recent_files)
+        Config().internal.RecentFiles = self.recent_files
+        # settings = QtCore.QSettings()
+        # settings.setValue("Internal/recent_files", self.recent_files)
         self.mw.list_widget_recent_files.clear()
         self.mw.list_widget_recent_files.addItems(self.recent_files)
 

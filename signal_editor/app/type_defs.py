@@ -11,6 +11,7 @@ from .enum_defs import (
     PointSymbols,
     StandardizationMethod,
     WFDBPeakDirection,
+    SVGColors,
 )
 
 if t.TYPE_CHECKING:
@@ -24,7 +25,7 @@ if t.TYPE_CHECKING:
     from ..app.gui.widgets.settings_dialog import RateComputationMethod
 
 
-PGColor = t.Union[str, int, float, tuple[int, int, int], tuple[int, int, int, int], "QtGui.QColor"]
+PGColor = t.Union[str, int, float, tuple[int, int, int], tuple[int, int, int, int], "QtGui.QColor", SVGColors]
 
 
 class PGPenKwargs(t.TypedDict, total=False):
