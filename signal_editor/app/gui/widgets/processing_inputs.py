@@ -1,6 +1,7 @@
 import typing as t
 
 import superqt
+import qfluentwidgets as qfw
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from signal_editor.ui.ui_dock_processing_input import Ui_DockWidgetProcessingInputs
@@ -20,13 +21,13 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
         self.setupUi(self)
         self.setVisible(False)
         self.toggleViewAction().setIcon(QtGui.QIcon(":/icons/filter_edit"))
-        # settings = QtCore.QSettings()
         sampling_rate = Config().internal.LastSamplingRate
         if sampling_rate <= 0:
             sampling_rate = 400
         freq_range = (0, sampling_rate // 2)
 
         dbl_slider_lowcut = superqt.QLabeledDoubleSlider()
+        dbl_slider_lowcut.setMinimumHeight(31)
         dbl_slider_lowcut.setEdgeLabelMode(superqt.QLabeledDoubleSlider.EdgeLabelMode.LabelIsValue)
         dbl_slider_lowcut.setDecimals(1)
         dbl_slider_lowcut.setRange(*freq_range)
@@ -54,11 +55,11 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
 
         combo_powerline = QtWidgets.QComboBox()
         combo_powerline.setMinimumHeight(31)
-        combo_powerline.addItem("50 Hz")
-        combo_powerline.addItem("60 Hz")
+        combo_powerline.addItem("50 Hz", userData=50)
+        combo_powerline.addItem("60 Hz", userData=60)
         combo_powerline.setCurrentIndex(0)
-        combo_powerline.setItemData(0, 50, QtCore.Qt.ItemDataRole.UserRole)
-        combo_powerline.setItemData(1, 60, QtCore.Qt.ItemDataRole.UserRole)
+        # combo_powerline.setItemData(0, 50, QtCore.Qt.ItemDataRole.UserRole)
+        # combo_powerline.setItemData(1, 60, QtCore.Qt.ItemDataRole.UserRole)
         self.combo_powerline = combo_powerline
         self.v_layout_grp_box_filter_parameters.addWidget(QtWidgets.QLabel("Power line"))
         self.v_layout_grp_box_filter_parameters.addWidget(self.combo_powerline)
@@ -238,3 +239,10 @@ class ProcessingInputsDock(QtWidgets.QDockWidget, Ui_DockWidgetProcessingInputs)
             self.combo_powerline.setEnabled(False)
 
         self._set_frequency_slider_states(FilterType(self.enum_combo_filter_type.currentEnum()))
+
+
+class FluentProcessingInputsDock(QtWidgets.QDockWidget):
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+
+        dbl_slider_lowcut = qfw.

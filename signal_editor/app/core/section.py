@@ -8,7 +8,6 @@ import numpy.typing as npt
 import polars as pl
 import polars.selectors as ps
 from loguru import logger
-from PySide6 import QtCore
 
 from .. import type_defs as _t
 from ..config import Config
@@ -23,25 +22,6 @@ from .processing import (
     signal_rate,
     standardize_signal,
 )
-
-# @dataclass(slots=True)
-# class ProcessingParameters:
-#     sampling_rate: int
-#     processing_pipeline: PreprocessPipeline | None = None
-#     filter_parameters: _t.SignalFilterParameters | None = None
-#     standardization_parameters: _t.StandardizationParameters | None = None
-#     peak_detection_method: PeakDetectionMethod = field(init=False)
-#     peak_detection_method_parameters: _t.PeakDetectionMethodParameters = field(init=False)
-
-#     def to_dict(self) -> _t.ProcessingParametersDict:
-#         return _t.ProcessingParametersDict(
-#             sampling_rate=self.sampling_rate,
-#             processing_pipeline=str(self.processing_pipeline),
-#             filter_parameters=self.filter_parameters,
-#             standardization_parameters=self.standardization_parameters,
-#             peak_detection_method=str(self.peak_detection_method),
-#             peak_detection_method_parameters=self.peak_detection_method_parameters,
-#         )
 
 
 @attrs.define
@@ -411,7 +391,7 @@ class Section:
         self,
     ) -> pl.DataFrame:
         # method = RateComputationMethod(
-            # QtCore.QSettings().value("Editing/rate_computation_method", RateComputationMethod.RollingWindow)
+        # QtCore.QSettings().value("Editing/rate_computation_method", RateComputationMethod.RollingWindow)
         # )
         method = Config().editing.RateMethod
         if method == RateComputationMethod.RollingWindow:

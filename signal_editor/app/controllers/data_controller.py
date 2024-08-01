@@ -33,8 +33,6 @@ class DataController(QtCore.QObject):
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
         self.has_data = False
-        # settings = QtCore.QSettings()
-        # self._sampling_rate = int(settings.value("Data/sampling_rate"))  # type: ignore
         self._sampling_rate = Config().internal.LastSamplingRate
 
         self.data_model = DataFrameModel(self)
@@ -155,11 +153,6 @@ class DataController(QtCore.QObject):
         last_signal_col = config.internal.LastSignalColumn
         last_info_col = config.internal.LastInfoColumn
 
-        # settings = QtCore.QSettings()
-
-        # last_sampling_rate: int = settings.value("Data/sampling_rate", 0)  # type: ignore
-        # last_signal_col = settings.value("Misc/last_signal_column_name", None)
-        # last_info_col = settings.value("Misc/last_info_column_name", None)
         metadata = FileMetadata(file_path, self)
 
         if file_path.suffix == ".edf":
@@ -175,29 +168,6 @@ class DataController(QtCore.QObject):
                 metadata.sampling_rate = last_sampling_rate
         else:
             raise ValueError(f"Unsupported file format: {file_path.suffix}. Please select a valid file format.")
-        # match file_path.suffix:
-        #     case ".edf":
-        #         edf_info = mne.io.read_raw_edf(file_path, preload=False)
-        #         metadata.sampling_rate = edf_info.info["sfreq"]
-        #         metadata.column_names = edf_info.ch_names
-        #     case ".feather":
-        #         lf = pl.scan_ipc(file_path)
-        #         metadata.column_names = lf.collect_schema().names()
-        #         try:
-        #             metadata.sampling_rate = detect_sampling_rate(lf)
-        #         except Exception:
-        #             metadata.sampling_rate = last_sampling_rate
-
-        #     case ".csv" | ".txt" | ".tsv":
-        #         lf = self._reader_funcs[file_path.suffix](file_path)
-        #         metadata.column_names = lf.columns
-        #         try:
-        #             metadata.sampling_rate = detect_sampling_rate(lf)
-        #         except Exception:
-        #             metadata.sampling_rate = last_sampling_rate
-
-        #     case _:
-        #         raise ValueError(f"Unsupported file format: {file_path.suffix}. Please select a valid file format.")
 
         if last_signal_col in metadata.column_names:
             metadata.signal_column = last_signal_col
@@ -216,8 +186,6 @@ class DataController(QtCore.QObject):
         suffix = self.metadata.file_format
         file_path = self.metadata.file_path
         separator = Config().data.TextSeparatorChar
-        # settings = QtCore.QSettings()
-        # separator = TextFileSeparator(settings.value("Data/txt_file_separator_character", TextFileSeparator.Tab))
 
         signal_col = self.metadata.signal_column
         info_col = self.metadata.info_column

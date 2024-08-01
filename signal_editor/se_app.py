@@ -46,7 +46,6 @@ class SignalEditor(QtWidgets.QApplication):
     def _connect_signals(self) -> None:
         self.sig_peaks_updated.connect(self.refresh_peak_data)
 
-        # self.mw.dialog_settings.sig_setting_changed.connect(self._update_setting)
         self.mw.action_open_file.triggered.connect(self.open_file)
         self.mw.action_edit_metadata.triggered.connect(lambda: self.show_metadata_dialog([]))
         self.mw.dialog_config.finished.connect(self.apply_settings)
@@ -86,11 +85,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.plot.sig_scatter_data_changed.connect(self.handle_peak_edit)
 
     def _retrieve_recent_files(self) -> list[str]:
-        # settings = QtCore.QSettings()
-        # recent_files: list[str] | None = settings.value("Internal/recent_files", None)  # type: ignore
         recent_files = self.config.internal.RecentFiles
-        # if recent_files is None:
-        #     recent_files = []
         self.mw.list_widget_recent_files.clear()
         self.mw.list_widget_recent_files.addItems(recent_files)
         return recent_files
@@ -354,8 +349,6 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot()
     def open_file(self) -> None:
-        # settings = QtCore.QSettings()
-        # default_data_dir = str(settings.value("Misc/data_folder", self.applicationDirPath()))
         default_data_dir = self.config.internal.InputDir
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self.mw,
@@ -370,7 +363,6 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.config.internal.InputDir = Path(file_path).parent.resolve().as_posix()
         self.config.save()
-        # settings.setValue("Misc/data_folder", Path(file_path).parent.resolve().as_posix())
         self._on_file_opened(file_path)
 
     def update_recent_files(self, file_path: str) -> None:
@@ -380,8 +372,6 @@ class SignalEditor(QtWidgets.QApplication):
         self.recent_files = self.recent_files[:10]
         self.config.internal.RecentFiles = self.recent_files
         self.config.save()
-        # settings = QtCore.QSettings()
-        # settings.setValue("Internal/recent_files", self.recent_files)
         self.mw.list_widget_recent_files.clear()
         self.mw.list_widget_recent_files.addItems(self.recent_files)
 
@@ -440,40 +430,6 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.label_showing_data_table.setText("Showing: -")
         self.mw.set_active_section_label("-")
         self.mw.line_edit_active_file.clear()
-
-    # @QtCore.Slot(str, object)
-    # def _update_setting(self, name: str, value: QtGui.QColor | str | int | float | None) -> None:
-    #     if value is None:
-    #         return
-    #     logger.info(f"Setting changed: {name} -> {value}")
-    #     if name == "background_color":
-    #         self.plot.set_background_color(value)
-    #     elif name == "foreground_color":
-    #         self.plot.set_foreground_color(value)
-    #     elif name == "point_color":
-    #         if self.plot.peak_scatter is not None:
-    #             self.plot.peak_scatter.setBrush(value)
-    #     elif name == "signal_line_color":
-    #         if self.plot.signal_curve is not None:
-    #             self.plot.signal_curve.setPen(value)
-    #     elif name == "rate_line_color":
-    #         if self.plot.rate_curve is not None:
-    #             self.plot.rate_curve.setPen(value)
-    #     elif name == "section_marker_color":
-    #         for r in self.plot.regions:
-    #             r.setBrush(color=value)
-    #     elif name == "float_visual_precision":
-    #         if isinstance(value, int):
-    #             self.data.data_model.set_float_precision(value)
-    #     elif name == "click_width_signal_line":
-    #         if isinstance(value, int) and self.plot.signal_curve is not None:
-    #             self.plot.signal_curve.setCurveClickable(True, width=value)
-    #     elif name == "search_around_click_radius":
-    #         if isinstance(value, int):
-    #             self.plot.search_around_click_radius = value
-    #     # elif name == "rate_computation_method":
-    #     #     if isinstance(value, RateComputationMethod):
-    #     #         self.
 
     @QtCore.Slot()
     def apply_settings(self) -> None:

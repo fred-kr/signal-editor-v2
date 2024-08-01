@@ -202,13 +202,14 @@ class ConfigTreeView(QtWidgets.QTreeView):
             parent=self,
         )
         if sure := msg_box.exec():
-            self.model().restore_defaults()
+            # self.model() returns a ConfigTreeModel
+            self.model().restore_defaults()  # type: ignore
 
         return None
 
     @QtCore.Slot()
     def reset_current_item(self) -> None:
-        self.model().reset_item(self.currentIndex())
+        self.model().reset_item(self.currentIndex())  # type: ignore
 
     @QtCore.Slot(QtCore.QPoint)
     def show_context_menu(self, pos: QtCore.QPoint) -> None:
@@ -216,29 +217,3 @@ class ConfigTreeView(QtWidgets.QTreeView):
         menu.addAction("Restore Defaults", self.restore_defaults)
         menu.addAction("Reset Selected", self.reset_current_item)
         menu.exec(self.mapToGlobal(pos))
-
-
-def test_config_tree() -> None:
-    import sys
-
-    from signal_editor.app.models.config_tree_model import ConfigTreeModel
-
-    app = QtWidgets.QApplication(sys.argv)
-    app.setStyle("fusion")
-    app.setOrganizationName("AWI")
-    app.setApplicationName("Signal Editor")
-    window = QtWidgets.QWidget()
-    window.setWindowTitle("Config Tree View")
-    layout = QtWidgets.QVBoxLayout(window)
-
-    tree = ConfigTreeView(window)
-    model = ConfigTreeModel(window)
-    tree.setModel(model)
-    tree.expandAll()
-    for column in range(model.columnCount()):
-        tree.resizeColumnToContents(column)
-        tree.header().setSectionResizeMode(column, QtWidgets.QHeaderView.ResizeMode.Interactive)
-
-    layout.addWidget(tree)
-    window.show()
-    sys.exit(app.exec())

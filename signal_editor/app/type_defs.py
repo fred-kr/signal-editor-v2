@@ -12,6 +12,7 @@ from .enum_defs import (
     StandardizationMethod,
     WFDBPeakDirection,
     SVGColors,
+    RateComputationMethod,
 )
 
 if t.TYPE_CHECKING:
@@ -22,7 +23,6 @@ if t.TYPE_CHECKING:
         TextFileSeparator,
     )
     from ..app.core.section import SectionID
-    from ..app.gui.widgets.settings_dialog import RateComputationMethod
 
 
 PGColor = t.Union[str, int, float, tuple[int, int, int], tuple[int, int, int, int], "QtGui.QColor", SVGColors]

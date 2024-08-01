@@ -30,10 +30,5 @@ class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
         config.internal.LastInfoColumn = self.combo_box_info_column.currentText()
         config.internal.LastSamplingRate = self.spin_box_sampling_rate.value()
         config.save()
-        
-        # settings = QtCore.QSettings()
-        # settings.setValue("Misc/last_signal_column_name", self.combo_box_signal_column.currentText())
-        # settings.setValue("Misc/last_info_column_name", self.combo_box_info_column.currentText())
-        # settings.setValue("Data/sampling_rate", self.spin_box_sampling_rate.value())
 
         super().accept()

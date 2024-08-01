@@ -25,7 +25,7 @@
         <x>0</x>
         <y>0</y>
         <width>633</width>
-        <height>722</height>
+        <height>715</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -42,6 +42,12 @@
           <layout class="QFormLayout" name="formLayout">
            <item row="0" column="0">
             <widget class="QLabel" name="label_2">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
              <property name="text">
               <string>File Name</string>
              </property>
@@ -52,6 +58,15 @@
            </item>
            <item row="0" column="1">
             <widget class="QLineEdit" name="line_edit_file_name">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
+             <property name="frame">
+              <bool>false</bool>
+             </property>
              <property name="readOnly">
               <bool>true</bool>
              </property>
@@ -59,6 +74,12 @@
            </item>
            <item row="1" column="0">
             <widget class="QLabel" name="label_4">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
              <property name="text">
               <string>File Type</string>
              </property>
@@ -69,6 +90,15 @@
            </item>
            <item row="1" column="1">
             <widget class="QLineEdit" name="line_edit_file_type">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
+             <property name="frame">
+              <bool>false</bool>
+             </property>
              <property name="readOnly">
               <bool>true</bool>
              </property>
@@ -76,6 +106,12 @@
            </item>
            <item row="2" column="0">
             <widget class="QLabel" name="label_3">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
              <property name="text">
               <string>Sampling Rate*</string>
              </property>
@@ -86,6 +122,15 @@
            </item>
            <item row="2" column="1">
             <widget class="QSpinBox" name="spin_box_sampling_rate">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
+             <property name="frame">
+              <bool>false</bool>
+             </property>
              <property name="suffix">
               <string> Hz</string>
              </property>
@@ -96,6 +141,12 @@
            </item>
            <item row="3" column="0">
             <widget class="QLabel" name="label_5">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
              <property name="text">
               <string>Signal Column / Channel*</string>
              </property>
@@ -105,10 +156,23 @@
             </widget>
            </item>
            <item row="3" column="1">
-            <widget class="QComboBox" name="combo_box_signal_column"/>
+            <widget class="QComboBox" name="combo_box_signal_column">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
+            </widget>
            </item>
            <item row="4" column="0">
             <widget class="QLabel" name="label_6">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
              <property name="text">
               <string>Info Column / Channel</string>
              </property>
@@ -118,10 +182,23 @@
             </widget>
            </item>
            <item row="4" column="1">
-            <widget class="QComboBox" name="combo_box_info_column"/>
+            <widget class="QComboBox" name="combo_box_info_column">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
+            </widget>
            </item>
            <item row="5" column="0">
             <widget class="QLabel" name="label_7">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
              <property name="text">
               <string>Additional Info</string>
              </property>
@@ -133,10 +210,10 @@
            <item row="5" column="1">
             <widget class="DataTreeWidget" name="data_tree_widget_additional_info">
              <property name="sizeAdjustPolicy">
-              <enum>QAbstractScrollArea::AdjustToContentsOnFirstShow</enum>
+              <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustToContentsOnFirstShow</enum>
              </property>
              <property name="editTriggers">
-              <set>QAbstractItemView::NoEditTriggers</set>
+              <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
              </property>
              <property name="showDropIndicator" stdset="0">
               <bool>false</bool>
@@ -178,11 +255,17 @@
    </item>
    <item row="1" column="0">
     <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>31</height>
+      </size>
+     </property>
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
      </property>
     </widget>
    </item>

@@ -24,19 +24,14 @@ def calculate_mad(sig: pl.Series, constant: float = 1.4826) -> np.float64:
     return constant * mad
 
 
-def standardize_signal(
-    sig: pl.Series, robust: bool = False, window_size: int | None = None
-) -> pl.Series:
+def standardize_signal(sig: pl.Series, robust: bool = False, window_size: int | None = None) -> pl.Series:
     if robust and window_size:
         raise ValueError("Windowed MAD scaling is not supported for robust scaling")
     if window_size:
-        # print(f"Standardizing signal with windowed Z-score. Window size: {window_size}")
         result = rolling_standardize(sig, window_size)
     elif robust:
-        # print("Standardizing signal with robust Z-score")
         result = (sig - sig.median()) / calculate_mad(sig)
     else:
-        # print("Standardizing signal with Z-score")
         result = (sig - sig.mean()) / sig.std(ddof=1)
 
     return result.fill_nan(None).fill_null(strategy="backward")

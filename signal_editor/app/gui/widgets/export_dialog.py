@@ -63,7 +63,6 @@ class ExportDialog(QtWidgets.QDialog, Ui_ExportDialog):
 
     @QtCore.Slot()
     def _browse_output_dir(self) -> None:
-        # prev_dir = str(QtCore.QSettings().value("Misc/output_folder", QtCore.QDir.currentPath()))
         prev_dir = Config().internal.OutputDir
         if output_dir := QtWidgets.QFileDialog.getExistingDirectory(self, "Select Output Directory", prev_dir):
             self.line_edit_output_dir.setText(output_dir)

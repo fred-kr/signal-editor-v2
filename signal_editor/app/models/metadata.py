@@ -54,8 +54,6 @@ class FileMetadata(QtCore.QObject):
             self.required_fields.remove("sampling_rate")
         elif value == 0 and "sampling_rate" not in self.required_fields:
             self.required_fields.append("sampling_rate")
-        # settings = QtCore.QSettings()
-        # settings.setValue("Data/sampling_rate", value)
         Config().internal.LastSamplingRate = value
         Config().save()
         self._sampling_rate = value
@@ -72,8 +70,6 @@ class FileMetadata(QtCore.QObject):
         if "signal_column" in self.required_fields:
             self.required_fields.remove("signal_column")
 
-        # settings = QtCore.QSettings()
-        # settings.setValue("Misc/last_signal_column_name", value)
         Config().internal.LastSignalColumn = value
         Config().save()
         self._signal_column = value
@@ -86,8 +82,6 @@ class FileMetadata(QtCore.QObject):
     def info_column(self, value: str | None) -> None:
         if value is None:
             value = ""
-        # settings = QtCore.QSettings()
-        # settings.setValue("Misc/last_info_column_name", value)
         Config().internal.LastInfoColumn = value
         Config().save()
         self._info_column = value
