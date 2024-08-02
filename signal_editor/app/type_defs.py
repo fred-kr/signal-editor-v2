@@ -157,11 +157,11 @@ class SignalFilterParameters(t.TypedDict, total=False):
     method: str
     order: int
     window_size: int | t.Literal["default"]
-    powerline: int
+    powerline: int | float
 
 
 class StandardizationParameters(t.TypedDict, total=False):
-    method: StandardizationMethod
+    method: StandardizationMethod | None
     robust: bool
     window_size: int | None
 
@@ -320,10 +320,10 @@ class NK2PeaksGamboa(t.TypedDict):
 
 
 # NOTE: Needs `ts2vg` package which currently doesnt work (py=3.12.3, windows)
-# class NK2PeaksEmrich(t.TypedDict):
-#     window_seconds: float  # seconds
-#     window_overlap: float  # percentage (0-1)
-#     accelerated: bool
+class NK2PeaksEmrich(t.TypedDict):
+    window_seconds: float  # seconds
+    window_overlap: float  # percentage (0-1)
+    accelerated: bool
 
 
 class NK2PeaksPromac(t.TypedDict):
@@ -331,7 +331,7 @@ class NK2PeaksPromac(t.TypedDict):
     gaussian_sd: int  # milliseconds
 
 
-NK2PeakMethodParams = t.Union[NK2PeaksNeuroKit, NK2PeaksGamboa, NK2PeaksPromac]
+NK2PeakMethodParams = t.Union[NK2PeaksNeuroKit, NK2PeaksGamboa, NK2PeaksPromac, NK2PeaksEmrich]
 
 
 class PeaksECGNeuroKit2(t.TypedDict):

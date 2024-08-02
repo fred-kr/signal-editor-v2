@@ -3,7 +3,6 @@
     <file>fluent-icons/AddCircle.svg</file>
     <file>fluent-icons/AddSquare.svg</file>
     <file>fluent-icons/Lasso.svg</file>
-    <file>fluent-icons/New.svg</file>
     <file>fluent-icons/ScanObject.svg</file>
     <file>fluent-icons/TabDesktopArrowClockwise.svg</file>
     <file>fluent-icons/ArrowReset.svg</file>
@@ -21,6 +20,7 @@
     <file>fluent-icons/ArrowPrevious.svg</file>
     <file>fluent-icons/ArrowRight.svg</file>
     <file>fluent-icons/ArrowSync.svg</file>
+    <file>fluent-icons/AutoFitHeight.svg</file>
     <file>fluent-icons/BookInformation.svg</file>
     <file>fluent-icons/BookQuestionMark.svg</file>
     <file>fluent-icons/BookSearch.svg</file>
@@ -31,6 +31,7 @@
     <file>fluent-icons/Checkmark.svg</file>
     <file>fluent-icons/CheckmarkCircle.svg</file>
     <file>fluent-icons/CheckmarkSquare.svg</file>
+    <file>fluent-icons/Circle.svg</file>
     <file>fluent-icons/Code.svg</file>
     <file>fluent-icons/Color.svg</file>
     <file>fluent-icons/DataArea.svg</file>
@@ -45,6 +46,8 @@
     <file>fluent-icons/DocumentArrowLeft.svg</file>
     <file>fluent-icons/DocumentArrowRight.svg</file>
     <file>fluent-icons/DocumentBulletListClock.svg</file>
+    <file>fluent-icons/DocumentDismiss.svg</file>
+    <file>fluent-icons/DocumentToolbox.svg</file>
     <file>fluent-icons/Edit.svg</file>
     <file>fluent-icons/EditOff.svg</file>
     <file>fluent-icons/EditSettings.svg</file>
@@ -56,11 +59,15 @@
     <file>fluent-icons/History.svg</file>
     <file>fluent-icons/Important.svg</file>
     <file>fluent-icons/Info.svg</file>
+    <file>fluent-icons/LightbulbCircle.svg</file>
     <file>fluent-icons/List.svg</file>
     <file>fluent-icons/MoreHorizontal.svg</file>
     <file>fluent-icons/MoreVertical.svg</file>
     <file>fluent-icons/Navigation.svg</file>
+    <file>fluent-icons/New.svg</file>
+    <file>fluent-icons/Options.svg</file>
     <file>fluent-icons/PageFit.svg</file>
+    <file>fluent-icons/Play.svg</file>
     <file>fluent-icons/Prohibited.svg</file>
     <file>fluent-icons/Pulse.svg</file>
     <file>fluent-icons/Question.svg</file>
@@ -70,6 +77,7 @@
     <file>fluent-icons/SaveArrowRight.svg</file>
     <file>fluent-icons/SaveEdit.svg</file>
     <file>fluent-icons/SelectObject.svg</file>
+    <file>fluent-icons/Send.svg</file>
     <file>fluent-icons/Settings.svg</file>
     <file>fluent-icons/Status.svg</file>
     <file>fluent-icons/Subtract.svg</file>

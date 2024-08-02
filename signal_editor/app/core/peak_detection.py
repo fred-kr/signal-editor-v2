@@ -200,9 +200,6 @@ def find_extrema(
     else:
         peaks = _find_peaks_local_min(sig, search_radius)
 
-    # settings = QtCore.QSettings()
-
-    # min_dist = settings.value("Editing/minimum_peak_distance")
     peak_diffs = np.diff(peaks)
     close_peaks = np.where(peak_diffs < min_peak_distance)[0]
     while len(close_peaks) > 0:
@@ -305,8 +302,6 @@ def _handle_close_peaks(
     min_peak_distance: int = 10,
 ) -> npt.NDArray[np.int32]:
     qrs_diffs = np.diff(qrs_locations)
-    # settings = QtCore.QSettings()
-    # min_dist = settings.value("Editing/minimum_peak_distance")
     close_indices = np.where(qrs_diffs <= min_peak_distance)[0]
 
     if not close_indices.size:

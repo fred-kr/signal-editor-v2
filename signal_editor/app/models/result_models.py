@@ -1,7 +1,7 @@
 import datetime
 import typing as t
-from dataclasses import dataclass, field
 
+import attrs
 import numpy as np
 import numpy.typing as npt
 import polars as pl
@@ -12,15 +12,15 @@ if t.TYPE_CHECKING:
     from ..core.section import ManualPeakEdits, SectionID, SectionMetadata
 
 
-@dataclass(slots=True, frozen=True)
+@attrs.define(frozen=True)
 class CompactSectionResult:
-    peaks_global_index: pl.Series = field()
-    peaks_section_index: pl.Series = field()
-    seconds_since_global_start: pl.Series = field()
-    seconds_since_section_start: pl.Series = field()
-    peak_intervals: pl.Series = field()
-    rate_data: pl.DataFrame = field()
-    info_values: pl.Series | None = field()
+    peaks_global_index: pl.Series = attrs.field()
+    peaks_section_index: pl.Series = attrs.field()
+    seconds_since_global_start: pl.Series = attrs.field()
+    seconds_since_section_start: pl.Series = attrs.field()
+    peak_intervals: pl.Series = attrs.field()
+    rate_data: pl.DataFrame = attrs.field()
+    info_values: pl.Series | None = attrs.field()
 
     def to_polars_df(self) -> pl.DataFrame:
         schema = {
@@ -52,14 +52,14 @@ class CompactSectionResult:
         return out
 
 
-@dataclass(slots=True, frozen=True, repr=True)
+@attrs.define(frozen=True, repr=True)
 class DetailedSectionResult:
-    metadata: "SectionMetadata" = field()
-    section_dataframe: pl.DataFrame = field()
-    manual_peak_edits: "ManualPeakEdits" = field()
-    compact_result: CompactSectionResult = field()
-    rate_data: pl.DataFrame = field()
-    rate_per_temperature: pl.DataFrame = field()
+    metadata: "SectionMetadata" = attrs.field()
+    section_dataframe: pl.DataFrame = attrs.field()
+    manual_peak_edits: "ManualPeakEdits" = attrs.field()
+    compact_result: CompactSectionResult = attrs.field()
+    rate_data: pl.DataFrame = attrs.field()
+    rate_per_temperature: pl.DataFrame = attrs.field()
 
     def to_dict(self) -> _t.DetailedSectionResultDict:
         return _t.DetailedSectionResultDict(
@@ -72,15 +72,15 @@ class DetailedSectionResult:
         )
 
 
-@dataclass(slots=True, frozen=True, repr=True)
+@attrs.define(frozen=True, repr=True)
 class SelectedFileMetadata:
-    file_name: str
-    file_format: str
-    name_signal_column: str
-    sampling_rate: int
-    measured_date: str | datetime.datetime | None = None
-    subject_id: str | None = None
-    oxygen_condition: str | None = None
+    file_name: str = attrs.field()
+    file_format: str = attrs.field()
+    name_signal_column: str = attrs.field()
+    sampling_rate: int = attrs.field()
+    measured_date: str | datetime.datetime | None = attrs.field(default=None)
+    subject_id: str | None = attrs.field(default=None)
+    oxygen_condition: str | None = attrs.field(default=None)
 
     def to_dict(self) -> _t.SelectedFileMetadataDict:
         return _t.SelectedFileMetadataDict(
@@ -94,11 +94,11 @@ class SelectedFileMetadata:
         )
 
 
-@dataclass(slots=True, frozen=True, repr=True)
+@attrs.define(frozen=True, repr=True)
 class CompleteResult:
-    metadata: SelectedFileMetadata = field()
-    global_dataframe: pl.DataFrame = field()
-    section_results: dict["SectionID", DetailedSectionResult] = field()
+    metadata: SelectedFileMetadata = attrs.field()
+    global_dataframe: pl.DataFrame = attrs.field()
+    section_results: dict["SectionID", DetailedSectionResult] = attrs.field()
 
     def to_dict(self) -> _t.CompleteResultDict:
         section_results = {k: v.to_dict() for k, v in self.section_results.items()}

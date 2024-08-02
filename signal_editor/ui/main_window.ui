@@ -74,7 +74,7 @@
              </property>
              <property name="icon">
               <iconset resource="../resources/resources.qrc">
-               <normaloff>:/icons/fluent-icons/ArrowImport.svg</normaloff>:/icons/fluent-icons/ArrowImport.svg</iconset>
+               <normaloff>:/icons/fluent-icons/DocumentArrowRight.svg</normaloff>:/icons/fluent-icons/DocumentArrowRight.svg</iconset>
              </property>
             </widget>
            </item>
@@ -101,6 +101,9 @@
                   <height>31</height>
                  </size>
                 </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The sampling rate of the signal values in the file&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
                 <property name="text">
                  <string>Sampling Rate</string>
                 </property>
@@ -113,6 +116,9 @@
                   <width>0</width>
                   <height>31</height>
                  </size>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The sampling rate of the signal values in the file&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="frame">
                  <bool>false</bool>
@@ -136,6 +142,9 @@
                   <height>31</height>
                  </size>
                 </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The column / channel in the file containing the signal values&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
                 <property name="text">
                  <string>Data Source</string>
                 </property>
@@ -149,6 +158,9 @@
                   <height>31</height>
                  </size>
                 </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The column / channel in the file containing the signal values&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
                </widget>
               </item>
               <item row="3" column="1">
@@ -159,6 +171,9 @@
                   <height>31</height>
                  </size>
                 </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A column / channel in the file containing supplementary data, e.g. temperature or O2-saturation recordings&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
                </widget>
               </item>
               <item row="3" column="0">
@@ -168,6 +183,9 @@
                   <width>0</width>
                   <height>31</height>
                  </size>
+                </property>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A column / channel in the file containing supplementary data, e.g. temperature or O2-saturation recordings&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="text">
                  <string>*Info Source</string>
@@ -204,19 +222,6 @@
              </property>
              <property name="readOnly">
               <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_2">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:700;&quot;&gt;Data Import&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
@@ -262,6 +267,12 @@
            </item>
            <item row="1" column="0">
             <widget class="PushButton" name="btn_open_file">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -283,7 +294,7 @@
               <bool>false</bool>
              </property>
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
@@ -299,7 +310,20 @@
              </property>
              <property name="icon">
               <iconset resource="../resources/resources.qrc">
-               <normaloff>:/icons/fluent-icons/DeleteDismiss.svg</normaloff>:/icons/fluent-icons/DeleteDismiss.svg</iconset>
+               <normaloff>:/icons/fluent-icons/DocumentDismiss.svg</normaloff>:/icons/fluent-icons/DocumentDismiss.svg</iconset>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0" colspan="3">
+            <widget class="QLabel" name="label_2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:700;&quot;&gt;Data Import&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
             </widget>
            </item>
@@ -637,7 +661,7 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/fluent-icons/EditSettings.svg</normaloff>:/icons/fluent-icons/EditSettings.svg</iconset>
+     <normaloff>:/icons/fluent-icons/DocumentToolbox.svg</normaloff>:/icons/fluent-icons/DocumentToolbox.svg</iconset>
    </property>
    <property name="text">
     <string>Edit Metadata</string>
@@ -652,7 +676,7 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/fluent-icons/DeleteDismiss.svg</normaloff>:/icons/fluent-icons/DeleteDismiss.svg</iconset>
+     <normaloff>:/icons/fluent-icons/DocumentDismiss.svg</normaloff>:/icons/fluent-icons/DocumentDismiss.svg</iconset>
    </property>
    <property name="text">
     <string>Close File</string>
@@ -727,7 +751,7 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/fluent-icons/ArrowAutofitHeightDotted.svg</normaloff>:/icons/fluent-icons/ArrowAutofitHeightDotted.svg</iconset>
+     <normaloff>:/icons/fluent-icons/AutoFitHeight.svg</normaloff>:/icons/fluent-icons/AutoFitHeight.svg</iconset>
    </property>
    <property name="text">
     <string>Toggle Auto-Scaling</string>

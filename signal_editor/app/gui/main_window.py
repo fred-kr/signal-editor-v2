@@ -15,8 +15,10 @@ from ..enum_defs import LogLevel
 from .icons import FluentIcon as FI
 from .widgets import ConfigDialog, ExportDialog, MetadataDialog, SectionListDock
 from .widgets.log_window import StatusMessageDock
-from .widgets.peak_detection_inputs import PeakDetectionDock
-from .widgets.processing_inputs import ProcessingInputsDock
+from .widgets.parameter_inputs import ParameterInputsDock
+
+# from .widgets.peak_detection_inputs import PeakDetectionDock
+# from .widgets.processing_inputs import ProcessingInputsDock
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -74,7 +76,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             position=NavigationItemPosition.BOTTOM,
         )
         qrouter.setDefaultRouteKey(self.stackedWidget, self.stacked_page_import.objectName())
-        self.navigation_interface.setExpandWidth(300)
+        self.navigation_interface.setExpandWidth(250)
 
         self.stackedWidget.currentChanged.connect(self._on_current_interface_changed)
         self.stackedWidget.setCurrentIndex(0)
@@ -148,13 +150,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.addDockWidget(dwa.RightDockWidgetArea, dock_sections)
         self.dock_sections = dock_sections
 
-        dock_processing = ProcessingInputsDock()
-        self.addDockWidget(dwa.RightDockWidgetArea, dock_processing)
-        self.dock_processing = dock_processing
+        dock_parameters = ParameterInputsDock()
+        self.addDockWidget(dwa.RightDockWidgetArea, dock_parameters)
+        self.dock_parameters = dock_parameters
 
-        dock_peaks = PeakDetectionDock()
-        self.addDockWidget(dwa.RightDockWidgetArea, dock_peaks)
-        self.dock_peaks = dock_peaks
+        # dock_processing = ProcessingInputsDock()
+        # self.addDockWidget(dwa.RightDockWidgetArea, dock_processing)
+        # self.dock_processing = dock_processing
+
+        # dock_peaks = PeakDetectionDock()
+        # self.addDockWidget(dwa.RightDockWidgetArea, dock_peaks)
+        # self.dock_peaks = dock_peaks
 
     def _add_console_dock(self) -> None:
         class ConsoleDock(QtWidgets.QDockWidget):
@@ -187,8 +193,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             "import": [self.action_open_file, self.action_edit_metadata, self.action_close_file],
             "edit": [
                 self.dock_sections.toggleViewAction(),
-                self.dock_processing.toggleViewAction(),
-                self.dock_peaks.toggleViewAction(),
+                self.dock_parameters.toggleViewAction(),
                 self.action_show_section_overview,
                 self.action_toggle_auto_scaling,
                 self.action_create_new_section,
@@ -241,14 +246,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.menuView.addSeparator()
         self.menuView.addActions(
             [
-                self.dock_processing.toggleViewAction(),
-                self.dock_peaks.toggleViewAction(),
+                self.dock_parameters.toggleViewAction(),
+                # self.dock_processing.toggleViewAction(),
+                # self.dock_peaks.toggleViewAction(),
             ]
         )
 
         self.menuEdit.insertActions(
             self.action_show_section_overview,
-            [self.dock_processing.toggleViewAction(), self.dock_peaks.toggleViewAction()],
+            [
+                self.dock_parameters.toggleViewAction(),
+                # self.dock_processing.toggleViewAction(),
+                # self.dock_peaks.toggleViewAction(),
+            ],
         )
         self.menuEdit.insertSeparator(self.action_show_section_overview)
 
@@ -258,8 +268,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def hide_all_docks(self) -> None:
         self.dock_status_log.hide()
-        self.dock_processing.hide()
-        self.dock_peaks.hide()
+        self.dock_parameters.hide()
+        # self.dock_processing.hide()
+        # self.dock_peaks.hide()
         self.dock_sections.hide()
 
     def _finalize_setup(self) -> None:
@@ -289,10 +300,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.action_show_settings.triggered.connect(self.show_settings_dialog)
         self.action_delete_section.triggered.connect(self.dock_sections.list_view.emit_delete_current_request)
 
-        self.dock_sections.toggleViewAction().toggled.connect(self.dock_sections.setVisible)
-        self.dock_processing.toggleViewAction().toggled.connect(self.dock_processing.setVisible)
-        self.dock_peaks.toggleViewAction().toggled.connect(self.dock_peaks.setVisible)
-        self.dock_status_log.toggleViewAction().toggled.connect(self.dock_status_log.setVisible)
+        # self.dock_sections.toggleViewAction().toggled.connect(self.dock_sections.setVisible)
+        # self.dock_processing.toggleViewAction().toggled.connect(self.dock_processing.setVisible)
+        # self.dock_peaks.toggleViewAction().toggled.connect(self.dock_peaks.setVisible)
+        # self.dock_status_log.toggleViewAction().toggled.connect(self.dock_status_log.setVisible)
 
         self.stackedWidget.currentChanged.connect(self._on_page_changed)
 
@@ -331,23 +342,26 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if index in {0, 2, 4}:
             self.tool_bar_editing.setEnabled(False)
             self.tool_bar_section_list.setEnabled(False)
-            self.dock_sections.toggleViewAction().setChecked(False)
-            self.dock_processing.toggleViewAction().setChecked(False)
-            self.dock_peaks.toggleViewAction().setChecked(False)
+            self.dock_sections.hide()
+            self.dock_parameters.hide()
+            # self.dock_processing.toggleViewAction().setChecked(False)
+            # self.dock_peaks.toggleViewAction().setChecked(False)
             self.action_export_result.setEnabled(False)
         elif index == 1:
             self.tool_bar_editing.setEnabled(True)
             self.tool_bar_section_list.setEnabled(True)
-            self.dock_sections.toggleViewAction().setChecked(True)
-            self.dock_processing.toggleViewAction().setChecked(True)
-            self.dock_peaks.toggleViewAction().setChecked(True)
+            self.dock_sections.show()
+            self.dock_parameters.show()
+            # self.dock_processing.toggleViewAction().setChecked(True)
+            # self.dock_peaks.toggleViewAction().setChecked(True)
             self.action_export_result.setEnabled(False)
         elif index == 3:
             self.tool_bar_editing.setEnabled(False)
             self.tool_bar_section_list.setEnabled(False)
-            self.dock_sections.toggleViewAction().setChecked(False)
-            self.dock_processing.toggleViewAction().setChecked(False)
-            self.dock_peaks.toggleViewAction().setChecked(False)
+            self.dock_sections.hide()
+            self.dock_parameters.hide()
+            # self.dock_processing.toggleViewAction().setChecked(False)
+            # self.dock_peaks.toggleViewAction().setChecked(False)
             self.action_export_result.setEnabled(True)
 
     def show_section_confirm_cancel(self, show: bool) -> None:
@@ -385,8 +399,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if self.dialog_config.isVisible():
             self.dialog_config.done(QtWidgets.QDialog.DialogCode.Accepted)
         self.dock_status_log.close()
-        self.dock_processing.close()
-        self.dock_peaks.close()
+        self.dock_parameters.close()
+        # self.dock_processing.close()
+        # self.dock_peaks.close()
         self.dock_sections.close()
 
         if hasattr(self, "dock_console"):

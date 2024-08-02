@@ -72,13 +72,13 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.action_toggle_auto_scaling.toggled.connect(self.plot.toggle_auto_scaling)
 
         self.mw.dock_sections.list_view.sig_delete_current_item.connect(self.delete_section)
-        self.mw.dock_processing.sig_filter_requested.connect(self.filter_active_signal)
-        self.mw.dock_processing.sig_pipeline_requested.connect(self.run_preprocess_pipeline)
-        self.mw.dock_processing.sig_standardization_requested.connect(self.standardize_active_signal)
-        self.mw.dock_processing.sig_data_reset_requested.connect(self.restore_original_signal)
 
-        self.mw.dock_peaks.sig_peak_detection_requested.connect(self.run_peak_detection)
-        self.mw.dock_peaks.sig_clear_peaks_requested.connect(self.clear_peaks)
+        self.mw.dock_parameters.sig_filter_requested.connect(self.filter_active_signal)
+        self.mw.dock_parameters.sig_pipeline_requested.connect(self.run_preprocess_pipeline)
+        self.mw.dock_parameters.sig_standardization_requested.connect(self.standardize_active_signal)
+        self.mw.dock_parameters.sig_data_reset_requested.connect(self.restore_original_signal)
+        self.mw.dock_parameters.sig_peak_detection_requested.connect(self.run_peak_detection)
+        self.mw.dock_parameters.sig_clear_peaks_requested.connect(self.clear_peaks)
 
         self.mw.action_find_peaks_in_selection.triggered.connect(self.find_peaks_in_selection)
         self.mw.action_remove_peaks_in_selection.triggered.connect(self.plot.remove_peaks_in_selection)
@@ -105,8 +105,8 @@ class SignalEditor(QtWidgets.QApplication):
         left, right = int(rect.left()), int(rect.right())
         self.plot.remove_selection_rect()
 
-        peak_method = PeakDetectionMethod(self.mw.dock_peaks.enum_combo_peak_method.currentEnum())
-        peak_params = self.mw.dock_peaks.get_peak_detection_parameters(peak_method)
+        peak_method = PeakDetectionMethod(self.mw.dock_parameters.ui.combo_peak_method.currentData())
+        peak_params = self.mw.dock_parameters.get_peak_detection_params(peak_method)
 
         edge_buffer = 10
         b_left, b_right = left + edge_buffer, right - edge_buffer
@@ -135,9 +135,14 @@ class SignalEditor(QtWidgets.QApplication):
         rate_data = self.data.active_section.get_rate_data().to_numpy(structured=True)
         self.plot.set_rate_data(x_data=rate_data["x"], y_data=rate_data["y"])
 
+    def update_status_indicators(self) -> None:
+        self.mw.dock_parameters.set_filter_status(self.data.active_section.is_filtered, len(self.data.active_section.filter_history))
+        self.mw.dock_parameters.set_pipeline_status(self.data.active_section.is_processed)
+        self.mw.dock_parameters.set_standardization_status(self.data.active_section.is_standardized)
+        
     @QtCore.Slot(dict)
     def filter_active_signal(self, filter_params: _t.SignalFilterParameters) -> None:
-        self.data.active_section.filter_signal(pipeline=PreprocessPipeline.PPGElgendi, **filter_params)
+        self.data.active_section.filter_signal(pipeline=None, **filter_params)
         self.refresh_plot_data()
 
     @QtCore.Slot()
@@ -163,6 +168,7 @@ class SignalEditor(QtWidgets.QApplication):
 
     def refresh_plot_data(self) -> None:
         self.plot.set_signal_data(self.data.active_section.processed_signal.to_numpy())
+        self.update_status_indicators()
 
     @QtCore.Slot(enum.StrEnum, dict)
     def run_peak_detection(self, method: PeakDetectionMethod, params: _t.PeakDetectionMethodParameters) -> None:
@@ -241,8 +247,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.action_delete_section.setEnabled(not is_base_section)
         self.mw.action_show_section_overview.setEnabled(is_base_section)
         self.mw.action_show_section_overview.setChecked(False)
-        self.mw.dock_processing.setEnabled(not is_base_section)
-        self.mw.dock_peaks.setEnabled(not is_base_section)
+        self.mw.dock_parameters.setEnabled(not is_base_section)
         self.mw.set_active_section_label(section.section_id.pretty_name())
         self.plot.set_signal_data(section.processed_signal.to_numpy())
         self.plot.clear_peaks()
@@ -313,7 +318,6 @@ class SignalEditor(QtWidgets.QApplication):
         sampling_rate = self.mw.spin_box_sampling_rate_import_page.value()
         self.data.update_metadata(sampling_rate=sampling_rate)
         self.plot.update_time_axis_scale(sampling_rate)
-        self.mw.dock_processing.update_frequency_sliders(sampling_rate)
         logger.info(f"Sampling rate set to {sampling_rate} Hz.")
 
     @QtCore.Slot(str)

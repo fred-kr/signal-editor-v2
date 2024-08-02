@@ -2,7 +2,22 @@ from pyqtgraph import AxisItem
 
 
 class TimeAxisItem(AxisItem):
+    """
+    Custom `pyqtgraph.AxisItem` subclass for displaying millisecond timestamps in a human readable format.
+    """
+
     def tickStrings(self, values: list[float], scale: float, spacing: float) -> list[str]:
+        """
+        Generate tick labels for the time axis.
+
+        Args:
+            values (list[float]): The tick values.
+            scale (float): The scale factor.
+            spacing (float): The spacing between ticks.
+
+        Returns:
+            list[str]: The generated tick labels.
+        """
         strings: list[str] = []
         for v in values:
             vs = v * scale

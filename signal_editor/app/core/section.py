@@ -139,6 +139,8 @@ class Section:
         self.section_id = SectionID.default()
         self._is_filtered: bool = False
         self._is_standardized: bool = False
+        self._is_processed: bool = False  # flag to indicate if the section has been processed using a pipeline
+        self._filter_history: list[_t.SignalFilterParameters] = []
 
         if "section_index" in data.columns:
             data.drop_in_place("section_index")
@@ -157,9 +159,6 @@ class Section:
             .collect()
         )
 
-        # settings = QtCore.QSettings()
-
-        # self.sampling_rate: int = settings.value("Data/sampling_rate")  # type: ignore
         self.sampling_rate = Config().internal.LastSamplingRate
         self.global_bounds: tuple[int, int] = (
             self.data.item(0, "index"),
@@ -193,6 +192,14 @@ class Section:
         return self._is_standardized
 
     @property
+    def is_processed(self) -> bool:
+        return self._is_processed
+
+    @property
+    def filter_history(self) -> list[_t.SignalFilterParameters]:
+        return self._filter_history
+
+    @property
     def peaks_local(self) -> pl.Series:
         return (
             self.data.lazy()
@@ -223,26 +230,26 @@ class Section:
         pipeline: PreprocessPipeline | None = None,
         **kwargs: t.Unpack[_t.SignalFilterParameters],
     ) -> None:
-        # settings = QtCore.QSettings()
-        # allow_stacking = settings.value("Editing/allow_stacking_filters", False, type=bool)
         allow_stacking = Config().editing.FilterStacking
         if self.is_filtered and not allow_stacking:
             logger.warning(
-                "Applying filter to raw signal. To apply to already processed signal, enable\n\n'Settings > Preferences > Editing > allow_stacking_filters'"
+                "Applying filter to raw signal. To apply to already processed signal, enable\n\n'Settings > Preferences > Editing > FilterStacking'."
             )
             sig_data = self.raw_signal.to_numpy(allow_copy=False)
         else:
             sig_data = self.processed_signal.to_numpy(allow_copy=False)
-        method = kwargs.get("method", FilterMethod.NoFilter)
+        method = kwargs.get("method", None)
         filtered = np.empty_like(sig_data)
         filter_params: _t.SignalFilterParameters | None = None
 
         if pipeline is None:
-            if method == FilterMethod.NoFilter:
+            if method is None:
                 filtered = sig_data
                 filter_params = None
             else:
                 filtered, filter_params = filter_signal(sig_data, self.sampling_rate, **kwargs)
+                self._is_filtered = True
+                self._filter_history.append(filter_params.copy())
         elif pipeline == PreprocessPipeline.PPGElgendi:
             filtered = filter_elgendi(sig_data, self.sampling_rate)
             filter_params = {
@@ -253,9 +260,10 @@ class Section:
                 "window_size": "default",
                 "powerline": 50,
             }
+            self._is_processed = True
         elif pipeline == PreprocessPipeline.ECGNeuroKit2:
             pow_line = kwargs.get("powerline", 50)
-            filtered = filter_neurokit2(sig_data, self.sampling_rate, powerline=pow_line)
+            filtered = filter_neurokit2(sig_data, self.sampling_rate, powerline=int(pow_line))
             filter_params = {
                 "highcut": None,
                 "lowcut": 0.5,
@@ -264,11 +272,11 @@ class Section:
                 "window_size": "default",
                 "powerline": pow_line,
             }
+            self._is_processed = True
 
         self._processing_parameters.processing_pipeline = pipeline
         self._processing_parameters.filter_parameters = filter_params
         self.data = self.data.with_columns(pl.Series(self.processed_signal_name, filtered))
-        self._is_filtered = True
 
     def scale_signal(self, **kwargs: t.Unpack[_t.StandardizationParameters]) -> None:
         if self._is_standardized:
@@ -390,9 +398,6 @@ class Section:
     def get_rate_data(
         self,
     ) -> pl.DataFrame:
-        # method = RateComputationMethod(
-        # QtCore.QSettings().value("Editing/rate_computation_method", RateComputationMethod.RollingWindow)
-        # )
         method = Config().editing.RateMethod
         if method == RateComputationMethod.RollingWindow:
             rate_data = self._calc_rate_rolling()
@@ -590,6 +595,8 @@ class Section:
         self._manual_peak_edits.clear()
         self._is_filtered = False
         self._is_standardized = False
+        self._is_processed = False
+        self._filter_history.clear()
 
     def reset_peaks(self) -> None:
         self.data = (

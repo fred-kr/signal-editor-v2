@@ -39,6 +39,7 @@ class SVGColorListModel(QtCore.QAbstractListModel):
         return None
 
 
+# TODO: Combine the following three classes into a single class that can handle all three types of enums.
 class ColorComboBox(QtWidgets.QComboBox):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)

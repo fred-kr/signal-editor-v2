@@ -55,7 +55,7 @@ class FilterMethod(enum.StrEnum):
     FIR = "fir"
     Bessel = "bessel"
     Powerline = "powerline"
-    NoFilter = "none"
+    # NoFilter = "none"
 
 
 class FilterType(enum.StrEnum):
@@ -73,16 +73,15 @@ class PreprocessPipeline(enum.StrEnum):
 class StandardizationMethod(enum.StrEnum):
     ZScore = "std"
     ZScoreRobust = "mad"
-    NoStandardization = "none"
+    # NoStandardization = "none"
 
 
 class PeakDetectionMethod(enum.StrEnum):
+    PPGElgendi = "ppg_elgendi"
     LocalMaxima = "local_maxima"
     LocalMinima = "local_minima"
-    PPGElgendi = "ppg_elgendi"
-    WFDBXQRS = "wfdb_xqrs"
-    # PanTompkins = "pantompkins"
     ECGNeuroKit2 = "neurokit"
+    WFDBXQRS = "wfdb_xqrs"
 
 
 class NK2ECGPeakDetectionMethod(enum.StrEnum):
@@ -99,7 +98,7 @@ class NK2ECGPeakDetectionMethod(enum.StrEnum):
     Kalidas2017 = "kalidas2017"
     Martinez2004 = "martinez2004"
     Rodrigues2020 = "rodrigues2020"
-    # Emrich2023 = "emrich2023"
+    Emrich2023 = "emrich2023"
     # SlopeSumFunction = "ssf"
     All = "promac"
 
