@@ -68,6 +68,7 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
 
         self._on_filter_method_changed()
         self._on_pipeline_changed()
+        self._on_peak_detection_method_changed(self.ui.combo_peak_method.currentData())
 
     @property
     def filter_inputs(self) -> list[QtWidgets.QWidget]:
@@ -91,7 +92,7 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
         self.ui.icon_filter_status.setFixedSize(20, 20)
         self.ui.icon_standardize_status.setFixedSize(20, 20)
         self.reset_status_indicators()
-        
+
     def set_pipeline_status(self, status: bool) -> None:
         self.ui.icon_pipeline_status.setIcon(FI.CheckmarkCircle.icon() if status else FI.Circle.icon())
 
@@ -162,30 +163,32 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
         self.ui.combo_pipeline.currentIndexChanged.connect(lambda: self._on_pipeline_changed())
         self.ui.combo_filter_method.currentIndexChanged.connect(lambda: self._on_filter_method_changed())
         self.ui.combo_standardize_method.currentIndexChanged.connect(lambda: self._on_standardize_method_changed())
-        self.ui.switch_btn_standardize_rolling_window.checkedChanged.connect(
-            self.ui.container_standardize_rolling_window.setEnabled
-        )
+        self.ui.switch_btn_standardize_rolling_window.checkedChanged.connect(self._on_switch_toggled)
 
     @QtCore.Slot(bool)
     def _on_switch_toggled(self, checked: bool) -> None:
         self.ui.container_standardize_rolling_window.setEnabled(checked)
         self.ui.sb_standardize_window_size.setEnabled(checked)
-        
+
     def _setup_command_bars(self) -> None:
         # Peak Detection
         self.ui.command_bar_peak_detection.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        self.ui.command_bar_peak_detection.addAction(self.ui.action_run_peak_detection)
-        self.ui.command_bar_peak_detection.addSeparator()
         self.ui.command_bar_peak_detection.addActions(
-            [self.ui.action_clear_peaks, self.ui.action_restore_defaults_peak_detection]
+            [
+                self.ui.action_run_peak_detection,
+                self.ui.action_clear_peaks,
+                self.ui.action_restore_defaults_peak_detection,
+            ]
         )
 
         # Processing
         self.ui.command_bar_processing.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        self.ui.command_bar_processing.addAction(self.ui.action_run_processing)
-        self.ui.command_bar_processing.addSeparator()
         self.ui.command_bar_processing.addActions(
-            [self.ui.action_restore_original_values, self.ui.action_restore_defaults_processing]
+            [
+                self.ui.action_run_processing,
+                self.ui.action_restore_original_values,
+                self.ui.action_restore_defaults_processing,
+            ]
         )
 
     @QtCore.Slot()
@@ -273,12 +276,17 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
                 logger.debug(f"Requesting to run standardization: {standardize_method},\n{standardize_params}")
 
     def _get_filter_params(self, method: FilterMethod) -> _t.SignalFilterParameters:
+        window = self.ui.sb_filter_window_size
+        if window.value() == window.minimum():
+            window_size = "default"
+        else:
+            window_size = window.value()
         return {
             "lowcut": self.ui.dbl_sb_lower_cutoff.value(),
             "highcut": self.ui.dbl_sb_upper_cutoff.value(),
             "method": method,
             "order": self.ui.sb_filter_order.value(),
-            "window_size": self.ui.sb_filter_window_size.value(),
+            "window_size": window_size,
             "powerline": self.ui.dbl_sb_powerline.value(),
         }
 

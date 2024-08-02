@@ -55,7 +55,7 @@ PROCESSING = {
     "dbl_sb_lower_cutoff": 0,
     "dbl_sb_upper_cutoff": 0,
     "sb_filter_order": 3,
-    "sb_filter_window_size": 333,
+    "sb_filter_window_size": 5,
     "sb_standardize_window_size": 333,
     # "combo_pipeline": 0,  # Index
     "switch_btn_standardize_rolling_window": False,

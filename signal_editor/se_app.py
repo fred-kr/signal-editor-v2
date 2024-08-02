@@ -277,7 +277,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.data_tree_widget_import_metadata.setData(metadata_dict, hideRoot=True)
         self.mw.data_tree_widget_import_metadata.collapseAll()
         self.mw.spin_box_sampling_rate_import_page.setValue(metadata.sampling_rate)
-
+        
     @QtCore.Slot(list)
     def show_metadata_dialog(self, required_fields: list[str]) -> None:
         metadata = None
@@ -294,8 +294,6 @@ class SignalEditor(QtWidgets.QApplication):
         file_type = metadata.file_format
         info_col = metadata.info_column
 
-        self.mw.dialog_meta.combo_box_signal_column.setModel(metadata.columns)
-        self.mw.dialog_meta.combo_box_info_column.setModel(metadata.columns)
         if "sampling_rate" not in required_fields:
             sampling_rate = metadata.sampling_rate
             self.mw.dialog_meta.spin_box_sampling_rate.setValue(sampling_rate)
@@ -331,10 +329,11 @@ class SignalEditor(QtWidgets.QApplication):
         logger.info(f"Info column set to '{info_column}'.")
 
     def _set_column_models(self) -> None:
-        self.mw.combo_box_info_column_import_page.addItems(self.data.metadata.columns.stringList())
-        self.mw.combo_box_signal_column_import_page.addItems(self.data.metadata.columns.stringList())
-        self.mw.dialog_meta.combo_box_signal_column.setModel(self.data.metadata.columns)
-        self.mw.dialog_meta.combo_box_info_column.setModel(self.data.metadata.columns)
+        
+        self.mw.combo_box_info_column_import_page.addItems(self.data.metadata.column_names)
+        self.mw.combo_box_signal_column_import_page.addItems(self.data.metadata.column_names)
+        self.mw.dialog_meta.combo_box_signal_column.addItems(self.data.metadata.column_names)
+        self.mw.dialog_meta.combo_box_info_column.addItems(self.data.metadata.column_names)
 
         with contextlib.suppress(Exception):
             self.mw.combo_box_info_column_import_page.setCurrentText(self.data.metadata.info_column)
@@ -409,6 +408,11 @@ class SignalEditor(QtWidgets.QApplication):
             self.mw.table_view_import_data.horizontalHeader().setSectionResizeMode(
                 col, QtWidgets.QHeaderView.ResizeMode.Stretch
             )
+
+        self.config.internal.LastSignalColumn = self.data.metadata.signal_column
+        self.config.internal.LastInfoColumn = self.data.metadata.info_column
+        self.config.internal.LastSamplingRate = self.data.metadata.sampling_rate
+        self.config.save()
 
     @QtCore.Slot()
     def close_file(self) -> None:

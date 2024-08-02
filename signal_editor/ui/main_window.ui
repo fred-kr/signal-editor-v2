@@ -13,12 +13,6 @@
   <property name="windowTitle">
    <string>Signal Editor</string>
   </property>
-  <property name="animated">
-   <bool>true</bool>
-  </property>
-  <property name="documentMode">
-   <bool>true</bool>
-  </property>
   <property name="dockNestingEnabled">
    <bool>true</bool>
   </property>
@@ -464,11 +458,11 @@
      <height>33</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menuFile">
+   <widget class="RoundMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
-    <widget class="QMenu" name="menuOpen_Recent">
+    <widget class="RoundMenu" name="menuOpen_Recent">
      <property name="title">
       <string>Open Recent</string>
      </property>
@@ -481,18 +475,18 @@
     <addaction name="separator"/>
     <addaction name="action_edit_metadata"/>
    </widget>
-   <widget class="QMenu" name="menuSettings">
+   <widget class="RoundMenu" name="menuSettings">
     <property name="title">
      <string>Settings</string>
     </property>
     <addaction name="action_show_settings"/>
    </widget>
-   <widget class="QMenu" name="menuView">
+   <widget class="RoundMenu" name="menuView">
     <property name="title">
      <string>View</string>
     </property>
    </widget>
-   <widget class="QMenu" name="menuEdit">
+   <widget class="RoundMenu" name="menuEdit">
     <property name="title">
      <string>Edit</string>
     </property>
@@ -502,7 +496,7 @@
     <addaction name="action_show_section_overview"/>
     <addaction name="action_toggle_auto_scaling"/>
    </widget>
-   <widget class="QMenu" name="menuHelp">
+   <widget class="RoundMenu" name="menuHelp">
     <property name="title">
      <string>Help</string>
     </property>
@@ -528,6 +522,9 @@
    <property name="allowedAreas">
     <set>Qt::ToolBarArea::TopToolBarArea</set>
    </property>
+   <property name="toolButtonStyle">
+    <enum>Qt::ToolButtonStyle::ToolButtonTextBesideIcon</enum>
+   </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
    </attribute>
@@ -550,96 +547,6 @@
     <bool>false</bool>
    </property>
   </action>
-  <action name="action_show_edit_page">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/app_wave</normaloff>:/icons/app_wave</iconset>
-   </property>
-   <property name="text">
-    <string>Edit</string>
-   </property>
-   <property name="toolTip">
-    <string>Apply processing and peak detection algorithms</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
-   </property>
-  </action>
-  <action name="action_show_import_page">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/table_import</normaloff>:/icons/table_import</iconset>
-   </property>
-   <property name="text">
-    <string>Data Import</string>
-   </property>
-   <property name="toolTip">
-    <string>Importing and viewing data from files</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
-   </property>
-  </action>
-  <action name="action_show_result_page">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/view_result</normaloff>:/icons/view_result</iconset>
-   </property>
-   <property name="text">
-    <string>Results</string>
-   </property>
-   <property name="toolTip">
-    <string>Overview of results</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
-   </property>
-  </action>
-  <action name="action_show_export_page">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/table_export</normaloff>:/icons/table_export</iconset>
-   </property>
-   <property name="text">
-    <string>Export</string>
-   </property>
-   <property name="toolTip">
-    <string>Export your results</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
-   </property>
-  </action>
-  <action name="action_show_info_page">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/app_monitor</normaloff>:/icons/app_monitor</iconset>
-   </property>
-   <property name="text">
-    <string>App Info</string>
-   </property>
-   <property name="toolTip">
-    <string>Status Information</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
-   </property>
-  </action>
   <action name="action_show_settings">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
@@ -650,6 +557,9 @@
    </property>
    <property name="toolTip">
     <string>Modify various settings</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+,</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::PreferencesRole</enum>
@@ -664,7 +574,10 @@
      <normaloff>:/icons/fluent-icons/DocumentToolbox.svg</normaloff>:/icons/fluent-icons/DocumentToolbox.svg</iconset>
    </property>
    <property name="text">
-    <string>Edit Metadata</string>
+    <string>File Metadata</string>
+   </property>
+   <property name="toolTip">
+    <string>View or edit metadata of the opened file</string>
    </property>
    <property name="iconVisibleInMenu">
     <bool>false</bool>
@@ -724,27 +637,6 @@
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
-  <action name="action_show_processing_inputs">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/filter</normaloff>:/icons/filter</iconset>
-   </property>
-   <property name="text">
-    <string>Signal Processing Inputs</string>
-   </property>
-   <property name="toolTip">
-    <string>Show signal processing options</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+1</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
-   </property>
-  </action>
   <action name="action_toggle_auto_scaling">
    <property name="checkable">
     <bool>true</bool>
@@ -754,10 +646,10 @@
      <normaloff>:/icons/fluent-icons/AutoFitHeight.svg</normaloff>:/icons/fluent-icons/AutoFitHeight.svg</iconset>
    </property>
    <property name="text">
-    <string>Toggle Auto-Scaling</string>
+    <string>Auto-Scaling</string>
    </property>
    <property name="toolTip">
-    <string>Automatically adjust the y-axis limits to the visible data</string>
+    <string>Automatically adjust the y-axis limits to the visible data range</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -806,13 +698,10 @@
      <normalon>:/icons/fluent-icons/EyeShow.svg</normalon>:/icons/fluent-icons/EyeHide.svg</iconset>
    </property>
    <property name="text">
-    <string>Show Section Overview</string>
+    <string>Section Overview</string>
    </property>
    <property name="toolTip">
     <string>Shows the current sections as colored regions in the plot</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+3</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -849,69 +738,6 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+F</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
-   </property>
-  </action>
-  <action name="action_show_peak_detection_inputs">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/target</normaloff>:/icons/target</iconset>
-   </property>
-   <property name="text">
-    <string>Peak Detection Inputs</string>
-   </property>
-   <property name="toolTip">
-    <string>Show peak detection inputs</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+2</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
-   </property>
-  </action>
-  <action name="action_show_section_list">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/fluent-icons/List.svg</normaloff>:/icons/fluent-icons/List.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Available Sections</string>
-   </property>
-   <property name="toolTip">
-    <string>Show list of existing sections</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+L</string>
-   </property>
-   <property name="menuRole">
-    <enum>QAction::MenuRole::NoRole</enum>
-   </property>
-  </action>
-  <action name="action_show_status_log">
-   <property name="checkable">
-    <bool>true</bool>
-   </property>
-   <property name="icon">
-    <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/fluent-icons/Status.svg</normaloff>:/icons/fluent-icons/Status.svg</iconset>
-   </property>
-   <property name="text">
-    <string>Application Output</string>
-   </property>
-   <property name="toolTip">
-    <string>Show logging messages produced by the application</string>
-   </property>
-   <property name="shortcut">
-    <string>Alt+L</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -981,6 +807,26 @@
  </widget>
  <customwidgets>
   <customwidget>
+   <class>LineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>SpinBox</class>
+   <extends>QSpinBox</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>ComboBox</class>
+   <extends>QPushButton</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>PushButton</class>
+   <extends>QPushButton</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
    <class>MatplotlibWidget</class>
    <extends>QWidget</extends>
    <header>pyqtgraph.widgets.MatplotlibWidget</header>
@@ -998,31 +844,30 @@
    <header>qfluentwidgets</header>
   </customwidget>
   <customwidget>
-   <class>SpinBox</class>
-   <extends>QSpinBox</extends>
-   <header>qfluentwidgets</header>
-  </customwidget>
-  <customwidget>
    <class>TableView</class>
    <extends>QTableView</extends>
    <header>qfluentwidgets</header>
   </customwidget>
   <customwidget>
-   <class>LineEdit</class>
-   <extends>QLineEdit</extends>
-   <header>qfluentwidgets</header>
-  </customwidget>
-  <customwidget>
-   <class>ComboBox</class>
-   <extends>QComboBox</extends>
-   <header>qfluentwidgets</header>
-  </customwidget>
-  <customwidget>
-   <class>PushButton</class>
-   <extends>QPushButton</extends>
+   <class>RoundMenu</class>
+   <extends>QMenu</extends>
    <header>qfluentwidgets</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>btn_open_file</tabstop>
+  <tabstop>line_edit_active_file</tabstop>
+  <tabstop>spin_box_sampling_rate_import_page</tabstop>
+  <tabstop>combo_box_signal_column_import_page</tabstop>
+  <tabstop>combo_box_info_column_import_page</tabstop>
+  <tabstop>btn_load_data</tabstop>
+  <tabstop>btn_close_file</tabstop>
+  <tabstop>tab_widget_files_properties</tabstop>
+  <tabstop>list_widget_recent_files</tabstop>
+  <tabstop>table_view_import_data</tabstop>
+  <tabstop>table_widget_mpl_data</tabstop>
+  <tabstop>table_view_export_data</tabstop>
+ </tabstops>
  <resources>
   <include location="../resources/resources.qrc"/>
  </resources>

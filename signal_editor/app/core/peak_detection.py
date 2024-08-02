@@ -359,12 +359,14 @@ def find_peaks(
             sig,
             search_radius=method_parameters.get("search_radius", sampling_rate // 2),
             direction="up",
+            min_peak_distance=method_parameters.get("min_distance", 10),
         )
     elif method == PeakDetectionMethod.LocalMinima:
         return find_extrema(
             sig,
             search_radius=method_parameters.get("search_radius", sampling_rate // 2),
             direction="down",
+            min_peak_distance=method_parameters.get("min_distance", 10),
         )
     elif method == PeakDetectionMethod.PPGElgendi:
         return _find_peaks_ppg_elgendi(

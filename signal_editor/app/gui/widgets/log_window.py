@@ -3,6 +3,8 @@ import typing as t
 from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from ..icons import FluentIcon as FI
+
 
 class LoggingWindow(QtWidgets.QTextEdit):
     sig_log_message: t.ClassVar[QtCore.Signal] = QtCore.Signal(str, int, str)
@@ -67,10 +69,10 @@ class StatusMessageDock(QtWidgets.QDockWidget):
         self.setObjectName("StatusMessageDock")
         self.setWindowTitle("Status Log")
         self.setVisible(False)
-        self.toggleViewAction().setIcon(QtGui.QIcon(":/icons/report"))
+        self.toggleViewAction().setIcon(FI.Status.icon())
 
         self.log_text_box = LoggingWindow(self)
-        self.setWindowIcon(QtGui.QIcon(":/icons/sys_monitor"))
+        self.setWindowIcon(FI.Status.icon())
         self.setWidget(self.log_text_box)
 
     #     if os.environ.get("DEBUG") == "1":

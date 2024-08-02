@@ -14,7 +14,9 @@ class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
         self.setupUi(self)
 
         self.setWindowIcon(FluentIcon.BookInformation.icon())
-
+        self.btn_accept.clicked.connect(self.accept)
+        self.btn_reject.clicked.connect(self.reject)
+        
     @QtCore.Slot()
     def accept(self) -> None:
         metadata_dict = {

@@ -65,30 +65,30 @@ def filter_signal(
     sampling_rate: int,
     **kwargs: t.Unpack[_t.SignalFilterParameters],
 ) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
-    method = FilterMethod(kwargs.get("method", FilterMethod.Butterworth))
+    # method = FilterMethod(kwargs.get("method", FilterMethod.Butterworth))
     highcut = kwargs.get("highcut")
     lowcut = kwargs.get("lowcut")
     if highcut == 0:
         kwargs["highcut"] = None
     if lowcut == 0:
         kwargs["lowcut"] = None
-    if method == FilterMethod.FIR:
-        max_attempts = 5  # Define a maximum number of attempts for FIR filtering
+    # if method == FilterMethod.FIR:
+    #     max_attempts = 5  # Define a maximum number of attempts for FIR filtering
 
-        for _ in range(max_attempts):
-            try:
-                out = nk.signal_filter(sig, sampling_rate=sampling_rate, **kwargs)
-                break  # Exit the loop if filtering is successful
-            except ValueError as e:
-                message = str(e)
-                if "which requires" not in message:
-                    raise
-                required_samples = int(message.split("requires")[1].split("samples")[0].strip())
-                kwargs["window_size"] = required_samples
-        else:
-            raise RuntimeError(f"FIR filtering failed after {max_attempts} attempts")
-    else:
-        out = nk.signal_filter(sig, sampling_rate=sampling_rate, **kwargs)
+    #     for _ in range(max_attempts):
+    #         try:
+    #             out = nk.signal_filter(sig, sampling_rate=sampling_rate, **kwargs)
+    #             break  # Exit the loop if filtering is successful
+    #         except ValueError as e:
+    #             message = str(e)
+    #             if "which requires" not in message:
+    #                 raise
+    #             required_samples = int(message.split("requires")[1].split("samples")[0].strip())
+    #             kwargs["window_size"] = required_samples
+    #     else:
+    #         raise RuntimeError(f"FIR filtering failed after {max_attempts} attempts")
+    # else:
+    out = nk.signal_filter(sig, sampling_rate=sampling_rate, **kwargs)  # type: ignore
 
     return np.asarray(out, dtype=np.float64), kwargs
 

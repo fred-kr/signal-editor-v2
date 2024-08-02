@@ -67,61 +67,90 @@ class CustomScatterPlotItem(pg.ScatterPlotItem):
         if spots is not None:
             for i, spot in enumerate(spots):
                 for k, v in spot.items():
-                    match k:
-                        case "pos":
-                            pos = v
-                            if isinstance(pos, QtCore.QPointF):
-                                x, y = pos.x(), pos.y()
-                            else:
-                                x, y = pos[0], pos[1]
-                            new_data[i]["x"] = x
-                            new_data[i]["y"] = y
-                        case "pen":
-                            new_data[i][k] = _mk_pen(v)
-                        case "brush":
-                            new_data[i][k] = _mk_brush(v)
-                        case "x" | "y" | "size" | "symbol" | "data":
-                            new_data[i][k] = v
-                        case _:
-                            raise KeyError(f"Invalid key: {k}")
+                    if k == "pos":
+                        pos = v
+                        if isinstance(pos, QtCore.QPointF):
+                            x, y = pos.x(), pos.y()
+                        else:
+                            x, y = pos[0], pos[1]
+                        new_data[i]["x"] = x
+                        new_data[i]["y"] = y
+                    elif k == "pen":
+                        new_data[i][k] = _mk_pen(v)
+                    elif k == "brush":
+                        new_data[i][k] = _mk_brush(v)
+                    elif k in ("x", "y", "size", "symbol", "data"):
+                        new_data[i][k] = v
+                    else:
+                        raise KeyError(f"Invalid key: {k}")
         # Handle 'y' parameter
         elif y is not None:
             new_data["x"] = x
             new_data["y"] = y
 
         for k, v in kargs.items():
-            match k:
-                case "name":
-                    self.opts["name"] = v
-                case "pxMode":
-                    self.setPxMode(v)
-                case "antialias":
-                    self.opts["antialias"] = v
-                case "hoverable":
-                    self.opts["hoverable"] = bool(v)
-                case "tip":
-                    self.opts["tip"] = v
-                case "useCache":
-                    self.opts["useCache"] = v
-                case "pen" | "brush" | "symbol" | "size":
-                    set_method = getattr(self, f"set{k.capitalize()}")
-                    set_method(
-                        v,
-                        update=False,
-                        dataSet=new_data,
-                        mask=kargs.get("mask", None),
-                    )
-                case "hoverPen" | "hoverBrush" | "hoverSymbol" | "hoverSize":
-                    vh = kargs[k]
-                    if k == "hoverPen":
-                        vh = _mk_pen(vh)
-                    elif k == "hoverBrush":
-                        vh = _mk_brush(vh)
-                    self.opts[k] = vh
-                case "data":
-                    self.setPointData(kargs["data"], dataSet=new_data)
-                case _:
-                    pass
+            if k == "name":
+                self.opts["name"] = v
+            elif k == "pxMode":
+                self.setPxMode(v)
+            elif k == "antialias":
+                self.opts["antialias"] = v
+            elif k == "hoverable":
+                self.opts["hoverable"] = bool(v)
+            elif k == "tip":
+                self.opts["tip"] = v
+            elif k == "useCache":
+                self.opts["useCache"] = v
+            elif k in ("pen", "brush", "symbol", "size"):
+                set_method = getattr(self, f"set{k.capitalize()}")
+                set_method(v, update=False, dataSet=new_data, mask=kargs.get("mask", None))
+            elif k in ("hoverPen", "hoverBrush", "hoverSymbol", "hoverSize"):
+                vh = kargs[k]
+                if k == "hoverPen":
+                    vh = _mk_pen(vh)
+                elif k == "hoverBrush":
+                    vh = _mk_brush(vh)
+                self.opts[k] = vh
+            elif k == "data":
+                self.setPointData(kargs["data"], dataSet=new_data)
+        # Handle 'y' parameter
+        # elif y is not None:
+        #     new_data["x"] = x
+        #     new_data["y"] = y
+
+        # for k, v in kargs.items():
+        #     match k:
+        #         case "name":
+        #             self.opts["name"] = v
+        #         case "pxMode":
+        #             self.setPxMode(v)
+        #         case "antialias":
+        #             self.opts["antialias"] = v
+        #         case "hoverable":
+        #             self.opts["hoverable"] = bool(v)
+        #         case "tip":
+        #             self.opts["tip"] = v
+        #         case "useCache":
+        #             self.opts["useCache"] = v
+        #         case "pen" | "brush" | "symbol" | "size":
+        #             set_method = getattr(self, f"set{k.capitalize()}")
+        #             set_method(
+        #                 v,
+        #                 update=False,
+        #                 dataSet=new_data,
+        #                 mask=kargs.get("mask", None),
+        #             )
+        #         case "hoverPen" | "hoverBrush" | "hoverSymbol" | "hoverSize":
+        #             vh = kargs[k]
+        #             if k == "hoverPen":
+        #                 vh = _mk_pen(vh)
+        #             elif k == "hoverBrush":
+        #                 vh = _mk_brush(vh)
+        #             self.opts[k] = vh
+        #         case "data":
+        #             self.setPointData(kargs["data"], dataSet=new_data)
+        #         case _:
+        #             pass
 
         # Update the scatter plot item
         self.prepareGeometryChange()

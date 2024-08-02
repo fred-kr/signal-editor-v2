@@ -170,6 +170,7 @@ class Ui_ParameterInputs(object):
         self.sb_filter_order.setFrame(False)
         self.sb_filter_order.setMinimum(1)
         self.sb_filter_order.setMaximum(10)
+        self.sb_filter_order.setValue(3)
 
         self.gridLayout.addWidget(self.sb_filter_order, 2, 1, 1, 1)
 
@@ -200,8 +201,8 @@ class Ui_ParameterInputs(object):
         self.sb_filter_window_size.setCorrectionMode(QAbstractSpinBox.CorrectionMode.CorrectToNearestValue)
         self.sb_filter_window_size.setMinimum(5)
         self.sb_filter_window_size.setMaximum(999999)
-        self.sb_filter_window_size.setSingleStep(2)
-        self.sb_filter_window_size.setValue(333)
+        self.sb_filter_window_size.setSingleStep(10)
+        self.sb_filter_window_size.setValue(5)
 
         self.gridLayout.addWidget(self.sb_filter_window_size, 3, 1, 1, 1)
 
@@ -269,7 +270,6 @@ class Ui_ParameterInputs(object):
         self.sb_standardize_window_size.setSizePolicy(sizePolicy2)
         self.sb_standardize_window_size.setMinimumSize(QSize(0, 31))
         self.sb_standardize_window_size.setFrame(False)
-        self.sb_standardize_window_size.setCorrectionMode(QAbstractSpinBox.CorrectionMode.CorrectToNearestValue)
         self.sb_standardize_window_size.setMinimum(5)
         self.sb_standardize_window_size.setMaximum(999999)
         self.sb_standardize_window_size.setSingleStep(2)
@@ -955,6 +955,7 @@ class Ui_ParameterInputs(object):
         self.label_3.setText(QCoreApplication.translate("ParameterInputs", u"Filter Window Size", None))
         self.dbl_sb_lower_cutoff.setSpecialValueText(QCoreApplication.translate("ParameterInputs", u"None", None))
         self.dbl_sb_lower_cutoff.setSuffix(QCoreApplication.translate("ParameterInputs", u" Hz", None))
+        self.sb_filter_window_size.setSpecialValueText(QCoreApplication.translate("ParameterInputs", u"Auto", None))
         self.label_4.setText(QCoreApplication.translate("ParameterInputs", u"Powerline Frequency", None))
         self.combo_standardize_method.setText("")
         self.combo_filter_method.setText("")

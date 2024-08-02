@@ -14,7 +14,58 @@
    <string>Dialog</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
+   <item row="1" column="1">
+    <widget class="PushButton" name="btn_accept">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>75</width>
+       <height>31</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>Ok</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="2">
+    <widget class="PushButton" name="btn_reject">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>75</width>
+       <height>31</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>Cancel</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <spacer name="horizontalSpacer">
+     <property name="orientation">
+      <enum>Qt::Orientation::Horizontal</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>40</width>
+       <height>20</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+   <item row="0" column="0" colspan="3">
     <widget class="QScrollArea" name="scrollArea">
      <property name="widgetResizable">
       <bool>true</bool>
@@ -41,7 +92,7 @@
          <item>
           <layout class="QFormLayout" name="formLayout">
            <item row="0" column="0">
-            <widget class="QLabel" name="label_2">
+            <widget class="BodyLabel" name="label_2">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -57,7 +108,7 @@
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QLineEdit" name="line_edit_file_name">
+            <widget class="LineEdit" name="line_edit_file_name">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -73,7 +124,7 @@
             </widget>
            </item>
            <item row="1" column="0">
-            <widget class="QLabel" name="label_4">
+            <widget class="BodyLabel" name="label_4">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -89,7 +140,7 @@
             </widget>
            </item>
            <item row="1" column="1">
-            <widget class="QLineEdit" name="line_edit_file_type">
+            <widget class="LineEdit" name="line_edit_file_type">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -105,7 +156,7 @@
             </widget>
            </item>
            <item row="2" column="0">
-            <widget class="QLabel" name="label_3">
+            <widget class="BodyLabel" name="label_3">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -121,7 +172,7 @@
             </widget>
            </item>
            <item row="2" column="1">
-            <widget class="QSpinBox" name="spin_box_sampling_rate">
+            <widget class="SpinBox" name="spin_box_sampling_rate">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -140,7 +191,7 @@
             </widget>
            </item>
            <item row="3" column="0">
-            <widget class="QLabel" name="label_5">
+            <widget class="BodyLabel" name="label_5">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -150,23 +201,23 @@
              <property name="text">
               <string>Signal Column / Channel*</string>
              </property>
-             <property name="buddy">
-              <cstring>combo_box_signal_column</cstring>
-             </property>
             </widget>
            </item>
            <item row="3" column="1">
-            <widget class="QComboBox" name="combo_box_signal_column">
+            <widget class="ComboBox" name="combo_box_signal_column">
              <property name="minimumSize">
               <size>
                <width>0</width>
                <height>31</height>
               </size>
              </property>
+             <property name="text">
+              <string/>
+             </property>
             </widget>
            </item>
            <item row="4" column="0">
-            <widget class="QLabel" name="label_6">
+            <widget class="BodyLabel" name="label_6">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -176,23 +227,23 @@
              <property name="text">
               <string>Info Column / Channel</string>
              </property>
-             <property name="buddy">
-              <cstring>combo_box_info_column</cstring>
-             </property>
             </widget>
            </item>
            <item row="4" column="1">
-            <widget class="QComboBox" name="combo_box_info_column">
+            <widget class="ComboBox" name="combo_box_info_column">
              <property name="minimumSize">
               <size>
                <width>0</width>
                <height>31</height>
               </size>
              </property>
+             <property name="text">
+              <string/>
+             </property>
             </widget>
            </item>
            <item row="5" column="0">
-            <widget class="QLabel" name="label_7">
+            <widget class="BodyLabel" name="label_7">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -217,6 +268,15 @@
              </property>
              <property name="showDropIndicator" stdset="0">
               <bool>false</bool>
+             </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
+             <property name="headerHidden">
+              <bool>true</bool>
+             </property>
+             <property name="expandsOnDoubleClick">
+              <bool>true</bool>
              </property>
              <property name="columnCount">
               <number>3</number>
@@ -253,22 +313,6 @@
      </widget>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QDialogButtonBox" name="buttonBox">
-     <property name="minimumSize">
-      <size>
-       <width>0</width>
-       <height>31</height>
-      </size>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::StandardButton::Cancel|QDialogButtonBox::StandardButton::Ok</set>
-     </property>
-    </widget>
-   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -277,48 +321,43 @@
    <extends>QTreeWidget</extends>
    <header>pyqtgraph</header>
   </customwidget>
+  <customwidget>
+   <class>LineEdit</class>
+   <extends>QLineEdit</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>SpinBox</class>
+   <extends>QSpinBox</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>ComboBox</class>
+   <extends>QPushButton</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>BodyLabel</class>
+   <extends>QLabel</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>PushButton</class>
+   <extends>QPushButton</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
  </customwidgets>
  <tabstops>
+  <tabstop>scrollArea</tabstop>
   <tabstop>line_edit_file_name</tabstop>
   <tabstop>line_edit_file_type</tabstop>
   <tabstop>spin_box_sampling_rate</tabstop>
   <tabstop>combo_box_signal_column</tabstop>
   <tabstop>combo_box_info_column</tabstop>
   <tabstop>data_tree_widget_additional_info</tabstop>
+  <tabstop>btn_accept</tabstop>
+  <tabstop>btn_reject</tabstop>
  </tabstops>
  <resources/>
- <connections>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>accepted()</signal>
-   <receiver>MetadataDialog</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>518</x>
-     <y>734</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>157</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>buttonBox</sender>
-   <signal>rejected()</signal>
-   <receiver>MetadataDialog</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>586</x>
-     <y>740</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>286</x>
-     <y>274</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

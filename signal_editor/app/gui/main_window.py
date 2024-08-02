@@ -17,9 +17,6 @@ from .widgets import ConfigDialog, ExportDialog, MetadataDialog, SectionListDock
 from .widgets.log_window import StatusMessageDock
 from .widgets.parameter_inputs import ParameterInputsDock
 
-# from .widgets.peak_detection_inputs import PeakDetectionDock
-# from .widgets.processing_inputs import ProcessingInputsDock
-
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     sig_metadata_changed = QtCore.Signal(dict)
@@ -137,7 +134,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.data_tree_widget_import_metadata = data_tree_widget
 
         self.stackedWidget.setCurrentIndex(0)
-        self.action_show_import_page.setChecked(True)
+        
 
     def _setup_docks(self) -> None:
         dwa = QtCore.Qt.DockWidgetArea
@@ -153,14 +150,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         dock_parameters = ParameterInputsDock()
         self.addDockWidget(dwa.RightDockWidgetArea, dock_parameters)
         self.dock_parameters = dock_parameters
-
-        # dock_processing = ProcessingInputsDock()
-        # self.addDockWidget(dwa.RightDockWidgetArea, dock_processing)
-        # self.dock_processing = dock_processing
-
-        # dock_peaks = PeakDetectionDock()
-        # self.addDockWidget(dwa.RightDockWidgetArea, dock_peaks)
-        # self.dock_peaks = dock_peaks
 
     def _add_console_dock(self) -> None:
         class ConsoleDock(QtWidgets.QDockWidget):
@@ -187,6 +176,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_console = dock_console
 
     def _setup_actions(self) -> None:
+        self.action_find_peaks_in_selection.setShortcutVisibleInContextMenu(False)
+        self.action_remove_peaks_in_selection.setShortcutVisibleInContextMenu(False)
+        self.action_show_settings.setShortcutVisibleInContextMenu(False)
+        self.action_show_user_guide.setShortcutVisibleInContextMenu(False)
+        
         self.action_toggle_whats_this_mode = QtWidgets.QWhatsThis().createAction(self)
         self.action_toggle_whats_this_mode.setIcon(FI.Question.icon())
         self._actions = {
@@ -235,6 +229,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _setup_toolbar(self, name: str, actions: list[QtGui.QAction], movable: bool = False) -> QtWidgets.QToolBar:
         tb = QtWidgets.QToolBar()
+        tb.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         tb.setObjectName(name)
         tb.setMovable(movable)
         tb.addActions(actions)
@@ -244,22 +239,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def _setup_menus(self) -> None:
         self.menuView.addActions([self.dock_sections.toggleViewAction(), self.dock_status_log.toggleViewAction()])
         self.menuView.addSeparator()
-        self.menuView.addActions(
-            [
-                self.dock_parameters.toggleViewAction(),
-                # self.dock_processing.toggleViewAction(),
-                # self.dock_peaks.toggleViewAction(),
-            ]
-        )
-
-        self.menuEdit.insertActions(
-            self.action_show_section_overview,
-            [
-                self.dock_parameters.toggleViewAction(),
-                # self.dock_processing.toggleViewAction(),
-                # self.dock_peaks.toggleViewAction(),
-            ],
-        )
+        self.menuView.addAction(self.dock_parameters.toggleViewAction())
+        
+        self.menuEdit.insertAction(self.action_show_section_overview, self.dock_parameters.toggleViewAction())
         self.menuEdit.insertSeparator(self.action_show_section_overview)
 
         self.menuHelp.addSeparator()
@@ -269,8 +251,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def hide_all_docks(self) -> None:
         self.dock_status_log.hide()
         self.dock_parameters.hide()
-        # self.dock_processing.hide()
-        # self.dock_peaks.hide()
         self.dock_sections.hide()
 
     def _finalize_setup(self) -> None:
@@ -281,29 +261,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._on_page_changed(0)
 
     def _connect_signals(self) -> None:
-        self.action_show_import_page.triggered.connect(
-            lambda: self.stackedWidget.setCurrentWidget(self.stacked_page_import)
-        )
-        self.action_show_edit_page.triggered.connect(
-            lambda: self.stackedWidget.setCurrentWidget(self.stacked_page_edit)
-        )
-        self.action_show_result_page.triggered.connect(
-            lambda: self.stackedWidget.setCurrentWidget(self.stacked_page_result)
-        )
-        self.action_show_export_page.triggered.connect(
-            lambda: self.stackedWidget.setCurrentWidget(self.stacked_page_export)
-        )
-        self.action_show_info_page.triggered.connect(
-            lambda: self.stackedWidget.setCurrentWidget(self.stacked_page_test)
-        )
-
         self.action_show_settings.triggered.connect(self.show_settings_dialog)
         self.action_delete_section.triggered.connect(self.dock_sections.list_view.emit_delete_current_request)
-
-        # self.dock_sections.toggleViewAction().toggled.connect(self.dock_sections.setVisible)
-        # self.dock_processing.toggleViewAction().toggled.connect(self.dock_processing.setVisible)
-        # self.dock_peaks.toggleViewAction().toggled.connect(self.dock_peaks.setVisible)
-        # self.dock_status_log.toggleViewAction().toggled.connect(self.dock_status_log.setVisible)
 
         self.stackedWidget.currentChanged.connect(self._on_page_changed)
 
@@ -344,24 +303,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.tool_bar_section_list.setEnabled(False)
             self.dock_sections.hide()
             self.dock_parameters.hide()
-            # self.dock_processing.toggleViewAction().setChecked(False)
-            # self.dock_peaks.toggleViewAction().setChecked(False)
             self.action_export_result.setEnabled(False)
         elif index == 1:
             self.tool_bar_editing.setEnabled(True)
             self.tool_bar_section_list.setEnabled(True)
             self.dock_sections.show()
             self.dock_parameters.show()
-            # self.dock_processing.toggleViewAction().setChecked(True)
-            # self.dock_peaks.toggleViewAction().setChecked(True)
             self.action_export_result.setEnabled(False)
         elif index == 3:
             self.tool_bar_editing.setEnabled(False)
             self.tool_bar_section_list.setEnabled(False)
             self.dock_sections.hide()
             self.dock_parameters.hide()
-            # self.dock_processing.toggleViewAction().setChecked(False)
-            # self.dock_peaks.toggleViewAction().setChecked(False)
             self.action_export_result.setEnabled(True)
 
     def show_section_confirm_cancel(self, show: bool) -> None:
