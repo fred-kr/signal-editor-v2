@@ -166,10 +166,15 @@ class Section:
         )
 
         self._rate_data = pl.DataFrame()
+        self._rate_is_synced = False
         self._result_data = pl.DataFrame()
 
         self._processing_parameters = ProcessingParameters(self.sampling_rate)
         self._manual_peak_edits = ManualPeakEdits()
+
+    @property
+    def rate_data(self) -> pl.DataFrame:
+        return self._rate_data
 
     @property
     def result_data(self) -> pl.DataFrame:
@@ -221,8 +226,7 @@ class Section:
     def update_sampling_rate(self, sampling_rate: int) -> None:
         self.sampling_rate = sampling_rate
         with contextlib.suppress(Exception):
-            peaks = self.peaks_local.to_numpy(allow_copy=False)
-            self._calc_rate_instant(peaks)
+            self.update_rate_data()
         self._processing_parameters.sampling_rate = sampling_rate
 
     def filter_signal(
@@ -299,6 +303,7 @@ class Section:
 
         self._processing_parameters.standardization_parameters = kwargs
 
+    @logger.catch(message="Peak detection failed. Please check the parameters and try again.")
     def detect_peaks(self, method: PeakDetectionMethod, method_parameters: _t.PeakDetectionMethodParameters) -> None:
         peaks = find_peaks(
             self.processed_signal.to_numpy(allow_copy=False),
@@ -341,8 +346,10 @@ class Section:
         )
 
         self._manual_peak_edits.clear()
+        self._rate_is_synced = False
         if update_rate:
-            self.get_rate_data()
+            self.update_rate_data()
+            # self.get_rate_data()
 
     def update_peaks(
         self,
@@ -392,27 +399,26 @@ class Section:
         else:
             self._manual_peak_edits.new_removed(changed_indices)
 
+        self._rate_is_synced = False
         if update_rate and self.peaks_local.len() > 3:
-            self.get_rate_data()
+            self.update_rate_data()
 
-    def get_rate_data(
-        self,
-    ) -> pl.DataFrame:
+    def update_rate_data(self) -> None:
+        if self._rate_is_synced:
+            return
         method = Config().editing.RateMethod
         if method == RateComputationMethod.RollingWindow:
-            rate_data = self._calc_rate_rolling()
+            self._calc_rate_rolling()
         elif method == RateComputationMethod.RollingWindowNoOverlap:
-            rate_data = self._calc_rate_rolling_no_overlap()
+            self._calc_rate_rolling(sec_new_window_every=60)
         elif method == RateComputationMethod.Instantaneous:
-            rate_data = self._calc_rate_instant()
+            self._calc_rate_instant()
         else:
             raise ValueError(f"Invalid rate computation method: {method}")
 
-        return rate_data
+        self._rate_is_synced = True
 
-    def _calc_rate_instant(
-        self, peaks: npt.NDArray[np.int32] | None = None, desired_length: int | None = None
-    ) -> pl.DataFrame:
+    def _calc_rate_instant(self, peaks: npt.NDArray[np.int32] | None = None, desired_length: int | None = None) -> None:
         if peaks is None:
             peaks = self.peaks_local.to_numpy(allow_copy=False)
         if peaks.shape[0] < 2:
@@ -421,13 +427,12 @@ class Section:
                 "Please change the current methods parameters (if available), or use "
                 "a different method."
             )
-            return self._rate_data
+            return
         if desired_length is None:
             desired_length = self.data.height
         inst_rate = signal_rate(peaks, self.sampling_rate, desired_length)
 
         self._rate_data = pl.DataFrame({"x": pl.int_range(inst_rate.size, dtype=pl.Int32, eager=True), "y": inst_rate})
-        return self._rate_data
 
     def _calc_rate_rolling(
         self,
@@ -435,7 +440,7 @@ class Section:
         sec_new_window_every: int = 10,
         sec_window_length: int = 60,
         sec_start_at: int = 0,
-    ) -> pl.DataFrame:
+    ) -> None:
         sampling_rate = self.sampling_rate
 
         every = sec_new_window_every * sampling_rate
@@ -469,21 +474,6 @@ class Section:
             ).collect()[:-n_incomplete_windows]
 
         self._rate_data = rr_df.rename({"section_index": "x"})
-        return self._rate_data
-
-    def _calc_rate_rolling_no_overlap(
-        self,
-        grp_col: str = "section_index",
-        sec_new_window_every: int = 60,
-        sec_window_length: int = 60,
-        sec_start_at: int = 0,
-    ) -> pl.DataFrame:
-        return self._calc_rate_rolling(
-            grp_col=grp_col,
-            sec_new_window_every=sec_new_window_every,
-            sec_window_length=sec_window_length,
-            sec_start_at=sec_start_at,
-        )
 
     def get_mean_rate_per_temperature(self) -> pl.DataFrame:
         info_col = self.info_name

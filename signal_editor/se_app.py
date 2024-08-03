@@ -2,6 +2,7 @@ import contextlib
 import enum
 import typing as t
 from pathlib import Path
+from concurrent import futures
 
 import numpy as np
 import numpy.typing as npt
@@ -24,7 +25,35 @@ from .app.gui.main_window import MainWindow
 from .app.utils import safe_multi_disconnect
 
 if t.TYPE_CHECKING:
+    from .app.core.section import Section
     from .app.models.metadata import FileMetadata
+
+
+class _WorkerSignals(QtCore.QObject):
+    sig_success: t.ClassVar[QtCore.Signal] = QtCore.Signal()
+    sig_failed: t.ClassVar[QtCore.Signal] = QtCore.Signal()
+    sig_done: t.ClassVar[QtCore.Signal] = QtCore.Signal()
+
+class PeakDetectionWorker(QtCore.QRunnable):
+    def __init__(
+        self, section: "Section", method: PeakDetectionMethod, params: _t.PeakDetectionMethodParameters
+    ) -> None:
+        super().__init__()
+        self.section = section
+        self.method = method
+        self.params = params
+        self.signals = _WorkerSignals()
+
+    @QtCore.Slot()
+    def run(self) -> None:
+        try:
+            self.section.detect_peaks(self.method, self.params)
+        except Exception:
+            self.signals.sig_failed.emit()
+        else:
+            self.signals.sig_success.emit()
+        finally:
+            self.signals.sig_done.emit()
 
 
 class SignalEditor(QtWidgets.QApplication):
@@ -38,6 +67,8 @@ class SignalEditor(QtWidgets.QApplication):
         self.data = DataController(self)
         self.plot = PlotController(self, self.mw)
         self.config = Config()
+
+        self.thread_pool = QtCore.QThreadPool.globalInstance()
 
         self.recent_files = self._retrieve_recent_files()
 
@@ -77,7 +108,8 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.dock_parameters.sig_pipeline_requested.connect(self.run_preprocess_pipeline)
         self.mw.dock_parameters.sig_standardization_requested.connect(self.standardize_active_signal)
         self.mw.dock_parameters.sig_data_reset_requested.connect(self.restore_original_signal)
-        self.mw.dock_parameters.sig_peak_detection_requested.connect(self.run_peak_detection)
+        # self.mw.dock_parameters.sig_peak_detection_requested.connect(self.run_peak_detection)
+        self.mw.dock_parameters.sig_peak_detection_requested.connect(self.run_peak_detection_worker)
         self.mw.dock_parameters.sig_clear_peaks_requested.connect(self.clear_peaks)
 
         self.mw.action_find_peaks_in_selection.triggered.connect(self.find_peaks_in_selection)
@@ -134,14 +166,17 @@ class SignalEditor(QtWidgets.QApplication):
     def refresh_peak_data(self) -> None:
         pos = self.data.active_section.get_peak_pos().to_numpy(structured=True)
         self.plot.set_peak_data(pos["x"], pos["y"])
-        rate_data = self.data.active_section.get_rate_data().to_numpy(structured=True)
+        self.data.active_section.update_rate_data()
+        rate_data = self.data.active_section.rate_data.to_numpy(structured=True)
         self.plot.set_rate_data(x_data=rate_data["x"], y_data=rate_data["y"])
 
     def update_status_indicators(self) -> None:
-        self.mw.dock_parameters.set_filter_status(self.data.active_section.is_filtered, len(self.data.active_section.filter_history))
+        self.mw.dock_parameters.set_filter_status(
+            self.data.active_section.is_filtered, len(self.data.active_section.filter_history)
+        )
         self.mw.dock_parameters.set_pipeline_status(self.data.active_section.is_processed)
         self.mw.dock_parameters.set_standardization_status(self.data.active_section.is_standardized)
-        
+
     @QtCore.Slot(dict)
     def filter_active_signal(self, filter_params: _t.SignalFilterParameters) -> None:
         self.data.active_section.filter_signal(pipeline=None, **filter_params)
@@ -173,9 +208,10 @@ class SignalEditor(QtWidgets.QApplication):
         self.update_status_indicators()
 
     @QtCore.Slot(enum.StrEnum, dict)
-    def run_peak_detection(self, method: PeakDetectionMethod, params: _t.PeakDetectionMethodParameters) -> None:
-        self.data.active_section.detect_peaks(method, params)
-        self.sig_peaks_updated.emit()
+    def run_peak_detection_worker(self, method: PeakDetectionMethod, params: _t.PeakDetectionMethodParameters) -> None:
+        worker = PeakDetectionWorker(self.data.active_section, method, params)
+        worker.signals.sig_success.connect(self.refresh_peak_data)
+        self.thread_pool.start(worker)
 
     @QtCore.Slot()
     def _on_sig_new_data(self) -> None:
@@ -266,7 +302,7 @@ class SignalEditor(QtWidgets.QApplication):
     def set_active_section_from_int(self, index: int) -> None:
         self.data.set_active_section(self.data.sections.index(index))
         self.mw.dock_sections.list_view.setCurrentIndex(self.data.sections.index(index))
-        
+
     @QtCore.Slot()
     def refresh_data_view(self) -> None:
         self.data.active_section_model.set_dataframe(self.data.active_section.data)
@@ -284,7 +320,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.data_tree_widget_import_metadata.setData(metadata_dict, hideRoot=True)
         self.mw.data_tree_widget_import_metadata.collapseAll()
         self.mw.spin_box_sampling_rate_import_page.setValue(metadata.sampling_rate)
-        
+
     @QtCore.Slot(list)
     def show_metadata_dialog(self, required_fields: list[str]) -> None:
         metadata = None
@@ -336,7 +372,6 @@ class SignalEditor(QtWidgets.QApplication):
         logger.info(f"Info column set to '{info_column}'.")
 
     def _set_column_models(self) -> None:
-        
         self.mw.combo_box_info_column_import_page.addItems(self.data.metadata.column_names)
         self.mw.combo_box_signal_column_import_page.addItems(self.data.metadata.column_names)
         self.mw.dialog_meta.combo_box_signal_column.addItems(self.data.metadata.column_names)

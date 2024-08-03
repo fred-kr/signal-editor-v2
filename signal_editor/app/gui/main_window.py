@@ -8,6 +8,7 @@ from pyqtgraph.console import ConsoleWidget
 from PySide6 import QtCore, QtGui, QtWidgets
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 
+from .widgets.message_box import MessageBox
 from signal_editor.ui.ui_main_window import Ui_MainWindow
 
 from ..config import Config
@@ -396,13 +397,32 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if msg_log_level >= threshold:
             time = plain_message.split("|", 1)[0].strip().split(" ", 1)[1]
             text = message.split(" - ", 1)[1]
-
-            msg_box = QtWidgets.QMessageBox(self)
-            msg_box.setWindowIcon(self._msg_box_icons[msg_log_level])
-            msg_box.setWindowTitle(f"Message: {msg_log_level.name} - {time}")
-            msg_box.setIconPixmap(self._msg_box_icons[msg_log_level].pixmap(64, 64))
-            msg_box.setText(text)
-            msg_box.setDetailedText(plain_message)
+            # If a traceback is included, show it in the detailed text instead of the message
+            traceback = plain_message
+            if "Traceback" in text:
+                split_text = text.split("Traceback", 1)
+                text = split_text[0]
+                traceback = f"Traceback: {split_text[1]}"
+                
+            # msg_box = QtWidgets.QMessageBox(self)
+            title = f"Message: {msg_log_level.name} - {time}"
+            icon = self._msg_box_icons[msg_log_level]
+            parent = self
+            if self.dialog_meta.isVisible():
+                parent = self.dialog_meta
+            elif self.dialog_export.isVisible():
+                parent = self.dialog_export
+            elif self.dialog_config.isVisible():
+                parent = self.dialog_config
+            
+            msg_box = MessageBox(title, text, icon=icon, parent=parent)
+            msg_box.set_detailed_text(traceback)
+            
+            # msg_box.setWindowIcon(self._msg_box_icons[msg_log_level])
+            # msg_box.setWindowTitle(f"Message: {msg_log_level.name} - {time}")
+            # msg_box.setIconPixmap(self._msg_box_icons[msg_log_level].pixmap(64, 64))
+            # msg_box.setText(text)
+            # msg_box.setDetailedText(traceback)
             msg_box.open()
 
     def set_active_section_label(self, label_text: str) -> None:

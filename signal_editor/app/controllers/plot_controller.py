@@ -256,6 +256,8 @@ class PlotController(QtCore.QObject):
                     self.pw_main.removeItem(region)
                     break
 
+        self.toggle_regions(self._show_regions)
+
     def clear_regions(self) -> None:
         for region in self.regions:
             region.setParent(None)
@@ -310,6 +312,7 @@ class PlotController(QtCore.QObject):
         self.regions.append(marked_region)
         self.pw_main.addItem(marked_region)
         self.hide_region_selector()
+        self.toggle_regions(self._show_regions)
 
     def set_signal_data(self, y_data: npt.NDArray[np.float64], clear: bool = False) -> None:
         if self.signal_curve is None:
