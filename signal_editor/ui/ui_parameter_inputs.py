@@ -156,6 +156,7 @@ class Ui_ParameterInputs(object):
         self.dbl_sb_upper_cutoff.setDecimals(1)
         self.dbl_sb_upper_cutoff.setMaximum(999999.000000000000000)
         self.dbl_sb_upper_cutoff.setSingleStep(0.100000000000000)
+        self.dbl_sb_upper_cutoff.setValue(8.000000000000000)
 
         self.gridLayout.addWidget(self.dbl_sb_upper_cutoff, 1, 1, 1, 1)
 
@@ -189,6 +190,7 @@ class Ui_ParameterInputs(object):
         self.dbl_sb_lower_cutoff.setDecimals(1)
         self.dbl_sb_lower_cutoff.setMaximum(999999.000000000000000)
         self.dbl_sb_lower_cutoff.setSingleStep(0.100000000000000)
+        self.dbl_sb_lower_cutoff.setValue(0.500000000000000)
 
         self.gridLayout.addWidget(self.dbl_sb_lower_cutoff, 0, 1, 1, 1)
 
@@ -242,6 +244,7 @@ class Ui_ParameterInputs(object):
         sizePolicy4.setHeightForWidth(self.label_6.sizePolicy().hasHeightForWidth())
         self.label_6.setSizePolicy(sizePolicy4)
         self.label_6.setMinimumSize(QSize(0, 31))
+        self.label_6.setFrameShape(QFrame.Shape.StyledPanel)
         self.label_6.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_2.addWidget(self.label_6, 4, 0, 1, 6)
@@ -924,9 +927,9 @@ class Ui_ParameterInputs(object):
 #if QT_CONFIG(tooltip)
         self.action_restore_defaults_processing.setToolTip(QCoreApplication.translate("ParameterInputs", u"Restore all input fields to their default values", None))
 #endif // QT_CONFIG(tooltip)
-        self.action_restore_original_values.setText(QCoreApplication.translate("ParameterInputs", u"Restore Original Values", None))
+        self.action_restore_original_values.setText(QCoreApplication.translate("ParameterInputs", u"Reset Data", None))
 #if QT_CONFIG(tooltip)
-        self.action_restore_original_values.setToolTip(QCoreApplication.translate("ParameterInputs", u"Restore current sections original signal (all currently applied filters and standardizations are removed)", None))
+        self.action_restore_original_values.setToolTip(QCoreApplication.translate("ParameterInputs", u"Reset current section data to the original (unprocessed) values", None))
 #endif // QT_CONFIG(tooltip)
         self.action_run_processing.setText(QCoreApplication.translate("ParameterInputs", u"Run Processing", None))
 #if QT_CONFIG(tooltip)

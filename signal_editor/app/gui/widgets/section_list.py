@@ -22,7 +22,6 @@ class SectionListView(qfw.ListView):
 
     @QtCore.Slot(QtCore.QPoint)
     def show_context_menu(self, point: QtCore.QPoint) -> None:
-        # menu = QtWidgets.QMenu(self)
         menu = qfw.RoundMenu(parent=self)
         selected_is_base = self.currentIndex().row() == 0
         self.action_delete_selected.setEnabled(not selected_is_base)
@@ -46,8 +45,6 @@ class SectionListDock(QtWidgets.QDockWidget):
         main_widget = QtWidgets.QWidget(self)
         main_layout = QtWidgets.QVBoxLayout(main_widget)
 
-        # label_active_section = QtWidgets.QLabel("Active Section: ", main_widget)
-        # label_active_section.setFont(QtGui.QFont("Segoe UI", 12, QtGui.QFont.Weight.Bold))
         label_active_section = qfw.StrongBodyLabel("Active Section: ", main_widget)
         main_layout.addWidget(label_active_section)
         self.label_active_section = label_active_section
@@ -56,21 +53,11 @@ class SectionListDock(QtWidgets.QDockWidget):
         confirm_cancel_layout = QtWidgets.QHBoxLayout(confirm_cancel_btns)
         confirm_cancel_layout.setContentsMargins(0, 0, 0, 0)
 
-        # confirm_btn = QtWidgets.QPushButton()
         confirm_btn = qfw.PushButton(icon=FI.CheckmarkCircle.icon(), text="Confirm")
-        # confirm_btn.setMinimumHeight(31)
-        # confirm_btn.setText("Confirm")
-        # confirm_btn.setIcon(QtGui.QIcon(":/icons/tick_button"))
-        # confirm_btn.setIcon(FI.CheckmarkCircle.icon())
         confirm_cancel_layout.addWidget(confirm_btn)
         self.btn_confirm = confirm_btn
 
-        # cancel_btn = QtWidgets.QPushButton()
         cancel_btn = qfw.PushButton(icon=FI.DismissCircle.icon(), text="Cancel")
-        # cancel_btn.setMinimumHeight(31)
-        # cancel_btn.setText("Cancel")
-        # cancel_btn.setIcon(QtGui.QIcon(":/icons/cross"))
-        # cancel_btn.setIcon(FI.DismissCircle.icon())
         confirm_cancel_layout.addWidget(cancel_btn)
         self.btn_cancel = cancel_btn
 

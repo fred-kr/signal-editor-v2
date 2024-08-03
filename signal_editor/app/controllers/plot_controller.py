@@ -5,12 +5,12 @@ import numpy.typing as npt
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from ..utils import safe_disconnect
+
 from .. import type_defs as _t
 from ..config import Config
-from ..enum_defs import PointSymbols
-from ..gui.plot_items import CustomScatterPlotItem
-from ..gui.plot_items.editing_view_box import EditingViewBox
-from ..gui.plot_items.time_axis_item import TimeAxisItem
+from ..enum_defs import PointSymbols, SVGColors
+from ..gui.plot_items import CustomScatterPlotItem, ClickableRegionItem, EditingViewBox, TimeAxisItem
 
 if t.TYPE_CHECKING:
     from pyqtgraph.GraphicsScene import mouseEvents
@@ -20,6 +20,7 @@ if t.TYPE_CHECKING:
 
 class PlotController(QtCore.QObject):
     sig_scatter_data_changed = QtCore.Signal(str, object)
+    sig_section_clicked = QtCore.Signal(int)
 
     def __init__(
         self,
@@ -29,14 +30,13 @@ class PlotController(QtCore.QObject):
         super().__init__(parent)
 
         self._mw_ref = main_window
-        self.regions: list[pg.LinearRegionItem] = []
+        # self.regions: list[pg.LinearRegionItem] = []
+        self.regions: list[ClickableRegionItem] = []
         self._show_regions = False
         self._setup_plot_widgets()
         self._setup_plot_items()
         self._setup_plot_data_items()
 
-        # settings = QtCore.QSettings()
-        # self.search_around_click_radius: int = settings.value("Editing/search_around_click_radius", 20, type=int)  # type: ignore
         self.search_around_click_radius = Config().plot.ClickRadius
 
     def _setup_plot_widgets(self) -> None:
@@ -68,7 +68,6 @@ class PlotController(QtCore.QObject):
 
         self.pw_main.getPlotItem().getViewBox().setXLink("rate_plot")
 
-        # settings = QtCore.QSettings()
         self.set_background_color(Config().plot.Background)
         self.set_foreground_color(Config().plot.Foreground)
 
@@ -111,10 +110,9 @@ class PlotController(QtCore.QObject):
 
         Parameters
         ----------
-        pen_color :
+        pen_color : PGColor | None
             The color of the pen used to draw the signal curve, by default None
         """
-        # settings = QtCore.QSettings()
 
         if pen_color is None:
             pen_color = Config().plot.LineColor
@@ -231,26 +229,29 @@ class PlotController(QtCore.QObject):
 
         self.mpw_result.fig.clear()
 
-        self.remove_plot_data_items()
         self.clear_regions()
+        self.remove_plot_data_items()
         self._setup_plot_data_items()
 
     @QtCore.Slot(bool)
     def toggle_regions(self, visible: bool) -> None:
-        for i, region in enumerate(self.regions):
-            region.setToolTip(f"Section {i + 1:03}")
+        for i, region in enumerate(self.regions, start=1):  # Start at 1 since section 0 is the base from which all others are added
+            region.section_id = i
+            region.setToolTip(f"Section {i:03}")
             region.setVisible(visible)
         self._show_regions = visible
 
     def remove_region(
-        self, region: pg.LinearRegionItem | None = None, bounds: tuple[float, float] | None = None
+        self, region: ClickableRegionItem | None = None, bounds: tuple[float, float] | None = None
     ) -> None:
         if region is not None:
+            safe_disconnect(region, region.sig_clicked, self._on_region_clicked)
             self.regions.remove(region)
         if bounds is not None:
             for region in self.regions:
                 reg_bounds = region.getRegion()
                 if np.allclose(bounds, reg_bounds):
+                    region.setParent(None)  # Not sure if necessary?
                     self.regions.remove(region)
                     self.pw_main.removeItem(region)
                     break
@@ -259,9 +260,14 @@ class PlotController(QtCore.QObject):
         for region in self.regions:
             region.setParent(None)
             if region in self.pw_main.plotItem.items:
+                safe_disconnect(region, region.sig_clicked, self._on_region_clicked)
                 self.pw_main.removeItem(region)
         self.regions.clear()
 
+    @QtCore.Slot(int)
+    def _on_region_clicked(self, section_id: int) -> None:
+        self.sig_section_clicked.emit(section_id)
+        
     def show_region_selector(self, bounds: tuple[float, float]) -> None:
         if not self.region_selector:
             return
@@ -282,15 +288,25 @@ class PlotController(QtCore.QObject):
 
     @QtCore.Slot(int, int)
     def mark_region(self, x1: int, x2: int) -> None:
-        r, g, b = 0, 200, 100
-        marked_region = pg.LinearRegionItem(
+        brush_color = Config().plot.SectionColor
+        brush_color.setAlpha(50)
+        brush = pg.mkBrush(brush_color)
+        hover_brush = pg.mkBrush(brush_color.lighter(180))
+        pen_color = QtGui.QColor(SVGColors.Orange)
+        pen = pg.mkPen(color=pen_color, width=2, style=QtCore.Qt.PenStyle.DashLine)
+        hover_pen = pg.mkPen(color=pen_color.darker(200), width=2, style=QtCore.Qt.PenStyle.DashLine)
+        
+        marked_region = ClickableRegionItem(
             values=(x1, x2),
-            brush=(r, g, b, 50),
-            pen=pg.mkPen(color=(r, g, b, 255), width=2, style=QtCore.Qt.PenStyle.DashLine),
+            brush=brush,
+            hoverBrush=hover_brush,
+            pen=pen,
+            hoverPen=hover_pen,
             movable=False,
         )
         marked_region.setVisible(self._show_regions)
         marked_region.setZValue(10)
+        marked_region.sig_clicked.connect(self._on_region_clicked)
         self.regions.append(marked_region)
         self.pw_main.addItem(marked_region)
         self.hide_region_selector()
@@ -461,20 +477,10 @@ class PlotController(QtCore.QObject):
                 rate_axis.setTextPen(color)
 
     def apply_settings(self) -> None:
-        # settings = QtCore.QSettings()
-        # settings.beginGroup("Plot")
-        # bg_color = settings.value("background_color", type=QtGui.QColor)
-        # fg_color = settings.value("foreground_color", type=QtGui.QColor)
-        # point_color = settings.value("point_color", type=QtGui.QColor)
-        # signal_line_color = settings.value("signal_line_color", type=QtGui.QColor)
-        # rate_line_color = settings.value("rate_line_color", type=QtGui.QColor)
-        # section_marker_color = settings.value("section_marker_color", type=QtGui.QColor)
-        # settings.endGroup()
         bg_color = Config().plot.Background
         fg_color = Config().plot.Foreground
         point_color = Config().plot.PointColor
         signal_line_color = Config().plot.LineColor
-        # rate_line_color = "crimson"
         section_marker_color = Config().plot.SectionColor
 
         self.set_background_color(bg_color)

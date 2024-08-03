@@ -1,4 +1,6 @@
-from signal_editor.app.gui.plot_items.scatter_plot_item import CustomScatterPlotItem
-from signal_editor.app.gui.plot_items.time_axis_item import TimeAxisItem
+from .scatter_plot_item import CustomScatterPlotItem
+from .time_axis_item import TimeAxisItem
+from .clickable_region_item import ClickableRegionItem
+from .editing_view_box import EditingViewBox
 
-__all__ = ["TimeAxisItem", "CustomScatterPlotItem"]
+__all__ = ["TimeAxisItem", "CustomScatterPlotItem", "ClickableRegionItem", "EditingViewBox"]

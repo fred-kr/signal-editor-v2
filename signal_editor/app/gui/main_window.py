@@ -146,10 +146,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         dock_sections = SectionListDock()
         self.addDockWidget(dwa.RightDockWidgetArea, dock_sections)
         self.dock_sections = dock_sections
+        self.dock_sections.setEnabled(False)
 
         dock_parameters = ParameterInputsDock()
         self.addDockWidget(dwa.RightDockWidgetArea, dock_parameters)
         self.dock_parameters = dock_parameters
+        self.dock_parameters.setEnabled(False)
 
     def _add_console_dock(self) -> None:
         class ConsoleDock(QtWidgets.QDockWidget):
@@ -335,7 +337,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.Slot()
     def show_settings_dialog(self) -> None:
         self.dialog_config.open()
-        # self.dialog_config.config_tree.show()
 
     @QtCore.Slot()
     def show_export_dialog(self) -> None:
@@ -353,8 +354,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.dialog_config.done(QtWidgets.QDialog.DialogCode.Accepted)
         self.dock_status_log.close()
         self.dock_parameters.close()
-        # self.dock_processing.close()
-        # self.dock_peaks.close()
         self.dock_sections.close()
 
         if hasattr(self, "dock_console"):

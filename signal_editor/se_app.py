@@ -82,7 +82,9 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.mw.action_find_peaks_in_selection.triggered.connect(self.find_peaks_in_selection)
         self.mw.action_remove_peaks_in_selection.triggered.connect(self.plot.remove_peaks_in_selection)
+
         self.plot.sig_scatter_data_changed.connect(self.handle_peak_edit)
+        self.plot.sig_section_clicked.connect(self.set_active_section_from_int)
 
     def _retrieve_recent_files(self) -> list[str]:
         recent_files = self.config.internal.RecentFiles
@@ -246,7 +248,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.action_create_new_section.setEnabled(is_base_section)
         self.mw.action_delete_section.setEnabled(not is_base_section)
         self.mw.action_show_section_overview.setEnabled(is_base_section)
-        self.mw.action_show_section_overview.setChecked(False)
+        self.mw.action_show_section_overview.setChecked(is_base_section)
         self.mw.dock_parameters.setEnabled(not is_base_section)
         self.mw.set_active_section_label(section.section_id.pretty_name())
         self.plot.set_signal_data(section.processed_signal.to_numpy())
@@ -260,6 +262,11 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.table_view_import_data.setModel(self.data.active_section_model)
         self.mw.label_showing_data_table.setText(f"Showing: {section.section_id.pretty_name()}")
 
+    @QtCore.Slot(int)
+    def set_active_section_from_int(self, index: int) -> None:
+        self.data.set_active_section(self.data.sections.index(index))
+        self.mw.dock_sections.list_view.setCurrentIndex(self.data.sections.index(index))
+        
     @QtCore.Slot()
     def refresh_data_view(self) -> None:
         self.data.active_section_model.set_dataframe(self.data.active_section.data)
@@ -390,6 +397,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.table_view_import_data.setModel(self.data.data_model)
         self._set_column_models()
         self.update_recent_files(file_path)
+        self.mw.switch_to(self.mw.stacked_page_import)
 
     def _open_recent_file(self, item: QtWidgets.QListWidgetItem) -> None:
         file_path = item.text()
@@ -409,6 +417,9 @@ class SignalEditor(QtWidgets.QApplication):
                 col, QtWidgets.QHeaderView.ResizeMode.Stretch
             )
 
+        self.mw.dock_parameters.setEnabled(True)
+        self.mw.dock_sections.setEnabled(True)
+
         self.config.internal.LastSignalColumn = self.data.metadata.signal_column
         self.config.internal.LastInfoColumn = self.data.metadata.info_column
         self.config.internal.LastSamplingRate = self.data.metadata.sampling_rate
@@ -420,6 +431,8 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.data_tree_widget_import_metadata.clear()
         self._clear_column_models()
         self.mw.dock_sections.list_view.setModel(None)
+        self.mw.dock_parameters.setEnabled(False)
+        self.mw.dock_sections.setEnabled(False)
 
         with contextlib.suppress(Exception):
             self._disconnect_data_controller_signals()
