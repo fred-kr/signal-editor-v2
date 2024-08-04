@@ -3,7 +3,7 @@ from qfluentwidgets import CommandBar
 
 from ...models.config_tree_model import ConfigTreeModel
 from ..icons import SignalEditorIcon as Icons
-from .config_tree import ConfigTreeView
+from ..widgets.config_tree import ConfigTreeView
 
 
 class ConfigDialog(QtWidgets.QDialog):

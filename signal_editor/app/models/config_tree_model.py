@@ -3,6 +3,7 @@ import typing as t
 from types import NoneType
 
 import attrs
+from attr._make import Factory
 from loguru import logger
 from PySide6 import QtCore, QtGui
 
@@ -34,9 +35,9 @@ class ItemData:
     description: str | None = attrs.field(default=None)
     default_value: _ConfigType = attrs.field(
         default=None,
-        validator=attrs.validators.instance_of(
-            (QtGui.QColor, int, bool, RateComputationMethod, TextFileSeparator, str, NoneType, list, QtCore.QByteArray)
-        ),
+        # validator=attrs.validators.instance_of(
+            # (QtGui.QColor, int, bool, RateComputationMethod, TextFileSeparator, str, NoneType, list, QtCore.QByteArray, attrs.Factory)
+        # ),
     )
 
 
@@ -132,9 +133,13 @@ class ConfigTreeItem:
     def reset_to_default(self) -> bool:
         if self.value == self.default_value:
             return False
+        if isinstance(self.default_value, Factory):
+            default_value = self.default_value.factory()
+        else:
+            default_value = self.default_value
 
-        self.value = self.default_value
-        Config().update_value(self.category, self.name, self.default_value)
+        self.value = default_value
+        Config().update_value(self.category, self.name, default_value)
         return True
 
     def __repr__(self) -> str:

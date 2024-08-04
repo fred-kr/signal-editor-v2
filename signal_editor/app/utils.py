@@ -74,6 +74,15 @@ def get_app_dir(as_string: bool = False) -> QtCore.QDir | str:
 
     return out.canonicalPath() if as_string else out
 
+def app_dir_posix() -> str:
+    app_instance = QtWidgets.QApplication.instance()
+    import sys
+
+    return (
+        QtCore.QDir(app_instance.applicationDirPath()).canonicalPath()
+        if hasattr(sys, "frozen") and app_instance is not None
+        else QtCore.QDir.current().canonicalPath()
+    )
 
 def safe_disconnect(
     sender: QtCore.QObject,

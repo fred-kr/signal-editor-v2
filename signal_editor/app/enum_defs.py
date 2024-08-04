@@ -1,4 +1,5 @@
 import enum
+from PySide6 import QtGui
 
 
 class LogLevel(enum.IntEnum):
@@ -325,3 +326,11 @@ class SVGColors(enum.StrEnum):
     WhiteSmoke = "#f5f5f5"
     Yellow = "#ffff00"
     YellowGreen = "#9acd32"
+
+    def qcolor(self) -> QtGui.QColor:
+        return QtGui.QColor(self.value)
+
+    def qicon(self) -> QtGui.QIcon:
+        pixmap = QtGui.QPixmap(16, 16)
+        pixmap.fill(QtGui.QColor(self.value))
+        return QtGui.QIcon(pixmap)

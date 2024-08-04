@@ -1,11 +1,11 @@
-import functools
 import typing as t
 
 import attrs
 from PySide6 import QtCore, QtGui
+
 from . import type_defs as _t
 from .enum_defs import RateComputationMethod, SVGColors, TextFileSeparator
-from .utils import get_app_dir, make_qcolor
+from .utils import app_dir_posix, make_qcolor
 
 type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 
@@ -16,7 +16,6 @@ def sync[T](inst: attrs.AttrsInstance, attr: t.Any, value: T) -> T:
     path = attr.metadata.get("path", None)
     settings = QtCore.QSettings()
     if path and path in settings.allKeys():
-        print(f"Setting {path} to {value}")
         settings.setValue(path, value)
         settings.sync()
     return value
@@ -193,11 +192,9 @@ class _DataConfig:
 
 @attrs.define(on_setattr=sync)
 class _InternalConfig:
-    InputDir: str = attrs.field(
-        factory=functools.partial(get_app_dir, True), metadata={"path": "Internal/InputDir", "allow_user_edits": True}
-    )
+    InputDir: str = attrs.field(factory=app_dir_posix, metadata={"path": "Internal/InputDir", "allow_user_edits": True})
     OutputDir: str = attrs.field(
-        factory=functools.partial(get_app_dir, True), metadata={"path": "Internal/OutputDir", "allow_user_edits": True}
+        factory=app_dir_posix, metadata={"path": "Internal/OutputDir", "allow_user_edits": True}
     )
     LastSamplingRate: int = attrs.field(
         default=0, metadata={"path": "Internal/LastSamplingRate", "allow_user_edits": True}
@@ -225,8 +222,8 @@ class _InternalConfig:
     def from_qsettings(cls) -> "_InternalConfig":
         settings = QtCore.QSettings()
         settings.beginGroup("Internal")
-        input_dir = settings.value("InputDir", get_app_dir(True), type=str)
-        output_dir = settings.value("OutputDir", get_app_dir(True), type=str)
+        input_dir = settings.value("InputDir", app_dir_posix(), type=str)
+        output_dir = settings.value("OutputDir", app_dir_posix(), type=str)
         last_sampling_rate = settings.value("LastSamplingRate", 0, type=int)
         recent_files = settings.value("RecentFiles", [], type=list)
         last_signal_column = settings.value("LastSignalColumn", "", type=str)

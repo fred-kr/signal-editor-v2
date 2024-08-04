@@ -1,13 +1,98 @@
+import enum
 import typing as t
 
-from PySide6 import QtCore, QtGui, QtWidgets
 import qfluentwidgets as qfw
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ...enum_defs import RateComputationMethod, SVGColors, TextFileSeparator
 
 type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 
 ItemDataRole = QtCore.Qt.ItemDataRole
+
+
+NONE_STRING = "----"
+
+
+class EnumComboBox(qfw.ComboBox):
+    sig_current_enum_changed: t.ClassVar[QtCore.Signal] = QtCore.Signal(object)
+
+    def __init__(
+        self, enum_class: enum.EnumMeta | None = None, allow_none: bool = False, parent: QtWidgets.QWidget | None = None
+    ) -> None:
+        super().__init__(parent)
+        self._enum_class: t.Type[enum.Enum] | None = None
+        self._allow_none = allow_none
+        if enum_class is not None:
+            self.set_enum_class(enum_class, allow_none)
+        self.currentIndexChanged.connect(self._on_current_index_changed)
+
+    def set_enum_class(self, enum_class: enum.EnumMeta | None, allow_none: bool = False) -> None:
+        self.clear()
+        self._enum_class = enum_class
+        self._allow_none = allow_none and enum_class is not None
+        if allow_none:
+            super().addItem(NONE_STRING, userData=None)
+        if enum_class is not None:
+            if isinstance(enum_class, SVGColors):
+                for svg_color in enum_class:
+                    super().addItem(svg_color.name, icon=svg_color.qicon(), userData=svg_color.value)
+            else:
+                for name, value in enum_class.__members__.items():
+                    super().addItem(name, userData=value)
+
+    def enum_class(self) -> t.Type[enum.Enum] | None:
+        return self._enum_class
+
+    def clear(self) -> None:
+        self._enum_class = None
+        self._allow_none = False
+        super().clear()
+
+    def current_enum(self) -> enum.Enum | None:
+        if self._enum_class is not None:
+            if self._allow_none and self.currentText() == NONE_STRING:
+                return None
+
+            return self._enum_class(self.currentData())
+        return None
+
+    def set_current_enum(self, value: enum.Enum | None) -> None:
+        if self._enum_class is None:
+            raise RuntimeError("Uninitialized enum class. Use `set_enum_class` before `set_current_enum`.")
+
+        if value is None:
+            if not self._allow_none:
+                raise ValueError(
+                    "Value cannot be None. Set `allow_none` to True when initializing the enum class to enable this."
+                )
+
+            self.setCurrentIndex(0)
+            return
+        if not isinstance(value, self._enum_class):
+            raise TypeError(f"Expected {self._enum_class} but got {type(value)}.")
+
+        self.setCurrentText(value.name)
+
+    @QtCore.Slot(int)
+    def _on_current_index_changed(self, index: int) -> None:
+        if self._enum_class is not None:
+            self.sig_current_enum_changed.emit(self.current_enum())
+
+    def insertItems(self, *args: t.Any, **kwargs: t.Any) -> None:
+        raise NotImplementedError("Not implemented for enum type.")
+
+    def insertItem(self, *args: t.Any, **kwargs: t.Any) -> None:
+        raise NotImplementedError("Not implemented for enum type.")
+
+    def addItems(self, *args: t.Any, **kwargs: t.Any) -> None:
+        raise NotImplementedError("Not implemented for enum type.")
+
+    def addItem(self, *args: t.Any, **kwargs: t.Any) -> None:
+        raise NotImplementedError("Not implemented for enum type.")
+
+    def setInsertPolicy(self, policy: QtWidgets.QComboBox.InsertPolicy) -> None:
+        raise NotImplementedError("Not implemented for enum type.")
 
 
 class SVGColorListModel(QtCore.QAbstractListModel):
@@ -40,49 +125,49 @@ class SVGColorListModel(QtCore.QAbstractListModel):
         return None
 
 
-# TODO: Combine the following three classes into a single class that can handle all three types of enums.
-class ColorComboBox(QtWidgets.QComboBox):
-    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
-        super().__init__(parent)
-        self.setModel(SVGColorListModel())
+# # TODO: Combine the following three classes into a single class that can handle all three types of enums.
+# class ColorComboBox(QtWidgets.QComboBox):
+#     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+#         super().__init__(parent)
+#         self.setModel(SVGColorListModel())
 
-    def current_color(self) -> QtGui.QColor:
-        return QtGui.QColor(self.currentData())
+#     def current_color(self) -> QtGui.QColor:
+#         return QtGui.QColor(self.currentData())
 
-    def set_color(self, color: SVGColors) -> None:
-        self.setCurrentText(color.name)
-
-
-class RateMethodComboBox(QtWidgets.QComboBox):
-    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
-        super().__init__(parent)
-        for rm in RateComputationMethod:
-            name = rm.name
-            value = rm.value
-
-            self.addItem(name, userData=value)
-
-    def current_method(self) -> RateComputationMethod:
-        return RateComputationMethod(self.currentData())
-
-    def set_method(self, method: RateComputationMethod) -> None:
-        self.setCurrentText(method.name)
+#     def set_color(self, color: SVGColors) -> None:
+#         self.setCurrentText(color.name)
 
 
-class TextFileSeparatorComboBox(QtWidgets.QComboBox):
-    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
-        super().__init__(parent)
-        for separator in TextFileSeparator:
-            name = separator.name
-            value = separator.value
+# class RateMethodComboBox(QtWidgets.QComboBox):
+#     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+#         super().__init__(parent)
+#         for rm in RateComputationMethod:
+#             name = rm.name
+#             value = rm.value
 
-            self.addItem(name, userData=value)
+#             self.addItem(name, userData=value)
 
-    def current_separator(self) -> TextFileSeparator:
-        return TextFileSeparator(self.currentData())
+#     def current_method(self) -> RateComputationMethod:
+#         return RateComputationMethod(self.currentData())
 
-    def set_separator(self, separator: TextFileSeparator) -> None:
-        self.setCurrentText(separator.name)
+#     def set_method(self, method: RateComputationMethod) -> None:
+#         self.setCurrentText(method.name)
+
+
+# class TextFileSeparatorComboBox(QtWidgets.QComboBox):
+#     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+#         super().__init__(parent)
+#         for separator in TextFileSeparator:
+#             name = separator.name
+#             value = separator.value
+
+#             self.addItem(name, userData=value)
+
+#     def current_separator(self) -> TextFileSeparator:
+#         return TextFileSeparator(self.currentData())
+
+#     def set_separator(self, separator: TextFileSeparator) -> None:
+#         self.setCurrentText(separator.name)
 
 
 class ConfigItemDelegate(QtWidgets.QStyledItemDelegate):
@@ -108,10 +193,8 @@ class ConfigItemDelegate(QtWidgets.QStyledItemDelegate):
         if type(initial_value) not in self._editable_types:
             return None
 
-        if isinstance(initial_value, RateComputationMethod):
-            editor = RateMethodComboBox(parent)
-        elif isinstance(initial_value, TextFileSeparator):
-            editor = TextFileSeparatorComboBox(parent)
+        if isinstance(initial_value, (RateComputationMethod, TextFileSeparator)):
+            editor = EnumComboBox(initial_value.__class__, allow_none=False, parent=parent)
         elif isinstance(initial_value, bool):
             editor = None
         elif isinstance(initial_value, int):
@@ -121,7 +204,7 @@ class ConfigItemDelegate(QtWidgets.QStyledItemDelegate):
             editor = QtWidgets.QDoubleSpinBox(parent)
             editor.setMinimum(0)
         elif isinstance(initial_value, QtGui.QColor):
-            editor = ColorComboBox(parent)
+            editor = EnumComboBox(SVGColors, allow_none=False, parent=parent)
         else:
             editor = super().createEditor(parent, option, index)
 
@@ -155,25 +238,21 @@ class ConfigItemDelegate(QtWidgets.QStyledItemDelegate):
     def setEditorData(self, editor: QtWidgets.QWidget, index: _Index) -> None:
         initial_value = index.model().data(index, ItemDataRole.EditRole)
 
-        if isinstance(editor, RateMethodComboBox):
-            editor.set_method(initial_value)
-        elif isinstance(editor, TextFileSeparatorComboBox):
-            editor.set_separator(initial_value)
+        if isinstance(editor, EnumComboBox):
+            if isinstance(initial_value, QtGui.QColor):
+                initial_value = SVGColors(initial_value.name())
+            editor.set_current_enum(initial_value)
         elif isinstance(editor, (QtWidgets.QSpinBox, QtWidgets.QDoubleSpinBox)):
             editor.setValue(initial_value)
-        elif isinstance(editor, ColorComboBox):
-            editor.set_color(SVGColors(initial_value.name()))
         else:
             super().setEditorData(editor, index)
 
     def setModelData(self, editor: QtWidgets.QWidget, model: QtCore.QAbstractItemModel, index: _Index) -> None:
         value = None
-        if isinstance(editor, RateMethodComboBox):
-            value = editor.current_method()
-        elif isinstance(editor, TextFileSeparatorComboBox):
-            value = editor.current_separator()
-        elif isinstance(editor, ColorComboBox):
-            value = editor.current_color()
+        if isinstance(editor, EnumComboBox):
+            value = editor.current_enum()
+            if isinstance(value, SVGColors):
+                value = value.qcolor()
         elif isinstance(editor, (QtWidgets.QSpinBox, QtWidgets.QDoubleSpinBox)):
             value = editor.value()
 
@@ -203,12 +282,6 @@ class ConfigTreeView(QtWidgets.QTreeView):
             parent=self,
         )
 
-        # msg_box = QtWidgets.QMessageBox(
-        # QtWidgets.QMessageBox.Icon.Warning,
-        # "Restore default settings?",
-        # "Are you sure you want to restore all settings to their default values?",
-        # parent=self,
-        # )
         if sure := msg_box.exec():
             # self.model() returns a ConfigTreeModel
             self.model().restore_defaults()  # type: ignore

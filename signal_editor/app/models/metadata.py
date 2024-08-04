@@ -8,9 +8,7 @@ from ..enum_defs import FileFormat
 
 
 class FileMetadata:
-    def __init__(
-        self, file_path: Path | str, columns: list[str], sampling_rate: int
-    ) -> None:
+    def __init__(self, file_path: Path | str, columns: list[str], sampling_rate: int) -> None:
         self.required_fields: list[str] = []
         self._placeholder = "<Not Set>"
         self.file_info = QtCore.QFileInfo(file_path)
