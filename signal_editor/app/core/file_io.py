@@ -231,12 +231,14 @@ def detect_sampling_rate(
 def read_edf(
     file_path: Path,
     data_channel: str,
-    info_channel: str = "",
+    info_channel: str | None = "",
     *,
     start: int = 0,
     stop: int | None = None,
     filter_all_zeros: bool = True,
 ) -> pl.DataFrame:
+    if info_channel is None:
+        info_channel = ""
     raw_edf = mne.io.read_raw_edf(file_path, include=[data_channel, info_channel])
     channel_names: list[str] = raw_edf.ch_names  # type: ignore
     data = raw_edf.get_data(start=start, stop=stop).squeeze()  # type: ignore

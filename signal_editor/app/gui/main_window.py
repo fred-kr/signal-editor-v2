@@ -8,14 +8,14 @@ from pyqtgraph.console import ConsoleWidget
 from PySide6 import QtCore, QtGui, QtWidgets
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 
-from .widgets.message_box import MessageBox
 from signal_editor.ui.ui_main_window import Ui_MainWindow
 
 from ..config import Config
 from ..enum_defs import LogLevel
-from .icons import FluentIcon as FI
+from .icons import SignalEditorIcon as Icons
 from .widgets import ConfigDialog, ExportDialog, MetadataDialog, SectionListDock
 from .widgets.log_window import StatusMessageDock
+from .widgets.message_box import MessageBox
 from .widgets.parameter_inputs import ParameterInputsDock
 
 
@@ -26,6 +26,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
+        self.setWindowIcon(Icons.SignalEditor.icon())
+        
         self.new_central_widget = QtWidgets.QWidget()
         self._h_layout = QtWidgets.QHBoxLayout(self.new_central_widget)
         self.navigation_interface = NavigationInterface(self, showMenuButton=True)
@@ -60,16 +62,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._h_layout.setStretchFactor(self.stackedWidget, 1)
 
     def _setup_navigation(self) -> None:
-        self.add_sub_interface(self.stacked_page_import, FI.ArrowImport.icon(), "Data Import")
-        self.add_sub_interface(self.stacked_page_edit, FI.DesktopPulse.icon(), "View / Edit")
-        self.add_sub_interface(self.stacked_page_result, FI.DataScatter.icon(), "Results")
-        self.add_sub_interface(self.stacked_page_export, FI.ArrowExportLtr.icon(), "Export")
+        self.add_sub_interface(self.stacked_page_import, Icons.ArrowImport.icon(), "Data Import")
+        self.add_sub_interface(self.stacked_page_edit, Icons.DesktopPulse.icon(), "View / Edit")
+        self.add_sub_interface(self.stacked_page_result, Icons.DataScatter.icon(), "Results")
+        self.add_sub_interface(self.stacked_page_export, Icons.ArrowExportLtr.icon(), "Export")
 
         self.navigation_interface.addSeparator()
 
         self.add_sub_interface(
             self.stacked_page_test,
-            FI.WindowDevTools.icon(),
+            Icons.WindowDevTools.icon(),
             "Debug",
             position=NavigationItemPosition.BOTTOM,
         )
@@ -109,12 +111,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _initialize_icons(self) -> None:
         self._msg_box_icons = {
-            LogLevel.DEBUG: FI.Wrench.icon(),
-            LogLevel.INFO: FI.Info.icon(),
-            LogLevel.WARNING: FI.Warning.icon(),
-            LogLevel.ERROR: FI.ErrorCircle.icon(),
-            LogLevel.CRITICAL: FI.Important.icon(),
-            LogLevel.SUCCESS: FI.CheckmarkCircle.icon(),
+            LogLevel.DEBUG: Icons.Wrench.icon(),
+            LogLevel.INFO: Icons.Info.icon(),
+            LogLevel.WARNING: Icons.Warning.icon(),
+            LogLevel.ERROR: Icons.ErrorCircle.icon(),
+            LogLevel.CRITICAL: Icons.Important.icon(),
+            LogLevel.SUCCESS: Icons.CheckmarkCircle.icon(),
         }
 
     def _setup_widgets(self) -> None:
@@ -135,7 +137,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.data_tree_widget_import_metadata = data_tree_widget
 
         self.stackedWidget.setCurrentIndex(0)
-        
 
     def _setup_docks(self) -> None:
         dwa = QtCore.Qt.DockWidgetArea
@@ -183,9 +184,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.action_remove_peaks_in_selection.setShortcutVisibleInContextMenu(False)
         self.action_show_settings.setShortcutVisibleInContextMenu(False)
         self.action_show_user_guide.setShortcutVisibleInContextMenu(False)
-        
+
         self.action_toggle_whats_this_mode = QtWidgets.QWhatsThis().createAction(self)
-        self.action_toggle_whats_this_mode.setIcon(FI.Question.icon())
+        self.action_toggle_whats_this_mode.setIcon(Icons.Question.icon())
         self._actions = {
             "import": [self.action_open_file, self.action_edit_metadata, self.action_close_file],
             "edit": [
@@ -243,7 +244,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.menuView.addActions([self.dock_sections.toggleViewAction(), self.dock_status_log.toggleViewAction()])
         self.menuView.addSeparator()
         self.menuView.addAction(self.dock_parameters.toggleViewAction())
-        
+
         self.menuEdit.insertAction(self.action_show_section_overview, self.dock_parameters.toggleViewAction())
         self.menuEdit.insertSeparator(self.action_show_section_overview)
 
@@ -293,7 +294,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.Slot(QtCore.QPoint)
     def show_data_view_context_menu(self, pos: QtCore.QPoint) -> None:
         menu = QtWidgets.QMenu(self)
-        action = QtGui.QAction(FI.ArrowSync.icon(), "Refresh", self.table_view_import_data)
+        action = QtGui.QAction(Icons.ArrowSync.icon(), "Refresh", self.table_view_import_data)
         action.triggered.connect(self.sig_table_refresh_requested.emit)
         menu.addAction(action)
         menu.exec(QtGui.QCursor.pos())
@@ -403,7 +404,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 split_text = text.split("Traceback", 1)
                 text = split_text[0]
                 traceback = f"Traceback: {split_text[1]}"
-                
+
             # msg_box = QtWidgets.QMessageBox(self)
             title = f"Message: {msg_log_level.name} - {time}"
             icon = self._msg_box_icons[msg_log_level]
@@ -414,10 +415,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 parent = self.dialog_export
             elif self.dialog_config.isVisible():
                 parent = self.dialog_config
-            
+
             msg_box = MessageBox(title, text, icon=icon, parent=parent)
             msg_box.set_detailed_text(traceback)
-            
+
             # msg_box.setWindowIcon(self._msg_box_icons[msg_log_level])
             # msg_box.setWindowTitle(f"Message: {msg_log_level.name} - {time}")
             # msg_box.setIconPixmap(self._msg_box_icons[msg_log_level].pixmap(64, 64))

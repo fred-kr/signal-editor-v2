@@ -3,6 +3,7 @@ import functools
 import typing as t
 from pathlib import Path
 
+from loguru import logger
 import mne.io
 import polars as pl
 from PySide6 import QtCore
@@ -20,7 +21,7 @@ from ..models.section_list_model import SectionListModel
 
 class DataController(QtCore.QObject):
     sig_non_ascii_in_file_name = QtCore.Signal(list, bool)
-    sig_user_input_required = QtCore.Signal(list)
+    sig_user_input_required = QtCore.Signal(set)
     sig_new_metadata = QtCore.Signal(object)
     sig_new_data = QtCore.Signal()
     sig_sampling_rate_changed = QtCore.Signal(int)
@@ -103,13 +104,7 @@ class DataController(QtCore.QObject):
         section = self.sections.data(model_index, QtCore.Qt.ItemDataRole.UserRole)
         if isinstance(section, Section):
             self._active_section = section
-            self.active_section_model.set_metadata(self.metadata)
-            self.active_section_model.set_dataframe(
-                data=self._active_section.data,
-                signal_col=self.metadata.signal_column,
-                index_col="section_index",
-                info_col=self.metadata.info_column,
-            )
+            self.active_section_model.set_df(self._active_section.data)
             has_peak_data = not self._active_section.peaks_local.is_empty()
             self.sig_active_section_changed.emit(has_peak_data)
 
@@ -128,12 +123,11 @@ class DataController(QtCore.QObject):
 
         if sampling_rate is not None:
             self.metadata.sampling_rate = sampling_rate
-        if signal_col != "" and signal_col is not None:
+        if signal_col is not None:
             self.metadata.signal_column = signal_col
         if info_col is not None:
             self.metadata.info_column = info_col
 
-        self.data_model.set_metadata(self.metadata)
         self.sig_new_metadata.emit(self.metadata)
 
     @QtCore.Slot(str)
@@ -152,32 +146,32 @@ class DataController(QtCore.QObject):
         last_sampling_rate = config.internal.LastSamplingRate
         last_signal_col = config.internal.LastSignalColumn
         last_info_col = config.internal.LastInfoColumn
-
-        metadata = FileMetadata(file_path, self)
+        print(f"Last sampling rate: {last_sampling_rate}\nLast signal column: {last_signal_col}\nLast info column: {last_info_col}")
 
         if file_path.suffix == ".edf":
             edf_info = mne.io.read_raw_edf(file_path, preload=False)
-            metadata.sampling_rate = edf_info.info["sfreq"]
-            metadata.column_names = edf_info.ch_names
+            sampling_rate = t.cast(int, edf_info.info["sfreq"])
+            column_names = edf_info.ch_names
         elif file_path.suffix in {".feather", ".csv", ".txt", ".tsv"}:
             lf = self._reader_funcs[file_path.suffix](file_path)
-            metadata.column_names = lf.collect_schema().names()
+            column_names = lf.collect_schema().names()
             try:
-                metadata.sampling_rate = detect_sampling_rate(lf)
+                sampling_rate = detect_sampling_rate(lf)
             except Exception:
-                metadata.sampling_rate = last_sampling_rate
+                sampling_rate = last_sampling_rate
         else:
             raise ValueError(f"Unsupported file format: {file_path.suffix}. Please select a valid file format.")
 
-        if last_signal_col in metadata.column_names:
+        metadata = FileMetadata(file_path, column_names, sampling_rate)
+        if last_signal_col in metadata.valid_columns:
             metadata.signal_column = last_signal_col
-        if last_info_col in metadata.column_names:
-            metadata.info_column = str(last_info_col)
+        if last_info_col in metadata.valid_columns:
+            metadata.info_column = last_info_col
         self._metadata = metadata
+        print(f"Required fields: {self.metadata.required_fields}")
         if self.metadata.required_fields:
             self.sig_user_input_required.emit(self.metadata.required_fields)
 
-        self.data_model.set_metadata(self.metadata)
         self.sig_new_metadata.emit(self.metadata)
 
     def load_data(self) -> None:
@@ -192,7 +186,10 @@ class DataController(QtCore.QObject):
         columns = [signal_col]
         if info_col:
             columns.append(info_col)
-        row_index_col = "index" if "index" not in columns else None
+        row_index_col = "index"
+        if row_index_col in columns:
+            logger.error("Column name 'index' is reserved for internal use and cannot be used as a column name.")
+            return
 
         if suffix == ".csv":
             df = pl.read_csv(file_path, columns=columns, row_index_name=row_index_col)
@@ -212,8 +209,8 @@ class DataController(QtCore.QObject):
         else:
             raise NotImplementedError(f"Can't read file type: {suffix}")
 
-        self.data_model.set_dataframe(df, signal_col, info_col=info_col)
-        self._base_section = Section(df, self.metadata.signal_column, info_column=info_col)
+        self.data_model.set_df(df)
+        self._base_section = Section(df, signal_col, info_column=info_col)
         self.sections.add_section(self._base_section)
         self.set_active_section(self.base_section_index)
         self.has_data = True

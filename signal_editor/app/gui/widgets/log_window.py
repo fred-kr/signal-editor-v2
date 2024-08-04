@@ -1,9 +1,10 @@
 import typing as t
 
+import qfluentwidgets as qfw
 from loguru import logger
-from PySide6 import QtCore, QtGui, QtWidgets
+from PySide6 import QtCore, QtWidgets
 
-from ..icons import FluentIcon as FI
+from ..icons import SignalEditorIcon as Icons
 
 
 class LoggingWindow(QtWidgets.QTextEdit):
@@ -19,11 +20,13 @@ class LoggingWindow(QtWidgets.QTextEdit):
         self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_context_menu)
         self.sig_log_message.connect(self.append)
+        self.action_clear_log = qfw.Action("Clear Log", parent=self)
+        self.action_clear_log.triggered.connect(self.clear)
 
     @QtCore.Slot(QtCore.QPoint)
     def show_context_menu(self, pos: QtCore.QPoint) -> None:
-        menu = QtWidgets.QMenu(self)
-        menu.addAction(QtGui.QIcon(":/icons/reset_all"), "Clear Messages", self.clear)
+        menu = qfw.RoundMenu(parent=self)
+        menu.addAction(self.action_clear_log)
         menu.exec(self.mapToGlobal(pos))
 
     def append_html(self, message: str) -> None:
@@ -69,10 +72,10 @@ class StatusMessageDock(QtWidgets.QDockWidget):
         self.setObjectName("StatusMessageDock")
         self.setWindowTitle("Status Log")
         self.setVisible(False)
-        self.toggleViewAction().setIcon(FI.Status.icon())
+        self.toggleViewAction().setIcon(Icons.Status.icon())
 
         self.log_text_box = LoggingWindow(self)
-        self.setWindowIcon(FI.Status.icon())
+        self.setWindowIcon(Icons.History.icon())
         self.setWidget(self.log_text_box)
 
     #     if os.environ.get("DEBUG") == "1":

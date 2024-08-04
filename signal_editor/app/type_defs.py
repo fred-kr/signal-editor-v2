@@ -24,6 +24,22 @@ if t.TYPE_CHECKING:
     )
     from ..app.core.section import SectionID
 
+ConfigCategory = t.Literal["Plot", "Data", "Editing", "Internal"]
+PlotConfigKey = t.Literal[
+    "Background", "Foreground", "LineColor", "PointColor", "SectionColor", "LineClickWidth", "ClickRadius"
+]
+EditingConfigKey = t.Literal["FilterStacking", "RateMethod"]
+DataConfigKey = t.Literal["FloatPrecision", "TextSeparatorChar"]
+InternalConfigKey = t.Literal[
+    "InputDir",
+    "OutputDir",
+    "LastSamplingRate",
+    "RecentFiles",
+    "LastSignalColumn",
+    "LastInfoColumn",
+    "WindowGeometry",
+    "WindowState",
+]
 
 PGColor = t.Union[str, int, float, tuple[int, int, int], tuple[int, int, int, int], "QtGui.QColor", SVGColors]
 
@@ -54,50 +70,19 @@ class FindPeaksKwargs(t.TypedDict, total=False):
     n_std: float
 
 
+class MetadataDict(t.TypedDict):
+    file_path: str
+    sampling_rate: int
+    signal_column: str
+    info_column: str | None
+    column_names: list[str]
+    
 class MetadataUpdateDict(t.TypedDict, total=False):
     sampling_rate: int
     signal_column: str
     info_column: str
     signal_column_index: int
     info_column_index: int
-
-
-class DefaultPlotSettings(t.TypedDict):
-    background_color: "QtGui.QColor"
-    foreground_color: "QtGui.QColor"
-    point_color: "QtGui.QColor"
-    signal_line_color: "QtGui.QColor"
-    rate_line_color: "QtGui.QColor"
-    section_marker_color: "QtGui.QColor"
-
-
-class DefaultEditingSettings(t.TypedDict):
-    click_width_signal_line: int
-    search_around_click_radius: int
-    minimum_peak_distance: int
-    rate_computation_method: "RateComputationMethod"
-    allow_stacking_filters: bool
-
-
-class DefaultDataSettings(t.TypedDict):
-    sampling_rate: float
-    txt_file_separator_character: "TextFileSeparator"
-    try_parse_dates: bool
-
-
-class DefaultMiscSettings(t.TypedDict):
-    data_folder: str
-    output_folder: str
-    float_visual_precision: int
-    last_signal_column_name: str | None
-    last_info_column_name: str | None
-
-
-class DefaultAppSettings(t.TypedDict):
-    Plot: DefaultPlotSettings
-    Editing: DefaultEditingSettings
-    Data: DefaultDataSettings
-    Misc: DefaultMiscSettings
 
 
 # region NewConfig

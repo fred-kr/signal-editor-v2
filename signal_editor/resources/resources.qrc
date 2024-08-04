@@ -1,15 +1,10 @@
 <RCC>
   <qresource prefix="icons">
+    <file>fluent-icons/DocumentEndnote.svg</file>
+    <file>app_icon.svg</file>
+    <file>fluent-icons/Add.svg</file>
     <file>fluent-icons/AddCircle.svg</file>
     <file>fluent-icons/AddSquare.svg</file>
-    <file>fluent-icons/Lasso.svg</file>
-    <file>fluent-icons/ScanObject.svg</file>
-    <file>fluent-icons/TabDesktopArrowClockwise.svg</file>
-    <file>fluent-icons/ArrowReset.svg</file>
-    <file>fluent-icons/Search.svg</file>
-    <file>fluent-icons/SearchSquare.svg</file>
-    <file>fluent-icons/SearchVisual.svg</file>
-    <file>fluent-icons/Add.svg</file>
     <file>fluent-icons/ArrowAutofitHeight.svg</file>
     <file>fluent-icons/ArrowAutofitHeightDotted.svg</file>
     <file>fluent-icons/ArrowExportLtr.svg</file>
@@ -18,6 +13,7 @@
     <file>fluent-icons/ArrowLeft.svg</file>
     <file>fluent-icons/ArrowNext.svg</file>
     <file>fluent-icons/ArrowPrevious.svg</file>
+    <file>fluent-icons/ArrowReset.svg</file>
     <file>fluent-icons/ArrowRight.svg</file>
     <file>fluent-icons/ArrowSync.svg</file>
     <file>fluent-icons/AutoFitHeight.svg</file>
@@ -31,6 +27,12 @@
     <file>fluent-icons/Checkmark.svg</file>
     <file>fluent-icons/CheckmarkCircle.svg</file>
     <file>fluent-icons/CheckmarkSquare.svg</file>
+    <file>fluent-icons/ChevronCircleDown.svg</file>
+    <file>fluent-icons/ChevronCircleRight.svg</file>
+    <file>fluent-icons/ChevronDown.svg</file>
+    <file>fluent-icons/ChevronLeft.svg</file>
+    <file>fluent-icons/ChevronRight.svg</file>
+    <file>fluent-icons/ChevronUp.svg</file>
     <file>fluent-icons/Circle.svg</file>
     <file>fluent-icons/Code.svg</file>
     <file>fluent-icons/Color.svg</file>
@@ -59,6 +61,7 @@
     <file>fluent-icons/History.svg</file>
     <file>fluent-icons/Important.svg</file>
     <file>fluent-icons/Info.svg</file>
+    <file>fluent-icons/Lasso.svg</file>
     <file>fluent-icons/LightbulbCircle.svg</file>
     <file>fluent-icons/List.svg</file>
     <file>fluent-icons/MoreHorizontal.svg</file>
@@ -76,6 +79,10 @@
     <file>fluent-icons/Save.svg</file>
     <file>fluent-icons/SaveArrowRight.svg</file>
     <file>fluent-icons/SaveEdit.svg</file>
+    <file>fluent-icons/ScanObject.svg</file>
+    <file>fluent-icons/Search.svg</file>
+    <file>fluent-icons/SearchSquare.svg</file>
+    <file>fluent-icons/SearchVisual.svg</file>
     <file>fluent-icons/SelectObject.svg</file>
     <file>fluent-icons/Send.svg</file>
     <file>fluent-icons/Settings.svg</file>
@@ -83,6 +90,7 @@
     <file>fluent-icons/Subtract.svg</file>
     <file>fluent-icons/SubtractCircle.svg</file>
     <file>fluent-icons/SubtractSquare.svg</file>
+    <file>fluent-icons/TabDesktopArrowClockwise.svg</file>
     <file>fluent-icons/Table.svg</file>
     <file>fluent-icons/Temperature.svg</file>
     <file>fluent-icons/Toolbox.svg</file>

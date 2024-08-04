@@ -2,11 +2,9 @@ import contextlib
 import enum
 import typing as t
 from pathlib import Path
-from concurrent import futures
 
 import numpy as np
 import numpy.typing as npt
-import superqt
 from loguru import logger
 from PySide6 import QtCore, QtWidgets
 
@@ -33,6 +31,7 @@ class _WorkerSignals(QtCore.QObject):
     sig_success: t.ClassVar[QtCore.Signal] = QtCore.Signal()
     sig_failed: t.ClassVar[QtCore.Signal] = QtCore.Signal()
     sig_done: t.ClassVar[QtCore.Signal] = QtCore.Signal()
+
 
 class PeakDetectionWorker(QtCore.QRunnable):
     def __init__(
@@ -108,7 +107,6 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.dock_parameters.sig_pipeline_requested.connect(self.run_preprocess_pipeline)
         self.mw.dock_parameters.sig_standardization_requested.connect(self.standardize_active_signal)
         self.mw.dock_parameters.sig_data_reset_requested.connect(self.restore_original_signal)
-        # self.mw.dock_parameters.sig_peak_detection_requested.connect(self.run_peak_detection)
         self.mw.dock_parameters.sig_peak_detection_requested.connect(self.run_peak_detection_worker)
         self.mw.dock_parameters.sig_clear_peaks_requested.connect(self.clear_peaks)
 
@@ -305,10 +303,10 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot()
     def refresh_data_view(self) -> None:
-        self.data.active_section_model.set_dataframe(self.data.active_section.data)
+        self.data.active_section_model.set_df(self.data.active_section.data)
 
     @QtCore.Slot(dict)
-    def update_metadata(self, metadata_dict: _t.MetadataUpdateDict) -> None:
+    def update_metadata(self, metadata_dict: _t.MetadataDict) -> None:
         sampling_rate = metadata_dict.get("sampling_rate", None)
         info_col = metadata_dict.get("info_column", None)
         signal_col = metadata_dict.get("signal_column", None)
@@ -320,18 +318,12 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.data_tree_widget_import_metadata.setData(metadata_dict, hideRoot=True)
         self.mw.data_tree_widget_import_metadata.collapseAll()
         self.mw.spin_box_sampling_rate_import_page.setValue(metadata.sampling_rate)
+        self.mw.combo_box_signal_column_import_page.setCurrentText(metadata.signal_column)
+        self.mw.combo_box_info_column_import_page.setCurrentText(metadata.info_column)
 
-    @QtCore.Slot(list)
-    def show_metadata_dialog(self, required_fields: list[str]) -> None:
-        metadata = None
-        with superqt.utils.exceptions_as_dialog(
-            icon=QtWidgets.QMessageBox.Icon.Warning,
-            title="Error loading metadata",
-            parent=self.mw,
-        ) as ctx:
-            metadata = self.data.metadata
-        if ctx.exception is not None or metadata is None:
-            return
+    @QtCore.Slot(set)
+    def show_metadata_dialog(self, required_fields: set[str]) -> None:
+        metadata = self.data.metadata
 
         file_name = metadata.file_name
         file_type = metadata.file_format
@@ -372,14 +364,18 @@ class SignalEditor(QtWidgets.QApplication):
         logger.info(f"Info column set to '{info_column}'.")
 
     def _set_column_models(self) -> None:
-        self.mw.combo_box_info_column_import_page.addItems(self.data.metadata.column_names)
-        self.mw.combo_box_signal_column_import_page.addItems(self.data.metadata.column_names)
-        self.mw.dialog_meta.combo_box_signal_column.addItems(self.data.metadata.column_names)
-        self.mw.dialog_meta.combo_box_info_column.addItems(self.data.metadata.column_names)
-
-        with contextlib.suppress(Exception):
-            self.mw.combo_box_info_column_import_page.setCurrentText(self.data.metadata.info_column)
+        with QtCore.QSignalBlocker(self.mw.combo_box_signal_column_import_page):
+            self.mw.combo_box_signal_column_import_page.addItems(self.data.metadata.valid_columns)
             self.mw.combo_box_signal_column_import_page.setCurrentText(self.data.metadata.signal_column)
+        with QtCore.QSignalBlocker(self.mw.combo_box_info_column_import_page):
+            self.mw.combo_box_info_column_import_page.addItems(self.data.metadata.column_names)
+            self.mw.combo_box_info_column_import_page.setCurrentText(self.data.metadata.info_column)
+        with QtCore.QSignalBlocker(self.mw.dialog_meta.combo_box_signal_column):
+            self.mw.dialog_meta.combo_box_signal_column.addItems(self.data.metadata.valid_columns)
+            self.mw.dialog_meta.combo_box_signal_column.setCurrentText(self.data.metadata.signal_column)
+        with QtCore.QSignalBlocker(self.mw.dialog_meta.combo_box_info_column):
+            self.mw.dialog_meta.combo_box_info_column.addItems(self.data.metadata.column_names)
+            self.mw.dialog_meta.combo_box_info_column.setCurrentText(self.data.metadata.info_column)
 
     def _clear_column_models(self) -> None:
         with QtCore.QSignalBlocker(self.mw.combo_box_info_column_import_page):
@@ -407,7 +403,6 @@ class SignalEditor(QtWidgets.QApplication):
         self.close_file()
 
         self.config.internal.InputDir = Path(file_path).parent.resolve().as_posix()
-        self.config.save()
         self._on_file_opened(file_path)
 
     def update_recent_files(self, file_path: str) -> None:
@@ -416,7 +411,6 @@ class SignalEditor(QtWidgets.QApplication):
         self.recent_files.insert(0, file_path)
         self.recent_files = self.recent_files[:10]
         self.config.internal.RecentFiles = self.recent_files
-        self.config.save()
         self.mw.list_widget_recent_files.clear()
         self.mw.list_widget_recent_files.addItems(self.recent_files)
 
@@ -458,7 +452,6 @@ class SignalEditor(QtWidgets.QApplication):
         self.config.internal.LastSignalColumn = self.data.metadata.signal_column
         self.config.internal.LastInfoColumn = self.data.metadata.info_column
         self.config.internal.LastSamplingRate = self.data.metadata.sampling_rate
-        self.config.save()
 
     @QtCore.Slot()
     def close_file(self) -> None:

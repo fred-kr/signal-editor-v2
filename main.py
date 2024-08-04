@@ -50,6 +50,7 @@ if __name__ == "__main__":
     # Built-in styles: ['windows11', 'windowsvista', 'Windows', 'Fusion']
     # styles = QtWidgets.QStyleFactory.keys()
     # app.setStyle("windows11")
+
     app.mw.show()
 
     sys.exit(app.exec())

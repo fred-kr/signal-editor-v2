@@ -113,44 +113,6 @@ class CustomScatterPlotItem(pg.ScatterPlotItem):
                 self.opts[k] = vh
             elif k == "data":
                 self.setPointData(kargs["data"], dataSet=new_data)
-        # Handle 'y' parameter
-        # elif y is not None:
-        #     new_data["x"] = x
-        #     new_data["y"] = y
-
-        # for k, v in kargs.items():
-        #     match k:
-        #         case "name":
-        #             self.opts["name"] = v
-        #         case "pxMode":
-        #             self.setPxMode(v)
-        #         case "antialias":
-        #             self.opts["antialias"] = v
-        #         case "hoverable":
-        #             self.opts["hoverable"] = bool(v)
-        #         case "tip":
-        #             self.opts["tip"] = v
-        #         case "useCache":
-        #             self.opts["useCache"] = v
-        #         case "pen" | "brush" | "symbol" | "size":
-        #             set_method = getattr(self, f"set{k.capitalize()}")
-        #             set_method(
-        #                 v,
-        #                 update=False,
-        #                 dataSet=new_data,
-        #                 mask=kargs.get("mask", None),
-        #             )
-        #         case "hoverPen" | "hoverBrush" | "hoverSymbol" | "hoverSize":
-        #             vh = kargs[k]
-        #             if k == "hoverPen":
-        #                 vh = _mk_pen(vh)
-        #             elif k == "hoverBrush":
-        #                 vh = _mk_brush(vh)
-        #             self.opts[k] = vh
-        #         case "data":
-        #             self.setPointData(kargs["data"], dataSet=new_data)
-        #         case _:
-        #             pass
 
         # Update the scatter plot item
         self.prepareGeometryChange()

@@ -3,86 +3,29 @@ import typing as t
 
 import numpy as np
 import polars as pl
-from loguru import logger
 from PySide6 import QtCore
 
-from ..utils import human_readable_timedelta
 from ..config import Config
-
-if t.TYPE_CHECKING:
-    from .metadata import FileMetadata
-
-
-def validate_column(col_name: str | None, schema: t.OrderedDict[str, pl.DataType], default: str | None = None) -> str:
-    if not col_name:
-        col_name = default
-    if col_name not in schema and col_name != "":
-        raise ValueError(f"Column '{col_name}' not found in data. Available columns: {", ".join(schema.keys())}")
-    return col_name
+from ..utils import human_readable_timedelta
 
 
 class DataFrameModel(QtCore.QAbstractTableModel):
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
-        self._metadata: "FileMetadata | None" = None
-        self._df: pl.DataFrame | None = None
-        self._schema: t.OrderedDict[str, pl.DataType] | None = None
-        self._name_index_column: str = "index"
-        self._name_signal_column: str | None = None
-        self._name_info_column: str | None = None
+        self.df = pl.DataFrame()
         self._float_precision = Config().data.FloatPrecision
 
-    @property
-    def df(self) -> pl.DataFrame:
-        if self._df is None:
-            raise ValueError("Data not loaded yet.")
-        return self._df
-
-    # TODO: Can probably be removed
-    def set_metadata(self, metadata: "FileMetadata") -> None:
-        self._metadata = metadata
-        metadata_dict = metadata.to_dict()
-        self._name_signal_column = metadata_dict["signal_column"]
-        self._name_info_column = metadata_dict["info_column"]
-
-    def set_float_precision(self, precision: int) -> None:
-        self._float_precision = precision
-        self.set_dataframe(self.df, self._name_signal_column, self._name_index_column, self._name_info_column)
-
-    def set_dataframe(
-        self,
-        data: pl.DataFrame,
-        signal_col: str | None = None,
-        index_col: str = "index",
-        info_col: str | None = None,
-    ) -> None:
+    def set_df(self, df: pl.DataFrame) -> None:
         self.beginResetModel()
-        self._df = data
-        self._schema = data.schema
-
-        self._name_signal_column = validate_column(signal_col, self._schema, default=self._name_signal_column)
-        self._name_index_column = validate_column(index_col, self._schema, default="index")
-
-        if not self._schema[self._name_index_column].is_integer():
-            logger.info(
-                f"Index column '{self._name_index_column}' is not of integer type.\nCreating new index column with name 'index'"
-            )
-            self._name_index_column = "index"
-            if self._name_index_column in self._df.columns:
-                self._df.drop_in_place(self._name_index_column)
-            self._df = self._df.with_row_index(self._name_index_column)
-            self._schema = self._df.schema
-
-        if info_col:
-            self._name_info_column = validate_column(info_col, self._schema)
-
+        self._float_precision = Config().data.FloatPrecision
+        self.df = df
         self.endResetModel()
 
     def rowCount(self, parent: QtCore.QModelIndex | QtCore.QPersistentModelIndex | None = None) -> int:
-        return self._df.height if self._df is not None else 0
+        return self.df.height
 
     def columnCount(self, parent: QtCore.QModelIndex | QtCore.QPersistentModelIndex | None = None) -> int:
-        return self._df.width if self._df is not None else 0
+        return self.df.width
 
     def data(
         self,
@@ -93,17 +36,17 @@ class DataFrameModel(QtCore.QAbstractTableModel):
             return None
         if index.row() >= self.rowCount() or index.column() >= self.columnCount():
             return None
-        if self._df is None:
+        if self.df.is_empty():
             return None
 
         col_idx = index.column()
         row_idx = index.row()
 
-        col_name = self._df.columns[col_idx]
+        col_name = self.df.columns[col_idx]
 
-        value = self._df.item(row_idx, col_idx)
+        value = self.df.item(row_idx, col_idx)
         if role == QtCore.Qt.ItemDataRole.DisplayRole:
-            value_type = self._df.schema[col_name]
+            value_type = self.df.schema[col_name]
 
             if value_type.is_integer():
                 return f"{value:_}"
@@ -133,12 +76,12 @@ class DataFrameModel(QtCore.QAbstractTableModel):
         orientation: QtCore.Qt.Orientation,
         role: int = QtCore.Qt.ItemDataRole.DisplayRole,
     ) -> str | None:
-        if self._df is None:
+        if self.df.is_empty():
             return None
         if role == QtCore.Qt.ItemDataRole.DisplayRole:
             if orientation == QtCore.Qt.Orientation.Horizontal:
-                return self._df.columns[section]
+                return self.df.columns[section]
         elif role == QtCore.Qt.ItemDataRole.ToolTipRole:
             if orientation == QtCore.Qt.Orientation.Horizontal:
-                return str(self._df.schema[self._df.columns[section]])
+                return str(self.df.schema[self.df.columns[section]])
         return None

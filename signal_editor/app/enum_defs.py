@@ -31,8 +31,9 @@ class TextFileSeparator(enum.StrEnum):
 
 
 class ExportFormatCompact(enum.StrEnum):
-    EXCEL = ".xlsx"
+    XLSX = ".xlsx"
     CSV = ".csv"
+    TXT = ".txt"
 
 
 class ExportFormatDetailed(enum.StrEnum):

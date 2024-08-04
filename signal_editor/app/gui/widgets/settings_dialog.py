@@ -1,8 +1,8 @@
-from PySide6 import QtGui, QtWidgets
+from PySide6 import QtCore, QtGui, QtWidgets
 from qfluentwidgets import CommandBar
 
 from ...models.config_tree_model import ConfigTreeModel
-from ..icons import FluentIcon as FI
+from ..icons import SignalEditorIcon as Icons
 from .config_tree import ConfigTreeView
 
 
@@ -11,7 +11,7 @@ class ConfigDialog(QtWidgets.QDialog):
         super().__init__(parent)
 
         self.setWindowTitle("Settings")
-        self.setWindowIcon(FI.Settings.icon())
+        self.setWindowIcon(Icons.app_icon())
         buttons = QtWidgets.QDialogButtonBox(
             QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel
         )
@@ -22,11 +22,12 @@ class ConfigDialog(QtWidgets.QDialog):
         self.config_tree.setModel(ConfigTreeModel(self))
 
         toolbar = CommandBar(self)
+        toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
-        action_restore_defaults = QtGui.QAction(FI.TabDesktopArrowClockwise.icon(), "Restore Defaults", self)
+        action_restore_defaults = QtGui.QAction(Icons.TabDesktopArrowClockwise.icon(), "Restore Defaults", self)
         action_restore_defaults.triggered.connect(self.config_tree.restore_defaults)
 
-        action_reset_selected = QtGui.QAction(FI.ArrowReset.icon(), "Reset Selected", self)
+        action_reset_selected = QtGui.QAction(Icons.ArrowReset.icon(), "Reset Selected", self)
         action_reset_selected.triggered.connect(self.config_tree.reset_current_item)
 
         toolbar.addAction(action_restore_defaults)

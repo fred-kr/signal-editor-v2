@@ -15,7 +15,7 @@ from ...enum_defs import (
     StandardizationMethod,
     WFDBPeakDirection,
 )
-from ..icons import FluentIcon as FI
+from ..icons import SignalEditorIcon as Icons
 from ._widget_defaults import PEAK_DETECTION, PROCESSING
 
 
@@ -40,9 +40,7 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
     sig_standardization_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal(dict)  # _t.StandardizationParameters
     sig_data_reset_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal()
 
-    sig_peak_detection_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal(
-        enum.StrEnum, dict
-    )  # PeakDetectionMethod, _t.PeakDetectionMethodParameters
+    sig_peak_detection_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal(enum.StrEnum, dict)
     sig_clear_peaks_requested: t.ClassVar[QtCore.Signal] = QtCore.Signal()
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
@@ -50,8 +48,8 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
         self.setVisible(False)
         self.setObjectName("DockWidgetParameterInputs")
         self.setWindowTitle("Parameter Inputs")
-        self.toggleViewAction().setIcon(FI.Options.icon())
-        self.setWindowIcon(FI.Options.icon())
+        self.toggleViewAction().setIcon(Icons.Options.icon())
+        self.setWindowIcon(Icons.Options.icon())
         self.setAllowedAreas(QtCore.Qt.DockWidgetArea.AllDockWidgetAreas)
 
         self.ui = ParameterInputs()
@@ -94,19 +92,19 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
         self.reset_status_indicators()
 
     def set_pipeline_status(self, status: bool) -> None:
-        self.ui.icon_pipeline_status.setIcon(FI.CheckmarkCircle.icon() if status else FI.Circle.icon())
+        self.ui.icon_pipeline_status.setIcon(Icons.CheckmarkCircle.icon() if status else Icons.Circle.icon())
 
     def set_filter_status(self, status: bool, times_filtered: int) -> None:
-        self.ui.icon_filter_status.setIcon(FI.CheckmarkCircle.icon() if status else FI.Circle.icon())
+        self.ui.icon_filter_status.setIcon(Icons.CheckmarkCircle.icon() if status else Icons.Circle.icon())
         self.ui.icon_filter_status.setToolTip(f"Filtered {times_filtered} times")
 
     def set_standardization_status(self, status: bool) -> None:
-        self.ui.icon_standardize_status.setIcon(FI.CheckmarkCircle.icon() if status else FI.Circle.icon())
+        self.ui.icon_standardize_status.setIcon(Icons.CheckmarkCircle.icon() if status else Icons.Circle.icon())
 
     def reset_status_indicators(self, status: bool = False) -> None:
-        self.ui.icon_pipeline_status.setIcon(FI.CheckmarkCircle.icon() if status else FI.Circle.icon())
-        self.ui.icon_filter_status.setIcon(FI.CheckmarkCircle.icon() if status else FI.Circle.icon())
-        self.ui.icon_standardize_status.setIcon(FI.CheckmarkCircle.icon() if status else FI.Circle.icon())
+        self.ui.icon_pipeline_status.setIcon(Icons.CheckmarkCircle.icon() if status else Icons.Circle.icon())
+        self.ui.icon_filter_status.setIcon(Icons.CheckmarkCircle.icon() if status else Icons.Circle.icon())
+        self.ui.icon_standardize_status.setIcon(Icons.CheckmarkCircle.icon() if status else Icons.Circle.icon())
 
     def _assign_defaults(self) -> None:
         # Peak Detection
@@ -128,9 +126,9 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
         if not hasattr(widget, "default_value"):
             return
         if isinstance(widget, (qfw.CheckBox, QtWidgets.QCheckBox, qfw.SwitchButton)):
-            widget.setChecked(widget.default_value)
+            widget.setChecked(widget.default_value)  # type: ignore
         else:
-            widget.setValue(widget.default_value)
+            widget.setValue(widget.default_value)  # type: ignore
 
     def _setup_enum_combo_boxes(self) -> None:
         _fill_combo_box_with_enum(self.ui.combo_pipeline, PreprocessPipeline, allow_none=True)
@@ -255,25 +253,17 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
         if pipeline is not None:
             pipeline = PreprocessPipeline(pipeline)
             self.sig_pipeline_requested.emit(pipeline)
-            logger.debug(f"Requesting to run pipeline: {pipeline}")
         else:
-            logger.debug("No pipeline selected, checking if custom filter/standardization parameters were set")
             filter_method = self.ui.combo_filter_method.currentData()
-            logger.debug(f"Filter method: {filter_method}")
             if filter_method is not None:
                 filter_method = FilterMethod(filter_method)
                 filter_params = self._get_filter_params(filter_method)
-                logger.debug(f"Filter params: {filter_params}")
                 self.sig_filter_requested.emit(filter_params)
-                logger.debug(f"Requesting to run filter: {filter_method},\n{filter_params}")
             standardize_method = self.ui.combo_standardize_method.currentData()
-            logger.debug(f"Standardize method: {standardize_method}")
             if standardize_method is not None:
                 standardize_method = StandardizationMethod(standardize_method)
                 standardize_params = self._get_standardize_params(standardize_method)
-                logger.debug(f"Standardize params: {standardize_params}")
                 self.sig_standardization_requested.emit(standardize_params)
-                logger.debug(f"Requesting to run standardization: {standardize_method},\n{standardize_params}")
 
     def _get_filter_params(self, method: FilterMethod) -> _t.SignalFilterParameters:
         window = self.ui.sb_filter_window_size

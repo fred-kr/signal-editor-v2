@@ -1,6 +1,7 @@
 import typing as t
 
 from PySide6 import QtCore, QtGui, QtWidgets
+import qfluentwidgets as qfw
 
 from ...enum_defs import RateComputationMethod, SVGColors, TextFileSeparator
 
@@ -196,17 +197,21 @@ class ConfigTreeView(QtWidgets.QTreeView):
 
     @QtCore.Slot()
     def restore_defaults(self) -> None:
-        msg_box = QtWidgets.QMessageBox(
-            QtWidgets.QMessageBox.Icon.Warning,
-            "Restore default settings?",
-            "Are you sure you want to restore all settings to their default values?",
+        msg_box = qfw.MessageBox(
+            title="Restore default settings?",
+            content="Are you sure you want to restore all settings to their default values?",
             parent=self,
         )
+
+        # msg_box = QtWidgets.QMessageBox(
+        # QtWidgets.QMessageBox.Icon.Warning,
+        # "Restore default settings?",
+        # "Are you sure you want to restore all settings to their default values?",
+        # parent=self,
+        # )
         if sure := msg_box.exec():
             # self.model() returns a ConfigTreeModel
             self.model().restore_defaults()  # type: ignore
-
-        return None
 
     @QtCore.Slot()
     def reset_current_item(self) -> None:

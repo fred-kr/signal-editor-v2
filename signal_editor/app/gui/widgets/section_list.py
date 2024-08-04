@@ -2,7 +2,8 @@ import typing as t
 
 import qfluentwidgets as qfw
 from PySide6 import QtCore, QtGui, QtWidgets
-from ..icons import FluentIcon as FI
+
+from ..icons import SignalEditorIcon as Icons
 
 
 class SectionListView(qfw.ListView):
@@ -40,8 +41,10 @@ class SectionListDock(QtWidgets.QDockWidget):
         self.setVisible(False)
         self.setObjectName("SectionListDock")
         self.setWindowTitle("Section List")
+        self.setWindowIcon(Icons.SignalEditor.icon())
+        
         self.list_view = SectionListView()
-        self.toggleViewAction().setIcon(FI.List.icon())
+        self.toggleViewAction().setIcon(Icons.List.icon())
         main_widget = QtWidgets.QWidget(self)
         main_layout = QtWidgets.QVBoxLayout(main_widget)
 
@@ -53,11 +56,11 @@ class SectionListDock(QtWidgets.QDockWidget):
         confirm_cancel_layout = QtWidgets.QHBoxLayout(confirm_cancel_btns)
         confirm_cancel_layout.setContentsMargins(0, 0, 0, 0)
 
-        confirm_btn = qfw.PushButton(icon=FI.CheckmarkCircle.icon(), text="Confirm")
+        confirm_btn = qfw.PushButton(icon=Icons.CheckmarkCircle.icon(), text="Confirm")
         confirm_cancel_layout.addWidget(confirm_btn)
         self.btn_confirm = confirm_btn
 
-        cancel_btn = qfw.PushButton(icon=FI.DismissCircle.icon(), text="Cancel")
+        cancel_btn = qfw.PushButton(icon=Icons.DismissCircle.icon(), text="Cancel")
         confirm_cancel_layout.addWidget(cancel_btn)
         self.btn_cancel = cancel_btn
 

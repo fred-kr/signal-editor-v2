@@ -3,6 +3,7 @@ import typing as t
 from types import NoneType
 
 import attrs
+from loguru import logger
 from PySide6 import QtCore, QtGui
 
 from ..config import Config
@@ -10,7 +11,9 @@ from ..enum_defs import RateComputationMethod, SVGColors, TextFileSeparator
 
 type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 
-_ConfigType = t.Union[QtGui.QColor, int, bool, RateComputationMethod, TextFileSeparator, str, None, list[str], QtCore.QByteArray]
+_ConfigType = t.Union[
+    QtGui.QColor, int, bool, RateComputationMethod, TextFileSeparator, str, None, list[str], QtCore.QByteArray
+]
 
 ItemDataRole = QtCore.Qt.ItemDataRole
 
@@ -56,8 +59,13 @@ class ConfigTreeItem:
 
     @property
     def category(self) -> str | None:
-        if self.parent_item and self.parent_item.name in {"Plot", "Editing", "Data", "Internal"}:
-            return self.parent_item.name.lower()
+        if self.parent_item and self.parent_item.name in {
+            "Plot",
+            "Data",
+            "Editing",
+            "Internal",
+        }:
+            return self.parent_item.name
         return None
 
     @property
@@ -112,6 +120,7 @@ class ConfigTreeItem:
     def parent(self) -> "ConfigTreeItem | None":
         return self.parent_item
 
+    @logger.catch(message="Error setting config value")
     def set_value(self, value: _ConfigType) -> bool:
         if self.value == value:
             return False

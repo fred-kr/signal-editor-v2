@@ -3,7 +3,6 @@ import typing as t
 
 import attrs
 from PySide6 import QtCore, QtGui
-
 from . import type_defs as _t
 from .enum_defs import RateComputationMethod, SVGColors, TextFileSeparator
 from .utils import get_app_dir, make_qcolor
@@ -13,43 +12,55 @@ type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 ItemDataRole = QtCore.Qt.ItemDataRole
 
 
-@attrs.define
+def sync[T](inst: attrs.AttrsInstance, attr: t.Any, value: T) -> T:
+    path = attr.metadata.get("path", None)
+    settings = QtCore.QSettings()
+    if path and path in settings.allKeys():
+        print(f"Setting {path} to {value}")
+        settings.setValue(path, value)
+        settings.sync()
+    return value
+
+
+@attrs.define(on_setattr=sync)
 class _PlotConfig:
     Background: QtGui.QColor = attrs.field(
         default=QtGui.QColor(SVGColors.Black),
         converter=make_qcolor,
-        metadata={"Description": "The background color of the plot."},
+        metadata={"path": "Plot/Background", "Description": "The background color of the plot."},
     )
     Foreground: QtGui.QColor = attrs.field(
         default=QtGui.QColor(SVGColors.Grey),
         converter=make_qcolor,
-        metadata={"Description": "The foreground (text, axis, etc) color of the plot."},
+        metadata={"path": "Plot/Foreground", "Description": "The foreground (text, axis, etc) color of the plot."},
     )
     LineColor: QtGui.QColor = attrs.field(
         default=QtGui.QColor(SVGColors.RoyalBlue),
         converter=make_qcolor,
-        metadata={"Description": "The color of the lines in the plot."},
+        metadata={"path": "Plot/LineColor", "Description": "The color of the lines in the plot."},
     )
     PointColor: QtGui.QColor = attrs.field(
         default=QtGui.QColor(SVGColors.GoldenRod),
         converter=make_qcolor,
-        metadata={"Description": "The color of the points in the plot."},
+        metadata={"path": "Plot/PointColor", "Description": "The color of the points in the plot."},
     )
     SectionColor: QtGui.QColor = attrs.field(
         default=QtGui.QColor(SVGColors.Lime),
         converter=make_qcolor,
-        metadata={"Description": "The color of the section markers in the plot."},
+        metadata={"path": "Plot/SectionColor", "Description": "The color of the section markers in the plot."},
     )
     LineClickWidth: int = attrs.field(
         default=70,
         metadata={
-            "Description": "The area around the signal line in pixels that is considered to be a click on the line."
+            "path": "Plot/LineClickWidth",
+            "Description": "The area around the signal line in pixels that is considered to be a click on the line.",
         },
     )
     ClickRadius: int = attrs.field(
         default=20,
         metadata={
-            "Description": "The radius of the area around the signal line in pixels that is considered to be a click on the line."
+            "path": "Plot/ClickRadius",
+            "Description": "The radius of the area around the signal line in pixels that is considered to be a click on the line.",
         },
     )
 
@@ -79,7 +90,7 @@ class _PlotConfig:
             ClickRadius=cr,  # type: ignore
         )
 
-    def save_to_qsettings(self) -> None:
+    def save_all(self) -> None:
         settings = QtCore.QSettings()
         settings.beginGroup("Plot")
         settings.setValue("Background", self.Background)
@@ -94,16 +105,20 @@ class _PlotConfig:
         settings.sync()
 
 
-@attrs.define
+@attrs.define(on_setattr=sync)
 class _EditingConfig:
     FilterStacking: bool = attrs.field(
         default=False,
-        metadata={"Description": "Whether to allow applying multiple filters to the same data."},
+        metadata={
+            "path": "Editing/FilterStacking",
+            "Description": "Whether to allow applying multiple filters to the same data.",
+        },
     )
     RateMethod: RateComputationMethod = attrs.field(
         default=RateComputationMethod.RollingWindow,
         metadata={
-            "Description": "Which method to use for computing the rate displayed in the lower plot on the editing page, either 'instantaneous' or 'rolling_window'."
+            "path": "Editing/RateMethod",
+            "Description": "Which method to use for computing the rate displayed in the lower plot on the editing page, either 'instantaneous' or 'rolling_window'.",
         },
     )
 
@@ -123,27 +138,31 @@ class _EditingConfig:
             RateMethod=rm,
         )
 
-    def save_to_qsettings(self) -> None:
+    def save_all(self) -> None:
         settings = QtCore.QSettings()
         settings.beginGroup("Editing")
         settings.setValue("FilterStacking", self.FilterStacking)
-        settings.setValue(
-            "RateMethod", self.RateMethod.value
-        )  # the stored value is a string (RateComputationMethod.RollingWindow.value)
+        settings.setValue("RateMethod", self.RateMethod.value)
         settings.endGroup()
 
         settings.sync()
 
 
-@attrs.define
+@attrs.define(on_setattr=sync)
 class _DataConfig:
     FloatPrecision: int = attrs.field(
         default=3,
-        metadata={"Description": "The number of decimal places to show in the data table."},
+        metadata={
+            "path": "Data/FloatPrecision",
+            "Description": "The number of decimal places to show in the data table.",
+        },
     )
     TextSeparatorChar: TextFileSeparator = attrs.field(
         default=TextFileSeparator.Tab,
-        metadata={"Description": "Character used to separate fields when reading from a text (.txt) file."},
+        metadata={
+            "path": "Data/TextSeparatorChar",
+            "Description": "Character used to separate fields when reading from a text (.txt) file.",
+        },
     )
 
     def to_dict(self) -> _t.DataConfigDict:
@@ -162,7 +181,7 @@ class _DataConfig:
             TextSeparatorChar=tfs,
         )
 
-    def save_to_qsettings(self) -> None:
+    def save_all(self) -> None:
         settings = QtCore.QSettings()
         settings.beginGroup("Data")
         settings.setValue("FloatPrecision", self.FloatPrecision)
@@ -172,16 +191,32 @@ class _DataConfig:
         settings.sync()
 
 
-@attrs.define
+@attrs.define(on_setattr=sync)
 class _InternalConfig:
-    InputDir: str = attrs.field(factory=functools.partial(get_app_dir, True), metadata={"allow_user_edits": True})
-    OutputDir: str = attrs.field(factory=functools.partial(get_app_dir, True), metadata={"allow_user_edits": True})
-    LastSamplingRate: int = attrs.field(default=0, metadata={"allow_user_edits": True})
-    RecentFiles: list[str] = attrs.field(factory=list, metadata={"allow_user_edits": False})
-    LastSignalColumn: str = attrs.field(default="", metadata={"allow_user_edits": False})
-    LastInfoColumn: str = attrs.field(default="", metadata={"allow_user_edits": False})
-    WindowGeometry: QtCore.QByteArray = attrs.field(factory=QtCore.QByteArray, metadata={"allow_user_edits": False})
-    WindowState: QtCore.QByteArray = attrs.field(factory=QtCore.QByteArray, metadata={"allow_user_edits": False})
+    InputDir: str = attrs.field(
+        factory=functools.partial(get_app_dir, True), metadata={"path": "Internal/InputDir", "allow_user_edits": True}
+    )
+    OutputDir: str = attrs.field(
+        factory=functools.partial(get_app_dir, True), metadata={"path": "Internal/OutputDir", "allow_user_edits": True}
+    )
+    LastSamplingRate: int = attrs.field(
+        default=0, metadata={"path": "Internal/LastSamplingRate", "allow_user_edits": True}
+    )
+    RecentFiles: list[str] = attrs.field(
+        factory=list, metadata={"path": "Internal/RecentFiles", "allow_user_edits": False}
+    )
+    LastSignalColumn: str = attrs.field(
+        default="", metadata={"path": "Internal/LastSignalColumn", "allow_user_edits": False}
+    )
+    LastInfoColumn: str = attrs.field(
+        default="", metadata={"path": "Internal/LastInfoColumn", "allow_user_edits": False}
+    )
+    WindowGeometry: QtCore.QByteArray = attrs.field(
+        factory=QtCore.QByteArray, metadata={"path": "Internal/WindowGeometry", "allow_user_edits": False}
+    )
+    WindowState: QtCore.QByteArray = attrs.field(
+        factory=QtCore.QByteArray, metadata={"path": "Internal/WindowState", "allow_user_edits": False}
+    )
 
     def to_dict(self) -> _t.InternalConfigDict:
         return _t.InternalConfigDict(**attrs.asdict(self))
@@ -211,7 +246,7 @@ class _InternalConfig:
             WindowState=window_state,  # type: ignore
         )
 
-    def save_to_qsettings(self) -> None:
+    def save_all(self) -> None:
         settings = QtCore.QSettings()
         settings.beginGroup("Internal")
         settings.setValue("InputDir", self.InputDir)
@@ -311,7 +346,14 @@ class Config:
         )
 
     def save(self) -> None:
-        self.plot.save_to_qsettings()
-        self.editing.save_to_qsettings()
-        self.data.save_to_qsettings()
-        self.internal.save_to_qsettings()
+        self.plot.save_all()
+        self.editing.save_all()
+        self.data.save_all()
+        self.internal.save_all()
+
+    def reset(self) -> None:
+        self._plot_config = _PlotConfig()
+        self._editing_config = _EditingConfig()
+        self._data_config = _DataConfig()
+        self._internal_config = _InternalConfig()
+        self.save()
