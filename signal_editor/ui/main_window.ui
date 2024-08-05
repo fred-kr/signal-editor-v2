@@ -39,7 +39,7 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="stacked_page_import">
-       <layout class="QHBoxLayout" name="horizontalLayout" stretch="3,6">
+       <layout class="QHBoxLayout" name="horizontalLayout" stretch="4,6">
         <item>
          <widget class="QWidget" name="container_file_information" native="true">
           <layout class="QGridLayout" name="gridLayout">
@@ -88,7 +88,7 @@
              </property>
              <layout class="QFormLayout" name="formLayout">
               <item row="0" column="0">
-               <widget class="QLabel" name="samplingRateLabel">
+               <widget class="BodyLabel" name="samplingRateLabel">
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
@@ -129,7 +129,7 @@
                </widget>
               </item>
               <item row="1" column="0">
-               <widget class="QLabel" name="signalColumnChannelLabel">
+               <widget class="BodyLabel" name="signalColumnChannelLabel">
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
@@ -171,7 +171,7 @@
                </widget>
               </item>
               <item row="3" column="0">
-               <widget class="QLabel" name="infoColumnChannelLabel">
+               <widget class="BodyLabel" name="infoColumnChannelLabel">
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
@@ -229,6 +229,18 @@
                <string>Recent Files</string>
               </attribute>
               <layout class="QVBoxLayout" name="verticalLayout_3">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
                <item>
                 <widget class="ListWidget" name="list_widget_recent_files"/>
                </item>
@@ -239,6 +251,18 @@
                <string>File Metadata</string>
               </attribute>
               <layout class="QVBoxLayout" name="verticalLayout_4">
+               <property name="leftMargin">
+                <number>0</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>0</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
                <item>
                 <widget class="QCollapsible" name="collapsible_frame">
                  <property name="sizePolicy">
@@ -309,7 +333,7 @@
             </widget>
            </item>
            <item row="0" column="0" colspan="3">
-            <widget class="QLabel" name="label_2">
+            <widget class="SubtitleLabel" name="label_2">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -317,7 +341,7 @@
               </sizepolicy>
              </property>
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:700;&quot;&gt;Data Import&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string>Data Import</string>
              </property>
             </widget>
            </item>
@@ -334,17 +358,14 @@
           </property>
           <layout class="QGridLayout" name="gridLayout_7">
            <item row="0" column="0">
-            <widget class="QLabel" name="label">
+            <widget class="SubtitleLabel" name="label">
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; font-weight:700;&quot;&gt;Data View&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+              <string>Data View</string>
              </property>
             </widget>
            </item>
            <item row="0" column="1">
-            <widget class="QLabel" name="label_showing_data_table">
+            <widget class="StrongBodyLabel" name="label_showing_data_table">
              <property name="text">
               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Showing&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;: -&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
@@ -511,7 +532,6 @@
    <addaction name="menuSettings"/>
    <addaction name="menuHelp"/>
   </widget>
-  <widget class="QStatusBar" name="statusbar"/>
   <widget class="QToolBar" name="tool_bar_file_actions">
    <property name="windowTitle">
     <string>Editing Toolbar</string>
@@ -851,6 +871,21 @@
   <customwidget>
    <class>RoundMenu</class>
    <extends>QMenu</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>SubtitleLabel</class>
+   <extends>QLabel</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>BodyLabel</class>
+   <extends>QLabel</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>StrongBodyLabel</class>
+   <extends>QLabel</extends>
    <header>qfluentwidgets</header>
   </customwidget>
  </customwidgets>

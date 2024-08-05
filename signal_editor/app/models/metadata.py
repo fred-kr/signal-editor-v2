@@ -72,7 +72,6 @@ class FileMetadata:
     def signal_column(self, value: str) -> None:
         if "signal_column" in self.required_fields:
             self.required_fields.remove("signal_column")
-        print(f"Setting signal column to {value}")
         self._signal_column = value
 
     @property

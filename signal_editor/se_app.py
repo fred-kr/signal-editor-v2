@@ -343,6 +343,7 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.mw.dialog_meta.line_edit_file_name.setText(file_name)
         self.mw.dialog_meta.line_edit_file_type.setText(file_type)
+        self.mw.dialog_meta.data_tree_widget_additional_info.setData(metadata.to_dict(), hideRoot=True)
 
         self.mw.dialog_meta.open()
 

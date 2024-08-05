@@ -35,9 +35,20 @@ class ItemData:
     description: str | None = attrs.field(default=None)
     default_value: _ConfigType = attrs.field(
         default=None,
-        # validator=attrs.validators.instance_of(
-            # (QtGui.QColor, int, bool, RateComputationMethod, TextFileSeparator, str, NoneType, list, QtCore.QByteArray, attrs.Factory)
-        # ),
+        validator=attrs.validators.instance_of(
+            (
+                QtGui.QColor,
+                int,
+                bool,
+                RateComputationMethod,
+                TextFileSeparator,
+                str,
+                NoneType,
+                list,
+                QtCore.QByteArray,
+                Factory,
+            )
+        ),
     )
 
 
@@ -134,7 +145,7 @@ class ConfigTreeItem:
         if self.value == self.default_value:
             return False
         if isinstance(self.default_value, Factory):
-            default_value = self.default_value.factory()
+            default_value = self.default_value.factory()  # type: ignore
         else:
             default_value = self.default_value
 
@@ -149,7 +160,7 @@ class ConfigTreeItem:
         return "".join(parts)
 
 
-class ConfigTreeModel(QtCore.QAbstractItemModel):
+class ConfigModel(QtCore.QAbstractItemModel):
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
         self._config = Config()
@@ -293,7 +304,7 @@ class ConfigTreeModel(QtCore.QAbstractItemModel):
         else:
             return QtCore.QModelIndex()
 
-    def parent(self, index: _Index | None = None) -> QtCore.QModelIndex:
+    def parent(self, index: _Index | None = None) -> QtCore.QModelIndex:  # type: ignore
         if index is None:
             index = QtCore.QModelIndex()
 

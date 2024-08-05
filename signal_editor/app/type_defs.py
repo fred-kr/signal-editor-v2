@@ -9,37 +9,18 @@ from .enum_defs import (
     FilterMethod,
     NK2ECGPeakDetectionMethod,
     PointSymbols,
-    StandardizationMethod,
-    WFDBPeakDirection,
-    SVGColors,
     RateComputationMethod,
+    StandardizationMethod,
+    SVGColors,
+    TextFileSeparator,
+    WFDBPeakDirection,
 )
 
 if t.TYPE_CHECKING:
     import mne
     from PySide6 import QtCore, QtGui
 
-    from ..app.controllers.data_controller import (
-        TextFileSeparator,
-    )
     from ..app.core.section import SectionID
-
-ConfigCategory = t.Literal["Plot", "Data", "Editing", "Internal"]
-PlotConfigKey = t.Literal[
-    "Background", "Foreground", "LineColor", "PointColor", "SectionColor", "LineClickWidth", "ClickRadius"
-]
-EditingConfigKey = t.Literal["FilterStacking", "RateMethod"]
-DataConfigKey = t.Literal["FloatPrecision", "TextSeparatorChar"]
-InternalConfigKey = t.Literal[
-    "InputDir",
-    "OutputDir",
-    "LastSamplingRate",
-    "RecentFiles",
-    "LastSignalColumn",
-    "LastInfoColumn",
-    "WindowGeometry",
-    "WindowState",
-]
 
 PGColor = t.Union[str, int, float, tuple[int, int, int], tuple[int, int, int, int], "QtGui.QColor", SVGColors]
 
@@ -76,13 +57,14 @@ class MetadataDict(t.TypedDict):
     signal_column: str
     info_column: str | None
     column_names: list[str]
-    
-class MetadataUpdateDict(t.TypedDict, total=False):
-    sampling_rate: int
-    signal_column: str
-    info_column: str
-    signal_column_index: int
-    info_column_index: int
+
+
+# class MetadataUpdateDict(t.TypedDict, total=False):
+#     sampling_rate: int
+#     signal_column: str
+#     info_column: str
+#     signal_column_index: int
+#     info_column_index: int
 
 
 # region NewConfig

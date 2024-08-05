@@ -19,12 +19,13 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
 from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplication, QFormLayout,
     QFrame, QGridLayout, QGroupBox, QHBoxLayout,
     QHeaderView, QLabel, QListWidgetItem, QMainWindow,
-    QMenuBar, QSizePolicy, QStackedWidget, QStatusBar,
-    QTabWidget, QToolBar, QVBoxLayout, QWidget)
+    QMenuBar, QSizePolicy, QStackedWidget, QTabWidget,
+    QToolBar, QVBoxLayout, QWidget)
 
 from pyqtgraph.widgets.MatplotlibWidget import MatplotlibWidget
-from qfluentwidgets import (ComboBox, LineEdit, ListWidget, PushButton,
-    RoundMenu, SpinBox, TableView)
+from qfluentwidgets import (BodyLabel, ComboBox, LineEdit, ListWidget,
+    PushButton, RoundMenu, SpinBox, StrongBodyLabel,
+    SubtitleLabel, TableView)
 from superqt import QCollapsible
 from . import resources_rc
 
@@ -175,7 +176,7 @@ class Ui_MainWindow(object):
         self.grp_box_required_info.setFlat(True)
         self.formLayout = QFormLayout(self.grp_box_required_info)
         self.formLayout.setObjectName(u"formLayout")
-        self.samplingRateLabel = QLabel(self.grp_box_required_info)
+        self.samplingRateLabel = BodyLabel(self.grp_box_required_info)
         self.samplingRateLabel.setObjectName(u"samplingRateLabel")
         self.samplingRateLabel.setMinimumSize(QSize(0, 31))
 
@@ -190,7 +191,7 @@ class Ui_MainWindow(object):
 
         self.formLayout.setWidget(0, QFormLayout.FieldRole, self.spin_box_sampling_rate_import_page)
 
-        self.signalColumnChannelLabel = QLabel(self.grp_box_required_info)
+        self.signalColumnChannelLabel = BodyLabel(self.grp_box_required_info)
         self.signalColumnChannelLabel.setObjectName(u"signalColumnChannelLabel")
         self.signalColumnChannelLabel.setMinimumSize(QSize(0, 31))
 
@@ -208,7 +209,7 @@ class Ui_MainWindow(object):
 
         self.formLayout.setWidget(3, QFormLayout.FieldRole, self.combo_box_info_column_import_page)
 
-        self.infoColumnChannelLabel = QLabel(self.grp_box_required_info)
+        self.infoColumnChannelLabel = BodyLabel(self.grp_box_required_info)
         self.infoColumnChannelLabel.setObjectName(u"infoColumnChannelLabel")
         self.infoColumnChannelLabel.setMinimumSize(QSize(0, 31))
 
@@ -243,6 +244,7 @@ class Ui_MainWindow(object):
         self.tab_recent_files.setObjectName(u"tab_recent_files")
         self.verticalLayout_3 = QVBoxLayout(self.tab_recent_files)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.verticalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.list_widget_recent_files = ListWidget(self.tab_recent_files)
         self.list_widget_recent_files.setObjectName(u"list_widget_recent_files")
 
@@ -253,6 +255,7 @@ class Ui_MainWindow(object):
         self.tab_file_metadata.setObjectName(u"tab_file_metadata")
         self.verticalLayout_4 = QVBoxLayout(self.tab_file_metadata)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.collapsible_frame = QCollapsible(self.tab_file_metadata)
         self.collapsible_frame.setObjectName(u"collapsible_frame")
         sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
@@ -291,7 +294,7 @@ class Ui_MainWindow(object):
 
         self.gridLayout.addWidget(self.btn_close_file, 3, 2, 1, 1)
 
-        self.label_2 = QLabel(self.container_file_information)
+        self.label_2 = SubtitleLabel(self.container_file_information)
         self.label_2.setObjectName(u"label_2")
         sizePolicy.setHeightForWidth(self.label_2.sizePolicy().hasHeightForWidth())
         self.label_2.setSizePolicy(sizePolicy)
@@ -310,13 +313,12 @@ class Ui_MainWindow(object):
         self.container_loaded_data_table.setSizePolicy(sizePolicy3)
         self.gridLayout_7 = QGridLayout(self.container_loaded_data_table)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
-        self.label = QLabel(self.container_loaded_data_table)
+        self.label = SubtitleLabel(self.container_loaded_data_table)
         self.label.setObjectName(u"label")
-        self.label.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_7.addWidget(self.label, 0, 0, 1, 1)
 
-        self.label_showing_data_table = QLabel(self.container_loaded_data_table)
+        self.label_showing_data_table = StrongBodyLabel(self.container_loaded_data_table)
         self.label_showing_data_table.setObjectName(u"label_showing_data_table")
         self.label_showing_data_table.setAlignment(Qt.AlignmentFlag.AlignBottom|Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing)
 
@@ -338,7 +340,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addWidget(self.container_loaded_data_table)
 
-        self.horizontalLayout.setStretch(0, 3)
+        self.horizontalLayout.setStretch(0, 4)
         self.horizontalLayout.setStretch(1, 6)
         self.stackedWidget.addWidget(self.stacked_page_import)
         self.stacked_page_edit = QWidget()
@@ -412,9 +414,6 @@ class Ui_MainWindow(object):
         self.menuHelp = RoundMenu(self.menubar)
         self.menuHelp.setObjectName(u"menuHelp")
         MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QStatusBar(MainWindow)
-        self.statusbar.setObjectName(u"statusbar")
-        MainWindow.setStatusBar(self.statusbar)
         self.tool_bar_file_actions = QToolBar(MainWindow)
         self.tool_bar_file_actions.setObjectName(u"tool_bar_file_actions")
         self.tool_bar_file_actions.setMovable(False)
@@ -574,8 +573,8 @@ class Ui_MainWindow(object):
         self.tab_widget_files_properties.setTabText(self.tab_widget_files_properties.indexOf(self.tab_file_metadata), QCoreApplication.translate("MainWindow", u"File Metadata", None))
         self.btn_open_file.setText(QCoreApplication.translate("MainWindow", u"Select File", None))
         self.btn_close_file.setText(QCoreApplication.translate("MainWindow", u"Close File", None))
-        self.label_2.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:14pt; font-weight:700;\">Data Import</span></p></body></html>", None))
-        self.label.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:14pt; font-weight:700;\">Data View</span></p></body></html>", None))
+        self.label_2.setText(QCoreApplication.translate("MainWindow", u"Data Import", None))
+        self.label.setText(QCoreApplication.translate("MainWindow", u"Data View", None))
         self.label_showing_data_table.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:10pt;\">Showing</span><span style=\" font-size:10pt;\">: -</span></p></body></html>", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuOpen_Recent.setTitle(QCoreApplication.translate("MainWindow", u"Open Recent", None))

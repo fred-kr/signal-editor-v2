@@ -146,7 +146,6 @@ class DataController(QtCore.QObject):
         last_sampling_rate = config.internal.LastSamplingRate
         last_signal_col = config.internal.LastSignalColumn
         last_info_col = config.internal.LastInfoColumn
-        print(f"Last sampling rate: {last_sampling_rate}\nLast signal column: {last_signal_col}\nLast info column: {last_info_col}")
 
         if file_path.suffix == ".edf":
             edf_info = mne.io.read_raw_edf(file_path, preload=False)
@@ -168,7 +167,6 @@ class DataController(QtCore.QObject):
         if last_info_col in metadata.valid_columns:
             metadata.info_column = last_info_col
         self._metadata = metadata
-        print(f"Required fields: {self.metadata.required_fields}")
         if self.metadata.required_fields:
             self.sig_user_input_required.emit(self.metadata.required_fields)
 

@@ -14,6 +14,54 @@ ItemDataRole = QtCore.Qt.ItemDataRole
 NONE_STRING = "----"
 
 
+
+
+class EnumModel(QtCore.QAbstractListModel):
+    def __init__(self, enum_class: t.Type[enum.Enum] | None, parent: QtCore.QObject | None = None) -> None:
+        super().__init__(parent)
+        self._enum_class = enum_class
+
+    @property
+    def enum_class(self) -> t.Type[enum.Enum] | None:
+        return self._enum_class
+    
+    def rowCount(self, parent: _Index | None = None) -> int:
+        return 0 if self._enum_class is None else len(self._enum_class)
+
+    def data(self, index: _Index, role: int = ItemDataRole.DisplayRole) -> t.Any:
+        if not index.isValid():
+            return None
+        if self._enum_class is None:
+            return None
+
+        enum_member = list(self._enum_class.__members__.values())[index.row()]
+
+        if role == ItemDataRole.DisplayRole:
+            return enum_member.name
+        elif role == ItemDataRole.ToolTipRole:
+            return enum_member.value
+        elif role == ItemDataRole.UserRole:
+            return enum_member
+        elif role == ItemDataRole.DecorationRole:
+            if "qcolor" in dir(enum_member):
+                return enum_member.qcolor()
+
+        return None
+
+
+class EnumComboBox2(QtWidgets.QComboBox):
+    def __init__(self, enum_class: t.Type[enum.Enum], parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+        self._enum_class = enum_class
+        self.setModel(EnumModel(enum_class))
+
+    def current_enum(self) -> enum.Enum:
+        return self._enum_class(self.currentData())
+
+    def set_current_enum(self, value: enum.Enum) -> None:
+        self.setCurrentText(value.name)
+        
+        
 class EnumComboBox(qfw.ComboBox):
     sig_current_enum_changed: t.ClassVar[QtCore.Signal] = QtCore.Signal(object)
 
@@ -194,7 +242,7 @@ class ConfigItemDelegate(QtWidgets.QStyledItemDelegate):
             return None
 
         if isinstance(initial_value, (RateComputationMethod, TextFileSeparator)):
-            editor = EnumComboBox(initial_value.__class__, allow_none=False, parent=parent)
+            editor = EnumComboBox2(initial_value.__class__, parent=parent)
         elif isinstance(initial_value, bool):
             editor = None
         elif isinstance(initial_value, int):
@@ -204,7 +252,7 @@ class ConfigItemDelegate(QtWidgets.QStyledItemDelegate):
             editor = QtWidgets.QDoubleSpinBox(parent)
             editor.setMinimum(0)
         elif isinstance(initial_value, QtGui.QColor):
-            editor = EnumComboBox(SVGColors, allow_none=False, parent=parent)
+            editor = EnumComboBox2(SVGColors, parent=parent)
         else:
             editor = super().createEditor(parent, option, index)
 
@@ -238,7 +286,7 @@ class ConfigItemDelegate(QtWidgets.QStyledItemDelegate):
     def setEditorData(self, editor: QtWidgets.QWidget, index: _Index) -> None:
         initial_value = index.model().data(index, ItemDataRole.EditRole)
 
-        if isinstance(editor, EnumComboBox):
+        if isinstance(editor, EnumComboBox2):
             if isinstance(initial_value, QtGui.QColor):
                 initial_value = SVGColors(initial_value.name())
             editor.set_current_enum(initial_value)
@@ -249,7 +297,7 @@ class ConfigItemDelegate(QtWidgets.QStyledItemDelegate):
 
     def setModelData(self, editor: QtWidgets.QWidget, model: QtCore.QAbstractItemModel, index: _Index) -> None:
         value = None
-        if isinstance(editor, EnumComboBox):
+        if isinstance(editor, EnumComboBox2):
             value = editor.current_enum()
             if isinstance(value, SVGColors):
                 value = value.qcolor()
