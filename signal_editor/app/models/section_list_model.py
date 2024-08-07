@@ -34,9 +34,13 @@ class SectionListModel(QtCore.QAbstractListModel):
 
         if role == QtCore.Qt.ItemDataRole.DisplayRole:
             return section.section_id.pretty_name()
-        if role == QtCore.Qt.ItemDataRole.SizeHintRole:
+        elif role == QtCore.Qt.ItemDataRole.SizeHintRole:
             return QtCore.QSize(100, 31)
-        return section if role == QtCore.Qt.ItemDataRole.UserRole else None
+        elif role == QtCore.Qt.ItemDataRole.UserRole:
+            return section
+        elif role == QtCore.Qt.ItemDataRole.ToolTipRole:
+            return section.__repr__()
+        return None
 
     def add_section(self, section: Section) -> None:
         parent = self.index(0, 0)

@@ -20,7 +20,7 @@ if t.TYPE_CHECKING:
     import mne
     from PySide6 import QtCore, QtGui
 
-    from ..app.core.section import SectionID
+    from ..app.core.section import SectionID, ProcessingParameters
 
 PGColor = t.Union[str, int, float, tuple[int, int, int], tuple[int, int, int, int], "QtGui.QColor", SVGColors]
 
@@ -57,14 +57,6 @@ class MetadataDict(t.TypedDict):
     signal_column: str
     info_column: str | None
     column_names: list[str]
-
-
-# class MetadataUpdateDict(t.TypedDict, total=False):
-#     sampling_rate: int
-#     signal_column: str
-#     info_column: str
-#     signal_column_index: int
-#     info_column_index: int
 
 
 # region NewConfig
@@ -341,8 +333,8 @@ class ProcessingParametersDict(t.TypedDict):
     processing_pipeline: str
     filter_parameters: SignalFilterParameters | None
     standardization_parameters: StandardizationParameters | None
-    peak_detection_method: str
-    peak_detection_method_parameters: PeakDetectionMethodParameters
+    peak_detection_method: str | None
+    peak_detection_method_parameters: PeakDetectionMethodParameters | None
 
 
 class ManualPeakEditsDict(t.TypedDict):
@@ -357,6 +349,16 @@ class SectionMetadataDict(t.TypedDict):
     sampling_rate: int
     processing_parameters: ProcessingParametersDict
 
+
+class SectionSummaryDict(t.TypedDict):
+    name: str
+    size: int
+    sampling_rate: int
+    start_index: int
+    end_index: int
+    peak_count: int
+    processing_parameters: "ProcessingParameters"
+    
 
 class CompactSectionResultDict(t.TypedDict):
     peaks_global_index: npt.NDArray[np.int32]

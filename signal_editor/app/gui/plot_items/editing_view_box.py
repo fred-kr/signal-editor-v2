@@ -146,3 +146,4 @@ class EditingViewBox(pg.ViewBox):
         tr = QtGui.QTransform.fromScale(rect.width(), rect.height())
         self.selection_box.setTransform(tr)
         self.selection_box.show()
+

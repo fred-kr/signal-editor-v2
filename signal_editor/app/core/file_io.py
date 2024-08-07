@@ -431,8 +431,8 @@ def write_hdf5(file_path: Path, data: CompleteResult) -> None:
                 )
 
             # Peak detection parameters
-            peak_method = detailed_result["metadata"]["processing_parameters"]["peak_detection_method"]
-            peak_params = detailed_result["metadata"]["processing_parameters"]["peak_detection_method_parameters"]
+            peak_method = detailed_result["metadata"]["processing_parameters"]["peak_detection_method"] or "unknown"
+            peak_params = detailed_result["metadata"]["processing_parameters"]["peak_detection_method_parameters"] or {}
             if peak_method == PeakDetectionMethod.ECGNeuroKit2:
                 peak_method = f"{peak_method}_{peak_params.get("method", "unknown")}"
                 peak_params = peak_params.get("params") or {"attribute_name": "unknown"}

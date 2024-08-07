@@ -14,8 +14,6 @@ ItemDataRole = QtCore.Qt.ItemDataRole
 NONE_STRING = "----"
 
 
-
-
 class EnumModel(QtCore.QAbstractListModel):
     def __init__(self, enum_class: t.Type[enum.Enum] | None, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
@@ -24,7 +22,7 @@ class EnumModel(QtCore.QAbstractListModel):
     @property
     def enum_class(self) -> t.Type[enum.Enum] | None:
         return self._enum_class
-    
+
     def rowCount(self, parent: _Index | None = None) -> int:
         return 0 if self._enum_class is None else len(self._enum_class)
 
@@ -60,8 +58,8 @@ class EnumComboBox2(QtWidgets.QComboBox):
 
     def set_current_enum(self, value: enum.Enum) -> None:
         self.setCurrentText(value.name)
-        
-        
+
+
 class EnumComboBox(qfw.ComboBox):
     sig_current_enum_changed: t.ClassVar[QtCore.Signal] = QtCore.Signal(object)
 
@@ -171,51 +169,6 @@ class SVGColorListModel(QtCore.QAbstractListModel):
             return QtGui.QIcon(pixmap)
 
         return None
-
-
-# # TODO: Combine the following three classes into a single class that can handle all three types of enums.
-# class ColorComboBox(QtWidgets.QComboBox):
-#     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
-#         super().__init__(parent)
-#         self.setModel(SVGColorListModel())
-
-#     def current_color(self) -> QtGui.QColor:
-#         return QtGui.QColor(self.currentData())
-
-#     def set_color(self, color: SVGColors) -> None:
-#         self.setCurrentText(color.name)
-
-
-# class RateMethodComboBox(QtWidgets.QComboBox):
-#     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
-#         super().__init__(parent)
-#         for rm in RateComputationMethod:
-#             name = rm.name
-#             value = rm.value
-
-#             self.addItem(name, userData=value)
-
-#     def current_method(self) -> RateComputationMethod:
-#         return RateComputationMethod(self.currentData())
-
-#     def set_method(self, method: RateComputationMethod) -> None:
-#         self.setCurrentText(method.name)
-
-
-# class TextFileSeparatorComboBox(QtWidgets.QComboBox):
-#     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
-#         super().__init__(parent)
-#         for separator in TextFileSeparator:
-#             name = separator.name
-#             value = separator.value
-
-#             self.addItem(name, userData=value)
-
-#     def current_separator(self) -> TextFileSeparator:
-#         return TextFileSeparator(self.currentData())
-
-#     def set_separator(self, separator: TextFileSeparator) -> None:
-#         self.setCurrentText(separator.name)
 
 
 class ConfigItemDelegate(QtWidgets.QStyledItemDelegate):

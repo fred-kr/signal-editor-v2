@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 
-import pyqtgraph as pg
 import qfluentwidgets as qfw
 from loguru import logger
 from pyqtgraph.console import ConsoleWidget
@@ -10,12 +9,14 @@ from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 
 from signal_editor.ui.ui_main_window import Ui_MainWindow
 
+from .. import type_defs as _t
 from ..config import Config
 from ..enum_defs import LogLevel
 from .icons import SignalEditorIcon as Icons
 from .widgets import ConfigDialog, ExportDialog, MetadataDialog, SectionListDock
+from .widgets.data_tree_widget import DataTreeWidgetContainer
 from .widgets.log_window import StatusMessageDock
-from .widgets.message_box import MessageBox
+from .widgets.message_box import MessageBox, SectionSummaryBox
 from .widgets.parameter_inputs import ParameterInputsDock
 
 
@@ -27,10 +28,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         super().__init__(parent)
         self.setupUi(self)
         self.setWindowIcon(Icons.SignalEditor.icon())
-        
+
         self.new_central_widget = QtWidgets.QWidget()
         self._h_layout = QtWidgets.QHBoxLayout(self.new_central_widget)
         self.navigation_interface = NavigationInterface(self, showMenuButton=True)
+
+        self.progress_dlg: QtWidgets.QProgressDialog | None = None
 
         self._setup_layout()
         self.setCentralWidget(self.new_central_widget)
@@ -130,15 +133,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.table_view_import_data.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.table_view_import_data.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_view_import_data.customContextMenuRequested.connect(self.show_data_view_context_menu)
-        data_tree_widget = pg.DataTreeWidget(self.collapsible_frame)
+        layout = QtWidgets.QVBoxLayout()
+        data_tree_widget = DataTreeWidgetContainer()
         data_tree_widget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
-        self.collapsible_frame.setText("File Metadata")
-        self.collapsible_frame.setContent(data_tree_widget)
-        self.data_tree_widget_import_metadata = data_tree_widget
+        layout.addWidget(data_tree_widget)
+        self.dialog_meta.container_additional_metadata.setLayout(layout)
+        self.data_tree_widget_additional_metadata = data_tree_widget
 
         self.stackedWidget.setCurrentIndex(0)
 
-    def _setup_docks(self) -> None:
+    def _setup_docks(self) -> None:  # sourcery skip: extract-duplicate-method
         dwa = QtCore.Qt.DockWidgetArea
 
         dock_status = StatusMessageDock()
@@ -159,6 +163,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         class ConsoleDock(QtWidgets.QDockWidget):
             def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
                 super().__init__(parent)
+                self.toggleViewAction().setIcon(Icons.Code.icon())
                 self.setVisible(False)
                 self.setObjectName("DockWidgetConsole")
                 self.setFloating(True)
@@ -173,40 +178,35 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         dock_console = ConsoleDock(self)
         dock_console.setVisible(False)
+        
         self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, dock_console)
-        self._actions["info"].append(dock_console.toggleViewAction())
-        self.menuView.addSeparator()
-        self.menuView.addAction(dock_console.toggleViewAction())
+        # self._actions["info"].append(dock_console.toggleViewAction())
+        self.menu_view.addSeparator()
+        self.menu_view.addAction(dock_console.toggleViewAction())
         self.dock_console = dock_console
 
     def _setup_actions(self) -> None:
-        self.action_find_peaks_in_selection.setShortcutVisibleInContextMenu(False)
-        self.action_remove_peaks_in_selection.setShortcutVisibleInContextMenu(False)
-        self.action_show_settings.setShortcutVisibleInContextMenu(False)
-        self.action_show_user_guide.setShortcutVisibleInContextMenu(False)
+        self.action_show_section_summary = QtGui.QAction(Icons.Info.icon(), "Show Section Summary", self)
 
         self.action_toggle_whats_this_mode = QtWidgets.QWhatsThis().createAction(self)
         self.action_toggle_whats_this_mode.setIcon(Icons.Question.icon())
+
         self._actions = {
             "import": [self.action_open_file, self.action_edit_metadata, self.action_close_file],
-            "edit": [
-                self.dock_sections.toggleViewAction(),
-                self.dock_parameters.toggleViewAction(),
+            "plot": [
                 self.action_show_section_overview,
                 self.action_toggle_auto_scaling,
                 self.action_create_new_section,
             ],
-            "result": [],
             "export": [self.action_export_result],
-            "info": [],
             "help": [
                 self.action_show_user_guide,
                 self.action_toggle_whats_this_mode,
-                self.dock_status_log.toggleViewAction(),
             ],
             "section_list": [
                 self.action_create_new_section,
                 self.action_delete_section,
+                self.action_show_section_summary,
                 self.action_show_section_overview,
             ],
         }
@@ -214,25 +214,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.action_toggle_auto_scaling.setChecked(True)
 
     def _setup_toolbars(self) -> None:
-        self.tool_bar_file_actions.addSeparator()
+        # self.tool_bar_file_actions.addSeparator()
         self.tool_bar_file_actions.addAction(self.action_export_result)
 
-        self.tool_bar_editing = self._setup_toolbar("tool_bar_editing", self._actions["edit"])
-        self.tool_bar_editing.insertSeparator(self.action_show_section_overview)
-        self.tool_bar_editing.insertSeparator(self.action_create_new_section)
+        self.tool_bar_editing = self._setup_toolbar("tool_bar_editing", self._actions["plot"])
 
         self.tool_bar_help = self._setup_toolbar("tool_bar_help", self._actions["help"])
 
         cb_section_list = qfw.CommandBar()
         cb_section_list.setObjectName("command_bar_section_list")
         cb_section_list.addActions(self._actions["section_list"])
-
         cb_section_list.insertSeparator(2)
+        cb_section_list.resizeToSuitableWidth()
+
         self.dock_sections.main_layout.insertWidget(1, cb_section_list)
         self.tool_bar_section_list = cb_section_list
 
     def _setup_toolbar(self, name: str, actions: list[QtGui.QAction], movable: bool = False) -> QtWidgets.QToolBar:
-        tb = QtWidgets.QToolBar()
+        tb = QtWidgets.QToolBar(name)
         tb.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         tb.setObjectName(name)
         tb.setMovable(movable)
@@ -241,16 +240,20 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         return tb
 
     def _setup_menus(self) -> None:
-        self.menuView.addActions([self.dock_sections.toggleViewAction(), self.dock_status_log.toggleViewAction()])
-        self.menuView.addSeparator()
-        self.menuView.addAction(self.dock_parameters.toggleViewAction())
+        self.menu_view.addActions(
+            [
+                self.dock_sections.toggleViewAction(),
+                self.dock_status_log.toggleViewAction(),
+                self.dock_parameters.toggleViewAction(),
+            ]
+        )
 
-        self.menuEdit.insertAction(self.action_show_section_overview, self.dock_parameters.toggleViewAction())
-        self.menuEdit.insertSeparator(self.action_show_section_overview)
+        # self.menuEdit.insertAction(self.action_show_section_overview, self.dock_parameters.toggleViewAction())
+        self.menu_plot.insertSeparator(self.action_show_section_overview)
 
-        self.menuHelp.addSeparator()
-        self.menuHelp.addAction(self.dock_status_log.toggleViewAction())
-        self.menuHelp.insertAction(self.action_show_user_guide, self.action_toggle_whats_this_mode)
+        self.menu_help.addSeparator()
+        self.menu_help.addAction(self.dock_status_log.toggleViewAction())
+        self.menu_help.insertAction(self.action_show_user_guide, self.action_toggle_whats_this_mode)
 
     def hide_all_docks(self) -> None:
         self.dock_status_log.hide()
@@ -298,6 +301,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         action.triggered.connect(self.sig_table_refresh_requested.emit)
         menu.addAction(action)
         menu.exec(QtGui.QCursor.pos())
+
+    def show_section_summary_box(self, summary: _t.SectionSummaryDict) -> None:
+        msg_box = SectionSummaryBox("Section Summary", summary, parent=self)
+        msg_box.open()
 
     @QtCore.Slot(int)
     def _on_page_changed(self, index: int) -> None:
@@ -362,6 +369,22 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             self.dock_console.close()
         return super().closeEvent(event)
 
+    def show_success(self, title: str, text: str) -> None:
+        qfw.InfoBar.success(
+            title=title,
+            content=text,
+            duration=3000,
+            parent=self,
+        )
+
+    def show_error(self, title: str, text: str) -> None:
+        qfw.InfoBar.error(
+            title=title,
+            content=text,
+            duration=3000,
+            parent=self,
+        )
+        
     @QtCore.Slot(str, int, str)
     def maybe_show_error_dialog(
         self,
@@ -405,7 +428,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 text = split_text[0]
                 traceback = f"Traceback: {split_text[1]}"
 
-            # msg_box = QtWidgets.QMessageBox(self)
             title = f"Message: {msg_log_level.name} - {time}"
             icon = self._msg_box_icons[msg_log_level]
             parent = self
@@ -419,11 +441,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             msg_box = MessageBox(title, text, icon=icon, parent=parent)
             msg_box.set_detailed_text(traceback)
 
-            # msg_box.setWindowIcon(self._msg_box_icons[msg_log_level])
-            # msg_box.setWindowTitle(f"Message: {msg_log_level.name} - {time}")
-            # msg_box.setIconPixmap(self._msg_box_icons[msg_log_level].pixmap(64, 64))
-            # msg_box.setText(text)
-            # msg_box.setDetailedText(traceback)
             msg_box.open()
 
     def set_active_section_label(self, label_text: str) -> None:

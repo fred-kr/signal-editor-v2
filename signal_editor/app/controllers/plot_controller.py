@@ -5,6 +5,8 @@ import numpy.typing as npt
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from ..gui.widgets.overlay_widget import OverlayWidget
+
 from ..utils import safe_disconnect
 
 from .. import type_defs as _t
@@ -30,9 +32,11 @@ class PlotController(QtCore.QObject):
         super().__init__(parent)
 
         self._mw_ref = main_window
-        # self.regions: list[pg.LinearRegionItem] = []
         self.regions: list[ClickableRegionItem] = []
         self._show_regions = False
+        self._overlay_widget = OverlayWidget(self._mw_ref.plot_container)
+        self._overlay_widget.hide()
+        
         self._setup_plot_widgets()
         self._setup_plot_items()
         self._setup_plot_data_items()
@@ -501,3 +505,14 @@ class PlotController(QtCore.QObject):
     def toggle_auto_scaling(self, state: bool) -> None:
         self.pw_main.enableAutoRange(y=state)
         self.pw_rate.enableAutoRange(y=state)
+
+    def show_overlay(self) -> None:
+        self._mw_ref.plot_container.setEnabled(False)
+        self._overlay_widget.setGeometry(self._mw_ref.plot_container.geometry())
+        self._overlay_widget.raise_()
+        self._overlay_widget.show()
+
+    @QtCore.Slot()
+    def hide_overlay(self) -> None:
+        self._mw_ref.plot_container.setEnabled(True)
+        self._overlay_widget.hide()

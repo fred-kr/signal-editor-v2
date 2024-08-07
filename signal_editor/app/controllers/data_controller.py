@@ -147,10 +147,13 @@ class DataController(QtCore.QObject):
         last_signal_col = config.internal.LastSignalColumn
         last_info_col = config.internal.LastInfoColumn
 
+        other_info: dict[str, t.Any] = {}
+
         if file_path.suffix == ".edf":
             edf_info = mne.io.read_raw_edf(file_path, preload=False)
             sampling_rate = t.cast(int, edf_info.info["sfreq"])
             column_names = edf_info.ch_names
+            other_info = dict(edf_info.info)
         elif file_path.suffix in {".feather", ".csv", ".txt", ".tsv"}:
             lf = self._reader_funcs[file_path.suffix](file_path)
             column_names = lf.collect_schema().names()
@@ -166,6 +169,8 @@ class DataController(QtCore.QObject):
             metadata.signal_column = last_signal_col
         if last_info_col in metadata.valid_columns:
             metadata.info_column = last_info_col
+
+        metadata.other_info = other_info
         self._metadata = metadata
         if self.metadata.required_fields:
             self.sig_user_input_required.emit(self.metadata.required_fields)

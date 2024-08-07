@@ -15,58 +15,50 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplication, QDialog,
-    QFormLayout, QGridLayout, QHeaderView, QLabel,
-    QScrollArea, QSizePolicy, QSpacerItem, QTreeWidgetItem,
-    QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QDialog, QFormLayout, QGridLayout,
+    QSizePolicy, QSpacerItem, QTabWidget, QVBoxLayout,
+    QWidget)
 
-from pyqtgraph import DataTreeWidget
-from qfluentwidgets import (BodyLabel, ComboBox, LineEdit, PushButton,
-    SpinBox, SubtitleLabel)
+from qfluentwidgets import (BodyLabel, CaptionLabel, ComboBox, LineEdit,
+    PushButton, SpinBox, SubtitleLabel)
 from . import resources_rc
 
 class Ui_MetadataDialog(object):
     def setupUi(self, MetadataDialog):
         if not MetadataDialog.objectName():
             MetadataDialog.setObjectName(u"MetadataDialog")
-        MetadataDialog.resize(653, 464)
+        MetadataDialog.resize(579, 359)
         icon = QIcon()
         icon.addFile(u":/icons/app_icon.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         MetadataDialog.setWindowIcon(icon)
         self.gridLayout = QGridLayout(MetadataDialog)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.btn_accept = PushButton(MetadataDialog)
-        self.btn_accept.setObjectName(u"btn_accept")
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout.addWidget(self.btn_accept, 1, 1, 1, 1)
+        self.gridLayout.addItem(self.horizontalSpacer, 1, 0, 1, 1)
 
         self.btn_reject = PushButton(MetadataDialog)
         self.btn_reject.setObjectName(u"btn_reject")
 
         self.gridLayout.addWidget(self.btn_reject, 1, 2, 1, 1)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.btn_accept = PushButton(MetadataDialog)
+        self.btn_accept.setObjectName(u"btn_accept")
 
-        self.gridLayout.addItem(self.horizontalSpacer, 1, 0, 1, 1)
+        self.gridLayout.addWidget(self.btn_accept, 1, 1, 1, 1)
 
-        self.scrollArea = QScrollArea(MetadataDialog)
-        self.scrollArea.setObjectName(u"scrollArea")
-        self.scrollArea.setWidgetResizable(True)
-        self.scrollAreaWidgetContents = QWidget()
-        self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 633, 414))
-        self.verticalLayout_2 = QVBoxLayout(self.scrollAreaWidgetContents)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.container_widget = QWidget(self.scrollAreaWidgetContents)
-        self.container_widget.setObjectName(u"container_widget")
-        self.verticalLayout = QVBoxLayout(self.container_widget)
+        self.container_tabWidget = QTabWidget(MetadataDialog)
+        self.container_tabWidget.setObjectName(u"container_tabWidget")
+        self.tab_required_metadata = QWidget()
+        self.tab_required_metadata.setObjectName(u"tab_required_metadata")
+        self.verticalLayout = QVBoxLayout(self.tab_required_metadata)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.label = SubtitleLabel(self.container_widget)
+        self.label = SubtitleLabel(self.tab_required_metadata)
         self.label.setObjectName(u"label")
 
         self.verticalLayout.addWidget(self.label)
 
-        self.container_form_layout = QWidget(self.container_widget)
+        self.container_form_layout = QWidget(self.tab_required_metadata)
         self.container_form_layout.setObjectName(u"container_form_layout")
         self.formLayout = QFormLayout(self.container_form_layout)
         self.formLayout.setObjectName(u"formLayout")
@@ -136,71 +128,47 @@ class Ui_MetadataDialog(object):
 
         self.formLayout.setWidget(4, QFormLayout.FieldRole, self.combo_box_info_column)
 
-        self.label_7 = BodyLabel(self.container_form_layout)
-        self.label_7.setObjectName(u"label_7")
-        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label_7.sizePolicy().hasHeightForWidth())
-        self.label_7.setSizePolicy(sizePolicy)
-        self.label_7.setMinimumSize(QSize(0, 31))
-
-        self.formLayout.setWidget(5, QFormLayout.LabelRole, self.label_7)
-
-        self.data_tree_widget_additional_info = DataTreeWidget(self.container_form_layout)
-        __qtreewidgetitem = QTreeWidgetItem()
-        __qtreewidgetitem.setText(2, u"3");
-        __qtreewidgetitem.setText(1, u"2");
-        __qtreewidgetitem.setText(0, u"1");
-        self.data_tree_widget_additional_info.setHeaderItem(__qtreewidgetitem)
-        self.data_tree_widget_additional_info.setObjectName(u"data_tree_widget_additional_info")
-        self.data_tree_widget_additional_info.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContentsOnFirstShow)
-        self.data_tree_widget_additional_info.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.data_tree_widget_additional_info.setProperty("showDropIndicator", False)
-        self.data_tree_widget_additional_info.setWordWrap(True)
-        self.data_tree_widget_additional_info.setHeaderHidden(True)
-        self.data_tree_widget_additional_info.setExpandsOnDoubleClick(True)
-        self.data_tree_widget_additional_info.setColumnCount(3)
-
-        self.formLayout.setWidget(5, QFormLayout.FieldRole, self.data_tree_widget_additional_info)
-
 
         self.verticalLayout.addWidget(self.container_form_layout, 0, Qt.AlignmentFlag.AlignTop)
 
-        self.label_8 = QLabel(self.container_widget)
+        self.label_8 = CaptionLabel(self.tab_required_metadata)
         self.label_8.setObjectName(u"label_8")
 
         self.verticalLayout.addWidget(self.label_8)
 
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.container_tabWidget.addTab(self.tab_required_metadata, "")
+        self.tab_additional_metadata = QWidget()
+        self.tab_additional_metadata.setObjectName(u"tab_additional_metadata")
+        self.verticalLayout_2 = QVBoxLayout(self.tab_additional_metadata)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.container_additional_metadata = QWidget(self.tab_additional_metadata)
+        self.container_additional_metadata.setObjectName(u"container_additional_metadata")
 
-        self.verticalLayout.addItem(self.verticalSpacer)
+        self.verticalLayout_2.addWidget(self.container_additional_metadata)
 
+        self.container_tabWidget.addTab(self.tab_additional_metadata, "")
 
-        self.verticalLayout_2.addWidget(self.container_widget)
+        self.gridLayout.addWidget(self.container_tabWidget, 0, 0, 1, 3)
 
-        self.scrollArea.setWidget(self.scrollAreaWidgetContents)
-
-        self.gridLayout.addWidget(self.scrollArea, 0, 0, 1, 3)
-
-        QWidget.setTabOrder(self.scrollArea, self.line_edit_file_name)
         QWidget.setTabOrder(self.line_edit_file_name, self.line_edit_file_type)
         QWidget.setTabOrder(self.line_edit_file_type, self.spin_box_sampling_rate)
         QWidget.setTabOrder(self.spin_box_sampling_rate, self.combo_box_signal_column)
         QWidget.setTabOrder(self.combo_box_signal_column, self.combo_box_info_column)
-        QWidget.setTabOrder(self.combo_box_info_column, self.data_tree_widget_additional_info)
-        QWidget.setTabOrder(self.data_tree_widget_additional_info, self.btn_accept)
+        QWidget.setTabOrder(self.combo_box_info_column, self.btn_accept)
         QWidget.setTabOrder(self.btn_accept, self.btn_reject)
 
         self.retranslateUi(MetadataDialog)
+
+        self.container_tabWidget.setCurrentIndex(0)
+
 
         QMetaObject.connectSlotsByName(MetadataDialog)
     # setupUi
 
     def retranslateUi(self, MetadataDialog):
         MetadataDialog.setWindowTitle(QCoreApplication.translate("MetadataDialog", u"File Metadata", None))
-        self.btn_accept.setText(QCoreApplication.translate("MetadataDialog", u"Save", None))
         self.btn_reject.setText(QCoreApplication.translate("MetadataDialog", u"Cancel", None))
+        self.btn_accept.setText(QCoreApplication.translate("MetadataDialog", u"Save", None))
         self.label.setText(QCoreApplication.translate("MetadataDialog", u"Metadata", None))
         self.label_2.setText(QCoreApplication.translate("MetadataDialog", u"File Name", None))
         self.label_4.setText(QCoreApplication.translate("MetadataDialog", u"File Type", None))
@@ -223,10 +191,8 @@ class Ui_MetadataDialog(object):
         self.combo_box_info_column.setToolTip(QCoreApplication.translate("MetadataDialog", u"<html><head/><body><p>A column / channel in the file containing supplementary data, e.g. temperature or O2-saturation recordings</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.combo_box_info_column.setText("")
-        self.label_7.setText(QCoreApplication.translate("MetadataDialog", u"Additional Info", None))
-#if QT_CONFIG(whatsthis)
-        self.data_tree_widget_additional_info.setWhatsThis(QCoreApplication.translate("MetadataDialog", u"<html><head/><body><p>Shows additional metadata information (if available) as a tree structure.</p></body></html>", None))
-#endif // QT_CONFIG(whatsthis)
         self.label_8.setText(QCoreApplication.translate("MetadataDialog", u"*Field is required", None))
+        self.container_tabWidget.setTabText(self.container_tabWidget.indexOf(self.tab_required_metadata), QCoreApplication.translate("MetadataDialog", u"Required Metadata", None))
+        self.container_tabWidget.setTabText(self.container_tabWidget.indexOf(self.tab_additional_metadata), QCoreApplication.translate("MetadataDialog", u"Additional Metadata", None))
     # retranslateUi
 

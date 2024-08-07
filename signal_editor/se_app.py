@@ -102,6 +102,10 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.action_toggle_auto_scaling.toggled.connect(self.plot.toggle_auto_scaling)
 
         self.mw.dock_sections.list_view.sig_delete_current_item.connect(self.delete_section)
+        self.mw.dock_sections.list_view.sig_show_summary.connect(self.show_section_summary)
+        self.mw.action_show_section_summary.triggered.connect(
+            lambda: self.show_section_summary(self.mw.dock_sections.list_view.currentIndex())
+        )
 
         self.mw.dock_parameters.sig_filter_requested.connect(self.filter_active_signal)
         self.mw.dock_parameters.sig_pipeline_requested.connect(self.run_preprocess_pipeline)
@@ -209,7 +213,16 @@ class SignalEditor(QtWidgets.QApplication):
     def run_peak_detection_worker(self, method: PeakDetectionMethod, params: _t.PeakDetectionMethodParameters) -> None:
         worker = PeakDetectionWorker(self.data.active_section, method, params)
         worker.signals.sig_success.connect(self.refresh_peak_data)
+        worker.signals.sig_done.connect(self._on_worker_finished)
+        # worker.signals.sig_failed.connect(self.mw.sb_progress.error)
+        self._on_worker_started()
         self.thread_pool.start(worker)
+
+    def _on_worker_started(self) -> None:
+        self.plot.show_overlay()
+
+    def _on_worker_finished(self) -> None:
+        self.plot.hide_overlay()
 
     @QtCore.Slot()
     def _on_sig_new_data(self) -> None:
@@ -273,6 +286,14 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.dock_sections.list_view.setCurrentIndex(self.data.base_section_index)
         logger.info(f"Deleted section {index.row():03}")
 
+    @QtCore.Slot(QtCore.QModelIndex)
+    def show_section_summary(self, index: QtCore.QModelIndex) -> None:
+        s = self.data.sections.get_section(index)
+        if s is None:
+            return
+        summary = s.get_summary()
+        self.mw.show_section_summary_box(summary)
+
     @QtCore.Slot(bool)
     def _on_active_section_changed(self, has_peaks: bool) -> None:
         section = self.data.active_section
@@ -314,9 +335,8 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot(object)
     def update_metadata_widgets(self, metadata: "FileMetadata") -> None:
-        metadata_dict = metadata.to_dict()
-        self.mw.data_tree_widget_import_metadata.setData(metadata_dict, hideRoot=True)
-        self.mw.data_tree_widget_import_metadata.collapseAll()
+        self.mw.data_tree_widget_additional_metadata.set_data(metadata.other_info, hide_root=True)
+        self.mw.data_tree_widget_additional_metadata.collapseAll()
         self.mw.spin_box_sampling_rate_import_page.setValue(metadata.sampling_rate)
         self.mw.combo_box_signal_column_import_page.setCurrentText(metadata.signal_column)
         self.mw.combo_box_info_column_import_page.setCurrentText(metadata.info_column)
@@ -343,7 +363,8 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.mw.dialog_meta.line_edit_file_name.setText(file_name)
         self.mw.dialog_meta.line_edit_file_type.setText(file_type)
-        self.mw.dialog_meta.data_tree_widget_additional_info.setData(metadata.to_dict(), hideRoot=True)
+
+        self.mw.data_tree_widget_additional_metadata.set_data(metadata.other_info, hide_root=True)
 
         self.mw.dialog_meta.open()
 
@@ -387,7 +408,7 @@ class SignalEditor(QtWidgets.QApplication):
             self.mw.dialog_meta.combo_box_signal_column.clear()
         with QtCore.QSignalBlocker(self.mw.dialog_meta.combo_box_signal_column):
             self.mw.dialog_meta.combo_box_info_column.clear()
-        self.mw.data_tree_widget_import_metadata.clear()
+        self.mw.data_tree_widget_additional_metadata.clear()
 
     @QtCore.Slot()
     def open_file(self) -> None:
@@ -447,7 +468,6 @@ class SignalEditor(QtWidgets.QApplication):
                 col, QtWidgets.QHeaderView.ResizeMode.Stretch
             )
 
-        self.mw.dock_parameters.setEnabled(True)
         self.mw.dock_sections.setEnabled(True)
 
         self.config.internal.LastSignalColumn = self.data.metadata.signal_column
@@ -457,7 +477,7 @@ class SignalEditor(QtWidgets.QApplication):
     @QtCore.Slot()
     def close_file(self) -> None:
         self.mw.table_view_import_data.setModel(None)
-        self.mw.data_tree_widget_import_metadata.clear()
+        self.mw.data_tree_widget_additional_metadata.clear()
         self._clear_column_models()
         self.mw.dock_sections.list_view.setModel(None)
         self.mw.dock_parameters.setEnabled(False)
@@ -498,6 +518,8 @@ class SignalEditor(QtWidgets.QApplication):
             write_hdf5(path, result)
         except Exception as e:
             logger.error(f"Error writing HDF5 file: {e}")
+            self.mw.show_error("Error", f"Error writing HDF5 file: {e}")
             return
         else:
             logger.success(f"Result exported to {path}.")
+            self.mw.show_success("Success", f"Result exported to:\n{path}.")

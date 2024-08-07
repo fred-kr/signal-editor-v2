@@ -1,6 +1,9 @@
 import qfluentwidgets as qfw
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from signal_editor.app.gui.widgets.data_tree_widget import DataTreeWidget
+
+from ... import type_defs as _t
 from ..icons import SignalEditorIcon as Icons
 
 
@@ -50,7 +53,6 @@ class MessageBox(qfw.MessageBoxBase):
 
     def set_icon(self, icon: QtGui.QIcon) -> None:
         self.icon_widget.setIcon(icon)
-        # self.setWindowIcon(icon)
 
     def set_text(self, text: str) -> None:
         self.message_label.setText(text)
@@ -76,3 +78,20 @@ class MessageBox(qfw.MessageBoxBase):
         title: str = "Success", text: str = "A success message", parent: QtWidgets.QWidget | None = None
     ) -> None:
         MessageBox(title, text, icon=Icons.CheckmarkCircle.icon(), parent=parent).open()
+
+
+class SectionSummaryBox(QtWidgets.QDialog):
+    def __init__(self, title: str, summary: _t.SectionSummaryDict, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+
+        summary_tree = DataTreeWidget()
+        summary_tree.set_data(dict(summary), hide_root=True)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(summary_tree)
+
+        self.setLayout(layout)
+
+        self.setWindowTitle(title)
+
+        self.resize(600, 400)

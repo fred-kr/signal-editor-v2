@@ -1,6 +1,7 @@
 import contextlib
 import re
 import typing as t
+import pprint
 
 import attrs
 import numpy as np
@@ -30,18 +31,21 @@ class ProcessingParameters:
     processing_pipeline: PreprocessPipeline | None = attrs.field(default=None)
     filter_parameters: _t.SignalFilterParameters | None = attrs.field(default=None)
     standardization_parameters: _t.StandardizationParameters | None = attrs.field(default=None)
-    peak_detection_method: PeakDetectionMethod = attrs.field(init=False)
-    peak_detection_method_parameters: _t.PeakDetectionMethodParameters = attrs.field(init=False)
+    peak_detection_method: PeakDetectionMethod | None = attrs.field(default=None)
+    peak_detection_method_parameters: _t.PeakDetectionMethodParameters | None = attrs.field(default=None)
 
     def to_dict(self) -> _t.ProcessingParametersDict:
-        return _t.ProcessingParametersDict(
-            sampling_rate=self.sampling_rate,
-            processing_pipeline=str(self.processing_pipeline),
-            filter_parameters=self.filter_parameters,
-            standardization_parameters=self.standardization_parameters,
-            peak_detection_method=str(self.peak_detection_method),
-            peak_detection_method_parameters=self.peak_detection_method_parameters,
-        )
+        return {
+            "sampling_rate": self.sampling_rate,
+            "processing_pipeline": str(self.processing_pipeline),
+            "filter_parameters": self.filter_parameters,
+            "standardization_parameters": self.standardization_parameters,
+            "peak_detection_method": str(self.peak_detection_method),
+            "peak_detection_method_parameters": self.peak_detection_method_parameters,
+        }
+
+    def __repr__(self) -> str:
+        return pprint.pformat(self.to_dict(), indent=2, width=120, underscore_numbers=True)
 
 
 @attrs.define
@@ -130,6 +134,9 @@ class SectionMetadata:
             processing_parameters=self.processing_parameters.to_dict(),
         )
 
+    def __repr__(self) -> str:
+        return pprint.pformat(self.to_dict(), indent=2, width=120, underscore_numbers=True)
+
 
 class Section:
     def __init__(self, data: pl.DataFrame, signal_name: str, info_column: str | None = None) -> None:
@@ -206,6 +213,9 @@ class Section:
 
     @property
     def peaks_local(self) -> pl.Series:
+        """
+        Returns the indices of the peaks in the processed signal.
+        """
         return (
             self.data.lazy()
             .filter(pl.col("is_peak") == 1)
@@ -349,7 +359,6 @@ class Section:
         self._rate_is_synced = False
         if update_rate:
             self.update_rate_data()
-            # self.get_rate_data()
 
     def update_peaks(
         self,
@@ -598,3 +607,33 @@ class Section:
             .collect()
         )
         self._manual_peak_edits.clear()
+
+    def get_summary(self) -> _t.SectionSummaryDict:
+        return {
+            "name": self.section_id.pretty_name(),
+            "size": self.data.height,
+            "sampling_rate": self.sampling_rate,
+            "start_index": self.global_bounds[0],
+            "end_index": self.global_bounds[1],
+            "peak_count": self.peaks_local.len(),
+            "processing_parameters": self._processing_parameters,
+        }
+
+    def __repr__(self) -> str:
+        # Section stats
+        metadata = self.get_metadata()
+        size = self.data.height
+        processing_history: dict[str, str] = {
+            f"Run {i}": repr(hist) for i, hist in enumerate(self._filter_history, start=1)
+        }
+        stat_dict = {
+            "Name": self.section_id.pretty_name(),
+            "Size": f"{size} samples",
+            "Sampling rate": f"{metadata.sampling_rate} Hz",
+            "Start Index": str(metadata.global_bounds[0]),
+            "End Index": str(metadata.global_bounds[1]),
+            "Peak Count": str(self.peaks_local.len()),
+            "Processing History": pprint.pformat(processing_history),
+        }
+
+        return pprint.pformat(stat_dict, indent=2, width=120, underscore_numbers=True)

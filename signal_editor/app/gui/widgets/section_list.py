@@ -8,6 +8,7 @@ from ..icons import SignalEditorIcon as Icons
 
 class SectionListView(qfw.ListView):
     sig_delete_current_item: t.ClassVar[QtCore.Signal] = QtCore.Signal(QtCore.QModelIndex)
+    sig_show_summary: t.ClassVar[QtCore.Signal] = QtCore.Signal(QtCore.QModelIndex)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
@@ -19,6 +20,9 @@ class SectionListView(qfw.ListView):
 
         self.action_delete_selected = QtGui.QAction("Delete Selected", self)
         self.action_delete_selected.triggered.connect(self.emit_delete_current_request)
+
+        self.action_show_summary = QtGui.QAction("Show Summary", self)
+        self.action_show_summary.triggered.connect(self.emit_show_summary_request)
         self.customContextMenuRequested.connect(self.show_context_menu)
 
     @QtCore.Slot(QtCore.QPoint)
@@ -27,12 +31,19 @@ class SectionListView(qfw.ListView):
         selected_is_base = self.currentIndex().row() == 0
         self.action_delete_selected.setEnabled(not selected_is_base)
         menu.addAction(self.action_delete_selected)
+        menu.addAction(self.action_show_summary)
         menu.exec(self.mapToGlobal(point))
 
     @QtCore.Slot()
     def emit_delete_current_request(self) -> None:
         index = self.currentIndex()
         self.sig_delete_current_item.emit(index)
+
+    @QtCore.Slot()
+    def emit_show_summary_request(self) -> None:
+        index = self.currentIndex()
+        self.sig_show_summary.emit(index)
+    
 
 
 class SectionListDock(QtWidgets.QDockWidget):

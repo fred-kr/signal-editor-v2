@@ -7,7 +7,7 @@ from PySide6 import QtCore, QtWidgets
 from ..icons import SignalEditorIcon as Icons
 
 
-class LoggingWindow(QtWidgets.QTextEdit):
+class LoggingWindow(qfw.TextEdit):
     sig_log_message: t.ClassVar[QtCore.Signal] = QtCore.Signal(str, int, str)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:

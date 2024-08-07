@@ -1,5 +1,5 @@
 from pathlib import Path
-
+import typing as t
 from PySide6 import QtCore
 
 from .. import type_defs as _t
@@ -27,6 +27,8 @@ class FileMetadata:
         if info_col not in self._columns:
             info_col = self._placeholder
         self._info_column = info_col
+
+        self.other_info: dict[str, t.Any] = {}
 
     @property
     def file_name(self) -> str:
