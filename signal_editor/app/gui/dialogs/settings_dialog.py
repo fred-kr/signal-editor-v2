@@ -1,5 +1,5 @@
 from PySide6 import QtCore, QtGui, QtWidgets
-from qfluentwidgets import CommandBar
+import qfluentwidgets as qfw
 
 from ...models.config_model import ConfigModel
 from ..icons import SignalEditorIcon as Icons
@@ -21,7 +21,7 @@ class ConfigDialog(QtWidgets.QDialog):
         self.config_tree = ConfigTreeView(self)
         self.config_tree.setModel(ConfigModel(self))
 
-        toolbar = CommandBar(self)
+        toolbar = qfw.CommandBar(self)
         toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         action_restore_defaults = QtGui.QAction(Icons.TabDesktopArrowClockwise.icon(), "Restore Defaults", self)

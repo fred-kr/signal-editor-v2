@@ -1,4 +1,5 @@
 import os
+import typing as t
 from pathlib import Path
 
 import qfluentwidgets as qfw
@@ -23,6 +24,7 @@ from .widgets.parameter_inputs import ParameterInputsDock
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     sig_metadata_changed = QtCore.Signal(dict)
     sig_table_refresh_requested = QtCore.Signal()
+    sig_export_requested = QtCore.Signal(str)
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
@@ -65,17 +67,16 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._h_layout.setStretchFactor(self.stackedWidget, 1)
 
     def _setup_navigation(self) -> None:
-        self.add_sub_interface(self.stacked_page_import, Icons.ArrowImport.icon(), "Data Import")
-        self.add_sub_interface(self.stacked_page_edit, Icons.DesktopPulse.icon(), "View / Edit")
-        self.add_sub_interface(self.stacked_page_result, Icons.DataScatter.icon(), "Results")
-        self.add_sub_interface(self.stacked_page_export, Icons.ArrowExportLtr.icon(), "Export")
+        self.add_sub_interface(self.stacked_page_import, Icons.DocumentArrowLeft.icon(), "Import")
+        self.add_sub_interface(self.stacked_page_edit, Icons.Pulse.icon(), "Editing")
+        self.add_sub_interface(self.stacked_page_export, Icons.DocumentArrowRight.icon(), "Results")
 
         self.navigation_interface.addSeparator()
 
         self.add_sub_interface(
             self.stacked_page_test,
-            Icons.WindowDevTools.icon(),
-            "Debug",
+            Icons.Bug.icon(),
+            "Test Page",
             position=NavigationItemPosition.BOTTOM,
         )
         qrouter.setDefaultRouteKey(self.stackedWidget, self.stacked_page_import.objectName())
@@ -133,12 +134,25 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.table_view_import_data.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.table_view_import_data.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.table_view_import_data.customContextMenuRequested.connect(self.show_data_view_context_menu)
+
+        self.table_view_result_peaks.horizontalHeader().setDefaultAlignment(
+            QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter
+        )
+        self.table_view_result_peaks.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+
+        self.table_view_result_rate.horizontalHeader().setDefaultAlignment(
+            QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter
+        )
+        self.table_view_result_rate.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+
         layout = QtWidgets.QVBoxLayout()
         data_tree_widget = DataTreeWidgetContainer()
         data_tree_widget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         layout.addWidget(data_tree_widget)
         self.dialog_meta.container_additional_metadata.setLayout(layout)
         self.data_tree_widget_additional_metadata = data_tree_widget
+
+        self.btn_dropdown_export.setMenu(self.menu_export)
 
         self.stackedWidget.setCurrentIndex(0)
 
@@ -178,9 +192,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         dock_console = ConsoleDock(self)
         dock_console.setVisible(False)
-        
+
         self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, dock_console)
-        # self._actions["info"].append(dock_console.toggleViewAction())
         self.menu_view.addSeparator()
         self.menu_view.addAction(dock_console.toggleViewAction())
         self.dock_console = dock_console
@@ -191,6 +204,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.action_toggle_whats_this_mode = QtWidgets.QWhatsThis().createAction(self)
         self.action_toggle_whats_this_mode.setIcon(Icons.Question.icon())
 
+        self.action_export_to_csv = QtGui.QAction("Export to CSV", self)
+        self.action_export_to_xlsx = QtGui.QAction("Export to XLSX", self)
+        self.action_export_to_hdf5 = QtGui.QAction("Export to HDF5", self)
+
         self._actions = {
             "import": [self.action_open_file, self.action_edit_metadata, self.action_close_file],
             "plot": [
@@ -198,7 +215,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
                 self.action_toggle_auto_scaling,
                 self.action_create_new_section,
             ],
-            "export": [self.action_export_result],
+            "export": [self.action_get_section_result],
             "help": [
                 self.action_show_user_guide,
                 self.action_toggle_whats_this_mode,
@@ -214,8 +231,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.action_toggle_auto_scaling.setChecked(True)
 
     def _setup_toolbars(self) -> None:
-        # self.tool_bar_file_actions.addSeparator()
-        self.tool_bar_file_actions.addAction(self.action_export_result)
+        self.tool_bar_file_actions.addAction(self.action_get_section_result)
 
         self.tool_bar_editing = self._setup_toolbar("tool_bar_editing", self._actions["plot"])
 
@@ -248,12 +264,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             ]
         )
 
-        # self.menuEdit.insertAction(self.action_show_section_overview, self.dock_parameters.toggleViewAction())
         self.menu_plot.insertSeparator(self.action_show_section_overview)
 
         self.menu_help.addSeparator()
         self.menu_help.addAction(self.dock_status_log.toggleViewAction())
         self.menu_help.insertAction(self.action_show_user_guide, self.action_toggle_whats_this_mode)
+
+        self.menu_export = qfw.RoundMenu(parent=self.btn_dropdown_export)
+        self.menu_export.addActions([self.action_export_to_csv, self.action_export_to_xlsx, self.action_export_to_hdf5])
 
     def hide_all_docks(self) -> None:
         self.dock_status_log.hide()
@@ -292,15 +310,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_sections.btn_confirm.clicked.connect(self.action_confirm_section.trigger)
         self.dock_sections.btn_cancel.clicked.connect(self.action_cancel_section.trigger)
 
-        self.action_export_result.triggered.connect(self.show_export_dialog)
+        self.action_export_to_csv.triggered.connect(lambda: self.show_export_dialog("csv"))
+        self.action_export_to_xlsx.triggered.connect(lambda: self.show_export_dialog("xlsx"))
+        self.action_export_to_hdf5.triggered.connect(lambda: self.show_export_dialog("hdf5"))
 
     @QtCore.Slot(QtCore.QPoint)
     def show_data_view_context_menu(self, pos: QtCore.QPoint) -> None:
-        menu = QtWidgets.QMenu(self)
+        menu = qfw.RoundMenu(parent=self.table_view_import_data)
         action = QtGui.QAction(Icons.ArrowSync.icon(), "Refresh", self.table_view_import_data)
         action.triggered.connect(self.sig_table_refresh_requested.emit)
         menu.addAction(action)
-        menu.exec(QtGui.QCursor.pos())
+        menu.exec(self.table_view_import_data.mapToGlobal(pos))
 
     def show_section_summary_box(self, summary: _t.SectionSummaryDict) -> None:
         msg_box = SectionSummaryBox("Section Summary", summary, parent=self)
@@ -309,24 +329,18 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.Slot(int)
     def _on_page_changed(self, index: int) -> None:
         self.show_section_confirm_cancel(False)
-        if index in {0, 2, 4}:
+        if index in {0, 2, 3, 4}:
             self.tool_bar_editing.setEnabled(False)
             self.tool_bar_section_list.setEnabled(False)
-            self.dock_sections.hide()
+            # self.dock_sections.hide()
             self.dock_parameters.hide()
-            self.action_export_result.setEnabled(False)
+            self.action_get_section_result.setEnabled(False)
         elif index == 1:
             self.tool_bar_editing.setEnabled(True)
             self.tool_bar_section_list.setEnabled(True)
             self.dock_sections.show()
             self.dock_parameters.show()
-            self.action_export_result.setEnabled(False)
-        elif index == 3:
-            self.tool_bar_editing.setEnabled(False)
-            self.tool_bar_section_list.setEnabled(False)
-            self.dock_sections.hide()
-            self.dock_parameters.hide()
-            self.action_export_result.setEnabled(True)
+            self.action_get_section_result.setEnabled(True)
 
     def show_section_confirm_cancel(self, show: bool) -> None:
         self.dock_sections.btn_container.setVisible(show)
@@ -347,14 +361,30 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def show_settings_dialog(self) -> None:
         self.dialog_config.open()
 
-    @QtCore.Slot()
-    def show_export_dialog(self) -> None:
+    @QtCore.Slot(str)
+    def show_export_dialog(self, format: t.Literal["csv", "xlsx", "hdf5"]) -> None:
+        # section = self.combo_box_result_section.currentText()
+        # selected_results = self.list_view_result_selection.selectedIndexes()
+
         curr_file_name = self.line_edit_active_file.text()
         if not curr_file_name:
             return
-        out_name = f"Result_{Path(curr_file_name).stem}"
-        self.dialog_export.line_edit_output_file_name.setText(out_name)
-        self.dialog_export.open()
+        result_path = Path(Path(Config().internal.OutputDir) / f"Result_{Path(curr_file_name).stem}").with_suffix(
+            f".{format}"
+        )
+
+        out_name, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, dir=result_path.as_posix(), filter=f"{format.upper()} files (*.{format})"
+        )
+
+        if not out_name:
+            return
+
+        Config().internal.OutputDir = Path(out_name).parent.as_posix()
+        self.sig_export_requested.emit(out_name)
+
+        # self.dialog_export.line_edit_output_file_name.setText(out_name)
+        # self.dialog_export.open()
 
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
@@ -384,7 +414,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             duration=3000,
             parent=self,
         )
-        
+
     @QtCore.Slot(str, int, str)
     def maybe_show_error_dialog(
         self,

@@ -16,16 +16,16 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QAbstractItemView, QAbstractScrollArea, QApplication, QFormLayout,
-    QFrame, QGridLayout, QGroupBox, QHBoxLayout,
-    QHeaderView, QLabel, QListWidgetItem, QMainWindow,
-    QMenuBar, QSizePolicy, QStackedWidget, QToolBar,
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFormLayout, QFrame,
+    QGridLayout, QGroupBox, QHBoxLayout, QHeaderView,
+    QLabel, QListWidgetItem, QMainWindow, QMenuBar,
+    QSizePolicy, QStackedWidget, QTabWidget, QToolBar,
     QVBoxLayout, QWidget)
 
 from pyqtgraph.widgets.MatplotlibWidget import MatplotlibWidget
-from qfluentwidgets import (BodyLabel, ComboBox, LineEdit, ListWidget,
-    PushButton, RoundMenu, SpinBox, StrongBodyLabel,
-    SubtitleLabel, TableView)
+from qfluentwidgets import (BodyLabel, ComboBox, DropDownPushButton, LineEdit,
+    ListWidget, PushButton, RoundMenu, SpinBox,
+    StrongBodyLabel, SubtitleLabel, TableView)
 from . import resources_rc
 
 class Ui_MainWindow(object):
@@ -62,12 +62,12 @@ class Ui_MainWindow(object):
         self.action_close_file.setIcon(icon3)
         self.action_close_file.setMenuRole(QAction.MenuRole.NoRole)
         self.action_close_file.setIconVisibleInMenu(False)
-        self.action_export_result = QAction(MainWindow)
-        self.action_export_result.setObjectName(u"action_export_result")
+        self.action_get_section_result = QAction(MainWindow)
+        self.action_get_section_result.setObjectName(u"action_get_section_result")
         icon4 = QIcon()
-        icon4.addFile(u":/icons/fluent-icons/ArrowExportLtr.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.action_export_result.setIcon(icon4)
-        self.action_export_result.setMenuRole(QAction.MenuRole.NoRole)
+        icon4.addFile(u":/icons/fluent-icons/PlayCircle.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.action_get_section_result.setIcon(icon4)
+        self.action_get_section_result.setMenuRole(QAction.MenuRole.NoRole)
         self.action_create_new_section = QAction(MainWindow)
         self.action_create_new_section.setObjectName(u"action_create_new_section")
         self.action_create_new_section.setCheckable(True)
@@ -143,6 +143,7 @@ class Ui_MainWindow(object):
         self.action_clear_recent_files.setIcon(icon15)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
+        self.centralwidget.setStyleSheet(u"")
         self.h_layout_centralwidget = QHBoxLayout(self.centralwidget)
         self.h_layout_centralwidget.setObjectName(u"h_layout_centralwidget")
         self.h_layout_centralwidget.setContentsMargins(0, 0, 0, 0)
@@ -339,43 +340,67 @@ class Ui_MainWindow(object):
         self.gridLayout_2.addWidget(self.plot_container, 0, 0, 1, 1)
 
         self.stackedWidget.addWidget(self.stacked_page_edit)
-        self.stacked_page_result = QWidget()
-        self.stacked_page_result.setObjectName(u"stacked_page_result")
-        self.h_layout_result_page = QHBoxLayout(self.stacked_page_result)
-        self.h_layout_result_page.setObjectName(u"h_layout_result_page")
-        self.table_widget_mpl_data = TableView(self.stacked_page_result)
-        self.table_widget_mpl_data.setObjectName(u"table_widget_mpl_data")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.table_widget_mpl_data.sizePolicy().hasHeightForWidth())
-        self.table_widget_mpl_data.setSizePolicy(sizePolicy3)
-        self.table_widget_mpl_data.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-        self.table_widget_mpl_data.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked|QAbstractItemView.EditTrigger.EditKeyPressed)
-        self.table_widget_mpl_data.setSortingEnabled(True)
-        self.table_widget_mpl_data.horizontalHeader().setHighlightSections(True)
+        self.stacked_page_export = QWidget()
+        self.stacked_page_export.setObjectName(u"stacked_page_export")
+        self.gridLayout_3 = QGridLayout(self.stacked_page_export)
+        self.gridLayout_3.setObjectName(u"gridLayout_3")
+        self.btn_dropdown_export = DropDownPushButton(self.stacked_page_export)
+        self.btn_dropdown_export.setObjectName(u"btn_dropdown_export")
+        sizePolicy.setHeightForWidth(self.btn_dropdown_export.sizePolicy().hasHeightForWidth())
+        self.btn_dropdown_export.setSizePolicy(sizePolicy)
 
-        self.h_layout_result_page.addWidget(self.table_widget_mpl_data)
+        self.gridLayout_3.addWidget(self.btn_dropdown_export, 0, 1, 1, 1)
 
-        self.mpl_widget = MatplotlibWidget(self.stacked_page_result)
+        self.label_4 = SubtitleLabel(self.stacked_page_export)
+        self.label_4.setObjectName(u"label_4")
+        sizePolicy2.setHeightForWidth(self.label_4.sizePolicy().hasHeightForWidth())
+        self.label_4.setSizePolicy(sizePolicy2)
+
+        self.gridLayout_3.addWidget(self.label_4, 0, 0, 1, 1)
+
+        self.container_result_preview = QTabWidget(self.stacked_page_export)
+        self.container_result_preview.setObjectName(u"container_result_preview")
+        self.tab_result_peaks_info = QWidget()
+        self.tab_result_peaks_info.setObjectName(u"tab_result_peaks_info")
+        self.verticalLayout_2 = QVBoxLayout(self.tab_result_peaks_info)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.table_view_result_peaks = TableView(self.tab_result_peaks_info)
+        self.table_view_result_peaks.setObjectName(u"table_view_result_peaks")
+        self.table_view_result_peaks.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table_view_result_peaks.setCornerButtonEnabled(False)
+        self.table_view_result_peaks.verticalHeader().setVisible(False)
+
+        self.verticalLayout_2.addWidget(self.table_view_result_peaks)
+
+        self.container_result_preview.addTab(self.tab_result_peaks_info, "")
+        self.tab_result_rate_info = QWidget()
+        self.tab_result_rate_info.setObjectName(u"tab_result_rate_info")
+        self.verticalLayout_4 = QVBoxLayout(self.tab_result_rate_info)
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.table_view_result_rate = TableView(self.tab_result_rate_info)
+        self.table_view_result_rate.setObjectName(u"table_view_result_rate")
+        self.table_view_result_rate.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.table_view_result_rate.setCornerButtonEnabled(False)
+        self.table_view_result_rate.verticalHeader().setVisible(False)
+
+        self.verticalLayout_4.addWidget(self.table_view_result_rate)
+
+        self.container_result_preview.addTab(self.tab_result_rate_info, "")
+        self.tab_result_mpl_widget = QWidget()
+        self.tab_result_mpl_widget.setObjectName(u"tab_result_mpl_widget")
+        self.verticalLayout = QVBoxLayout(self.tab_result_mpl_widget)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.mpl_widget = MatplotlibWidget(self.tab_result_mpl_widget)
         self.mpl_widget.setObjectName(u"mpl_widget")
         sizePolicy2.setHeightForWidth(self.mpl_widget.sizePolicy().hasHeightForWidth())
         self.mpl_widget.setSizePolicy(sizePolicy2)
         self.mpl_widget.setMinimumSize(QSize(500, 0))
 
-        self.h_layout_result_page.addWidget(self.mpl_widget)
+        self.verticalLayout.addWidget(self.mpl_widget)
 
-        self.h_layout_result_page.setStretch(0, 4)
-        self.h_layout_result_page.setStretch(1, 6)
-        self.stackedWidget.addWidget(self.stacked_page_result)
-        self.stacked_page_export = QWidget()
-        self.stacked_page_export.setObjectName(u"stacked_page_export")
-        self.gridLayout_3 = QGridLayout(self.stacked_page_export)
-        self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.table_view_export_data = TableView(self.stacked_page_export)
-        self.table_view_export_data.setObjectName(u"table_view_export_data")
+        self.container_result_preview.addTab(self.tab_result_mpl_widget, "")
 
-        self.gridLayout_3.addWidget(self.table_view_export_data, 0, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.container_result_preview, 1, 0, 1, 2)
 
         self.stackedWidget.addWidget(self.stacked_page_export)
         self.stacked_page_test = QWidget()
@@ -416,8 +441,6 @@ class Ui_MainWindow(object):
         QWidget.setTabOrder(self.btn_close_file, self.container_recent_files)
         QWidget.setTabOrder(self.container_recent_files, self.list_widget_recent_files)
         QWidget.setTabOrder(self.list_widget_recent_files, self.table_view_import_data)
-        QWidget.setTabOrder(self.table_view_import_data, self.table_widget_mpl_data)
-        QWidget.setTabOrder(self.table_widget_mpl_data, self.table_view_export_data)
 
         self.menubar.addAction(self.menu_file.menuAction())
         self.menubar.addAction(self.menu_view.menuAction())
@@ -446,6 +469,7 @@ class Ui_MainWindow(object):
         self.line_edit_active_file.textChanged.connect(MainWindow.setWindowTitle)
 
         self.stackedWidget.setCurrentIndex(0)
+        self.container_result_preview.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -469,9 +493,9 @@ class Ui_MainWindow(object):
 #if QT_CONFIG(tooltip)
         self.action_close_file.setToolTip(QCoreApplication.translate("MainWindow", u"Closes the currently loaded file and refreshes the app state. Make sure to export any existing results first, as they will be lost on refresh.", None))
 #endif // QT_CONFIG(tooltip)
-        self.action_export_result.setText(QCoreApplication.translate("MainWindow", u"Export Result", None))
+        self.action_get_section_result.setText(QCoreApplication.translate("MainWindow", u"Get Section Result", None))
 #if QT_CONFIG(tooltip)
-        self.action_export_result.setToolTip(QCoreApplication.translate("MainWindow", u"Open the export dialog", None))
+        self.action_get_section_result.setToolTip(QCoreApplication.translate("MainWindow", u"Make the current section's results available for viewing/exporting (see \"Results\" page)", None))
 #endif // QT_CONFIG(tooltip)
         self.action_create_new_section.setText(QCoreApplication.translate("MainWindow", u"New Section", None))
 #if QT_CONFIG(tooltip)
@@ -558,6 +582,11 @@ class Ui_MainWindow(object):
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Recent Files", None))
         self.label.setText(QCoreApplication.translate("MainWindow", u"Data View", None))
         self.label_showing_data_table.setText(QCoreApplication.translate("MainWindow", u"<html><head/><body><p><span style=\" font-size:10pt;\">Showing</span><span style=\" font-size:10pt;\">: -</span></p></body></html>", None))
+        self.btn_dropdown_export.setText(QCoreApplication.translate("MainWindow", u"Export", None))
+        self.label_4.setText(QCoreApplication.translate("MainWindow", u"Section Data and Results", None))
+        self.container_result_preview.setTabText(self.container_result_preview.indexOf(self.tab_result_peaks_info), QCoreApplication.translate("MainWindow", u"Peak Indices", None))
+        self.container_result_preview.setTabText(self.container_result_preview.indexOf(self.tab_result_rate_info), QCoreApplication.translate("MainWindow", u"Calculated Rate / Summary Statistics", None))
+        self.container_result_preview.setTabText(self.container_result_preview.indexOf(self.tab_result_mpl_widget), QCoreApplication.translate("MainWindow", u"Plot View", None))
         self.menu_file.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menu_settings.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))
         self.menu_view.setTitle(QCoreApplication.translate("MainWindow", u"View", None))

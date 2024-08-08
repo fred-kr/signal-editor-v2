@@ -1,5 +1,7 @@
 <RCC>
   <qresource prefix="icons">
+    <file>fluent-icons/ConvertToTable.svg</file>
+    <file>fluent-icons/PlayCircle.svg</file>
     <file>fluent-icons/DocumentEndnote.svg</file>
     <file>app_icon.svg</file>
     <file>fluent-icons/Add.svg</file>

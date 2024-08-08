@@ -2,7 +2,7 @@ from pathlib import Path
 import typing as t
 from PySide6 import QtCore
 
-from .. import type_defs as _t
+from .. import type_defs as _t, const_defs as _C
 from ..config import Config
 from ..enum_defs import FileFormat
 
@@ -10,7 +10,7 @@ from ..enum_defs import FileFormat
 class FileMetadata:
     def __init__(self, file_path: Path | str, columns: list[str], sampling_rate: int) -> None:
         self.required_fields: list[str] = []
-        self._placeholder = "<Not Set>"
+        self._placeholder = _C.COLUMN_PLACEHOLDER
         self.file_info = QtCore.QFileInfo(file_path)
         self._sampling_rate = sampling_rate
         if self._sampling_rate == 0:

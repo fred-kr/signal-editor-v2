@@ -2,13 +2,7 @@ import enum
 from PySide6 import QtGui
 
 
-class LogLevel(enum.IntEnum):
-    DEBUG = 10
-    INFO = 20
-    WARNING = 30
-    ERROR = 40
-    CRITICAL = 50
-    SUCCESS = 60
+
 
 
 class RateComputationMethod(enum.StrEnum):
@@ -334,3 +328,12 @@ class SVGColors(enum.StrEnum):
         pixmap = QtGui.QPixmap(16, 16)
         pixmap.fill(QtGui.QColor(self.value))
         return QtGui.QIcon(pixmap)
+
+
+class LogLevel(enum.IntEnum):
+    DEBUG = 10
+    INFO = 20
+    WARNING = 30
+    ERROR = 40
+    CRITICAL = 50
+    SUCCESS = 60

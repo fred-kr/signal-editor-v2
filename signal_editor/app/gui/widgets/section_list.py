@@ -12,6 +12,7 @@ class SectionListView(qfw.ListView):
 
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
+        self.setSelectRightClickedRow(True)
         self.setUniformItemSizes(True)
         self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         self.setSelectionRectVisible(True)
@@ -43,7 +44,6 @@ class SectionListView(qfw.ListView):
     def emit_show_summary_request(self) -> None:
         index = self.currentIndex()
         self.sig_show_summary.emit(index)
-    
 
 
 class SectionListDock(QtWidgets.QDockWidget):
@@ -53,7 +53,7 @@ class SectionListDock(QtWidgets.QDockWidget):
         self.setObjectName("SectionListDock")
         self.setWindowTitle("Section List")
         self.setWindowIcon(Icons.SignalEditor.icon())
-        
+
         self.list_view = SectionListView()
         self.toggleViewAction().setIcon(Icons.List.icon())
         main_widget = QtWidgets.QWidget(self)

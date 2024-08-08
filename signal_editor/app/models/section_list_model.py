@@ -1,8 +1,7 @@
 from PySide6 import QtCore
 
 from ..core.section import Section, SectionID
-
-type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
+from . import ModelIndex
 
 
 class SectionListModel(QtCore.QAbstractListModel):
@@ -18,12 +17,12 @@ class SectionListModel(QtCore.QAbstractListModel):
     def editable_sections(self) -> list[Section]:
         return list(self._sections)[1:]
 
-    def rowCount(self, parent: _Index | None = None) -> int:
+    def rowCount(self, parent: ModelIndex | None = None) -> int:
         return len(self._sections)
 
     def data(
         self,
-        index: _Index,
+        index: ModelIndex,
         role: int = QtCore.Qt.ItemDataRole.DisplayRole,
     ) -> Section | str | QtCore.QSize | None:
         if not index.isValid():

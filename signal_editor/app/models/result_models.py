@@ -19,8 +19,8 @@ class CompactSectionResult:
     seconds_since_global_start: pl.Series = attrs.field()
     seconds_since_section_start: pl.Series = attrs.field()
     peak_intervals: pl.Series = attrs.field()
-    rate_data: pl.DataFrame = attrs.field()
     info_values: pl.Series | None = attrs.field()
+    rate_data: pl.DataFrame = attrs.field()
 
     def to_polars_df(self) -> pl.DataFrame:
         schema = {

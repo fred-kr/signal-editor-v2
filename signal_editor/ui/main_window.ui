@@ -20,6 +20,9 @@
    <set>QMainWindow::DockOption::AllowNestedDocks|QMainWindow::DockOption::AllowTabbedDocks|QMainWindow::DockOption::AnimatedDocks|QMainWindow::DockOption::VerticalTabs</set>
   </property>
   <widget class="QWidget" name="centralwidget">
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
    <layout class="QHBoxLayout" name="h_layout_centralwidget">
     <property name="leftMargin">
      <number>0</number>
@@ -378,52 +381,103 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="stacked_page_result">
-       <layout class="QHBoxLayout" name="h_layout_result_page" stretch="4,6">
-        <item>
-         <widget class="TableView" name="table_widget_mpl_data">
+      <widget class="QWidget" name="stacked_page_export">
+       <layout class="QGridLayout" name="gridLayout_3">
+        <item row="0" column="1">
+         <widget class="DropDownPushButton" name="btn_dropdown_export">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <property name="sizeAdjustPolicy">
-           <enum>QAbstractScrollArea::SizeAdjustPolicy::AdjustToContents</enum>
+          <property name="text">
+           <string>Export</string>
           </property>
-          <property name="editTriggers">
-           <set>QAbstractItemView::EditTrigger::DoubleClicked|QAbstractItemView::EditTrigger::EditKeyPressed</set>
-          </property>
-          <property name="sortingEnabled">
-           <bool>true</bool>
-          </property>
-          <attribute name="horizontalHeaderHighlightSections">
-           <bool>true</bool>
-          </attribute>
          </widget>
         </item>
-        <item>
-         <widget class="MatplotlibWidget" name="mpl_widget" native="true">
+        <item row="0" column="0">
+         <widget class="SubtitleLabel" name="label_4">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
-          <property name="minimumSize">
-           <size>
-            <width>500</width>
-            <height>0</height>
-           </size>
+          <property name="text">
+           <string>Section Data and Results</string>
           </property>
          </widget>
         </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="stacked_page_export">
-       <layout class="QGridLayout" name="gridLayout_3">
-        <item row="0" column="0">
-         <widget class="TableView" name="table_view_export_data"/>
+        <item row="1" column="0" colspan="2">
+         <widget class="QTabWidget" name="container_result_preview">
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="tab_result_peaks_info">
+           <attribute name="title">
+            <string>Peak Indices</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_2">
+            <item>
+             <widget class="TableView" name="table_view_result_peaks">
+              <property name="editTriggers">
+               <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+              </property>
+              <property name="cornerButtonEnabled">
+               <bool>false</bool>
+              </property>
+              <attribute name="verticalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_result_rate_info">
+           <attribute name="title">
+            <string>Calculated Rate / Summary Statistics</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="TableView" name="table_view_result_rate">
+              <property name="editTriggers">
+               <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
+              </property>
+              <property name="cornerButtonEnabled">
+               <bool>false</bool>
+              </property>
+              <attribute name="verticalHeaderVisible">
+               <bool>false</bool>
+              </attribute>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_result_mpl_widget">
+           <attribute name="title">
+            <string>Plot View</string>
+           </attribute>
+           <layout class="QVBoxLayout" name="verticalLayout">
+            <item>
+             <widget class="MatplotlibWidget" name="mpl_widget" native="true">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>500</width>
+                <height>0</height>
+               </size>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -580,16 +634,16 @@
     <bool>false</bool>
    </property>
   </action>
-  <action name="action_export_result">
+  <action name="action_get_section_result">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/fluent-icons/ArrowExportLtr.svg</normaloff>:/icons/fluent-icons/ArrowExportLtr.svg</iconset>
+     <normaloff>:/icons/fluent-icons/PlayCircle.svg</normaloff>:/icons/fluent-icons/PlayCircle.svg</iconset>
    </property>
    <property name="text">
-    <string>Export Result</string>
+    <string>Get Section Result</string>
    </property>
    <property name="toolTip">
-    <string>Open the export dialog</string>
+    <string>Make the current section's results available for viewing/exporting (see &quot;Results&quot; page)</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -842,6 +896,11 @@
    <extends>QLabel</extends>
    <header>qfluentwidgets</header>
   </customwidget>
+  <customwidget>
+   <class>DropDownPushButton</class>
+   <extends>QPushButton</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
  </customwidgets>
  <tabstops>
   <tabstop>btn_open_file</tabstop>
@@ -854,8 +913,6 @@
   <tabstop>container_recent_files</tabstop>
   <tabstop>list_widget_recent_files</tabstop>
   <tabstop>table_view_import_data</tabstop>
-  <tabstop>table_widget_mpl_data</tabstop>
-  <tabstop>table_view_export_data</tabstop>
  </tabstops>
  <resources>
   <include location="../resources/resources.qrc"/>

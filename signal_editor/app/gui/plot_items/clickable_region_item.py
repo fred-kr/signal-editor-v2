@@ -9,7 +9,7 @@ if t.TYPE_CHECKING:
 
 
 class ClickableRegionItem(pg.LinearRegionItem):
-    sig_clicked = QtCore.Signal(int)
+    sig_clicked: t.ClassVar[QtCore.Signal] = QtCore.Signal(int)
 
     def __init__(self, values: t.Sequence[float] = (0, 1), orientation: t.Literal["vertical", "horizontal"] = "vertical", brush: _t.PGBrush | None = None, pen: _t.PGPen | None = None, hoverBrush: _t.PGBrush | None = None, hoverPen: _t.PGPen | None = None, movable: bool = True, bounds: t.Sequence[float] | None = None, span: t.Sequence[float] = (0, 1), swapMode: t.Literal["block", "push", "sort"] | None = "sort", clipItem: pg.GraphicsObject | None = None) -> None:
         super().__init__(values, orientation, brush, pen, hoverBrush, hoverPen, movable, bounds, span, swapMode, clipItem)

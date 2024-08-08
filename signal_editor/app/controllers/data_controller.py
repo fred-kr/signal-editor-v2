@@ -3,11 +3,12 @@ import functools
 import typing as t
 from pathlib import Path
 
-from loguru import logger
 import mne.io
 import polars as pl
+from loguru import logger
 from PySide6 import QtCore
 
+from .. import const_defs as _C
 from .. import type_defs as _t
 from ..config import Config
 from ..core.file_io import detect_sampling_rate, read_edf
@@ -44,6 +45,9 @@ class DataController(QtCore.QObject):
         self._active_section: Section | None = None
         self.active_section_model = DataFrameModel(self)
         self._base_section: Section | None = None
+        self.result_model_peaks = DataFrameModel(self)
+        self.result_model_rate = DataFrameModel(self)
+
         try:
             self._txt_separator = Config().data.TextSeparatorChar
         except Exception:
@@ -107,6 +111,8 @@ class DataController(QtCore.QObject):
             self.active_section_model.set_df(self._active_section.data)
             has_peak_data = not self._active_section.peaks_local.is_empty()
             self.sig_active_section_changed.emit(has_peak_data)
+            if has_peak_data:
+                self.refresh_active_section_results()
 
     @property
     def base_section_index(self) -> QtCore.QModelIndex:
@@ -187,7 +193,7 @@ class DataController(QtCore.QObject):
         signal_col = self.metadata.signal_column
         info_col = self.metadata.info_column
         columns = [signal_col]
-        if info_col:
+        if info_col != _C.COLUMN_PLACEHOLDER:
             columns.append(info_col)
         row_index_col = "index"
         if row_index_col in columns:
@@ -261,7 +267,7 @@ class DataController(QtCore.QObject):
         )
 
         info_col = self.metadata.info_column
-        if info_col == "":
+        if info_col == _C.COLUMN_PLACEHOLDER:
             info_col = None
         section_results = {s.section_id: s.get_detailed_result(info_col) for s in self.sections.editable_sections}
 
@@ -280,3 +286,9 @@ class DataController(QtCore.QObject):
             global_dataframe=global_df.collect(),
             section_results=section_results,
         )
+
+    def refresh_active_section_results(self) -> None:
+        if self.active_section.peaks_local.is_empty():
+            return
+        self.active_section.update_peak_data()
+        self.active_section.update_rate_data(full_info=True, force=True)

@@ -7,10 +7,10 @@ from attr._make import Factory
 from loguru import logger
 from PySide6 import QtCore, QtGui
 
+from . import ModelIndex
 from ..config import Config
 from ..enum_defs import RateComputationMethod, SVGColors, TextFileSeparator
 
-type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 
 _ConfigType = t.Union[
     QtGui.QColor, int, bool, RateComputationMethod, TextFileSeparator, str, None, list[str], QtCore.QByteArray
@@ -176,10 +176,10 @@ class ConfigModel(QtCore.QAbstractItemModel):
         include_internal = os.environ.get("DEBUG", "0") == "1"
         self.setup_model_data(include_internal=include_internal)
 
-    def columnCount(self, parent: _Index | None = None) -> int:
+    def columnCount(self, parent: ModelIndex | None = None) -> int:
         return self.root_item.column_count()
 
-    def data(self, index: _Index, role: int | None = None) -> t.Any:
+    def data(self, index: ModelIndex, role: int | None = None) -> t.Any:
         if not index.isValid():
             return None
 
@@ -238,7 +238,7 @@ class ConfigModel(QtCore.QAbstractItemModel):
 
         return None
 
-    def setData(self, index: _Index, value: _ConfigType, role: int = ItemDataRole.EditRole) -> bool:
+    def setData(self, index: ModelIndex, value: _ConfigType, role: int = ItemDataRole.EditRole) -> bool:
         if (
             role not in {ItemDataRole.EditRole, ItemDataRole.UserRole, ItemDataRole.CheckStateRole}
             or not index.isValid()
@@ -260,7 +260,7 @@ class ConfigModel(QtCore.QAbstractItemModel):
 
         return result
 
-    def flags(self, index: _Index) -> QtCore.Qt.ItemFlag:
+    def flags(self, index: ModelIndex) -> QtCore.Qt.ItemFlag:
         if not index.isValid():
             return QtCore.Qt.ItemFlag.NoItemFlags
         flags = QtCore.QAbstractItemModel.flags(self, index)
@@ -274,7 +274,7 @@ class ConfigModel(QtCore.QAbstractItemModel):
 
         return flags
 
-    def get_item(self, index: _Index) -> ConfigTreeItem:
+    def get_item(self, index: ModelIndex) -> ConfigTreeItem:
         if index.isValid():
             if item := index.internalPointer():
                 return item
@@ -288,7 +288,7 @@ class ConfigModel(QtCore.QAbstractItemModel):
             return self._headers[section]
         return None
 
-    def index(self, row: int, column: int, parent: _Index | None = None) -> QtCore.QModelIndex:
+    def index(self, row: int, column: int, parent: ModelIndex | None = None) -> QtCore.QModelIndex:
         if parent is None:
             parent = QtCore.QModelIndex()
 
@@ -304,7 +304,7 @@ class ConfigModel(QtCore.QAbstractItemModel):
         else:
             return QtCore.QModelIndex()
 
-    def parent(self, index: _Index | None = None) -> QtCore.QModelIndex:  # type: ignore
+    def parent(self, index: ModelIndex | None = None) -> QtCore.QModelIndex:  # type: ignore
         if index is None:
             index = QtCore.QModelIndex()
 
@@ -321,7 +321,7 @@ class ConfigModel(QtCore.QAbstractItemModel):
 
         return self.createIndex(parent_item.child_number(), 0, parent_item)
 
-    def rowCount(self, parent: _Index | None = None) -> int:
+    def rowCount(self, parent: ModelIndex | None = None) -> int:
         if parent is None:
             parent = QtCore.QModelIndex()
 
@@ -405,7 +405,7 @@ class ConfigModel(QtCore.QAbstractItemModel):
                 item.reset_to_default()
         self.endResetModel()
 
-    def reset_item(self, index: _Index) -> bool:
+    def reset_item(self, index: ModelIndex) -> bool:
         item = self.get_item(index)
         result = item.reset_to_default()
         if result:

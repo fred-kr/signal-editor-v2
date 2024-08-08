@@ -454,8 +454,6 @@ class PlotController(QtCore.QObject):
         y: npt.NDArray[np.float64],
         color: str = "green",
         marker: str = "o",
-        linestyle: str = "-",
-        linewidth: int = 2,
         markersize: int = 12,
     ) -> None:
         subplot = self.mpw_result.fig.add_subplot(111)

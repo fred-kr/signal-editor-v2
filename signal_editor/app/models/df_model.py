@@ -5,6 +5,7 @@ import numpy as np
 import polars as pl
 from PySide6 import QtCore
 
+from . import ModelIndex
 from ..config import Config
 from ..utils import human_readable_timedelta
 
@@ -21,15 +22,15 @@ class DataFrameModel(QtCore.QAbstractTableModel):
         self.df = df
         self.endResetModel()
 
-    def rowCount(self, parent: QtCore.QModelIndex | QtCore.QPersistentModelIndex | None = None) -> int:
+    def rowCount(self, parent: ModelIndex | None = None) -> int:
         return self.df.height
 
-    def columnCount(self, parent: QtCore.QModelIndex | QtCore.QPersistentModelIndex | None = None) -> int:
+    def columnCount(self, parent: ModelIndex | None = None) -> int:
         return self.df.width
 
     def data(
         self,
-        index: QtCore.QModelIndex | QtCore.QPersistentModelIndex,
+        index: ModelIndex,
         role: int = QtCore.Qt.ItemDataRole.DisplayRole,
     ) -> t.Any:
         if not index.isValid():
@@ -85,3 +86,4 @@ class DataFrameModel(QtCore.QAbstractTableModel):
             if orientation == QtCore.Qt.Orientation.Horizontal:
                 return str(self.df.schema[self.df.columns[section]])
         return None
+
