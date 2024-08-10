@@ -13,7 +13,7 @@ from loguru import logger
 from .. import type_defs as _t
 from ..config import Config
 from ..enum_defs import FilterMethod, PeakDetectionMethod, PreprocessPipeline, RateComputationMethod
-from ..models.result_models import CompactSectionResult, DetailedSectionResult
+from ..models.result_models import CompactSectionResult, DetailedSectionResult, SectionResult
 from ..utils import format_long_sequence
 from .peak_detection import find_peaks
 from .processing import (
@@ -29,10 +29,11 @@ from .processing import (
 class ProcessingParameters:
     sampling_rate: int = attrs.field()
     processing_pipeline: PreprocessPipeline | None = attrs.field(default=None)
-    filter_parameters: _t.SignalFilterParameters | None = attrs.field(default=None)
+    filter_parameters: list[_t.SignalFilterParameters] = attrs.field(factory=list)
     standardization_parameters: _t.StandardizationParameters | None = attrs.field(default=None)
     peak_detection_method: PeakDetectionMethod | None = attrs.field(default=None)
     peak_detection_method_parameters: _t.PeakDetectionMethodParameters | None = attrs.field(default=None)
+    rate_computation_method: RateComputationMethod = attrs.field(default=Config().editing.RateMethod)
 
     def to_dict(self) -> _t.ProcessingParametersDict:
         return {
@@ -42,7 +43,20 @@ class ProcessingParameters:
             "standardization_parameters": self.standardization_parameters,
             "peak_detection_method": str(self.peak_detection_method),
             "peak_detection_method_parameters": self.peak_detection_method_parameters,
+            "rate_computation_method": str(self.rate_computation_method),
         }
+
+    def reset(self, peaks_only: bool = False) -> None:
+        if peaks_only:
+            self.peak_detection_method = None
+            self.peak_detection_method_parameters = None
+            return
+        self.processing_pipeline = None
+        self.filter_parameters = []
+        self.standardization_parameters = None
+        self.peak_detection_method = None
+        self.peak_detection_method_parameters = None
+        self.rate_computation_method = Config().editing.RateMethod
 
     def __repr__(self) -> str:
         return pprint.pformat(self.to_dict(), indent=2, width=120, underscore_numbers=True)
@@ -139,6 +153,22 @@ class SectionMetadata:
 
 
 class Section:
+    __slots__ = (
+        "signal_name",
+        "processed_signal_name",
+        "info_name",
+        "section_id",
+        "_is_filtered",
+        "_is_standardized",
+        "_is_processed",
+        "data",
+        "sampling_rate",
+        "global_bounds",
+        "_result_data",
+        "_rate_is_synced",
+        "_processing_parameters",
+        "_manual_peak_edits",
+    )
     def __init__(self, data: pl.DataFrame, signal_name: str, info_column: str | None = None) -> None:
         self.signal_name = signal_name
         self.processed_signal_name = f"{self.signal_name}_processed"
@@ -147,7 +177,6 @@ class Section:
         self._is_filtered: bool = False
         self._is_standardized: bool = False
         self._is_processed: bool = False  # flag to indicate if the section has been processed using a pipeline
-        self._filter_history: list[_t.SignalFilterParameters] = []
 
         if "section_index" in data.columns:
             data.drop_in_place("section_index")
@@ -172,24 +201,46 @@ class Section:
             self.data.item(-1, "index"),
         )
 
-        self.rate_data = pl.DataFrame()
-        self.peak_data = pl.DataFrame()
         self._rate_is_synced = False
 
-        self._result_data = pl.DataFrame()
+        self._result_data = SectionResult()
 
         self._processing_parameters = ProcessingParameters(self.sampling_rate)
         self._manual_peak_edits = ManualPeakEdits()
 
-    # @property
-    # def rate_data(self) -> pl.DataFrame:
-    #     """Dataframe with x and y values of the sections rate curve."""
-    #     return self._rate_data
+    @property
+    def rate_data(self) -> pl.DataFrame:
+        return self._result_data.rate_data
+
+    @rate_data.setter
+    def rate_data(self, value: pl.DataFrame) -> None:
+        if self._result_data.is_locked:
+            logger.warning("Unable to update rate data because the section is locked. Please unlock the section and try again.")
+            return
+        self._result_data.rate_data = value
 
     @property
-    def result_data(self) -> pl.DataFrame:
-        return self._result_data
+    def peak_data(self) -> pl.DataFrame:
+        return self._result_data.peak_data
 
+    @peak_data.setter
+    def peak_data(self, value: pl.DataFrame) -> None:
+        if self._result_data.is_locked:
+            logger.warning("Unable to update peak data because the section is locked. Please unlock the section and try again.")
+            return
+        self._result_data.peak_data = value
+
+    @property
+    def is_locked(self) -> bool:
+        return self._result_data.is_locked
+
+    def set_locked(self, value: bool) -> None:
+        self._result_data.is_locked = value
+
+    @property
+    def n_filters(self) -> int:
+        return len(self._processing_parameters.filter_parameters)
+    
     @property
     def raw_signal(self) -> pl.Series:
         """The raw (unprocessed) signal data for the section."""
@@ -214,11 +265,6 @@ class Section:
     def is_processed(self) -> bool:
         """Flag indicating if the section values were processed using a pipeline."""
         return self._is_processed
-
-    @property
-    def filter_history(self) -> list[_t.SignalFilterParameters]:
-        """Holds the parameters of all filters currently applied to the section."""
-        return self._filter_history
 
     @property
     def peaks_local(self) -> pl.Series:
@@ -286,16 +332,17 @@ class Section:
             sig_data = self.processed_signal.to_numpy(allow_copy=False)
         method = kwargs.get("method", None)
         filtered = np.empty_like(sig_data)
-        filter_params: _t.SignalFilterParameters | None = None
+        filter_params: _t.SignalFilterParameters = {}
+        additional_params: _t.SignalFilterParameters | None = None
 
         if pipeline is None:
+            self._processing_parameters.processing_pipeline = pipeline
             if method is None:
                 filtered = sig_data
-                filter_params = None
+
             else:
                 filtered, filter_params = filter_signal(sig_data, self.sampling_rate, **kwargs)
                 self._is_filtered = True
-                self._filter_history.append(filter_params.copy())
         elif pipeline == PreprocessPipeline.PPGElgendi:
             filtered = filter_elgendi(sig_data, self.sampling_rate)
             filter_params = {
@@ -303,25 +350,28 @@ class Section:
                 "lowcut": 0.5,
                 "method": str(FilterMethod.Butterworth),
                 "order": 3,
-                "window_size": "default",
-                "powerline": 50,
             }
             self._is_processed = True
         elif pipeline == PreprocessPipeline.ECGNeuroKit2:
             pow_line = kwargs.get("powerline", 50)
             filtered = filter_neurokit2(sig_data, self.sampling_rate, powerline=int(pow_line))
+            # Applies two filters to the signal: first a highpass butterworth, then a powerline filter
             filter_params = {
-                "highcut": None,
                 "lowcut": 0.5,
                 "method": str(FilterMethod.Butterworth),
                 "order": 5,
-                "window_size": "default",
+            }
+            additional_params = {
+                "method": str(FilterMethod.Powerline),
                 "powerline": pow_line,
             }
             self._is_processed = True
 
         self._processing_parameters.processing_pipeline = pipeline
-        self._processing_parameters.filter_parameters = filter_params
+        self._processing_parameters.filter_parameters.append(filter_params)
+        if additional_params is not None:
+            self._processing_parameters.filter_parameters.append(additional_params)
+            
         self.data = self.data.with_columns(pl.Series(self.processed_signal_name, filtered))
 
     def scale_signal(self, **kwargs: t.Unpack[_t.StandardizationParameters]) -> None:
@@ -336,7 +386,7 @@ class Section:
             If using rolling standardization, the window size to use
         """
         if self._is_standardized:
-            logger.warning("Signal is already standardized. To restandardize, reset the signal.")
+            logger.warning("Signal is already standardized. Skipping standardization.")
             return
         window_size = kwargs.get("window_size", None)
         robust = kwargs.get("robust", False)
@@ -465,9 +515,20 @@ class Section:
             self.update_rate_data()
 
     def update_rate_data(self, full_info: bool = False, force: bool = False) -> None:
-        if not force and self._rate_is_synced:
-            return
+        """
+        Recalculates the signal rate based on the current peaks.
 
+        Parameters
+        ----------
+        full_info : bool, optional
+            If True, calculates summary statistics in addition to the rate, by default False
+        force : bool, optional
+            If True, recalculates the rate even if the `_rate_is_synced` flag is True, by default False
+
+        """
+        if (not force and self._rate_is_synced) or self.is_locked:
+            return
+        
         method = Config().editing.RateMethod
         if method == RateComputationMethod.RollingWindow:
             self._calc_rate_rolling(full_info=full_info)
@@ -542,11 +603,13 @@ class Section:
                 pl.sum("is_peak").alias("y"),
             ).collect()[:-n_incomplete_windows]
 
-        self.rate_data = rr_df.rename({"section_index": "x"})
+        rr_df = rr_df.rename({"section_index": "x"})
+
+        self.rate_data = rr_df.with_columns(pl.col("x").shrink_dtype(), pl.col("y").shrink_dtype()).shrink_to_fit()
 
     def get_mean_rate_per_temperature(self) -> pl.DataFrame:
         info_col = self.info_name
-        self._result_data = (
+        return (
             self.rate_data.group_by(pl.col(f"{info_col}_mean"))
             .agg(
                 pl.mean("y").alias("rate_mean"),
@@ -557,7 +620,6 @@ class Section:
             )
             .sort(f"{info_col}_mean")
         )
-        return self._result_data
 
     def _add_manual_peak_edits_column(self) -> None:
         pl_added = pl.Series("added", self._manual_peak_edits.added, pl.Int32)
@@ -626,6 +688,11 @@ class Section:
             rate_data=self.rate_data,
         )
 
+    def lock_result(self) -> None:
+        self.update_peak_data(include_global=True, include_times=True, include_intervals=True, include_info=True)
+        self.update_rate_data(full_info=True, force=True)
+        self._result_data.is_locked = True
+
     def get_detailed_result(self, info_column: str | None = None) -> DetailedSectionResult:
         metadata = self.get_metadata()
         section_df = self.data
@@ -644,14 +711,18 @@ class Section:
         )
 
     def update_peak_data(
-        self, include_global: bool = False, include_times: bool = False, include_intervals: bool = False
+        self,
+        include_global: bool = False,
+        include_times: bool = False,
+        include_intervals: bool = False,
+        include_info: bool = False,
     ) -> None:
         section_peaks = self.peaks_local
 
         if section_peaks.len() < 3:
             raise RuntimeError(f"Need at least 3 detected peaks to create a result, got {section_peaks.len()}")
 
-        peak_df = pl.DataFrame({"section_index": section_peaks})
+        peak_df = self.get_peak_pos().rename({"x": "section_index", "y": self.processed_signal_name})
 
         if include_global:
             peak_df = peak_df.with_columns(self.peaks_global.alias("global_index"))
@@ -662,7 +733,7 @@ class Section:
         if include_intervals:
             peak_df = peak_df.with_columns(section_peaks.diff().fill_null(0).alias("peak_intervals"))
 
-        if self.info_name in self.data.columns:
+        if self.info_name in self.data.columns and include_info:
             peak_df = peak_df.with_columns(
                 self.data.get_column(self.info_name).gather(section_peaks).alias(self.info_name)
             )
@@ -683,7 +754,7 @@ class Section:
         self._is_filtered = False
         self._is_standardized = False
         self._is_processed = False
-        self._filter_history.clear()
+        self._processing_parameters.reset()
 
     def reset_peaks(self) -> None:
         self.data = (
@@ -695,6 +766,7 @@ class Section:
             .collect()
         )
         self._manual_peak_edits.clear()
+        self._processing_parameters.reset(peaks_only=True)
 
     def get_summary(self) -> _t.SectionSummaryDict:
         return {
@@ -712,7 +784,7 @@ class Section:
         metadata = self.get_metadata()
         size = self.data.height
         processing_history: dict[str, str] = {
-            f"Run {i}": repr(hist) for i, hist in enumerate(self._filter_history, start=1)
+            f"Run {i}": repr(hist) for i, hist in enumerate(self._processing_parameters.filter_parameters, start=1)
         }
         stat_dict = {
             "Name": self.section_id.pretty_name(),

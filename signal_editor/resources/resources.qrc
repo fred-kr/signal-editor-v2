@@ -1,8 +1,7 @@
 <RCC>
   <qresource prefix="icons">
-    <file>fluent-icons/ConvertToTable.svg</file>
-    <file>fluent-icons/PlayCircle.svg</file>
-    <file>fluent-icons/DocumentEndnote.svg</file>
+    <file>fluent-icons/LockClosed.svg</file>
+    <file>fluent-icons/LockOpen.svg</file>
     <file>app_icon.svg</file>
     <file>fluent-icons/Add.svg</file>
     <file>fluent-icons/AddCircle.svg</file>
@@ -26,6 +25,10 @@
     <file>fluent-icons/Bug.svg</file>
     <file>fluent-icons/CaretLeft.svg</file>
     <file>fluent-icons/CaretRight.svg</file>
+    <file>fluent-icons/CheckboxChecked.svg</file>
+    <file>fluent-icons/CheckboxIndeterminate.svg</file>
+    <file>fluent-icons/CheckboxUnchecked.svg</file>
+    <file>fluent-icons/CheckboxWarning.svg</file>
     <file>fluent-icons/Checkmark.svg</file>
     <file>fluent-icons/CheckmarkCircle.svg</file>
     <file>fluent-icons/CheckmarkSquare.svg</file>
@@ -36,8 +39,12 @@
     <file>fluent-icons/ChevronRight.svg</file>
     <file>fluent-icons/ChevronUp.svg</file>
     <file>fluent-icons/Circle.svg</file>
+    <file>fluent-icons/CircleEdit.svg</file>
+    <file>fluent-icons/CircleHalfFill.svg</file>
+    <file>fluent-icons/CircleLine.svg</file>
     <file>fluent-icons/Code.svg</file>
     <file>fluent-icons/Color.svg</file>
+    <file>fluent-icons/ConvertToTable.svg</file>
     <file>fluent-icons/DataArea.svg</file>
     <file>fluent-icons/DataHistogram.svg</file>
     <file>fluent-icons/DataScatter.svg</file>
@@ -51,6 +58,7 @@
     <file>fluent-icons/DocumentArrowRight.svg</file>
     <file>fluent-icons/DocumentBulletListClock.svg</file>
     <file>fluent-icons/DocumentDismiss.svg</file>
+    <file>fluent-icons/DocumentEndnote.svg</file>
     <file>fluent-icons/DocumentToolbox.svg</file>
     <file>fluent-icons/Edit.svg</file>
     <file>fluent-icons/EditOff.svg</file>
@@ -73,6 +81,7 @@
     <file>fluent-icons/Options.svg</file>
     <file>fluent-icons/PageFit.svg</file>
     <file>fluent-icons/Play.svg</file>
+    <file>fluent-icons/PlayCircle.svg</file>
     <file>fluent-icons/Prohibited.svg</file>
     <file>fluent-icons/Pulse.svg</file>
     <file>fluent-icons/Question.svg</file>
@@ -101,120 +110,5 @@
     <file>fluent-icons/Wrench.svg</file>
     <file>fluent-icons/ZoomIn.svg</file>
     <file>fluent-icons/ZoomOut.svg</file>
-    <file alias="cross">fugue-icons/cross.png</file>
-    <file alias="minus_circle">fugue-icons/minus-circle.png</file>
-    <file alias="minus">fugue-icons/minus.png</file>
-    <file alias="document_go">fugue-icons/document--arrow.png</file>
-    <file alias="table_go">fugue-icons/table--arrow.png</file>
-    <file alias="arrow_resize">fugue-icons/arrow-resize-045.png</file>
-    <file alias="user_guide">fugue-icons/book-question.png</file>
-    <file alias="whats_this">fugue-icons/cursor-question.png</file>
-    <file alias="report">fugue-icons/report.png</file>
-    <file alias="color_palette">fugue-icons/palette-medium.png</file>
-    <file alias="list_view">fugue-icons/ui-list-box.png</file>
-    <file alias="section_view">fugue-icons/zone.png</file>
-    <file alias="section_remove">fugue-icons/zone--minus.png</file>
-    <file alias="section_add">fugue-icons/zone--plus.png</file>
-    <file alias="toolbox">fugue-icons/toolbox.png</file>
-    <file alias="toolbox_edit">fugue-icons/toolbox--pencil.png</file>
-    <file alias="target">fugue-icons/target.png</file>
-    <file alias="target_go">fugue-icons/target--arrow.png</file>
-    <file alias="target_remove">fugue-icons/target--minus.png</file>
-    <file alias="target_edit">fugue-icons/target--pencil.png</file>
-    <file alias="target_add">fugue-icons/target--plus.png</file>
-    <file alias="status_success">fugue-icons/status.png</file>
-    <file alias="status_working">fugue-icons/status-away.png</file>
-    <file alias="status_failure">fugue-icons/status-busy.png</file>
-    <file alias="status_ready">fugue-icons/status-offline.png</file>
-    <file alias="toggle_spectrum">fugue-icons/spectrum.png</file>
-    <file alias="search_edit">fugue-icons/magnifier--pencil.png</file>
-    <file alias="layer">fugue-icons/layer.png</file>
-    <file alias="layer_remove">fugue-icons/layer--minus.png</file>
-    <file alias="layer_add">fugue-icons/layer--plus.png</file>
-    <file alias="location">fugue-icons/geolocation.png</file>
-    <file alias="filter">fugue-icons/funnel.png</file>
-    <file alias="filter_edit">fugue-icons/funnel--pencil.png</file>
-    <file alias="eye_open">fugue-icons/eye.png</file>
-    <file alias="eye_close">fugue-icons/eye-close.png</file>
-    <file alias="eye_remove">fugue-icons/eye--minus.png</file>
-    <file alias="eye_add">fugue-icons/eye--plus.png</file>
-    <file alias="eraser">fugue-icons/eraser.png</file>
-    <file alias="arrow_right">fugue-icons/arrow.png</file>
-    <file alias="cross_close">fugue-icons/cross-script.png</file>
-    <file alias="app_ab">fugue-icons/application-ab.png</file>
-    <file alias="app_docs">fugue-icons/application-documents.png</file>
-    <file alias="app_plus">fugue-icons/application-plus.png</file>
-    <file alias="app_plus_black">fugue-icons/application-plus-black.png</file>
-    <file alias="app_plus_red">fugue-icons/application-plus-red.png</file>
-    <file alias="search">fugue-icons/magnifier.png</file>
-    <file alias="search_minus">fugue-icons/magnifier--minus.png</file>
-    <file alias="search_plus">fugue-icons/magnifier--plus.png</file>
-    <file alias="zoom_fit">fugue-icons/magnifier-zoom-fit.png</file>
-    <file alias="zoom_in">fugue-icons/magnifier-zoom-in.png</file>
-    <file alias="zoom_out">fugue-icons/magnifier-zoom-out.png</file>
-    <file alias="binoculars">fugue-icons/binocular.png</file>
-    <file alias="toggle_autoscale">fugue-icons/arrow-resize-090.png</file>
-    <file alias="new_section">fugue-icons/selection-select.png</file>
-    <file alias="folder_open">fugue-icons/folder-open.png</file>
-    <file alias="folder_close">fugue-icons/folder.png</file>
-    <file alias="navigation">fugue-icons/application-sidebar-list.png</file>
-    <file alias="terminal">fugue-icons/application-terminal.png</file>
-    <file alias="view_settings">fugue-icons/gear.png</file>
-    <file alias="app_monitor">fugue-icons/application-monitor.png</file>
-    <file alias="sys_monitor">fugue-icons/system-monitor.png</file>
-    <file alias="view_result">fugue-icons/chart--pencil.png</file>
-    <file alias="download_data">fugue-icons/drive-download.png</file>
-    <file alias="upload_data">fugue-icons/drive-upload.png</file>
-    <file alias="app_wave">fugue-icons/application-wave.png</file>
-    <file alias="processor">fugue-icons/processor-bit-064.png</file>
-    <file alias="no_access">fugue-icons/prohibition.png</file>
-    <file alias="properties">fugue-icons/property.png</file>
-    <file alias="properties_export">fugue-icons/property-export.png</file>
-    <file alias="properties_import">fugue-icons/property-import.png</file>
-    <file alias="edit_history">fugue-icons/clock-history.png</file>
-    <file alias="edit_redo">fugue-icons/arrow-return.png</file>
-    <file alias="edit_undo">fugue-icons/arrow-return-180-left.png</file>
-    <file alias="clear_history">fugue-icons/broom.png</file>
-    <file alias="app_file_export">fugue-icons/application-export.png</file>
-    <file alias="table_export">fugue-icons/table-export.png</file>
-    <file alias="table_edit">fugue-icons/table--pencil.png</file>
-    <file alias="view_data">fugue-icons/document-table.png</file>
-    <file alias="file_import">fugue-icons/document-import.png</file>
-    <file alias="file_export">fugue-icons/document-export.png</file>
-    <file alias="table_import">fugue-icons/table-import.png</file>
-    <file alias="sys_monitor_edit">fugue-icons/system-monitor--pencil.png</file>
-    <file alias="refresh">fugue-icons/arrow-circle-double-135.png</file>
-    <file alias="auto_refresh">fugue-icons/arrow-repeat.png</file>
-    <file alias="delete">fugue-icons/cross-button.png</file>
-    <file alias="edit">fugue-icons/pencil.png</file>
-    <file alias="create">fugue-icons/plus-button.png</file>
-    <file alias="tick_button">fugue-icons/tick-button.png</file>
-    <file alias="resource_monitor">fugue-icons/resource-monitor.png</file>
-    <file alias="restore_defaults">fugue-icons/arrow-circle-225-left.png</file>
-    <file alias="info_btn">fugue-icons/information-button.png</file>
-    <file alias="question_btn">fugue-icons/question-button.png</file>
-    <file alias="color">fugue-icons/color.png</file>
-    <file alias="color_edit">fugue-icons/color--pencil.png</file>
-    <file alias="reset_all">fugue-icons/broom.png</file>
-    <file alias="category">fugue-icons/category.png</file>
-    <file alias="category_item">fugue-icons/category-item.png</file>
-    <file alias="expand_plus">fugue-icons/toggle-expand.png</file>
-    <file alias="expand_minus">fugue-icons/toggle.png</file>
-    <file alias="folder_import">fugue-icons/folder-import.png</file>
-    <file alias="folder_export">fugue-icons/folder-export.png</file>
-    <file alias="info">fugue-icons/information.png</file>
-    <file alias="question">fugue-icons/question.png</file>
-    <file alias="warning_triangle">fugue-icons/exclamation.png</file>
-    <file alias="warning">fugue-icons/exclamation-circle.png</file>
-    <file alias="error">fugue-icons/exclamation-red.png</file>
-    <file alias="critical">fugue-icons/cross-circle.png</file>
-    <file alias="success">fugue-icons/tick-circle.png</file>
-    <file alias="tick_mark">fugue-icons/tick.png</file>
-    <file alias="nav_left">fugue-icons/navigation-180.png</file>
-    <file alias="nav_right">fugue-icons/navigation.png</file>
-    <file alias="nav_left_btn">fugue-icons/navigation-180-button.png</file>
-    <file alias="nav_right_btn">fugue-icons/navigation-000-button.png</file>
-    <file alias="menu">fugue-icons/ui-menu.png</file>
-    <file alias="menu_blue">fugue-icons/ui-menu-blue.png</file>
   </qresource>
 </RCC>

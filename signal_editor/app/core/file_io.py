@@ -11,6 +11,7 @@ import polars.selectors as cs
 import tables as tb
 from loguru import logger
 
+from ..const_defs import COLUMN_PLACEHOLDER
 from ..enum_defs import OxygenCondition, PeakDetectionMethod
 from ..models.result_models import CompleteResult
 
@@ -231,19 +232,19 @@ def detect_sampling_rate(
 def read_edf(
     file_path: Path,
     data_channel: str,
-    info_channel: str | None = "",
+    info_channel: str | None = None,
     *,
     start: int = 0,
     stop: int | None = None,
     filter_all_zeros: bool = True,
 ) -> pl.DataFrame:
     if info_channel is None:
-        info_channel = ""
+        info_channel = COLUMN_PLACEHOLDER
     raw_edf = mne.io.read_raw_edf(file_path, include=[data_channel, info_channel])
     channel_names: list[str] = raw_edf.ch_names  # type: ignore
     data = raw_edf.get_data(start=start, stop=stop).squeeze()  # type: ignore
     out = pl.from_numpy(data, channel_names)  # type: ignore
-    if info_channel != "":
+    if info_channel != COLUMN_PLACEHOLDER:
         out = out.select(pl.col(data_channel), pl.col(info_channel))
         if filter_all_zeros:
             out = out.filter((pl.col(data_channel) != 0) & (pl.col(info_channel) != 0))

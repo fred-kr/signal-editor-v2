@@ -52,6 +52,25 @@ class CompactSectionResult:
         return out
 
 
+@attrs.define(repr=True)
+class SectionResult:
+    peak_data: pl.DataFrame = attrs.field(factory=pl.DataFrame)
+    rate_data: pl.DataFrame = attrs.field(factory=pl.DataFrame)
+    is_locked: bool = attrs.field(default=False)
+
+    def has_peak_data(self) -> bool:
+        return not self.peak_data.is_empty()
+
+    def has_rate_data(self) -> bool:
+        return not self.rate_data.is_empty()
+    
+    def to_dict(self) -> _t.SectionResultDict:
+        return _t.SectionResultDict(
+            peak_data=self.peak_data.to_numpy(structured=True),
+            rate_data=self.rate_data.to_numpy(structured=True),
+        )
+
+
 @attrs.define(frozen=True, repr=True)
 class DetailedSectionResult:
     metadata: "SectionMetadata" = attrs.field()

@@ -55,6 +55,24 @@ class PeakDetectionWorker(QtCore.QRunnable):
             self.signals.sig_done.emit()
 
 
+class SectionResultWorker(QtCore.QRunnable):
+    def __init__(self, section: "Section") -> None:
+        super().__init__()
+        self.section = section
+        self.signals = _WorkerSignals()
+
+    @QtCore.Slot()
+    def run(self) -> None:
+        try:
+            self.section.lock_result()
+        except Exception as e:
+            self.signals.sig_failed.emit(e)
+        else:
+            self.signals.sig_success.emit()
+        finally:
+            self.signals.sig_done.emit()
+
+
 class SignalEditor(QtWidgets.QApplication):
     sig_peaks_updated: t.ClassVar[QtCore.Signal] = QtCore.Signal()
 
@@ -78,21 +96,26 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.mw.action_open_file.triggered.connect(self.open_file)
         self.mw.action_edit_metadata.triggered.connect(lambda: self.show_metadata_dialog([]))
-        self.mw.dialog_config.finished.connect(self.apply_settings)
-        self.mw.btn_load_data.clicked.connect(self.read_data)
-        self.mw.dialog_meta.sig_property_has_changed.connect(self.update_metadata)
-        self.mw.btn_open_file.clicked.connect(self.open_file)
-        self.mw.action_close_file.triggered.connect(self.close_file)
-        self.mw.btn_close_file.clicked.connect(self.close_file)
         self.mw.action_about_qt.triggered.connect(self.aboutQt)
+        self.mw.action_close_file.triggered.connect(self.close_file)
+
+        self.mw.dialog_config.finished.connect(self.apply_settings)
+        self.mw.dialog_meta.sig_property_has_changed.connect(self.update_metadata)
         self.mw.dialog_export.sig_export_confirmed.connect(self.export_result)
-        self.mw.list_widget_recent_files.itemDoubleClicked.connect(self._open_recent_file)
-        self.mw.sig_table_refresh_requested.connect(self.refresh_data_view)
-        self.mw.sig_export_requested.connect(self.export_result)
+
+        self.mw.btn_load_data.clicked.connect(self.read_data)
+        self.mw.btn_open_file.clicked.connect(self.open_file)
+        self.mw.btn_close_file.clicked.connect(self.close_file)
+
+        self.mw.combo_box_signal_column_import_page.currentTextChanged.connect(self.update_signal_column)
+        self.mw.combo_box_info_column_import_page.currentTextChanged.connect(self.update_info_column)
 
         self.mw.spin_box_sampling_rate_import_page.editingFinished.connect(self.update_sampling_rate)
-        self.mw.combo_box_info_column_import_page.currentTextChanged.connect(self.update_info_column)
-        self.mw.combo_box_signal_column_import_page.currentTextChanged.connect(self.update_signal_column)
+
+        self.mw.list_widget_recent_files.itemDoubleClicked.connect(self._open_recent_file)
+
+        self.mw.sig_table_refresh_requested.connect(self.refresh_data_view)
+        self.mw.sig_export_requested.connect(self.export_result)
 
         # Section actions
         self.mw.action_create_new_section.toggled.connect(self.maybe_new_section)
@@ -107,7 +130,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.action_show_section_summary.triggered.connect(
             lambda: self.show_section_summary(self.mw.dock_sections.list_view.currentIndex())
         )
-        self.mw.action_get_section_result.triggered.connect(self.get_section_result)
+        self.mw.action_mark_section_done.triggered.connect(self.get_section_result)
 
         self.mw.dock_parameters.sig_filter_requested.connect(self.filter_active_signal)
         self.mw.dock_parameters.sig_pipeline_requested.connect(self.run_preprocess_pipeline)
@@ -171,12 +194,12 @@ class SignalEditor(QtWidgets.QApplication):
         pos = self.data.active_section.get_peak_pos().to_numpy(structured=True)
         self.plot.set_peak_data(pos["x"], pos["y"])
         self.data.active_section.update_rate_data()
-        rate_data = self.data.active_section.rate_data.to_numpy(structured=True)
+        rate_data = self.data.active_section.rate_data.select("x", "y").to_numpy(structured=True)
         self.plot.set_rate_data(x_data=rate_data["x"], y_data=rate_data["y"])
 
     def update_status_indicators(self) -> None:
         self.mw.dock_parameters.set_filter_status(
-            self.data.active_section.is_filtered, len(self.data.active_section.filter_history)
+            self.data.active_section.is_filtered, self.data.active_section.n_filters
         )
         self.mw.dock_parameters.set_pipeline_status(self.data.active_section.is_processed)
         self.mw.dock_parameters.set_standardization_status(self.data.active_section.is_standardized)
@@ -217,21 +240,25 @@ class SignalEditor(QtWidgets.QApplication):
         worker.signals.sig_success.connect(self.refresh_peak_data)
         worker.signals.sig_done.connect(self._on_worker_finished)
         # worker.signals.sig_failed.connect(self.mw.sb_progress.error)
-        self._on_worker_started()
+        self._on_worker_started("Detecting peaks...")
         self.thread_pool.start(worker)
 
-    def _on_worker_started(self) -> None:
-        self.plot.show_overlay()
+    def _on_worker_started(self, overlay_text: str = "Calculating...") -> None:
+        self.mw.show_overlay(overlay_text)
 
+    @QtCore.Slot()
     def _on_worker_finished(self) -> None:
-        self.plot.hide_overlay()
+        self.mw.hide_overlay()
+        is_locked = self.data.active_section.is_locked
+        self.mw.dock_parameters.setEnabled(not is_locked)
+        self.mw.action_remove_section.setEnabled(not is_locked)
+        self.mw.action_mark_section_done.setEnabled(not is_locked)
+        self.mw.action_unlock_section.setEnabled(is_locked)
 
     @QtCore.Slot()
     def _on_sig_new_data(self) -> None:
         self.mw.dock_sections.list_view.setModel(self.data.sections)
         self.mw.dock_sections.list_view.setCurrentIndex(self.data.base_section_index)
-        # with QtCore.QSignalBlocker(self.mw.combo_box_result_section):
-        #     self.mw.combo_box_result_section.setModel(self.data.sections)
         self.update_sampling_rate()
 
     def _connect_data_controller_signals(self) -> None:
@@ -240,7 +267,6 @@ class SignalEditor(QtWidgets.QApplication):
         self.data.sig_new_data.connect(self._on_sig_new_data)
         self.mw.dock_sections.list_view.pressed.connect(self.data.set_active_section)
         self.data.sig_active_section_changed.connect(self._on_active_section_changed)
-        # self.mw.combo_box_result_section.currentIndexChanged.connect(self.data.set_result_section)
 
     def _disconnect_data_controller_signals(self) -> None:
         sender = self.data
@@ -250,7 +276,6 @@ class SignalEditor(QtWidgets.QApplication):
             (sender.sig_new_data, self._on_sig_new_data),
             (sender.sig_active_section_changed, self._on_active_section_changed),
             (self.mw.dock_sections.list_view.pressed, sender.set_active_section),
-            # (self.mw.combo_box_result_section.currentIndexChanged, sender.set_result_section),
         ]
         safe_multi_disconnect(sender, signal_slot_pairs)
 
@@ -304,29 +329,32 @@ class SignalEditor(QtWidgets.QApplication):
     def _on_active_section_changed(self, has_peaks: bool) -> None:
         section = self.data.active_section
         is_base_section = section is self.data.get_base_section()
-        # has_results = not section.result_data.is_empty()
+        is_locked = section.is_locked
 
         self.mw.action_create_new_section.setEnabled(is_base_section)
-        self.mw.action_delete_section.setEnabled(not is_base_section)
+        self.mw.action_remove_section.setEnabled(not is_base_section and not is_locked)
+        self.mw.action_mark_section_done.setEnabled(not is_base_section and not is_locked)
+        self.mw.action_unlock_section.setEnabled(not is_base_section and is_locked)
         self.mw.action_show_section_overview.setEnabled(is_base_section)
         self.mw.action_show_section_overview.setChecked(is_base_section)
-        self.mw.dock_parameters.setEnabled(not is_base_section)
+        self.mw.dock_parameters.setEnabled(not is_base_section and not is_locked)
 
         self.mw.set_active_section_label(section.section_id.pretty_name())
 
+        self.plot.block_clicks = is_base_section or is_locked
         self.plot.set_signal_data(section.processed_signal.to_numpy())
         self.plot.clear_peaks()
 
         if has_peaks:
             self.sig_peaks_updated.emit()
-        # if has_results:
-        #     result = section.result_data.to_numpy(structured=True)
-        #     self.plot.draw_rolling_rate(result["x"], result["y"])
+
         # Update the table view to show the current sections' data
         self.mw.table_view_import_data.setModel(self.data.active_section_model)
-        self.mw.label_showing_data_table.setText(f"Showing: {section.section_id.pretty_name()}")
-        self.mw.table_view_result_peaks.setModel(self.data.result_model_peaks)
-        self.mw.table_view_result_rate.setModel(self.data.result_model_rate)
+        if is_locked:
+            self.update_result_views()
+        if is_base_section:
+            self.data.result_model_peaks.set_df(section.peak_data)
+            self.data.result_model_rate.set_df(section.rate_data)
 
     @QtCore.Slot(int)
     def set_active_section_from_int(self, index: int) -> None:
@@ -477,12 +505,16 @@ class SignalEditor(QtWidgets.QApplication):
             self._on_file_opened(loaded_file)
 
         self.data.load_data()
-        for col in range(self.data.base_df.width):
-            self.mw.table_view_import_data.horizontalHeader().setSectionResizeMode(
-                col, QtWidgets.QHeaderView.ResizeMode.Stretch
-            )
+        self.mw.table_view_import_data.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
 
         self.mw.dock_sections.setEnabled(True)
+
+        self.mw.spin_box_sampling_rate_import_page.setEnabled(False)
+        self.mw.combo_box_signal_column_import_page.setEnabled(False)
+        self.mw.combo_box_info_column_import_page.setEnabled(False)
+        self.mw.dialog_meta.spin_box_sampling_rate.setEnabled(False)
+        self.mw.dialog_meta.combo_box_signal_column.setEnabled(False)
+        self.mw.dialog_meta.combo_box_info_column.setEnabled(False)
 
         self.config.internal.LastSignalColumn = self.data.metadata.signal_column
         self.config.internal.LastInfoColumn = self.data.metadata.info_column
@@ -513,19 +545,33 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.btn_close_file.setEnabled(False)
         self.mw.btn_load_data.setEnabled(False)
 
-        self.mw.label_showing_data_table.setText("Showing: -")
         self.mw.set_active_section_label("-")
         self.mw.line_edit_active_file.clear()
+
+        self.mw.spin_box_sampling_rate_import_page.setEnabled(True)
+        self.mw.combo_box_signal_column_import_page.setEnabled(True)
+        self.mw.combo_box_info_column_import_page.setEnabled(True)
+        self.mw.dialog_meta.spin_box_sampling_rate.setEnabled(True)
+        self.mw.dialog_meta.combo_box_signal_column.setEnabled(True)
+        self.mw.dialog_meta.combo_box_info_column.setEnabled(True)
 
     @QtCore.Slot()
     def apply_settings(self) -> None:
         self.plot.apply_settings()
 
     @QtCore.Slot()
-    def get_section_result(self) -> None:
-        self.data.refresh_active_section_results()
+    def update_result_views(self) -> None:
         self.data.result_model_peaks.set_df(self.data.active_section.peak_data)
         self.data.result_model_rate.set_df(self.data.active_section.rate_data)
+
+    @QtCore.Slot()
+    def get_section_result(self) -> None:
+        worker = SectionResultWorker(self.data.active_section)
+        worker.signals.sig_success.connect(self.update_result_views)
+        worker.signals.sig_done.connect(self._on_worker_finished)
+
+        self._on_worker_started("Creating section result...")
+        self.thread_pool.start(worker)
 
     @QtCore.Slot(dict)
     def export_result(self, info_dict: _t.ExportInfoDict) -> None:
@@ -545,3 +591,6 @@ class SignalEditor(QtWidgets.QApplication):
         else:
             logger.success(f"Result exported to {path}.")
             self.mw.show_success("Success", f"Result exported to:\n{path}.")
+
+    # @QtCore.Slot(str)
+    # def export_result2(self, format: str) -> None:

@@ -25,7 +25,6 @@ class DataController(QtCore.QObject):
     sig_user_input_required = QtCore.Signal(set)
     sig_new_metadata = QtCore.Signal(object)
     sig_new_data = QtCore.Signal()
-    sig_sampling_rate_changed = QtCore.Signal(int)
     sig_active_section_changed = QtCore.Signal(bool)
     sig_section_added = QtCore.Signal(str)
     sig_section_removed = QtCore.Signal(str)
@@ -77,14 +76,6 @@ class DataController(QtCore.QObject):
             raise ValueError("No data available.")
         return self._metadata
 
-    def _set_sampling_rate(self, value: int) -> None:
-        """
-        This method is used whenever the sampling rate is changed programmatically, as opposed
-        to when the user changes the value in the UI.
-        """
-        self._sampling_rate = value
-        self.sig_sampling_rate_changed.emit(value)
-
     @QtCore.Slot(int)
     def on_sampling_rate_changed(self, value: int) -> None:
         self.sections.update_sampling_rate(value)
@@ -92,7 +83,8 @@ class DataController(QtCore.QObject):
     def get_base_section(self) -> Section:
         if self._base_section is None:
             try:
-                self._base_section = Section(self.base_df, self.metadata.signal_column)
+                self._base_section = Section(self.base_df, signal_name=self.metadata.signal_column, info_column=self.metadata.info_column)
+                self._base_section.set_locked(True)
             except Exception as e:
                 raise ValueError("No data available. Select a valid file to load, and try again.") from e
         return self._base_section
@@ -111,8 +103,6 @@ class DataController(QtCore.QObject):
             self.active_section_model.set_df(self._active_section.data)
             has_peak_data = not self._active_section.peaks_local.is_empty()
             self.sig_active_section_changed.emit(has_peak_data)
-            if has_peak_data:
-                self.refresh_active_section_results()
 
     @property
     def base_section_index(self) -> QtCore.QModelIndex:
@@ -219,7 +209,7 @@ class DataController(QtCore.QObject):
             raise NotImplementedError(f"Can't read file type: {suffix}")
 
         self.data_model.set_df(df)
-        self._base_section = Section(df, signal_col, info_column=info_col)
+        self._base_section = self.get_base_section()
         self.sections.add_section(self._base_section)
         self.set_active_section(self.base_section_index)
         self.has_data = True
@@ -286,9 +276,3 @@ class DataController(QtCore.QObject):
             global_dataframe=global_df.collect(),
             section_results=section_results,
         )
-
-    def refresh_active_section_results(self) -> None:
-        if self.active_section.peaks_local.is_empty():
-            return
-        self.active_section.update_peak_data()
-        self.active_section.update_rate_data(full_info=True, force=True)

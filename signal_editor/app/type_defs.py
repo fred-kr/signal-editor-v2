@@ -331,10 +331,11 @@ class MutableMetadataAttributes(t.TypedDict, total=False):
 class ProcessingParametersDict(t.TypedDict):
     sampling_rate: int
     processing_pipeline: str
-    filter_parameters: SignalFilterParameters | None
+    filter_parameters: list[SignalFilterParameters]
     standardization_parameters: StandardizationParameters | None
     peak_detection_method: str | None
     peak_detection_method_parameters: PeakDetectionMethodParameters | None
+    rate_computation_method: str
 
 
 class ManualPeakEditsDict(t.TypedDict):
@@ -369,6 +370,11 @@ class CompactSectionResultDict(t.TypedDict):
     rate_data: npt.NDArray[np.void]
     info_values: t.NotRequired[npt.NDArray[np.float64]]
 
+
+class SectionResultDict(t.TypedDict):
+    peak_data: npt.NDArray[np.void]
+    rate_data: npt.NDArray[np.void]
+    
 
 class DetailedSectionResultDict(t.TypedDict):
     metadata: SectionMetadataDict

@@ -34,7 +34,7 @@ class PlotController(QtCore.QObject):
         self._mw_ref = main_window
         self.regions: list[ClickableRegionItem] = []
         self._show_regions = False
-        self._overlay_widget = OverlayWidget(self._mw_ref.plot_container)
+        self._overlay_widget = OverlayWidget(parent=self._mw_ref.plot_container)
         self._overlay_widget.hide()
         
         self._setup_plot_widgets()
@@ -42,6 +42,7 @@ class PlotController(QtCore.QObject):
         self._setup_plot_data_items()
 
         self.search_around_click_radius = Config().plot.ClickRadius
+        self.block_clicks = False
 
     def _setup_plot_widgets(self) -> None:
         widget_layout = QtWidgets.QVBoxLayout()
@@ -372,7 +373,7 @@ class PlotController(QtCore.QObject):
         ev: "mouseEvents.MouseClickEvent",
     ) -> None:
         ev.accept()
-        if not self.peak_scatter or len(points) == 0:
+        if not self.peak_scatter or len(points) == 0 or self.block_clicks:
             return
 
         point = points[0]
@@ -389,7 +390,7 @@ class PlotController(QtCore.QObject):
     @QtCore.Slot(object, object)
     def _on_curve_clicked(self, sender: pg.PlotCurveItem, ev: "mouseEvents.MouseClickEvent") -> None:
         ev.accept()
-        if self.signal_curve is None or self.peak_scatter is None:
+        if self.signal_curve is None or self.peak_scatter is None or self.block_clicks:
             return
 
         click_x = int(ev.pos().x())
@@ -503,14 +504,3 @@ class PlotController(QtCore.QObject):
     def toggle_auto_scaling(self, state: bool) -> None:
         self.pw_main.enableAutoRange(y=state)
         self.pw_rate.enableAutoRange(y=state)
-
-    def show_overlay(self) -> None:
-        self._mw_ref.plot_container.setEnabled(False)
-        self._overlay_widget.setGeometry(self._mw_ref.plot_container.geometry())
-        self._overlay_widget.raise_()
-        self._overlay_widget.show()
-
-    @QtCore.Slot()
-    def hide_overlay(self) -> None:
-        self._mw_ref.plot_container.setEnabled(True)
-        self._overlay_widget.hide()

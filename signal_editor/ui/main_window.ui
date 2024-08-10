@@ -64,7 +64,10 @@
               </size>
              </property>
              <property name="toolTip">
-              <string>Load data from the selected file using the settings shown above</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Loads the data from the columns or channels specified in the &amp;quot;Signal Data&amp;quot; and &amp;quot;Additional Data&amp;quot; fields.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="whatsThis">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Loads the data from the columns or channels specified in the &amp;quot;Signal Data&amp;quot; and &amp;quot;Additional Data&amp;quot; fields.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="text">
               <string>Load Data</string>
@@ -99,7 +102,10 @@
                  </size>
                 </property>
                 <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The sampling rate of the signal values in the file&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The sampling rate of the signal in Hz (samples/second)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="whatsThis">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The sampling rate, measured in Hertz (Hz), defines the number of data points captured per second. For instance, a sampling rate of 1000 Hz means that 1000 data points are recorded every second.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="text">
                  <string>Sampling Rate</string>
@@ -116,6 +122,9 @@
                 </property>
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The sampling rate of the signal values in the file&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="whatsThis">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The sampling rate, measured in Hertz (Hz), defines the number of data points captured per second. For instance, a sampling rate of 1000 Hz means that 1000 data points are recorded every second.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="frame">
                  <bool>false</bool>
@@ -140,10 +149,13 @@
                  </size>
                 </property>
                 <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The column / channel in the file containing the signal values&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The column or channel containing the signal values&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="whatsThis">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The column or channel containing the signal values&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="text">
-                 <string>Data Source</string>
+                 <string>Signal Data</string>
                 </property>
                </widget>
               </item>
@@ -156,20 +168,17 @@
                  </size>
                 </property>
                 <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The column / channel in the file containing the signal values&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The column or channel containing the signal values&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="whatsThis">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;The column or channel containing the signal values&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                </widget>
               </item>
-              <item row="3" column="1">
-               <widget class="ComboBox" name="combo_box_info_column_import_page">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>31</height>
-                 </size>
-                </property>
-                <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A column / channel in the file containing supplementary data, e.g. temperature or O2-saturation recordings&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <item row="2" column="0" colspan="2">
+               <widget class="Line" name="line">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Horizontal</enum>
                 </property>
                </widget>
               </item>
@@ -182,24 +191,29 @@
                  </size>
                 </property>
                 <property name="toolTip">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A column / channel in the file containing supplementary data, e.g. temperature or O2-saturation recordings&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;An optional column or channel of data recorded alongside the signal with information that should be shown while editing and which should be included in the results (e.g. temperature, oxygen saturation, etc)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="whatsThis">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;An optional column or channel of data recorded alongside the signal with information that should be shown while editing and which should be included in the results (e.g. temperature, oxygen saturation, etc)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                 <property name="text">
-                 <string>*Info Source</string>
+                 <string>Additional Data</string>
                 </property>
                </widget>
               </item>
-              <item row="2" column="0" colspan="2">
-               <widget class="Line" name="line">
-                <property name="orientation">
-                 <enum>Qt::Orientation::Horizontal</enum>
+              <item row="3" column="1">
+               <widget class="ComboBox" name="combo_box_info_column_import_page">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>31</height>
+                 </size>
                 </property>
-               </widget>
-              </item>
-              <item row="4" column="0" colspan="2">
-               <widget class="QLabel" name="label_5">
-                <property name="text">
-                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:7pt;&quot;&gt;*optional data source from the file to be displayed alongside the signal data (e.g. temperature, O2-saturation, etc)&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;An optional column or channel of data recorded alongside the signal with information that should be shown while editing and which should be included in the results (e.g. temperature, oxygen saturation, etc)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="whatsThis">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;An optional column or channel of data recorded alongside the signal with information that should be shown while editing and which should be included in the results (e.g. temperature, oxygen saturation, etc)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                 </property>
                </widget>
               </item>
@@ -236,8 +250,11 @@
                <height>41</height>
               </size>
              </property>
+             <property name="whatsThis">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Opens a window allowing you to choose a file to load into the app.&lt;/p&gt;&lt;p&gt;The selected file is searched for available columns or channels of data.&lt;/p&gt;&lt;p&gt;If any are found, their names are made available for selection in the &amp;quot;Signal Data&amp;quot; and &amp;quot;Additional Data&amp;quot; fields.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="text">
-              <string>Select File</string>
+              <string>Open File</string>
              </property>
              <property name="icon">
               <iconset resource="../resources/resources.qrc">
@@ -261,6 +278,12 @@
                <width>0</width>
                <height>41</height>
               </size>
+             </property>
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Close the current file and reset the app state.&lt;/p&gt;&lt;p&gt;Make sure to export any existing results first, as they will be lost on reset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
+             <property name="whatsThis">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Close the current file and reset the app state.&lt;/p&gt;&lt;p&gt;Make sure to export any existing results first, as they will be lost on reset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="text">
               <string>Close File</string>
@@ -307,7 +330,11 @@
                </widget>
               </item>
               <item>
-               <widget class="ListWidget" name="list_widget_recent_files"/>
+               <widget class="ListWidget" name="list_widget_recent_files">
+                <property name="toolTip">
+                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Double-click on a filename to open it&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+               </widget>
               </item>
              </layout>
             </widget>
@@ -334,7 +361,7 @@
            <item row="0" column="1">
             <widget class="StrongBodyLabel" name="label_showing_data_table">
              <property name="text">
-              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;Showing&lt;/span&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;: -&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Showing: -&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
              </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignBottom|Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing</set>
@@ -343,6 +370,9 @@
            </item>
            <item row="1" column="0" colspan="2">
             <widget class="TableView" name="table_view_import_data">
+             <property name="toolTip">
+              <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A table showing the current section's data&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             </property>
              <property name="editTriggers">
               <set>QAbstractItemView::EditTrigger::NoEditTriggers</set>
              </property>
@@ -383,7 +413,14 @@
       </widget>
       <widget class="QWidget" name="stacked_page_export">
        <layout class="QGridLayout" name="gridLayout_3">
-        <item row="0" column="1">
+        <item row="0" column="0">
+         <widget class="SubtitleLabel" name="label_4">
+          <property name="text">
+           <string>Section Data and Results</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
          <widget class="DropDownPushButton" name="btn_dropdown_export">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -396,20 +433,7 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="0">
-         <widget class="SubtitleLabel" name="label_4">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>Section Data and Results</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0" colspan="2">
+        <item row="1" column="0" colspan="3">
          <widget class="QTabWidget" name="container_result_preview">
           <property name="currentIndex">
            <number>0</number>
@@ -477,6 +501,13 @@
             </item>
            </layout>
           </widget>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="StrongBodyLabel" name="label_showing_section_result">
+          <property name="text">
+           <string/>
+          </property>
          </widget>
         </item>
        </layout>
@@ -562,8 +593,8 @@
     <bool>false</bool>
    </attribute>
    <addaction name="action_open_file"/>
-   <addaction name="action_edit_metadata"/>
    <addaction name="action_close_file"/>
+   <addaction name="action_edit_metadata"/>
   </widget>
   <action name="action_open_file">
    <property name="icon">
@@ -601,13 +632,16 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/fluent-icons/DocumentToolbox.svg</normaloff>:/icons/fluent-icons/DocumentToolbox.svg</iconset>
+     <normaloff>:/icons/fluent-icons/DocumentEndnote.svg</normaloff>:/icons/fluent-icons/DocumentEndnote.svg</iconset>
    </property>
    <property name="text">
     <string>File Metadata</string>
    </property>
    <property name="toolTip">
-    <string>View or edit metadata of the opened file</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open a more detailed view of the current file's metadata.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="whatsThis">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Shows a dialog window with fields for setting the sampling rate, data source and info source to be used for the current file.&lt;/p&gt;&lt;p&gt;If any additional metadata exists in the file (and if the app is able to read it and parse it into a python dictionary) it will be displayed as a read-only tree structure.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;p&gt;For EDF files, shows the information from the &lt;a href=&quot;https://mne.tools/stable/generated/mne.Info.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#ff8c00;&quot;&gt;Info&lt;/span&gt;&lt;/a&gt; object created by the &lt;a href=&quot;https://mne.tools/stable/index.html&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#ff8c00;&quot;&gt;mne&lt;/span&gt;&lt;/a&gt; library.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="iconVisibleInMenu">
     <bool>false</bool>
@@ -625,7 +659,7 @@
     <string>Close File</string>
    </property>
    <property name="toolTip">
-    <string>Closes the currently loaded file and refreshes the app state. Make sure to export any existing results first, as they will be lost on refresh.</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Close the current file and reset the app state.&lt;/p&gt;&lt;p&gt;Make sure to export any existing results first, as they will be lost on reset.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -634,16 +668,19 @@
     <bool>false</bool>
    </property>
   </action>
-  <action name="action_get_section_result">
+  <action name="action_mark_section_done">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/fluent-icons/PlayCircle.svg</normaloff>:/icons/fluent-icons/PlayCircle.svg</iconset>
+     <normaloff>:/icons/fluent-icons/CheckmarkCircle.svg</normaloff>:/icons/fluent-icons/CheckmarkCircle.svg</iconset>
    </property>
    <property name="text">
-    <string>Get Section Result</string>
+    <string>Mark as Done</string>
    </property>
    <property name="toolTip">
-    <string>Make the current section's results available for viewing/exporting (see &quot;Results&quot; page)</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save the current section's data and lock it to prevent further edits.&lt;/p&gt;&lt;p&gt;To view or export the data, go to the &amp;quot;Results&amp;quot; page.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="whatsThis">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Save the current section's data and lock it to prevent further edits.&lt;/p&gt;&lt;p&gt;To view or export the data, go to the &amp;quot;Results&amp;quot; page.&lt;/p&gt;&lt;p&gt;To unlock a section, right-click it's name in the section list and select &amp;quot;Unlock Section&amp;quot;.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -655,7 +692,7 @@
    </property>
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/fluent-icons/Add.svg</normaloff>:/icons/fluent-icons/Add.svg</iconset>
+     <normaloff>:/icons/fluent-icons/AddCircle.svg</normaloff>:/icons/fluent-icons/AddCircle.svg</iconset>
    </property>
    <property name="text">
     <string>New Section</string>
@@ -802,7 +839,7 @@
   <action name="action_about_app">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/fluent-icons/Info.svg</normaloff>:/icons/fluent-icons/Info.svg</iconset>
+     <normaloff>:/icons/fluent-icons/BookInformation.svg</normaloff>:/icons/fluent-icons/BookInformation.svg</iconset>
    </property>
    <property name="text">
     <string>About App</string>
@@ -814,16 +851,16 @@
     <enum>QAction::MenuRole::AboutRole</enum>
    </property>
   </action>
-  <action name="action_delete_section">
+  <action name="action_remove_section">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/fluent-icons/Delete.svg</normaloff>:/icons/fluent-icons/Delete.svg</iconset>
+     <normaloff>:/icons/fluent-icons/SubtractCircle.svg</normaloff>:/icons/fluent-icons/SubtractCircle.svg</iconset>
    </property>
    <property name="text">
-    <string>Delete Section</string>
+    <string>Remove Section</string>
    </property>
    <property name="toolTip">
-    <string>Delete the selected section</string>
+    <string>Removes the selected section</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -832,10 +869,25 @@
   <action name="action_clear_recent_files">
    <property name="icon">
     <iconset resource="../resources/resources.qrc">
-     <normaloff>:/icons/fluent-icons/DismissCircle.svg</normaloff>:/icons/fluent-icons/DismissCircle.svg</iconset>
+     <normaloff>:/icons/fluent-icons/Dismiss.svg</normaloff>:/icons/fluent-icons/Dismiss.svg</iconset>
    </property>
    <property name="text">
     <string>Clear Recent Files</string>
+   </property>
+  </action>
+  <action name="action_unlock_section">
+   <property name="icon">
+    <iconset resource="../resources/resources.qrc">
+     <normaloff>:/icons/fluent-icons/LockOpen.svg</normaloff>:/icons/fluent-icons/LockOpen.svg</iconset>
+   </property>
+   <property name="text">
+    <string>Unlock Section</string>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Make a section marked as &amp;quot;Done&amp;quot; editable again.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
  </widget>

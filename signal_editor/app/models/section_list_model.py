@@ -1,6 +1,9 @@
+import typing as t
+
 from PySide6 import QtCore
 
 from ..core.section import Section, SectionID
+from ..gui.icons import SignalEditorIcon as Icons
 from . import ModelIndex
 
 
@@ -24,12 +27,14 @@ class SectionListModel(QtCore.QAbstractListModel):
         self,
         index: ModelIndex,
         role: int = QtCore.Qt.ItemDataRole.DisplayRole,
-    ) -> Section | str | QtCore.QSize | None:
-        if not index.isValid():
+    ) -> t.Any:
+        if not index.isValid() or not self._sections:
             return None
-        if index.row() >= self.rowCount():
+        row = index.row()
+        if row >= self.rowCount():
             return None
-        section = self._sections[index.row()]
+
+        section = self._sections[row]
 
         if role == QtCore.Qt.ItemDataRole.DisplayRole:
             return section.section_id.pretty_name()
@@ -38,7 +43,9 @@ class SectionListModel(QtCore.QAbstractListModel):
         elif role == QtCore.Qt.ItemDataRole.UserRole:
             return section
         elif role == QtCore.Qt.ItemDataRole.ToolTipRole:
-            return section.__repr__()
+            return repr(section)
+        elif role == QtCore.Qt.ItemDataRole.DecorationRole:
+            return Icons.LockClosed.icon() if section.is_locked else Icons.LockOpen.icon()
         return None
 
     def add_section(self, section: Section) -> None:

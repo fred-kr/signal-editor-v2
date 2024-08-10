@@ -8,6 +8,7 @@ from pyqtgraph.console import ConsoleWidget
 from PySide6 import QtCore, QtGui, QtWidgets
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 
+from .widgets.overlay_widget import OverlayWidget
 from signal_editor.ui.ui_main_window import Ui_MainWindow
 
 from .. import type_defs as _t
@@ -36,6 +37,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.navigation_interface = NavigationInterface(self, showMenuButton=True)
 
         self.progress_dlg: QtWidgets.QProgressDialog | None = None
+        self._overlay_widget = OverlayWidget("Calculating...", self)
+        self._overlay_widget.hide()
 
         self._setup_layout()
         self.setCentralWidget(self.new_central_widget)
@@ -153,6 +156,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.data_tree_widget_additional_metadata = data_tree_widget
 
         self.btn_dropdown_export.setMenu(self.menu_export)
+        self.btn_dropdown_export.setIcon(Icons.ArrowExportLtr.icon())
 
         self.stackedWidget.setCurrentIndex(0)
 
@@ -208,40 +212,27 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.action_export_to_xlsx = QtGui.QAction("Export to XLSX", self)
         self.action_export_to_hdf5 = QtGui.QAction("Export to HDF5", self)
 
-        self._actions = {
-            "import": [self.action_open_file, self.action_edit_metadata, self.action_close_file],
-            "plot": [
-                self.action_show_section_overview,
-                self.action_toggle_auto_scaling,
-                self.action_create_new_section,
-            ],
-            "export": [self.action_get_section_result],
-            "help": [
-                self.action_show_user_guide,
-                self.action_toggle_whats_this_mode,
-            ],
-            "section_list": [
-                self.action_create_new_section,
-                self.action_delete_section,
-                self.action_show_section_summary,
-                self.action_show_section_overview,
-            ],
-        }
-
         self.action_toggle_auto_scaling.setChecked(True)
 
     def _setup_toolbars(self) -> None:
-        self.tool_bar_file_actions.addAction(self.action_get_section_result)
+        self.tool_bar_editing = self._setup_toolbar(
+            "tool_bar_editing", [self.action_toggle_auto_scaling, self.action_mark_section_done]
+        )
 
-        self.tool_bar_editing = self._setup_toolbar("tool_bar_editing", self._actions["plot"])
-
-        self.tool_bar_help = self._setup_toolbar("tool_bar_help", self._actions["help"])
+        self.tool_bar_help = self._setup_toolbar(
+            "tool_bar_help", [self.action_show_user_guide, self.action_toggle_whats_this_mode]
+        )
 
         cb_section_list = qfw.CommandBar()
+        cb_section_list.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         cb_section_list.setObjectName("command_bar_section_list")
-        cb_section_list.addActions(self._actions["section_list"])
-        cb_section_list.insertSeparator(2)
-        cb_section_list.resizeToSuitableWidth()
+        cb_section_list.addActions(
+            [self.action_create_new_section, self.action_remove_section, self.action_mark_section_done]
+        )
+        cb_section_list.addHiddenActions(
+            [self.action_unlock_section, self.action_show_section_summary, self.action_show_section_overview]
+        )
+
 
         self.dock_sections.main_layout.insertWidget(1, cb_section_list)
         self.tool_bar_section_list = cb_section_list
@@ -287,7 +278,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _connect_signals(self) -> None:
         self.action_show_settings.triggered.connect(self.show_settings_dialog)
-        self.action_delete_section.triggered.connect(self.dock_sections.list_view.emit_delete_current_request)
+        self.action_remove_section.triggered.connect(self.dock_sections.list_view.emit_delete_current_request)
 
         self.stackedWidget.currentChanged.connect(self._on_page_changed)
 
@@ -332,15 +323,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if index in {0, 2, 3, 4}:
             self.tool_bar_editing.setEnabled(False)
             self.tool_bar_section_list.setEnabled(False)
-            # self.dock_sections.hide()
             self.dock_parameters.hide()
-            self.action_get_section_result.setEnabled(False)
         elif index == 1:
             self.tool_bar_editing.setEnabled(True)
             self.tool_bar_section_list.setEnabled(True)
             self.dock_sections.show()
             self.dock_parameters.show()
-            self.action_get_section_result.setEnabled(True)
 
     def show_section_confirm_cancel(self, show: bool) -> None:
         self.dock_sections.btn_container.setVisible(show)
@@ -386,6 +374,23 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         # self.dialog_export.line_edit_output_file_name.setText(out_name)
         # self.dialog_export.open()
 
+    def show_overlay(self, text: str = "Calculating...") -> None:
+        self.centralWidget().setEnabled(False)
+        self.dock_parameters.setEnabled(False)
+        self.dock_sections.setEnabled(False)
+        
+        self._overlay_widget.set_text(text)
+        self._overlay_widget.setGeometry(self.centralWidget().geometry())
+        self._overlay_widget.raise_()
+        self._overlay_widget.show()
+
+    def hide_overlay(self) -> None:
+        self.centralWidget().setEnabled(True)
+        self.dock_parameters.setEnabled(True)
+        self.dock_sections.setEnabled(True)
+        
+        self._overlay_widget.hide()
+        
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.write_settings()
@@ -475,3 +480,5 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def set_active_section_label(self, label_text: str) -> None:
         self.dock_sections.label_active_section.setText(f"Active Section: {label_text}")
+        self.label_showing_section_result.setText(label_text)
+        self.label_showing_data_table.setText(f"Showing: {label_text}")

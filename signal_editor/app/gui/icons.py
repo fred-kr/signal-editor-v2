@@ -158,6 +158,10 @@ class SignalEditorIcon(IconBase, enum.Enum):
     Bug = ":/icons/fluent-icons/Bug.svg"
     CaretLeft = ":/icons/fluent-icons/CaretLeft.svg"
     CaretRight = ":/icons/fluent-icons/CaretRight.svg"
+    CheckboxChecked = ":/icons/fluent-icons/CheckboxChecked.svg"
+    CheckboxIndeterminate = ":/icons/fluent-icons/CheckboxIndeterminate.svg"
+    CheckboxUnchecked = ":/icons/fluent-icons/CheckboxUnchecked.svg"
+    CheckboxWarning = ":/icons/fluent-icons/CheckboxWarning.svg"
     Checkmark = ":/icons/fluent-icons/Checkmark.svg"
     CheckmarkCircle = ":/icons/fluent-icons/CheckmarkCircle.svg"
     CheckmarkSquare = ":/icons/fluent-icons/CheckmarkSquare.svg"
@@ -168,8 +172,12 @@ class SignalEditorIcon(IconBase, enum.Enum):
     ChevronRight = ":/icons/fluent-icons/ChevronRight.svg"
     ChevronUp = ":/icons/fluent-icons/ChevronUp.svg"
     Circle = ":/icons/fluent-icons/Circle.svg"
+    CircleEdit = ":/icons/fluent-icons/CircleEdit.svg"
+    CircleHalfFill = ":/icons/fluent-icons/CircleHalfFill.svg"
+    CircleLine = ":/icons/fluent-icons/CircleLine.svg"
     Code = ":/icons/fluent-icons/Code.svg"
     Color = ":/icons/fluent-icons/Color.svg"
+    ConvertToTable = ":/icons/fluent-icons/ConvertToTable.svg"
     DataArea = ":/icons/fluent-icons/DataArea.svg"
     DataHistogram = ":/icons/fluent-icons/DataHistogram.svg"
     DataScatter = ":/icons/fluent-icons/DataScatter.svg"
@@ -199,6 +207,8 @@ class SignalEditorIcon(IconBase, enum.Enum):
     Lasso = ":/icons/fluent-icons/Lasso.svg"
     LightbulbCircle = ":/icons/fluent-icons/LightbulbCircle.svg"
     List = ":/icons/fluent-icons/List.svg"
+    LockClosed = ":/icons/fluent-icons/LockClosed.svg"
+    LockOpen = ":/icons/fluent-icons/LockOpen.svg"
     MoreHorizontal = ":/icons/fluent-icons/MoreHorizontal.svg"
     MoreVertical = ":/icons/fluent-icons/MoreVertical.svg"
     Navigation = ":/icons/fluent-icons/Navigation.svg"
@@ -206,6 +216,7 @@ class SignalEditorIcon(IconBase, enum.Enum):
     Options = ":/icons/fluent-icons/Options.svg"
     PageFit = ":/icons/fluent-icons/PageFit.svg"
     Play = ":/icons/fluent-icons/Play.svg"
+    PlayCircle = ":/icons/fluent-icons/PlayCircle.svg"
     Prohibited = ":/icons/fluent-icons/Prohibited.svg"
     Pulse = ":/icons/fluent-icons/Pulse.svg"
     Question = ":/icons/fluent-icons/Question.svg"
@@ -237,9 +248,6 @@ class SignalEditorIcon(IconBase, enum.Enum):
 
     def path(self) -> str:
         return self.value
-
-    # def icon(self) -> QtGui.QIcon:
-    # return QtGui.QIcon(self.value)
 
     @staticmethod
     def app_icon() -> QtGui.QIcon:

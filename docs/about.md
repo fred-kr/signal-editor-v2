@@ -1,3 +1,5 @@
 # About
 
-Icons used: [Fugue Icons](https://p.yusukekamiyamane.com/)
+UI library: [QFluentWidgets](https://qfluentwidgets.com)
+
+Icons used: [Fluent Icons](https://github.com/microsoft/fluentui-system-icons)
