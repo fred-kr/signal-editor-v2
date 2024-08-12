@@ -169,6 +169,7 @@ class Section:
         "_processing_parameters",
         "_manual_peak_edits",
     )
+
     def __init__(self, data: pl.DataFrame, signal_name: str, info_column: str | None = None) -> None:
         self.signal_name = signal_name
         self.processed_signal_name = f"{self.signal_name}_processed"
@@ -215,7 +216,9 @@ class Section:
     @rate_data.setter
     def rate_data(self, value: pl.DataFrame) -> None:
         if self._result_data.is_locked:
-            logger.warning("Unable to update rate data because the section is locked. Please unlock the section and try again.")
+            logger.warning(
+                "Unable to update rate data because the section is locked. Please unlock the section and try again."
+            )
             return
         self._result_data.rate_data = value
 
@@ -226,7 +229,9 @@ class Section:
     @peak_data.setter
     def peak_data(self, value: pl.DataFrame) -> None:
         if self._result_data.is_locked:
-            logger.warning("Unable to update peak data because the section is locked. Please unlock the section and try again.")
+            logger.warning(
+                "Unable to update peak data because the section is locked. Please unlock the section and try again."
+            )
             return
         self._result_data.peak_data = value
 
@@ -240,7 +245,7 @@ class Section:
     @property
     def n_filters(self) -> int:
         return len(self._processing_parameters.filter_parameters)
-    
+
     @property
     def raw_signal(self) -> pl.Series:
         """The raw (unprocessed) signal data for the section."""
@@ -371,7 +376,7 @@ class Section:
         self._processing_parameters.filter_parameters.append(filter_params)
         if additional_params is not None:
             self._processing_parameters.filter_parameters.append(additional_params)
-            
+
         self.data = self.data.with_columns(pl.Series(self.processed_signal_name, filtered))
 
     def scale_signal(self, **kwargs: t.Unpack[_t.StandardizationParameters]) -> None:
@@ -528,7 +533,7 @@ class Section:
         """
         if (not force and self._rate_is_synced) or self.is_locked:
             return
-        
+
         method = Config().editing.RateMethod
         if method == RateComputationMethod.RollingWindow:
             self._calc_rate_rolling(full_info=full_info)
@@ -776,7 +781,7 @@ class Section:
             "start_index": self.global_bounds[0],
             "end_index": self.global_bounds[1],
             "peak_count": self.peaks_local.len(),
-            "processing_parameters": self._processing_parameters,
+            "processing_parameters": self._processing_parameters.to_dict(),
         }
 
     def __repr__(self) -> str:

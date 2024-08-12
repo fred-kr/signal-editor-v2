@@ -21,6 +21,7 @@ from .app.enum_defs import (
 )
 from .app.gui.main_window import MainWindow
 from .app.utils import safe_multi_disconnect
+from .app.models.file_list_model import FileListModel
 
 if t.TYPE_CHECKING:
     from .app.core.section import Section
@@ -87,7 +88,11 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.thread_pool = QtCore.QThreadPool.globalInstance()
 
-        self.recent_files = self._retrieve_recent_files()
+        # self.recent_files = self._retrieve_recent_files()
+        self.recent_files_model = FileListModel(self.config.internal.RecentFiles, max_files=10, parent=self)
+        self.recent_files_model.validate_files()
+        
+        self.mw.list_view_recent_files.setModel(self.recent_files_model)
 
         self._connect_signals()
 
@@ -101,7 +106,7 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.mw.dialog_config.finished.connect(self.apply_settings)
         self.mw.dialog_meta.sig_property_has_changed.connect(self.update_metadata)
-        self.mw.dialog_export.sig_export_confirmed.connect(self.export_result)
+        # self.mw.dialog_export.sig_export_confirmed.connect(self.export_result)
 
         self.mw.btn_load_data.clicked.connect(self.read_data)
         self.mw.btn_open_file.clicked.connect(self.open_file)
@@ -112,7 +117,8 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.mw.spin_box_sampling_rate_import_page.editingFinished.connect(self.update_sampling_rate)
 
-        self.mw.list_widget_recent_files.itemDoubleClicked.connect(self._open_recent_file)
+        # self.mw.list_widget_recent_files.itemDoubleClicked.connect(self._open_recent_file)
+        self.mw.list_view_recent_files.doubleClicked.connect(self._open_recent_file)
 
         self.mw.sig_table_refresh_requested.connect(self.refresh_data_view)
         self.mw.sig_export_requested.connect(self.export_result)
@@ -145,11 +151,11 @@ class SignalEditor(QtWidgets.QApplication):
         self.plot.sig_scatter_data_changed.connect(self.handle_peak_edit)
         self.plot.sig_section_clicked.connect(self.set_active_section_from_int)
 
-    def _retrieve_recent_files(self) -> list[str]:
-        recent_files = self.config.internal.RecentFiles
-        self.mw.list_widget_recent_files.clear()
-        self.mw.list_widget_recent_files.addItems(recent_files)
-        return recent_files
+    # def _retrieve_recent_files(self) -> list[str]:
+    #     recent_files = self.config.internal.RecentFiles
+    #     self.mw.list_widget_recent_files.clear()
+    #     self.mw.list_widget_recent_files.addItems(recent_files)
+    #     return recent_files
 
     @QtCore.Slot()
     def clear_peaks(self) -> None:
@@ -363,6 +369,7 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot()
     def refresh_data_view(self) -> None:
+        # TODO: Make this generic so any table view can be connected to this slot
         self.data.active_section_model.set_df(self.data.active_section.data)
 
     @QtCore.Slot(dict)
@@ -466,17 +473,18 @@ class SignalEditor(QtWidgets.QApplication):
         self.config.internal.InputDir = Path(file_path).parent.resolve().as_posix()
         self._on_file_opened(file_path)
 
-    def update_recent_files(self, file_path: str) -> None:
-        if file_path in self.recent_files:
-            self.recent_files.remove(file_path)
-        self.recent_files.insert(0, file_path)
-        self.recent_files = self.recent_files[:10]
-        self.config.internal.RecentFiles = self.recent_files
-        self.mw.list_widget_recent_files.clear()
-        self.mw.list_widget_recent_files.addItems(self.recent_files)
+    # def update_recent_files(self, file_path: str) -> None:
+    #     # if file_path in self.recent_files:
+    #         # self.recent_files.remove(file_path)
+    #     # self.recent_files.insert(0, file_path)
+    #     # self.recent_files = self.recent_files[:10]
+    #     self.recent_files_model.add_file(file_path)
+    #     # self.config.internal.RecentFiles = self.recent_files
+    #     # self.mw.list_widget_recent_files.clear()
+    #     # self.mw.list_widget_recent_files.addItems(self.recent_files)
 
     def _on_file_opened(self, file_path: str) -> None:
-        self.mw.line_edit_active_file.setText(file_path)
+        self.mw.line_edit_active_file.setText(Path(file_path).name)
 
         self.mw.action_close_file.setEnabled(True)
         self.mw.action_edit_metadata.setEnabled(True)
@@ -489,18 +497,20 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.table_view_result_rate.setModel(self.data.result_model_rate)
 
         self._set_column_models()
-        self.update_recent_files(file_path)
+        self.recent_files_model.add_file(file_path)
         self.mw.switch_to(self.mw.stacked_page_import)
 
-    def _open_recent_file(self, item: QtWidgets.QListWidgetItem) -> None:
-        file_path = item.text()
+    @QtCore.Slot(QtCore.QModelIndex)
+    def _open_recent_file(self, index: QtCore.QModelIndex) -> None:
+        file_path = self.recent_files_model.data(index, QtCore.Qt.ItemDataRole.UserRole)
         self.close_file()
         self._on_file_opened(file_path)
 
     @QtCore.Slot()
     def read_data(self) -> None:
         if self.data.has_data:
-            loaded_file = self.mw.line_edit_active_file.text()
+            # loaded_file = self.mw.line_edit_active_file.text()
+            loaded_file = self.data.metadata.file_path
             self.close_file()
             self._on_file_opened(loaded_file)
 

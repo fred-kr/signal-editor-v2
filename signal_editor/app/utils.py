@@ -1,8 +1,10 @@
 import datetime
+from pathlib import Path
 import typing as t
 
-from PySide6 import QtCore, QtWidgets, QtGui
 import pyqtgraph as pg
+from PySide6 import QtCore, QtGui, QtWidgets
+
 from . import type_defs as _t
 
 MICRO: t.Final = "\u03bc"
@@ -74,6 +76,7 @@ def get_app_dir(as_string: bool = False) -> QtCore.QDir | str:
 
     return out.canonicalPath() if as_string else out
 
+
 def app_dir_posix() -> str:
     app_instance = QtWidgets.QApplication.instance()
     import sys
@@ -83,6 +86,7 @@ def app_dir_posix() -> str:
         if hasattr(sys, "frozen") and app_instance is not None
         else QtCore.QDir.current().canonicalPath()
     )
+
 
 def safe_disconnect(
     sender: QtCore.QObject,
@@ -111,3 +115,18 @@ def format_long_sequence(seq: t.Sequence[int | float]) -> str:
 
 def make_qcolor(*args: _t.PGColor) -> QtGui.QColor:
     return args[0] if isinstance(args[0], QtGui.QColor) else pg.mkColor(*args)
+
+
+def format_file_path(path: str, max_len: int = 50) -> str:
+    path_obj = Path(path).resolve()
+
+    len_name = len(path_obj.name)
+    if len_name >= max_len:
+        name = f"{path_obj.name[:max_len - 3]}..."
+        len_prefix = 0
+    else:
+        name = path_obj.name
+        len_prefix = max_len - len_name - 4
+
+    prefix = path_obj.parent.as_posix()[:len_prefix]
+    return f"{prefix}.../{name}"

@@ -42,7 +42,7 @@
        <number>0</number>
       </property>
       <widget class="QWidget" name="stacked_page_import">
-       <layout class="QHBoxLayout" name="horizontalLayout" stretch="4,6">
+       <layout class="QHBoxLayout" name="horizontalLayout" stretch="3,6">
         <item>
          <widget class="QWidget" name="container_file_information" native="true">
           <layout class="QGridLayout" name="gridLayout">
@@ -323,16 +323,19 @@
                <number>3</number>
               </property>
               <item>
-               <widget class="SubtitleLabel" name="label_3">
+               <widget class="StrongBodyLabel" name="label_3">
                 <property name="text">
                  <string>Recent Files</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="ListWidget" name="list_widget_recent_files">
+               <widget class="ListView" name="list_view_recent_files">
                 <property name="toolTip">
                  <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Double-click on a filename to open it&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                </property>
+                <property name="textElideMode">
+                 <enum>Qt::TextElideMode::ElideMiddle</enum>
                 </property>
                </widget>
               </item>
@@ -412,7 +415,7 @@
        </layout>
       </widget>
       <widget class="QWidget" name="stacked_page_export">
-       <layout class="QGridLayout" name="gridLayout_3">
+       <layout class="QGridLayout" name="gridLayout_3" columnstretch="2,1,1">
         <item row="0" column="0">
          <widget class="SubtitleLabel" name="label_4">
           <property name="text">
@@ -421,7 +424,7 @@
          </widget>
         </item>
         <item row="0" column="2">
-         <widget class="DropDownPushButton" name="btn_dropdown_export">
+         <widget class="PushButton" name="btn_export_all_results">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -429,7 +432,7 @@
            </sizepolicy>
           </property>
           <property name="text">
-           <string>Export</string>
+           <string>Export all results to HDF5</string>
           </property>
          </widget>
         </item>
@@ -443,6 +446,16 @@
             <string>Peak Indices</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_2">
+            <item>
+             <widget class="CommandBar" name="cb_result_peak_info">
+              <property name="frameShape">
+               <enum>QFrame::Shape::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Shadow::Raised</enum>
+              </property>
+             </widget>
+            </item>
             <item>
              <widget class="TableView" name="table_view_result_peaks">
               <property name="editTriggers">
@@ -463,6 +476,16 @@
             <string>Calculated Rate / Summary Statistics</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_4">
+            <item>
+             <widget class="CommandBar" name="cb_result_rate_info">
+              <property name="frameShape">
+               <enum>QFrame::Shape::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Shadow::Raised</enum>
+              </property>
+             </widget>
+            </item>
             <item>
              <widget class="TableView" name="table_view_result_rate">
               <property name="editTriggers">
@@ -496,6 +519,29 @@
                 <width>500</width>
                 <height>0</height>
                </size>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="tab_result_metadata">
+           <attribute name="title">
+            <string>Metadata</string>
+           </attribute>
+           <attribute name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Shows the methods and parameters used to produce the current results.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </attribute>
+           <layout class="QGridLayout" name="gridLayout_4">
+            <item row="1" column="0">
+             <widget class="TreeView" name="tree_view_result_metadata"/>
+            </item>
+            <item row="0" column="0">
+             <widget class="CommandBar" name="cb_result_metadata">
+              <property name="frameShape">
+               <enum>QFrame::Shape::StyledPanel</enum>
+              </property>
+              <property name="frameShadow">
+               <enum>QFrame::Shadow::Raised</enum>
               </property>
              </widget>
             </item>
@@ -929,11 +975,6 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>ListWidget</class>
-   <extends>QListWidget</extends>
-   <header>qfluentwidgets</header>
-  </customwidget>
-  <customwidget>
    <class>TableView</class>
    <extends>QTableView</extends>
    <header>qfluentwidgets</header>
@@ -949,9 +990,20 @@
    <header>qfluentwidgets</header>
   </customwidget>
   <customwidget>
-   <class>DropDownPushButton</class>
-   <extends>QPushButton</extends>
+   <class>TreeView</class>
+   <extends>QTreeView</extends>
    <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>ListView</class>
+   <extends>QListView</extends>
+   <header>qfluentwidgets</header>
+  </customwidget>
+  <customwidget>
+   <class>CommandBar</class>
+   <extends>QFrame</extends>
+   <header>qfluentwidgets</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <tabstops>
@@ -963,7 +1015,7 @@
   <tabstop>btn_load_data</tabstop>
   <tabstop>btn_close_file</tabstop>
   <tabstop>container_recent_files</tabstop>
-  <tabstop>list_widget_recent_files</tabstop>
+  <tabstop>list_view_recent_files</tabstop>
   <tabstop>table_view_import_data</tabstop>
  </tabstops>
  <resources>

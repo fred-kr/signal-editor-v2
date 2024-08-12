@@ -94,4 +94,4 @@ class SectionSummaryBox(QtWidgets.QDialog):
 
         self.setWindowTitle(title)
 
-        self.resize(600, 400)
+        self.adjustSize()

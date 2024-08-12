@@ -7,7 +7,7 @@ from attr._make import Factory
 from loguru import logger
 from PySide6 import QtCore, QtGui
 
-from . import ModelIndex
+from . import ModelIndex, ItemDataRole
 from ..config import Config
 from ..enum_defs import RateComputationMethod, SVGColors, TextFileSeparator
 
@@ -15,8 +15,6 @@ from ..enum_defs import RateComputationMethod, SVGColors, TextFileSeparator
 _ConfigType = t.Union[
     QtGui.QColor, int, bool, RateComputationMethod, TextFileSeparator, str, None, list[str], QtCore.QByteArray
 ]
-
-ItemDataRole = QtCore.Qt.ItemDataRole
 
 
 @attrs.define
@@ -52,15 +50,13 @@ class ItemData:
     )
 
 
-class ConfigTreeItem:
+class ConfigItem:
     "Class representing a config item in a tree model"
 
-    def __init__(
-        self, data: ItemData, parent: "ConfigTreeItem | None" = None, _allow_edits: bool | None = None
-    ) -> None:
+    def __init__(self, data: ItemData, parent: "ConfigItem | None" = None, _allow_edits: bool | None = None) -> None:
         self.item_data = data
         self.parent_item = parent
-        self.child_items: list[ConfigTreeItem] = []
+        self.child_items: list[ConfigItem] = []
         self._allow_edits = _allow_edits
 
     @property
@@ -113,7 +109,7 @@ class ConfigTreeItem:
             return self._allow_edits
         return self.value is not None and self.description != ""
 
-    def child(self, number: int) -> "ConfigTreeItem | None":
+    def child(self, number: int) -> "ConfigItem | None":
         if 0 <= number < len(self.child_items):
             return self.child_items[number]
         return None
@@ -129,7 +125,7 @@ class ConfigTreeItem:
     def column_count(self) -> int:
         return 3
 
-    def parent(self) -> "ConfigTreeItem | None":
+    def parent(self) -> "ConfigItem | None":
         return self.parent_item
 
     @logger.catch(message="Error setting config value")
@@ -165,11 +161,11 @@ class ConfigModel(QtCore.QAbstractItemModel):
         super().__init__(parent)
         self._config = Config()
         self._headers = ["Name", "Value", "Description"]
-        self.root_item = ConfigTreeItem(ItemData("Name", "Value", "Description"))
+        self.root_item = ConfigItem(ItemData("Name", "Value", "Description"))
 
-        self._plot_root = ConfigTreeItem(ItemData("Plot", None, None), self.root_item)
-        self._editing_root = ConfigTreeItem(ItemData("Editing", None, None), self.root_item)
-        self._data_root = ConfigTreeItem(ItemData("Data", None, None), self.root_item)
+        self._plot_root = ConfigItem(ItemData("Plot", None, None), self.root_item)
+        self._editing_root = ConfigItem(ItemData("Editing", None, None), self.root_item)
+        self._data_root = ConfigItem(ItemData("Data", None, None), self.root_item)
 
         self.root_item.child_items.extend([self._plot_root, self._editing_root, self._data_root])
 
@@ -274,7 +270,7 @@ class ConfigModel(QtCore.QAbstractItemModel):
 
         return flags
 
-    def get_item(self, index: ModelIndex) -> ConfigTreeItem:
+    def get_item(self, index: ModelIndex) -> ConfigItem:
         if index.isValid():
             if item := index.internalPointer():
                 return item
@@ -334,7 +330,7 @@ class ConfigModel(QtCore.QAbstractItemModel):
     def setup_model_data(self, include_internal: bool = False) -> None:
         for field in attrs.fields(self._config.plot.__class__):
             self._plot_root.child_items.append(
-                ConfigTreeItem(
+                ConfigItem(
                     ItemData(
                         field.name,
                         getattr(self._config.plot, field.name),
@@ -347,7 +343,7 @@ class ConfigModel(QtCore.QAbstractItemModel):
 
         for field in attrs.fields(self._config.editing.__class__):
             self._editing_root.child_items.append(
-                ConfigTreeItem(
+                ConfigItem(
                     ItemData(
                         field.name,
                         getattr(self._config.editing, field.name),
@@ -360,7 +356,7 @@ class ConfigModel(QtCore.QAbstractItemModel):
 
         for field in attrs.fields(self._config.data.__class__):
             self._data_root.child_items.append(
-                ConfigTreeItem(
+                ConfigItem(
                     ItemData(
                         field.name,
                         getattr(self._config.data, field.name),
@@ -372,12 +368,12 @@ class ConfigModel(QtCore.QAbstractItemModel):
             )
 
         if include_internal:
-            self._internal_root = ConfigTreeItem(ItemData("Internal", None, None), self.root_item)
+            self._internal_root = ConfigItem(ItemData("Internal", None, None), self.root_item)
             self.root_item.child_items.append(self._internal_root)
 
             for field in attrs.fields(self._config.internal.__class__):
                 self._internal_root.child_items.append(
-                    ConfigTreeItem(
+                    ConfigItem(
                         ItemData(
                             field.name,
                             getattr(self._config.internal, field.name),

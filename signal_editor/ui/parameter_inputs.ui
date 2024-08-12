@@ -69,7 +69,7 @@
          </property>
         </widget>
        </item>
-       <item row="0" column="0" colspan="6">
+       <item row="0" column="0" colspan="6" alignment="Qt::AlignmentFlag::AlignHCenter">
         <widget class="CommandBar" name="command_bar_processing">
          <property name="minimumSize">
           <size>
@@ -550,7 +550,7 @@
        <string>Peak Detection</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_3">
-       <item row="0" column="0" colspan="2">
+       <item row="0" column="0" colspan="2" alignment="Qt::AlignmentFlag::AlignHCenter">
         <widget class="CommandBar" name="command_bar_peak_detection">
          <property name="minimumSize">
           <size>
@@ -604,7 +604,7 @@
           <enum>QFrame::Shape::NoFrame</enum>
          </property>
          <property name="currentIndex">
-          <number>2</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="page_peak_elgendi_ppg">
           <layout class="QFormLayout" name="formLayout_2">
@@ -1909,10 +1909,10 @@ li.checked::marker { content: &quot;\2612&quot;; }
      <normaloff>:/icons/fluent-icons/ArrowReset.svg</normaloff>:/icons/fluent-icons/ArrowReset.svg</iconset>
    </property>
    <property name="text">
-    <string>Restore Default Parameters</string>
+    <string>Restore Defaults</string>
    </property>
    <property name="toolTip">
-    <string>Restore all input fields to their default values</string>
+    <string>Reset all input fields to their default values</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -1969,10 +1969,10 @@ li.checked::marker { content: &quot;\2612&quot;; }
      <normaloff>:/icons/fluent-icons/ArrowReset.svg</normaloff>:/icons/fluent-icons/ArrowReset.svg</iconset>
    </property>
    <property name="text">
-    <string>Restore Default Parameters</string>
+    <string>Restore Defaults</string>
    </property>
    <property name="toolTip">
-    <string>Restore all input fields to their default values</string>
+    <string>Reset current input fields to their default values</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>

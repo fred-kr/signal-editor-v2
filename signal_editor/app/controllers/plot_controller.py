@@ -5,14 +5,11 @@ import numpy.typing as npt
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ..gui.widgets.overlay_widget import OverlayWidget
-
-from ..utils import safe_disconnect
-
 from .. import type_defs as _t
 from ..config import Config
 from ..enum_defs import PointSymbols, SVGColors
-from ..gui.plot_items import CustomScatterPlotItem, ClickableRegionItem, EditingViewBox, TimeAxisItem
+from ..gui.plot_items import ClickableRegionItem, CustomScatterPlotItem, EditingViewBox, TimeAxisItem
+from ..utils import safe_disconnect
 
 if t.TYPE_CHECKING:
     from pyqtgraph.GraphicsScene import mouseEvents
@@ -34,9 +31,7 @@ class PlotController(QtCore.QObject):
         self._mw_ref = main_window
         self.regions: list[ClickableRegionItem] = []
         self._show_regions = False
-        self._overlay_widget = OverlayWidget(parent=self._mw_ref.plot_container)
-        self._overlay_widget.hide()
-        
+
         self._setup_plot_widgets()
         self._setup_plot_items()
         self._setup_plot_data_items()
@@ -240,7 +235,9 @@ class PlotController(QtCore.QObject):
 
     @QtCore.Slot(bool)
     def toggle_regions(self, visible: bool) -> None:
-        for i, region in enumerate(self.regions, start=1):  # Start at 1 since section 0 is the base from which all others are added
+        for i, region in enumerate(
+            self.regions, start=1
+        ):  # Start at 1 since section 0 is the base from which all others are added
             region.section_id = i
             region.setToolTip(f"Section {i:03}")
             region.setVisible(visible)
@@ -274,7 +271,7 @@ class PlotController(QtCore.QObject):
     @QtCore.Slot(int)
     def _on_region_clicked(self, section_id: int) -> None:
         self.sig_section_clicked.emit(section_id)
-        
+
     def show_region_selector(self, bounds: tuple[float, float]) -> None:
         if not self.region_selector:
             return
@@ -302,7 +299,7 @@ class PlotController(QtCore.QObject):
         pen_color = QtGui.QColor(SVGColors.Orange)
         pen = pg.mkPen(color=pen_color, width=2, style=QtCore.Qt.PenStyle.DashLine)
         hover_pen = pg.mkPen(color=pen_color.darker(200), width=2, style=QtCore.Qt.PenStyle.DashLine)
-        
+
         marked_region = ClickableRegionItem(
             values=(x1, x2),
             brush=brush,

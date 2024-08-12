@@ -1,15 +1,18 @@
-from ..dialogs.export_dialog import ExportDialog
 from .log_window import StatusMessageDock
-from ..dialogs.metadata_dialog import MetadataDialog
 from .parameter_inputs import ParameterInputsDock
 from .section_list import SectionListDock
-from ..dialogs.settings_dialog import ConfigDialog
+from .data_tree_widget import DataTreeWidgetContainer
+from .message_box import MessageBox, SectionSummaryBox
+from .overlay_widget import OverlayWidget
+from .jupyter_console_widget import ConsoleWindow
 
 __all__ = [
     "StatusMessageDock",
     "ParameterInputsDock",
-    "MetadataDialog",
-    "ExportDialog",
     "SectionListDock",
-    "ConfigDialog",
+    "DataTreeWidgetContainer",
+    "MessageBox",
+    "SectionSummaryBox",
+    "OverlayWidget",
+    "ConsoleWindow",
 ]

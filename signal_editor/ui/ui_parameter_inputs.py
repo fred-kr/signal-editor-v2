@@ -101,7 +101,7 @@ class Ui_ParameterInputs(object):
         self.command_bar_processing.setFrameShape(QFrame.Shape.StyledPanel)
         self.command_bar_processing.setFrameShadow(QFrame.Shadow.Raised)
 
-        self.gridLayout_2.addWidget(self.command_bar_processing, 0, 0, 1, 6)
+        self.gridLayout_2.addWidget(self.command_bar_processing, 0, 0, 1, 6, Qt.AlignmentFlag.AlignHCenter)
 
         self.verticalSpacer_5 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
@@ -337,7 +337,7 @@ class Ui_ParameterInputs(object):
         self.command_bar_peak_detection.setFrameShape(QFrame.Shape.StyledPanel)
         self.command_bar_peak_detection.setFrameShadow(QFrame.Shadow.Raised)
 
-        self.gridLayout_3.addWidget(self.command_bar_peak_detection, 0, 0, 1, 2)
+        self.gridLayout_3.addWidget(self.command_bar_peak_detection, 0, 0, 1, 2, Qt.AlignmentFlag.AlignHCenter)
 
         self.label_7 = StrongBodyLabel(self.tab_peak_detection)
         self.label_7.setObjectName(u"label_7")
@@ -914,7 +914,7 @@ class Ui_ParameterInputs(object):
         self.retranslateUi(ParameterInputs)
 
         self.tab_widget_parameter_inputs.setCurrentIndex(0)
-        self.stacked_peak_parameters.setCurrentIndex(2)
+        self.stacked_peak_parameters.setCurrentIndex(3)
         self.stacked_nk2_method_parameters.setCurrentIndex(1)
 
 
@@ -923,9 +923,9 @@ class Ui_ParameterInputs(object):
 
     def retranslateUi(self, ParameterInputs):
         ParameterInputs.setWindowTitle(QCoreApplication.translate("ParameterInputs", u"Parameter Inputs", None))
-        self.action_restore_defaults_processing.setText(QCoreApplication.translate("ParameterInputs", u"Restore Default Parameters", None))
+        self.action_restore_defaults_processing.setText(QCoreApplication.translate("ParameterInputs", u"Restore Defaults", None))
 #if QT_CONFIG(tooltip)
-        self.action_restore_defaults_processing.setToolTip(QCoreApplication.translate("ParameterInputs", u"Restore all input fields to their default values", None))
+        self.action_restore_defaults_processing.setToolTip(QCoreApplication.translate("ParameterInputs", u"Reset all input fields to their default values", None))
 #endif // QT_CONFIG(tooltip)
         self.action_restore_original_values.setText(QCoreApplication.translate("ParameterInputs", u"Reset Data", None))
 #if QT_CONFIG(tooltip)
@@ -939,9 +939,9 @@ class Ui_ParameterInputs(object):
 #if QT_CONFIG(tooltip)
         self.action_run_peak_detection.setToolTip(QCoreApplication.translate("ParameterInputs", u"Detects location of peak indices in the signal using the selected method and parameters", None))
 #endif // QT_CONFIG(tooltip)
-        self.action_restore_defaults_peak_detection.setText(QCoreApplication.translate("ParameterInputs", u"Restore Default Parameters", None))
+        self.action_restore_defaults_peak_detection.setText(QCoreApplication.translate("ParameterInputs", u"Restore Defaults", None))
 #if QT_CONFIG(tooltip)
-        self.action_restore_defaults_peak_detection.setToolTip(QCoreApplication.translate("ParameterInputs", u"Restore all input fields to their default values", None))
+        self.action_restore_defaults_peak_detection.setToolTip(QCoreApplication.translate("ParameterInputs", u"Reset current input fields to their default values", None))
 #endif // QT_CONFIG(tooltip)
         self.action_clear_peaks.setText(QCoreApplication.translate("ParameterInputs", u"Clear Peaks", None))
 #if QT_CONFIG(tooltip)

@@ -7,7 +7,7 @@ from PySide6 import QtCore, QtWidgets
 
 from ..config import Config
 from ..utils import human_readable_timedelta
-from . import ModelIndex
+from . import ItemDataRole, ModelIndex
 
 
 class DataFrameModel(QtCore.QAbstractTableModel):
@@ -31,7 +31,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
     def data(
         self,
         index: ModelIndex,
-        role: int = QtCore.Qt.ItemDataRole.DisplayRole,
+        role: int = ItemDataRole.DisplayRole,
     ) -> t.Any:
         if not index.isValid():
             return None
@@ -46,7 +46,7 @@ class DataFrameModel(QtCore.QAbstractTableModel):
         col_name = self.df.columns[col_idx]
 
         value = self.df.item(row_idx, col_idx)
-        if role == QtCore.Qt.ItemDataRole.DisplayRole:
+        if role == ItemDataRole.DisplayRole:
             value_type = self.df.schema[col_name]
 
             if value_type.is_integer():
@@ -64,9 +64,9 @@ class DataFrameModel(QtCore.QAbstractTableModel):
                 return "NaN"
             else:
                 return str(value)
-        elif role == QtCore.Qt.ItemDataRole.UserRole:
+        elif role == ItemDataRole.UserRole:
             return value
-        elif role == QtCore.Qt.ItemDataRole.ToolTipRole:
+        elif role == ItemDataRole.ToolTipRole:
             return repr(value)
 
         return None
@@ -75,14 +75,14 @@ class DataFrameModel(QtCore.QAbstractTableModel):
         self,
         section: int,
         orientation: QtCore.Qt.Orientation,
-        role: int = QtCore.Qt.ItemDataRole.DisplayRole,
+        role: int = ItemDataRole.DisplayRole,
     ) -> str | None:
         if self.df.is_empty():
             return None
-        if role == QtCore.Qt.ItemDataRole.DisplayRole:
+        if role == ItemDataRole.DisplayRole:
             if orientation == QtCore.Qt.Orientation.Horizontal:
                 return self.df.columns[section]
-        elif role == QtCore.Qt.ItemDataRole.ToolTipRole:
+        elif role == ItemDataRole.ToolTipRole:
             if orientation == QtCore.Qt.Orientation.Horizontal:
                 return str(self.df.schema[self.df.columns[section]])
         return None
@@ -106,7 +106,7 @@ class LazyDataFrameModel(QtCore.QAbstractTableModel):
     def data(
         self,
         index: ModelIndex,
-        role: int = QtCore.Qt.ItemDataRole.DisplayRole,
+        role: int = ItemDataRole.DisplayRole,
     ) -> t.Any:
         if not index.isValid() or self._df is None:
             return None
@@ -116,7 +116,7 @@ class LazyDataFrameModel(QtCore.QAbstractTableModel):
             return None
 
         value = self._df.item(row, col)
-        if role == QtCore.Qt.ItemDataRole.DisplayRole:
+        if role == ItemDataRole.DisplayRole:
             col_name = self._df.columns[col]
             value_type = self._df.schema[col_name]
 
@@ -137,11 +137,11 @@ class LazyDataFrameModel(QtCore.QAbstractTableModel):
                 return "NaN"
             else:
                 return str(value)
-        elif role == QtCore.Qt.ItemDataRole.UserRole:
+        elif role == ItemDataRole.UserRole:
             return value
-        elif role == QtCore.Qt.ItemDataRole.ToolTipRole:
+        elif role == ItemDataRole.ToolTipRole:
             return repr(value)
-        elif role == QtCore.Qt.ItemDataRole.BackgroundRole:
+        elif role == ItemDataRole.BackgroundRole:
             batch = row // self._batch_size
             palette = QtWidgets.QApplication.palette()
             return palette.base() if batch % 2 == 0 else palette.alternateBase()
@@ -152,9 +152,9 @@ class LazyDataFrameModel(QtCore.QAbstractTableModel):
         self,
         section: int,
         orientation: QtCore.Qt.Orientation,
-        role: int = QtCore.Qt.ItemDataRole.DisplayRole,
+        role: int = ItemDataRole.DisplayRole,
     ) -> str | None:
-        if role != QtCore.Qt.ItemDataRole.DisplayRole:
+        if role != ItemDataRole.DisplayRole:
             return None
         if orientation == QtCore.Qt.Orientation.Horizontal and self._df is not None:
             return self._df.columns[section]

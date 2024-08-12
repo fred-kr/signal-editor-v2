@@ -8,7 +8,7 @@ import polars as pl
 from loguru import logger
 from PySide6 import QtCore
 
-from .. import const_defs as _C
+from ..const_defs import COLUMN_PLACEHOLDER
 from .. import type_defs as _t
 from ..config import Config
 from ..core.file_io import detect_sampling_rate, read_edf
@@ -29,12 +29,12 @@ class DataController(QtCore.QObject):
     sig_section_added = QtCore.Signal(str)
     sig_section_removed = QtCore.Signal(str)
 
-    SUPPORTED_FILE_FORMATS = frozenset([".edf", ".feather", ".csv", ".txt", ".tsv"])
+    SUPPORTED_FILE_FORMATS = frozenset([".edf", ".feather", ".csv", ".txt", ".tsv", ".xlsx", ".hdf5"])
 
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
         self.has_data = False
-        self._sampling_rate = Config().internal.LastSamplingRate
+        # self._sampling_rate = Config().internal.LastSamplingRate
 
         self.data_model = DataFrameModel(self)
 
@@ -66,9 +66,9 @@ class DataController(QtCore.QObject):
     def sections(self) -> SectionListModel:
         return self._sections
 
-    @property
-    def sampling_rate(self) -> int:
-        return self._sampling_rate
+    # @property
+    # def sampling_rate(self) -> int:
+    # return self.metadata.sampling_rate
 
     @property
     def metadata(self) -> FileMetadata:
@@ -76,14 +76,16 @@ class DataController(QtCore.QObject):
             raise ValueError("No data available.")
         return self._metadata
 
-    @QtCore.Slot(int)
-    def on_sampling_rate_changed(self, value: int) -> None:
-        self.sections.update_sampling_rate(value)
+    # @QtCore.Slot(int)
+    # def on_sampling_rate_changed(self, value: int) -> None:
+    #     self.sections.update_sampling_rate(value)
 
     def get_base_section(self) -> Section:
         if self._base_section is None:
             try:
-                self._base_section = Section(self.base_df, signal_name=self.metadata.signal_column, info_column=self.metadata.info_column)
+                self._base_section = Section(
+                    self.base_df, signal_name=self.metadata.signal_column, info_column=self.metadata.info_column
+                )
                 self._base_section.set_locked(True)
             except Exception as e:
                 raise ValueError("No data available. Select a valid file to load, and try again.") from e
@@ -130,11 +132,11 @@ class DataController(QtCore.QObject):
     def open_file(self, file_path: Path | str) -> None:
         file_path = Path(file_path)
         if not file_path.is_file():
-            raise FileNotFoundError(
+            logger.error(
                 f"Path: {file_path} \n\nNo file exists at the specified path. Please check the path and try again."
             )
         if file_path.suffix not in self.SUPPORTED_FILE_FORMATS:
-            raise ValueError(
+            logger.error(
                 f"Unsupported file format: {file_path.suffix}. Allowed formats: {', '.join(self.SUPPORTED_FILE_FORMATS)}"
             )
 
@@ -146,7 +148,7 @@ class DataController(QtCore.QObject):
         other_info: dict[str, t.Any] = {}
 
         if file_path.suffix == ".edf":
-            edf_info = mne.io.read_raw_edf(file_path, preload=False)
+            edf_info = mne.io.read_raw_edf(file_path, preload=False, verbose=False)
             sampling_rate = t.cast(int, edf_info.info["sfreq"])
             column_names = edf_info.ch_names
             other_info = dict(edf_info.info)
@@ -157,6 +159,15 @@ class DataController(QtCore.QObject):
                 sampling_rate = detect_sampling_rate(lf)
             except Exception:
                 sampling_rate = last_sampling_rate
+        elif file_path.suffix == ".xlsx":
+            lf = pl.read_excel(file_path).lazy()
+            column_names = lf.collect_schema().names()
+            try:
+                sampling_rate = detect_sampling_rate(lf)
+            except Exception:
+                sampling_rate = last_sampling_rate
+        elif file_path.suffix == ".hdf5":
+            raise NotImplementedError("HDF5 file support is not yet implemented.")
         else:
             raise ValueError(f"Unsupported file format: {file_path.suffix}. Please select a valid file format.")
 
@@ -183,7 +194,7 @@ class DataController(QtCore.QObject):
         signal_col = self.metadata.signal_column
         info_col = self.metadata.info_column
         columns = [signal_col]
-        if info_col != _C.COLUMN_PLACEHOLDER:
+        if info_col != COLUMN_PLACEHOLDER:
             columns.append(info_col)
         row_index_col = "index"
         if row_index_col in columns:
@@ -205,6 +216,10 @@ class DataController(QtCore.QObject):
             df = pl.read_ipc(file_path, columns=columns, row_index_name=row_index_col)
         elif suffix == ".edf":
             df = read_edf(Path(file_path), signal_col, info_col)
+        elif suffix == ".hdf5":
+            raise NotImplementedError("HDF5 file support is not yet implemented.")
+        elif suffix == ".xlsx":
+            df = pl.read_excel(file_path, columns=columns)
         else:
             raise NotImplementedError(f"Can't read file type: {suffix}")
 
@@ -257,7 +272,7 @@ class DataController(QtCore.QObject):
         )
 
         info_col = self.metadata.info_column
-        if info_col == _C.COLUMN_PLACEHOLDER:
+        if info_col == COLUMN_PLACEHOLDER:
             info_col = None
         section_results = {s.section_id: s.get_detailed_result(info_col) for s in self.sections.editable_sections}
 

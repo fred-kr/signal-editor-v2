@@ -4,7 +4,7 @@ from PySide6 import QtCore
 
 from ..core.section import Section, SectionID
 from ..gui.icons import SignalEditorIcon as Icons
-from . import ModelIndex
+from . import ModelIndex, ItemDataRole
 
 
 class SectionListModel(QtCore.QAbstractListModel):
@@ -26,7 +26,7 @@ class SectionListModel(QtCore.QAbstractListModel):
     def data(
         self,
         index: ModelIndex,
-        role: int = QtCore.Qt.ItemDataRole.DisplayRole,
+        role: int = ItemDataRole.DisplayRole,
     ) -> t.Any:
         if not index.isValid() or not self._sections:
             return None
@@ -36,15 +36,15 @@ class SectionListModel(QtCore.QAbstractListModel):
 
         section = self._sections[row]
 
-        if role == QtCore.Qt.ItemDataRole.DisplayRole:
+        if role == ItemDataRole.DisplayRole:
             return section.section_id.pretty_name()
-        elif role == QtCore.Qt.ItemDataRole.SizeHintRole:
+        elif role == ItemDataRole.SizeHintRole:
             return QtCore.QSize(100, 31)
-        elif role == QtCore.Qt.ItemDataRole.UserRole:
+        elif role == ItemDataRole.UserRole:
             return section
-        elif role == QtCore.Qt.ItemDataRole.ToolTipRole:
+        elif role == ItemDataRole.ToolTipRole:
             return repr(section)
-        elif role == QtCore.Qt.ItemDataRole.DecorationRole:
+        elif role == ItemDataRole.DecorationRole:
             return Icons.LockClosed.icon() if section.is_locked else Icons.LockOpen.icon()
         return None
 

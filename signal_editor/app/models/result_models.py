@@ -63,7 +63,7 @@ class SectionResult:
 
     def has_rate_data(self) -> bool:
         return not self.rate_data.is_empty()
-    
+
     def to_dict(self) -> _t.SectionResultDict:
         return _t.SectionResultDict(
             peak_data=self.peak_data.to_numpy(structured=True),

@@ -35,8 +35,8 @@ ts2vg = "^1.2.4"
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.26.0"
-pyinstaller = "^6.9.0"
-pyinstaller-hooks-contrib = "^2024.7"
+pyinstaller = "^6.10.0"
+pyinstaller-hooks-contrib = "^2024.8"
 sourcery = "^1.21.0"
 ruff = "^0.5.7"
 python-dotenv = "^1.0.1"

@@ -111,9 +111,11 @@ class TimeUnitDataTypeMismatchError(Exception):
 def _infer_time_column(lf: pl.LazyFrame, contains: t.Sequence[str] | None = None) -> list[str]:
     if contains is None:
         contains = ("time", "ts")
-    return lf.select(
-        cs.contains(*contains) | cs.datetime() | cs.duration() | (cs.integer() & ~cs.contains("index"))
-    ).collect_schema().names()
+    return (
+        lf.select(cs.contains(*contains) | cs.datetime() | cs.duration() | (cs.integer() & ~cs.contains("index")))
+        .collect_schema()
+        .names()
+    )
 
 
 def _infer_time_unit(
@@ -400,20 +402,32 @@ def write_hdf5(file_path: Path, data: CompleteResult) -> None:
                 attrvalue=detailed_result["metadata"]["processing_parameters"]["processing_pipeline"],
             )
             # Filter parameters
-            filter_params = detailed_result["metadata"]["processing_parameters"]["filter_parameters"] or {
-                "attribute_name": "unknown"
-            }
+            filter_params_list = detailed_result["metadata"]["processing_parameters"]["filter_parameters"]
             h5f.create_group(
                 f"/complete_section_results/complete_result_{section_id}/processing_parameters",
                 name="filter_parameters",
                 title="Filter Parameters",
             )
-            for filt_param, filt_val in filter_params.items():
-                h5f.set_node_attr(
+            for i, filter_param in enumerate(filter_params_list, start=1):
+                if i == 1:
+                    suffix = "st"
+                elif i == 2:
+                    suffix = "nd"
+                elif i == 3:
+                    suffix = "rd"
+                else:
+                    suffix = "th"
+                h5f.create_group(
                     f"/complete_section_results/complete_result_{section_id}/processing_parameters/filter_parameters",
-                    attrname=filt_param,
-                    attrvalue=filt_val,
+                    name=f"filter_parameters_{i}",
+                    title=f"Parameters for {i}{suffix} filter",
                 )
+                for filt_param, filt_val in filter_param.items():
+                    h5f.set_node_attr(
+                        f"/complete_section_results/complete_result_{section_id}/processing_parameters/filter_parameters/filter_parameters_{i}",
+                        attrname=filt_param,
+                        attrvalue=filt_val,
+                    )
 
             # Standardize parameters
             std_params = detailed_result["metadata"]["processing_parameters"]["standardization_parameters"] or {

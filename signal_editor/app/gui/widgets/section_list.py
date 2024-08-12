@@ -53,7 +53,7 @@ class SectionListDock(QtWidgets.QDockWidget):
         self.setObjectName("SectionListDock")
         self.setWindowTitle("Section List")
         self.setWindowIcon(Icons.SignalEditor.icon())
-        
+
         self.list_view = SectionListView()
         self.toggleViewAction().setIcon(Icons.List.icon())
         main_widget = QtWidgets.QWidget(self)

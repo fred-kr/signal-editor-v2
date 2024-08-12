@@ -30,7 +30,7 @@
 			"**/build/**",
 			"**/output/**",
 			"**/.idea/**",
-			"**/ui_*.py",
+			// "**/ui_*.py",
 		],
 		"ruff.format.args": [
 			"--config=${workspaceFolder}/pyproject.toml"

@@ -168,7 +168,7 @@ class DataTreeWidget(qfw.TreeWidget):
         return type_str, desc, childs, widget
 
     def filter_tree(self, text: str) -> None:
-        for node, item in self._nodes.items():
+        for item in self._nodes.values():
             item.setHidden(text.lower() not in item.text(0).lower() and text.lower() not in item.text(2).lower())
 
     def toggle_sort(self) -> None:

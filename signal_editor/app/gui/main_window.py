@@ -4,22 +4,26 @@ from pathlib import Path
 
 import qfluentwidgets as qfw
 from loguru import logger
-from pyqtgraph.console import ConsoleWidget
 from PySide6 import QtCore, QtGui, QtWidgets
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 
-from .widgets.overlay_widget import OverlayWidget
-from signal_editor.ui.ui_main_window import Ui_MainWindow
+from ...ui.ui_main_window import Ui_MainWindow
 
 from .. import type_defs as _t
 from ..config import Config
 from ..enum_defs import LogLevel
+from .dialogs import ConfigDialog, MetadataDialog
 from .icons import SignalEditorIcon as Icons
-from .widgets import ConfigDialog, ExportDialog, MetadataDialog, SectionListDock
-from .widgets.data_tree_widget import DataTreeWidgetContainer
-from .widgets.log_window import StatusMessageDock
-from .widgets.message_box import MessageBox, SectionSummaryBox
-from .widgets.parameter_inputs import ParameterInputsDock
+from .widgets import (
+    DataTreeWidgetContainer,
+    MessageBox,
+    OverlayWidget,
+    ParameterInputsDock,
+    SectionListDock,
+    SectionSummaryBox,
+    StatusMessageDock,
+)
+from .widgets.jupyter_console_widget import ConsoleWindow
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -30,6 +34,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.setupUi(self)
+        self._msg_box_icons = {
+            LogLevel.DEBUG: Icons.Wrench.icon(),
+            LogLevel.INFO: Icons.Info.icon(),
+            LogLevel.WARNING: Icons.Warning.icon(),
+            LogLevel.ERROR: Icons.ErrorCircle.icon(),
+            LogLevel.CRITICAL: Icons.Important.icon(),
+            LogLevel.SUCCESS: Icons.CheckmarkCircle.icon(),
+        }
         self.setWindowIcon(Icons.SignalEditor.icon())
 
         self.new_central_widget = QtWidgets.QWidget()
@@ -37,7 +49,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.navigation_interface = NavigationInterface(self, showMenuButton=True)
 
         self.progress_dlg: QtWidgets.QProgressDialog | None = None
-        self._overlay_widget = OverlayWidget("Calculating...", self)
+        self._overlay_widget = OverlayWidget(self)
         self._overlay_widget.hide()
 
         self._setup_layout()
@@ -45,7 +57,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._setup_navigation()
         self._setup_window()
 
-        self._initialize_icons()
         self._setup_docks()
         self._setup_actions()
         self._setup_toolbars()
@@ -71,10 +82,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _setup_navigation(self) -> None:
         self.add_sub_interface(self.stacked_page_import, Icons.DocumentArrowLeft.icon(), "Import")
-        self.add_sub_interface(self.stacked_page_edit, Icons.Pulse.icon(), "Editing")
+        self.add_sub_interface(self.stacked_page_edit, Icons.Edit.icon(), "Editing")
         self.add_sub_interface(self.stacked_page_export, Icons.DocumentArrowRight.icon(), "Results")
-
-        self.navigation_interface.addSeparator()
 
         self.add_sub_interface(
             self.stacked_page_test,
@@ -116,20 +125,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.navigation_interface.setCurrentItem(widget.objectName())
         qrouter.push(self.stackedWidget, widget.objectName())
 
-    def _initialize_icons(self) -> None:
-        self._msg_box_icons = {
-            LogLevel.DEBUG: Icons.Wrench.icon(),
-            LogLevel.INFO: Icons.Info.icon(),
-            LogLevel.WARNING: Icons.Warning.icon(),
-            LogLevel.ERROR: Icons.ErrorCircle.icon(),
-            LogLevel.CRITICAL: Icons.Important.icon(),
-            LogLevel.SUCCESS: Icons.CheckmarkCircle.icon(),
-        }
-
     def _setup_widgets(self) -> None:
         self.dialog_meta = MetadataDialog(self)
         self.dialog_config = ConfigDialog(self)
-        self.dialog_export = ExportDialog(self)
+        # self.dialog_export = ExportDialog(self)
 
         self.table_view_import_data.horizontalHeader().setDefaultAlignment(
             QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter
@@ -155,8 +154,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dialog_meta.container_additional_metadata.setLayout(layout)
         self.data_tree_widget_additional_metadata = data_tree_widget
 
-        self.btn_dropdown_export.setMenu(self.menu_export)
-        self.btn_dropdown_export.setIcon(Icons.ArrowExportLtr.icon())
+        self.btn_export_all_results.setIcon(Icons.ArrowExportLtr.icon())
 
         self.stackedWidget.setCurrentIndex(0)
 
@@ -178,29 +176,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_parameters.setEnabled(False)
 
     def _add_console_dock(self) -> None:
-        class ConsoleDock(QtWidgets.QDockWidget):
-            def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
-                super().__init__(parent)
-                self.toggleViewAction().setIcon(Icons.Code.icon())
-                self.setVisible(False)
-                self.setObjectName("DockWidgetConsole")
-                self.setFloating(True)
-                self.console = ConsoleWidget(
-                    self,
-                    namespace={"mw": parent, "app": qApp},  # type: ignore # noqa: F821
-                    editor="code-insiders --reuse-window --goto {fileName}:{lineNum}",
-                )
+        console_window = ConsoleWindow()
+        console_window.setVisible(False)
 
-                self.setWidget(self.console)
-                self.widget().show()
-
-        dock_console = ConsoleDock(self)
-        dock_console.setVisible(False)
-
-        self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea, dock_console)
         self.menu_view.addSeparator()
-        self.menu_view.addAction(dock_console.toggleViewAction())
-        self.dock_console = dock_console
+        self.menu_view.addAction(console_window.toggle_view_action)
+        self.console_window = console_window
 
     def _setup_actions(self) -> None:
         self.action_show_section_summary = QtGui.QAction(Icons.Info.icon(), "Show Section Summary", self)
@@ -208,15 +189,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.action_toggle_whats_this_mode = QtWidgets.QWhatsThis().createAction(self)
         self.action_toggle_whats_this_mode.setIcon(Icons.Question.icon())
 
-        self.action_export_to_csv = QtGui.QAction("Export to CSV", self)
-        self.action_export_to_xlsx = QtGui.QAction("Export to XLSX", self)
-        self.action_export_to_hdf5 = QtGui.QAction("Export to HDF5", self)
+        self.action_export_to_csv = qfw.Action(Icons.ArrowExportLtr.icon(), "Export to CSV")
+        self.action_export_to_xlsx = qfw.Action(Icons.ArrowExportLtr.icon(), "Export to XLSX")
+        self.action_export_to_hdf5 = qfw.Action(Icons.ArrowExportLtr.icon(), "Export to HDF5")
 
         self.action_toggle_auto_scaling.setChecked(True)
 
     def _setup_toolbars(self) -> None:
         self.tool_bar_editing = self._setup_toolbar(
-            "tool_bar_editing", [self.action_toggle_auto_scaling, self.action_mark_section_done]
+            "tool_bar_editing", [self.action_toggle_auto_scaling, self.action_show_section_overview]
         )
 
         self.tool_bar_help = self._setup_toolbar(
@@ -233,9 +214,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             [self.action_unlock_section, self.action_show_section_summary, self.action_show_section_overview]
         )
 
-
         self.dock_sections.main_layout.insertWidget(1, cb_section_list)
         self.tool_bar_section_list = cb_section_list
+
+        self.cb_result_peak_info.addActions([self.action_export_to_csv, self.action_export_to_xlsx])
+        self.cb_result_rate_info.addActions([self.action_export_to_csv, self.action_export_to_xlsx])
+        self.cb_result_metadata.addActions([self.action_export_to_hdf5])
+
+        for cb in [self.cb_result_peak_info, self.cb_result_rate_info, self.cb_result_metadata]:
+            cb.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
     def _setup_toolbar(self, name: str, actions: list[QtGui.QAction], movable: bool = False) -> QtWidgets.QToolBar:
         tb = QtWidgets.QToolBar(name)
@@ -261,7 +248,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.menu_help.addAction(self.dock_status_log.toggleViewAction())
         self.menu_help.insertAction(self.action_show_user_guide, self.action_toggle_whats_this_mode)
 
-        self.menu_export = qfw.RoundMenu(parent=self.btn_dropdown_export)
+        self.menu_export = qfw.RoundMenu()
         self.menu_export.addActions([self.action_export_to_csv, self.action_export_to_xlsx, self.action_export_to_hdf5])
 
     def hide_all_docks(self) -> None:
@@ -378,9 +365,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.centralWidget().setEnabled(False)
         self.dock_parameters.setEnabled(False)
         self.dock_sections.setEnabled(False)
-        
+
         self._overlay_widget.set_text(text)
         self._overlay_widget.setGeometry(self.centralWidget().geometry())
+        self._overlay_widget.btn_cancel.setEnabled(True)
         self._overlay_widget.raise_()
         self._overlay_widget.show()
 
@@ -388,9 +376,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.centralWidget().setEnabled(True)
         self.dock_parameters.setEnabled(True)
         self.dock_sections.setEnabled(True)
-        
+
         self._overlay_widget.hide()
-        
+
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.write_settings()
@@ -400,8 +388,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_parameters.close()
         self.dock_sections.close()
 
-        if hasattr(self, "dock_console"):
-            self.dock_console.close()
+        if hasattr(self, "console_window"):
+            self.console_window.close()
         return super().closeEvent(event)
 
     def show_success(self, title: str, text: str) -> None:
@@ -468,8 +456,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             parent = self
             if self.dialog_meta.isVisible():
                 parent = self.dialog_meta
-            elif self.dialog_export.isVisible():
-                parent = self.dialog_export
+            # elif self.dialog_export.isVisible():
+            # parent = self.dialog_export
             elif self.dialog_config.isVisible():
                 parent = self.dialog_config
 

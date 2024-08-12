@@ -20,7 +20,7 @@ if t.TYPE_CHECKING:
     import mne
     from PySide6 import QtCore, QtGui
 
-    from ..app.core.section import SectionID, ProcessingParameters
+    from ..app.core.section import SectionID
 
 PGColor = t.Union[str, int, float, tuple[int, int, int], tuple[int, int, int, int], "QtGui.QColor", SVGColors]
 
@@ -358,8 +358,8 @@ class SectionSummaryDict(t.TypedDict):
     start_index: int
     end_index: int
     peak_count: int
-    processing_parameters: "ProcessingParameters"
-    
+    processing_parameters: ProcessingParametersDict
+
 
 class CompactSectionResultDict(t.TypedDict):
     peaks_global_index: npt.NDArray[np.int32]
@@ -374,7 +374,7 @@ class CompactSectionResultDict(t.TypedDict):
 class SectionResultDict(t.TypedDict):
     peak_data: npt.NDArray[np.void]
     rate_data: npt.NDArray[np.void]
-    
+
 
 class DetailedSectionResultDict(t.TypedDict):
     metadata: SectionMetadataDict

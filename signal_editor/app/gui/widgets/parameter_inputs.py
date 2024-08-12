@@ -119,7 +119,7 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
             widget = getattr(self.ui, name)
             widget.default_value = default_value
 
-    def _restore_default_value(self, widget: QtWidgets.QWidget) -> None:
+    def _restore_default_value(self, widget: QtWidgets.QWidget | QtCore.QObject) -> None:
         if isinstance(widget, (qfw.ComboBox, QtWidgets.QComboBox)):
             widget.setCurrentIndex(0)
             return
@@ -170,7 +170,7 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
 
     def _setup_command_bars(self) -> None:
         # Peak Detection
-        self.ui.command_bar_peak_detection.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.ui.command_bar_peak_detection.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         self.ui.command_bar_peak_detection.addActions(
             [
                 self.ui.action_run_peak_detection,
@@ -178,9 +178,10 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
                 self.ui.action_restore_defaults_peak_detection,
             ]
         )
+        self.ui.command_bar_peak_detection.resizeToSuitableWidth()
 
         # Processing
-        self.ui.command_bar_processing.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        self.ui.command_bar_processing.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         self.ui.command_bar_processing.addActions(
             [
                 self.ui.action_run_processing,
@@ -188,6 +189,7 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
                 self.ui.action_restore_defaults_processing,
             ]
         )
+        self.ui.command_bar_processing.resizeToSuitableWidth()
 
     @QtCore.Slot()
     def _on_pipeline_changed(self) -> None:
@@ -379,17 +381,13 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
 
     @QtCore.Slot()
     def _on_restore_defaults_peak_detection(self) -> None:
-        for cb in [self.ui.combo_peak_method, self.ui.peak_neurokit2_algorithm_used, self.ui.peak_xqrs_peak_dir]:
-            cb.setCurrentIndex(0)
+        current_input_page = self.ui.stacked_peak_parameters.currentWidget()
+        for child in current_input_page.children():
+            self._restore_default_value(child)
 
-        for name_prefix, param_map in self._peak_defaults.items():
-            for param_name, default_value in param_map.items():
-                widget_name = f"{name_prefix}_{param_name}"
-                widget = getattr(self.ui, widget_name)
-                if isinstance(default_value, bool):
-                    widget.setChecked(default_value)
-                else:
-                    widget.setValue(default_value)
+        if current_input_page == self.ui.page_peak_neurokit2:
+            for child in self.ui.stacked_nk2_method_parameters.currentWidget().children():
+                self._restore_default_value(child)
 
     @QtCore.Slot()
     def _on_restore_defaults_processing(self) -> None:

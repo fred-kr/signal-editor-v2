@@ -1,6 +1,6 @@
 import enum
 
-from PySide6 import QtGui
+from PySide6 import QtCore, QtGui
 
 
 class RateComputationMethod(enum.StrEnum):
@@ -22,6 +22,13 @@ class TextFileSeparator(enum.StrEnum):
     Comma = ","
     Semicolon = ";"
     Pipe = "|"
+
+    def qicon(self) -> QtGui.QIcon:
+        pixmap = QtGui.QPixmap(16, 16)
+        painter = QtGui.QPainter(pixmap)
+        painter.drawText(QtCore.QRect(0, 0, 16, 16), QtCore.Qt.AlignmentFlag.AlignCenter, self.value)
+        painter.end()
+        return QtGui.QIcon(pixmap)
 
 
 class ExportFormatCompact(enum.StrEnum):
