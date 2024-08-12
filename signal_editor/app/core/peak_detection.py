@@ -13,8 +13,8 @@ from ..enum_defs import PeakDetectionMethod, SmoothingKernels, WFDBPeakDirection
 
 
 def _fit_loess(
-    y: npt.NDArray[np.float64 | np.intp] | pl.Series,
-    x: npt.NDArray[np.float64 | np.intp] | pl.Series | None = None,
+    y: npt.NDArray[np.float64 | np.intp],
+    x: npt.NDArray[np.float64 | np.intp] | None = None,
     alpha: float = 0.75,
     order: int = 2,
 ) -> npt.NDArray[np.float64]:
@@ -49,13 +49,15 @@ def _fit_loess(
     return y_predicted
 
 
-def _signal_smoothing_median(sig: npt.NDArray[np.float64 | np.intp] | pl.Series, size: int = 5) -> npt.NDArray[np.float64]:
+def _signal_smoothing_median(sig: npt.NDArray[np.float64 | np.intp], size: int = 5) -> npt.NDArray[np.float64]:
     if size % 2 == 0:
         size += 1
     return ndimage.median_filter(sig, size=size)
 
 
-def _signal_smoothing(sig: npt.NDArray[np.float64 | np.intp] | pl.Series, kernel: SmoothingKernels, size: int = 5) -> npt.NDArray[np.float64]:
+def _signal_smoothing(
+    sig: npt.NDArray[np.float64 | np.intp], kernel: SmoothingKernels, size: int = 5
+) -> npt.NDArray[np.float64]:
     window: npt.NDArray[np.float64] = signal.get_window(kernel, size)
     w: npt.NDArray[np.float64] = window / window.sum()
 
@@ -66,7 +68,7 @@ def _signal_smoothing(sig: npt.NDArray[np.float64 | np.intp] | pl.Series, kernel
 
 
 def _signal_smooth(
-    sig: npt.NDArray[np.float64 | np.intp] | pl.Series,
+    sig: npt.NDArray[np.float64 | np.intp],
     method: t.Literal["convolution", "loess"] = "convolution",
     kernel: SmoothingKernels = SmoothingKernels.BOXZEN,
     size: int = 10,
@@ -94,7 +96,7 @@ def _signal_smooth(
 
 
 def _find_peaks_ppg_elgendi(
-    sig: npt.NDArray[np.float64] | pl.Series,
+    sig: npt.NDArray[np.float64],
     sampling_rate: int,
     peakwindow: float = 0.111,
     beatwindow: float = 0.667,
@@ -177,7 +179,7 @@ def _find_peaks_ppg_elgendi(
     return np.array(peaks, dtype=np.int32)
 
 
-def _find_peaks_local_max(sig: npt.NDArray[np.float64] | pl.Series, search_radius: int) -> npt.NDArray[np.int32]:
+def _find_peaks_local_max(sig: npt.NDArray[np.float64], search_radius: int) -> npt.NDArray[np.int32]:
     if len(sig) == 0 or np.min(sig) == np.max(sig):
         return np.array([], dtype=np.int32)
 
@@ -185,7 +187,7 @@ def _find_peaks_local_max(sig: npt.NDArray[np.float64] | pl.Series, search_radiu
     return np.flatnonzero(sig == max_vals)
 
 
-def _find_peaks_local_min(sig: npt.NDArray[np.float64] | pl.Series, search_radius: int) -> npt.NDArray[np.int32]:
+def _find_peaks_local_min(sig: npt.NDArray[np.float64], search_radius: int) -> npt.NDArray[np.int32]:
     if len(sig) == 0 or np.min(sig) == np.max(sig):
         return np.array([], dtype=np.int32)
 
@@ -194,7 +196,7 @@ def _find_peaks_local_min(sig: npt.NDArray[np.float64] | pl.Series, search_radiu
 
 
 def find_extrema(
-    sig: npt.NDArray[np.float64] | pl.Series, search_radius: int, direction: t.Literal["up", "down"], min_peak_distance: int = 10
+    sig: npt.NDArray[np.float64], search_radius: int, direction: t.Literal["up", "down"], min_peak_distance: int = 10
 ) -> npt.NDArray[np.int32]:
     if direction == "up":
         peaks = _find_peaks_local_max(sig, search_radius)
@@ -215,10 +217,10 @@ def find_extrema(
 
 # XQRS related functions
 def _shift_peaks(
-    sig: npt.NDArray[np.float64] | pl.Series, peaks: npt.NDArray[np.int32], radius: int, dir_is_up: bool
+    sig: npt.NDArray[np.float64], peaks: npt.NDArray[np.int32], radius: int, dir_is_up: bool
 ) -> npt.NDArray[np.int32]:
     start_indices = np.maximum(peaks - radius, 0)
-    end_indices = np.minimum(peaks + radius, len(sig))
+    end_indices = np.minimum(peaks + radius, sig.size)
 
     shifted_peaks = np.zeros_like(peaks)
 
@@ -234,7 +236,7 @@ def _shift_peaks(
 
 
 def _adjust_peak_positions(
-    sig: npt.NDArray[np.float64] | pl.Series,
+    sig: npt.NDArray[np.float64],
     peaks: npt.NDArray[np.int32],
     radius: int,
     direction: WFDBPeakDirection,
@@ -265,7 +267,7 @@ def _get_comparison_func(find_peak_func: t.Callable[..., np.intp]) -> t.Callable
 
 
 def _remove_outliers(
-    sig: npt.NDArray[np.float64] | pl.Series,
+    sig: npt.NDArray[np.float64],
     qrs_locations: npt.NDArray[np.int32],
     n_std: float,
     find_peak_func: t.Callable[..., np.intp],
@@ -296,7 +298,7 @@ def _remove_outliers(
 
 
 def _handle_close_peaks(
-    sig: npt.NDArray[np.float64] | pl.Series,
+    sig: npt.NDArray[np.float64],
     qrs_locations: npt.NDArray[np.int32],
     n_std: float,
     find_peak_func: t.Callable[..., np.intp],
@@ -318,7 +320,7 @@ def _handle_close_peaks(
 
 
 def _sanitize_qrs_locations(
-    sig: npt.NDArray[np.float64] | pl.Series,
+    sig: npt.NDArray[np.float64],
     qrs_locations: npt.NDArray[np.int32],
     min_peak_distance: int,
     n_std: float = 4.0,
@@ -334,14 +336,14 @@ def _sanitize_qrs_locations(
 
 
 def _find_peaks_xqrs(
-    sig: npt.NDArray[np.float64] | pl.Series,
+    sig: npt.NDArray[np.float64],
     sampling_rate: int,
     radius: int,
     min_peak_distance: int,
     peak_dir: WFDBPeakDirection = WFDBPeakDirection.Up,
 ) -> npt.NDArray[np.int32]:
     xqrs_out = wp.XQRS(sig, sampling_rate)
-    xqrs_out.detect()
+    xqrs_out.detect(verbose=False)
     qrs_locations = np.array(xqrs_out.qrs_inds, dtype=np.int32)
     peak_indices = _adjust_peak_positions(sig, peaks=qrs_locations, radius=radius, direction=peak_dir)
 
@@ -349,7 +351,7 @@ def _find_peaks_xqrs(
 
 
 def find_peaks(
-    sig: npt.NDArray[np.float64] | pl.Series,
+    sig: npt.NDArray[np.float64],
     sampling_rate: int,
     method: PeakDetectionMethod,
     method_parameters: _t.PeakDetectionMethodParameters,

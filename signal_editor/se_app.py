@@ -171,7 +171,7 @@ class SignalEditor(QtWidgets.QApplication):
         b_left = max(left + edge_buffer, 0)
         b_right = min(right - edge_buffer, active_section.processed_signal.len())
         b_length = b_right - b_left
-        data = active_section.processed_signal.slice(b_left, b_length)
+        data = active_section.processed_signal.slice(b_left, b_length).to_numpy(allow_copy=False)
         peaks = find_peaks(
             data,
             sampling_rate=active_section.sampling_rate,
@@ -181,20 +181,6 @@ class SignalEditor(QtWidgets.QApplication):
         peaks = peaks + b_left
         active_section.update_peaks("add", peaks)
         self.sig_peaks_updated.emit()
-        
-        # b_left, b_right = left + edge_buffer, right - edge_buffer
-        # b_left = np.maximum(b_left, 0)
-        # b_right = np.minimum(b_right, active_section.processed_signal.len())
-        # data = active_section.processed_signal[b_left:b_right].to_numpy()
-        # peaks = find_peaks(
-        #     data,
-        #     sampling_rate=active_section.sampling_rate,
-        #     method=peak_method,
-        #     method_parameters=peak_params,
-        # )
-        # peaks = peaks + b_left
-        # active_section.update_peaks("add", peaks)
-        # self.sig_peaks_updated.emit()
 
     @QtCore.Slot(str, object)
     def handle_peak_edit(self, action: _t.UpdatePeaksAction, indices: npt.NDArray[np.int32]) -> None:

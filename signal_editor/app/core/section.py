@@ -332,9 +332,9 @@ class Section:
             logger.warning(
                 "Applying filter to raw signal. To apply to already processed signal, enable\n\n'Settings > Preferences > Editing > FilterStacking'."
             )
-            sig_data = self.raw_signal
+            sig_data = self.raw_signal.to_numpy(allow_copy=False)
         else:
-            sig_data = self.processed_signal
+            sig_data = self.processed_signal.to_numpy(allow_copy=False)
         method = kwargs.get("method", None)
         # filtered = np.empty_like(sig_data)
         # filtered = sig_data.clear(n=len(sig_data))
@@ -424,7 +424,7 @@ class Section:
             The parameters to use for the peak detection method
         """
         peaks = find_peaks(
-            self.processed_signal,
+            self.processed_signal.to_numpy(allow_copy=False),
             self.sampling_rate,
             method,
             method_parameters,

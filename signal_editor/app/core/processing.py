@@ -37,7 +37,7 @@ def standardize_signal(sig: pl.Series, robust: bool = False, window_size: int | 
     return result.fill_nan(None).fill_null(strategy="backward")
 
 
-def filter_neurokit2(sig: npt.NDArray[np.float64] | pl.Series, sampling_rate: int, powerline: int = 50) -> npt.NDArray[np.float64]:
+def filter_neurokit2(sig: npt.NDArray[np.float64], sampling_rate: int, powerline: int = 50) -> npt.NDArray[np.float64]:
     clean = nk.signal_filter(
         signal=sig,
         sampling_rate=sampling_rate,
@@ -48,7 +48,7 @@ def filter_neurokit2(sig: npt.NDArray[np.float64] | pl.Series, sampling_rate: in
     return nk.signal_filter(clean, sampling_rate=sampling_rate, method=FilterMethod.Powerline, powerline=powerline)
 
 
-def filter_elgendi(sig: npt.NDArray[np.float64] | pl.Series, sampling_rate: int) -> npt.NDArray[np.float64]:
+def filter_elgendi(sig: npt.NDArray[np.float64], sampling_rate: int) -> npt.NDArray[np.float64]:
     return nk.signal_filter(
         sig,
         sampling_rate=sampling_rate,
@@ -60,7 +60,7 @@ def filter_elgendi(sig: npt.NDArray[np.float64] | pl.Series, sampling_rate: int)
 
 
 def filter_signal(
-    sig: npt.NDArray[np.float64] | pl.Series,
+    sig: npt.NDArray[np.float64],
     sampling_rate: int,
     **kwargs: t.Unpack[_t.SignalFilterParameters],
 ) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
