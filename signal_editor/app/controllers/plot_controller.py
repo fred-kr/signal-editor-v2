@@ -1,6 +1,7 @@
 import typing as t
 
 import numpy as np
+import polars as pl
 import numpy.typing as npt
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -316,7 +317,7 @@ class PlotController(QtCore.QObject):
         self.hide_region_selector()
         self.toggle_regions(self._show_regions)
 
-    def set_signal_data(self, y_data: npt.NDArray[np.float64], clear: bool = False) -> None:
+    def set_signal_data(self, y_data: npt.NDArray[np.float64] | pl.Series, clear: bool = False) -> None:
         if self.signal_curve is None:
             return
         if clear:
@@ -327,8 +328,8 @@ class PlotController(QtCore.QObject):
 
     def set_rate_data(
         self,
-        y_data: npt.NDArray[np.float64 | np.intp],
-        x_data: npt.NDArray[np.intp] | None = None,
+        y_data: npt.NDArray[np.float64 | np.intp] | pl.Series,
+        x_data: npt.NDArray[np.intp] | pl.Series | None = None,
         clear: bool = False,
     ) -> None:
         if self.rate_curve is None:
@@ -341,7 +342,7 @@ class PlotController(QtCore.QObject):
         else:
             self.rate_curve.setData(y_data)
 
-    def set_peak_data(self, x_data: npt.NDArray[np.intp | np.uintp], y_data: npt.NDArray[np.float64]) -> None:
+    def set_peak_data(self, x_data: npt.NDArray[np.intp | np.uintp] | pl.Series, y_data: npt.NDArray[np.float64] | pl.Series) -> None:
         if self.peak_scatter is None:
             return
         self.peak_scatter.setData(x=x_data, y=y_data)

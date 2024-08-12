@@ -88,7 +88,6 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.thread_pool = QtCore.QThreadPool.globalInstance()
 
-        # self.recent_files = self._retrieve_recent_files()
         self.recent_files_model = FileListModel(self.config.internal.RecentFiles, max_files=10, parent=self)
         self.recent_files_model.validate_files()
         
@@ -117,7 +116,6 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.mw.spin_box_sampling_rate_import_page.editingFinished.connect(self.update_sampling_rate)
 
-        # self.mw.list_widget_recent_files.itemDoubleClicked.connect(self._open_recent_file)
         self.mw.list_view_recent_files.doubleClicked.connect(self._open_recent_file)
 
         self.mw.sig_table_refresh_requested.connect(self.refresh_data_view)
@@ -151,12 +149,6 @@ class SignalEditor(QtWidgets.QApplication):
         self.plot.sig_scatter_data_changed.connect(self.handle_peak_edit)
         self.plot.sig_section_clicked.connect(self.set_active_section_from_int)
 
-    # def _retrieve_recent_files(self) -> list[str]:
-    #     recent_files = self.config.internal.RecentFiles
-    #     self.mw.list_widget_recent_files.clear()
-    #     self.mw.list_widget_recent_files.addItems(recent_files)
-    #     return recent_files
-
     @QtCore.Slot()
     def clear_peaks(self) -> None:
         self.plot.clear_peaks()
@@ -176,10 +168,10 @@ class SignalEditor(QtWidgets.QApplication):
         peak_params = self.mw.dock_parameters.get_peak_detection_params(peak_method)
 
         edge_buffer = 10
-        b_left, b_right = left + edge_buffer, right - edge_buffer
-        b_left = np.maximum(b_left, 0)
-        b_right = np.minimum(b_right, active_section.processed_signal.len())
-        data = active_section.processed_signal[b_left:b_right].to_numpy()
+        b_left = max(left + edge_buffer, 0)
+        b_right = min(right - edge_buffer, active_section.processed_signal.len())
+        b_length = b_right - b_left
+        data = active_section.processed_signal.slice(b_left, b_length)
         peaks = find_peaks(
             data,
             sampling_rate=active_section.sampling_rate,
@@ -189,6 +181,20 @@ class SignalEditor(QtWidgets.QApplication):
         peaks = peaks + b_left
         active_section.update_peaks("add", peaks)
         self.sig_peaks_updated.emit()
+        
+        # b_left, b_right = left + edge_buffer, right - edge_buffer
+        # b_left = np.maximum(b_left, 0)
+        # b_right = np.minimum(b_right, active_section.processed_signal.len())
+        # data = active_section.processed_signal[b_left:b_right].to_numpy()
+        # peaks = find_peaks(
+        #     data,
+        #     sampling_rate=active_section.sampling_rate,
+        #     method=peak_method,
+        #     method_parameters=peak_params,
+        # )
+        # peaks = peaks + b_left
+        # active_section.update_peaks("add", peaks)
+        # self.sig_peaks_updated.emit()
 
     @QtCore.Slot(str, object)
     def handle_peak_edit(self, action: _t.UpdatePeaksAction, indices: npt.NDArray[np.int32]) -> None:
@@ -197,11 +203,11 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot()
     def refresh_peak_data(self) -> None:
-        pos = self.data.active_section.get_peak_pos().to_numpy(structured=True)
-        self.plot.set_peak_data(pos["x"], pos["y"])
+        pos = self.data.active_section.get_peak_pos()
+        self.plot.set_peak_data(pos.get_column("x"), pos.get_column("y"))
         self.data.active_section.update_rate_data()
-        rate_data = self.data.active_section.rate_data.select("x", "y").to_numpy(structured=True)
-        self.plot.set_rate_data(x_data=rate_data["x"], y_data=rate_data["y"])
+        rate_data = self.data.active_section.rate_data.select("x", "y")
+        self.plot.set_rate_data(x_data=rate_data.get_column("x"), y_data=rate_data.get_column("y"))
 
     def update_status_indicators(self) -> None:
         self.mw.dock_parameters.set_filter_status(
@@ -237,7 +243,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.refresh_plot_data()
 
     def refresh_plot_data(self) -> None:
-        self.plot.set_signal_data(self.data.active_section.processed_signal.to_numpy())
+        self.plot.set_signal_data(self.data.active_section.processed_signal)
         self.update_status_indicators()
 
     @QtCore.Slot(enum.StrEnum, dict)
@@ -348,7 +354,7 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.set_active_section_label(section.section_id.pretty_name())
 
         self.plot.block_clicks = is_base_section or is_locked
-        self.plot.set_signal_data(section.processed_signal.to_numpy())
+        self.plot.set_signal_data(section.processed_signal)
         self.plot.clear_peaks()
 
         if has_peaks:

@@ -3,6 +3,7 @@ import typing as t
 import neurokit2 as nk
 import numpy as np
 import numpy.typing as npt
+import polars as pl
 import wfdb.processing as wp
 from loguru import logger
 from scipy import ndimage, signal
@@ -12,8 +13,8 @@ from ..enum_defs import PeakDetectionMethod, SmoothingKernels, WFDBPeakDirection
 
 
 def _fit_loess(
-    y: npt.NDArray[np.float64],
-    x: npt.NDArray[np.float64] | None = None,
+    y: npt.NDArray[np.float64 | np.intp] | pl.Series,
+    x: npt.NDArray[np.float64 | np.intp] | pl.Series | None = None,
     alpha: float = 0.75,
     order: int = 2,
 ) -> npt.NDArray[np.float64]:
@@ -48,13 +49,13 @@ def _fit_loess(
     return y_predicted
 
 
-def _signal_smoothing_median(sig: npt.NDArray[np.float64], size: int = 5) -> npt.NDArray[np.float64]:
+def _signal_smoothing_median(sig: npt.NDArray[np.float64 | np.intp] | pl.Series, size: int = 5) -> npt.NDArray[np.float64]:
     if size % 2 == 0:
         size += 1
     return ndimage.median_filter(sig, size=size)
 
 
-def _signal_smoothing(sig: npt.NDArray[np.float64], kernel: SmoothingKernels, size: int = 5) -> npt.NDArray[np.float64]:
+def _signal_smoothing(sig: npt.NDArray[np.float64 | np.intp] | pl.Series, kernel: SmoothingKernels, size: int = 5) -> npt.NDArray[np.float64]:
     window: npt.NDArray[np.float64] = signal.get_window(kernel, size)
     w: npt.NDArray[np.float64] = window / window.sum()
 
@@ -65,13 +66,13 @@ def _signal_smoothing(sig: npt.NDArray[np.float64], kernel: SmoothingKernels, si
 
 
 def _signal_smooth(
-    sig: npt.NDArray[np.float64],
+    sig: npt.NDArray[np.float64 | np.intp] | pl.Series,
     method: t.Literal["convolution", "loess"] = "convolution",
     kernel: SmoothingKernels = SmoothingKernels.BOXZEN,
     size: int = 10,
     alpha: float = 0.1,
 ) -> npt.NDArray[np.float64]:
-    length = sig.size
+    length = len(sig)
 
     if size > length or size < 1:
         raise ValueError(f"Size must be between 1 and {length}")
@@ -93,7 +94,7 @@ def _signal_smooth(
 
 
 def _find_peaks_ppg_elgendi(
-    sig: npt.NDArray[np.float64],
+    sig: npt.NDArray[np.float64] | pl.Series,
     sampling_rate: int,
     peakwindow: float = 0.111,
     beatwindow: float = 0.667,
@@ -176,16 +177,16 @@ def _find_peaks_ppg_elgendi(
     return np.array(peaks, dtype=np.int32)
 
 
-def _find_peaks_local_max(sig: npt.NDArray[np.float64], search_radius: int) -> npt.NDArray[np.int32]:
-    if sig.size == 0 or np.min(sig) == np.max(sig):
+def _find_peaks_local_max(sig: npt.NDArray[np.float64] | pl.Series, search_radius: int) -> npt.NDArray[np.int32]:
+    if len(sig) == 0 or np.min(sig) == np.max(sig):
         return np.array([], dtype=np.int32)
 
     max_vals = ndimage.maximum_filter1d(sig, size=2 * search_radius + 1, mode="constant")
     return np.flatnonzero(sig == max_vals)
 
 
-def _find_peaks_local_min(sig: npt.NDArray[np.float64], search_radius: int) -> npt.NDArray[np.int32]:
-    if sig.size == 0 or np.min(sig) == np.max(sig):
+def _find_peaks_local_min(sig: npt.NDArray[np.float64] | pl.Series, search_radius: int) -> npt.NDArray[np.int32]:
+    if len(sig) == 0 or np.min(sig) == np.max(sig):
         return np.array([], dtype=np.int32)
 
     min_vals = ndimage.minimum_filter1d(sig, size=2 * search_radius + 1, mode="constant")
@@ -193,7 +194,7 @@ def _find_peaks_local_min(sig: npt.NDArray[np.float64], search_radius: int) -> n
 
 
 def find_extrema(
-    sig: npt.NDArray[np.float64], search_radius: int, direction: t.Literal["up", "down"], min_peak_distance: int = 10
+    sig: npt.NDArray[np.float64] | pl.Series, search_radius: int, direction: t.Literal["up", "down"], min_peak_distance: int = 10
 ) -> npt.NDArray[np.int32]:
     if direction == "up":
         peaks = _find_peaks_local_max(sig, search_radius)
@@ -214,10 +215,10 @@ def find_extrema(
 
 # XQRS related functions
 def _shift_peaks(
-    sig: npt.NDArray[np.float64], peaks: npt.NDArray[np.int32], radius: int, dir_is_up: bool
+    sig: npt.NDArray[np.float64] | pl.Series, peaks: npt.NDArray[np.int32], radius: int, dir_is_up: bool
 ) -> npt.NDArray[np.int32]:
     start_indices = np.maximum(peaks - radius, 0)
-    end_indices = np.minimum(peaks + radius, sig.size)
+    end_indices = np.minimum(peaks + radius, len(sig))
 
     shifted_peaks = np.zeros_like(peaks)
 
@@ -233,7 +234,7 @@ def _shift_peaks(
 
 
 def _adjust_peak_positions(
-    sig: npt.NDArray[np.float64],
+    sig: npt.NDArray[np.float64] | pl.Series,
     peaks: npt.NDArray[np.int32],
     radius: int,
     direction: WFDBPeakDirection,
@@ -264,7 +265,7 @@ def _get_comparison_func(find_peak_func: t.Callable[..., np.intp]) -> t.Callable
 
 
 def _remove_outliers(
-    sig: npt.NDArray[np.float64],
+    sig: npt.NDArray[np.float64] | pl.Series,
     qrs_locations: npt.NDArray[np.int32],
     n_std: float,
     find_peak_func: t.Callable[..., np.intp],
@@ -295,7 +296,7 @@ def _remove_outliers(
 
 
 def _handle_close_peaks(
-    sig: npt.NDArray[np.float64],
+    sig: npt.NDArray[np.float64] | pl.Series,
     qrs_locations: npt.NDArray[np.int32],
     n_std: float,
     find_peak_func: t.Callable[..., np.intp],
@@ -317,7 +318,7 @@ def _handle_close_peaks(
 
 
 def _sanitize_qrs_locations(
-    sig: npt.NDArray[np.float64],
+    sig: npt.NDArray[np.float64] | pl.Series,
     qrs_locations: npt.NDArray[np.int32],
     min_peak_distance: int,
     n_std: float = 4.0,
@@ -328,12 +329,12 @@ def _sanitize_qrs_locations(
     sorted_peak_indices = np.argsort(peak_indices)
 
     return peak_indices[
-        sorted_peak_indices[(peak_indices[sorted_peak_indices] > 0) & (peak_indices[sorted_peak_indices] < sig.size)]
+        sorted_peak_indices[(peak_indices[sorted_peak_indices] > 0) & (peak_indices[sorted_peak_indices] < len(sig))]
     ]
 
 
 def _find_peaks_xqrs(
-    sig: npt.NDArray[np.float64],
+    sig: npt.NDArray[np.float64] | pl.Series,
     sampling_rate: int,
     radius: int,
     min_peak_distance: int,
@@ -348,7 +349,7 @@ def _find_peaks_xqrs(
 
 
 def find_peaks(
-    sig: npt.NDArray[np.float64],
+    sig: npt.NDArray[np.float64] | pl.Series,
     sampling_rate: int,
     method: PeakDetectionMethod,
     method_parameters: _t.PeakDetectionMethodParameters,
@@ -393,7 +394,7 @@ def find_peaks(
 
 
 def _find_peaks_nk_ecg(
-    method_parameters: _t.PeaksECGNeuroKit2, sig: npt.NDArray[np.float64], sampling_rate: int
+    method_parameters: _t.PeaksECGNeuroKit2, sig: npt.NDArray[np.float64] | pl.Series, sampling_rate: int
 ) -> npt.NDArray[np.int32]:
     nk_method = method_parameters["method"]
     logger.info(f"Using NeuroKit2 ECG peak detection method: {nk_method}")

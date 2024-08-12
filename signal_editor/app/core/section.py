@@ -332,11 +332,12 @@ class Section:
             logger.warning(
                 "Applying filter to raw signal. To apply to already processed signal, enable\n\n'Settings > Preferences > Editing > FilterStacking'."
             )
-            sig_data = self.raw_signal.to_numpy(allow_copy=False)
+            sig_data = self.raw_signal
         else:
-            sig_data = self.processed_signal.to_numpy(allow_copy=False)
+            sig_data = self.processed_signal
         method = kwargs.get("method", None)
-        filtered = np.empty_like(sig_data)
+        # filtered = np.empty_like(sig_data)
+        # filtered = sig_data.clear(n=len(sig_data))
         filter_params: _t.SignalFilterParameters = {}
         additional_params: _t.SignalFilterParameters | None = None
 
@@ -423,7 +424,7 @@ class Section:
             The parameters to use for the peak detection method
         """
         peaks = find_peaks(
-            self.processed_signal.to_numpy(allow_copy=False),
+            self.processed_signal,
             self.sampling_rate,
             method,
             method_parameters,
@@ -546,9 +547,9 @@ class Section:
 
         self._rate_is_synced = True
 
-    def _calc_rate_instant(self, peaks: npt.NDArray[np.int32] | None = None, desired_length: int | None = None) -> None:
+    def _calc_rate_instant(self, peaks: npt.NDArray[np.int32] | pl.Series | None = None, desired_length: int | None = None) -> None:
         if peaks is None:
-            peaks = self.peaks_local.to_numpy(allow_copy=False)
+            peaks = self.peaks_local
         if peaks.shape[0] < 2:
             logger.warning(
                 "The currently selected peak detection method finds less than 2 peaks. "
