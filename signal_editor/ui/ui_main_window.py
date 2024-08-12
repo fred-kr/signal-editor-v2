@@ -22,9 +22,9 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFormLayout, QFr
     QTabWidget, QToolBar, QVBoxLayout, QWidget)
 
 from pyqtgraph.widgets.MatplotlibWidget import MatplotlibWidget
-from qfluentwidgets import (BodyLabel, ComboBox, CommandBar, LineEdit,
-    ListView, PushButton, RoundMenu, SpinBox,
-    StrongBodyLabel, SubtitleLabel, TableView, TreeView)
+from qfluentwidgets import (BodyLabel, ComboBox, LineEdit, ListView,
+    PushButton, RoundMenu, SpinBox, StrongBodyLabel,
+    SubtitleLabel, TableView, TreeView)
 from . import resources_rc
 
 class Ui_MainWindow(object):
@@ -355,19 +355,12 @@ class Ui_MainWindow(object):
 
         self.gridLayout_3.addWidget(self.btn_export_all_results, 0, 2, 1, 1)
 
-        self.container_result_preview = QTabWidget(self.stacked_page_export)
-        self.container_result_preview.setObjectName(u"container_result_preview")
+        self.tab_widget_result_views = QTabWidget(self.stacked_page_export)
+        self.tab_widget_result_views.setObjectName(u"tab_widget_result_views")
         self.tab_result_peaks_info = QWidget()
         self.tab_result_peaks_info.setObjectName(u"tab_result_peaks_info")
         self.verticalLayout_2 = QVBoxLayout(self.tab_result_peaks_info)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.cb_result_peak_info = CommandBar(self.tab_result_peaks_info)
-        self.cb_result_peak_info.setObjectName(u"cb_result_peak_info")
-        self.cb_result_peak_info.setFrameShape(QFrame.Shape.StyledPanel)
-        self.cb_result_peak_info.setFrameShadow(QFrame.Shadow.Raised)
-
-        self.verticalLayout_2.addWidget(self.cb_result_peak_info)
-
         self.table_view_result_peaks = TableView(self.tab_result_peaks_info)
         self.table_view_result_peaks.setObjectName(u"table_view_result_peaks")
         self.table_view_result_peaks.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -376,18 +369,11 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addWidget(self.table_view_result_peaks)
 
-        self.container_result_preview.addTab(self.tab_result_peaks_info, "")
+        self.tab_widget_result_views.addTab(self.tab_result_peaks_info, "")
         self.tab_result_rate_info = QWidget()
         self.tab_result_rate_info.setObjectName(u"tab_result_rate_info")
         self.verticalLayout_4 = QVBoxLayout(self.tab_result_rate_info)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
-        self.cb_result_rate_info = CommandBar(self.tab_result_rate_info)
-        self.cb_result_rate_info.setObjectName(u"cb_result_rate_info")
-        self.cb_result_rate_info.setFrameShape(QFrame.Shape.StyledPanel)
-        self.cb_result_rate_info.setFrameShadow(QFrame.Shadow.Raised)
-
-        self.verticalLayout_4.addWidget(self.cb_result_rate_info)
-
         self.table_view_result_rate = TableView(self.tab_result_rate_info)
         self.table_view_result_rate.setObjectName(u"table_view_result_rate")
         self.table_view_result_rate.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
@@ -396,7 +382,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.table_view_result_rate)
 
-        self.container_result_preview.addTab(self.tab_result_rate_info, "")
+        self.tab_widget_result_views.addTab(self.tab_result_rate_info, "")
         self.tab_result_mpl_widget = QWidget()
         self.tab_result_mpl_widget.setObjectName(u"tab_result_mpl_widget")
         self.verticalLayout = QVBoxLayout(self.tab_result_mpl_widget)
@@ -409,7 +395,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout.addWidget(self.mpl_widget)
 
-        self.container_result_preview.addTab(self.tab_result_mpl_widget, "")
+        self.tab_widget_result_views.addTab(self.tab_result_mpl_widget, "")
         self.tab_result_metadata = QWidget()
         self.tab_result_metadata.setObjectName(u"tab_result_metadata")
         self.gridLayout_4 = QGridLayout(self.tab_result_metadata)
@@ -417,18 +403,11 @@ class Ui_MainWindow(object):
         self.tree_view_result_metadata = TreeView(self.tab_result_metadata)
         self.tree_view_result_metadata.setObjectName(u"tree_view_result_metadata")
 
-        self.gridLayout_4.addWidget(self.tree_view_result_metadata, 1, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.tree_view_result_metadata, 0, 0, 1, 1)
 
-        self.cb_result_metadata = CommandBar(self.tab_result_metadata)
-        self.cb_result_metadata.setObjectName(u"cb_result_metadata")
-        self.cb_result_metadata.setFrameShape(QFrame.Shape.StyledPanel)
-        self.cb_result_metadata.setFrameShadow(QFrame.Shadow.Raised)
+        self.tab_widget_result_views.addTab(self.tab_result_metadata, "")
 
-        self.gridLayout_4.addWidget(self.cb_result_metadata, 0, 0, 1, 1)
-
-        self.container_result_preview.addTab(self.tab_result_metadata, "")
-
-        self.gridLayout_3.addWidget(self.container_result_preview, 1, 0, 1, 3)
+        self.gridLayout_3.addWidget(self.tab_widget_result_views, 1, 0, 1, 3)
 
         self.label_showing_section_result = StrongBodyLabel(self.stacked_page_export)
         self.label_showing_section_result.setObjectName(u"label_showing_section_result")
@@ -505,7 +484,7 @@ class Ui_MainWindow(object):
         self.line_edit_active_file.textChanged.connect(MainWindow.setWindowTitle)
 
         self.stackedWidget.setCurrentIndex(0)
-        self.container_result_preview.setCurrentIndex(0)
+        self.tab_widget_result_views.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -665,12 +644,12 @@ class Ui_MainWindow(object):
 #endif // QT_CONFIG(tooltip)
         self.label_4.setText(QCoreApplication.translate("MainWindow", u"Section Data and Results", None))
         self.btn_export_all_results.setText(QCoreApplication.translate("MainWindow", u"Export all results to HDF5", None))
-        self.container_result_preview.setTabText(self.container_result_preview.indexOf(self.tab_result_peaks_info), QCoreApplication.translate("MainWindow", u"Peak Indices", None))
-        self.container_result_preview.setTabText(self.container_result_preview.indexOf(self.tab_result_rate_info), QCoreApplication.translate("MainWindow", u"Calculated Rate / Summary Statistics", None))
-        self.container_result_preview.setTabText(self.container_result_preview.indexOf(self.tab_result_mpl_widget), QCoreApplication.translate("MainWindow", u"Plot View", None))
-        self.container_result_preview.setTabText(self.container_result_preview.indexOf(self.tab_result_metadata), QCoreApplication.translate("MainWindow", u"Metadata", None))
+        self.tab_widget_result_views.setTabText(self.tab_widget_result_views.indexOf(self.tab_result_peaks_info), QCoreApplication.translate("MainWindow", u"Peak Indices", None))
+        self.tab_widget_result_views.setTabText(self.tab_widget_result_views.indexOf(self.tab_result_rate_info), QCoreApplication.translate("MainWindow", u"Calculated Rate / Summary Statistics", None))
+        self.tab_widget_result_views.setTabText(self.tab_widget_result_views.indexOf(self.tab_result_mpl_widget), QCoreApplication.translate("MainWindow", u"Plot View", None))
+        self.tab_widget_result_views.setTabText(self.tab_widget_result_views.indexOf(self.tab_result_metadata), QCoreApplication.translate("MainWindow", u"Metadata", None))
 #if QT_CONFIG(tooltip)
-        self.container_result_preview.setTabToolTip(self.container_result_preview.indexOf(self.tab_result_metadata), QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Shows the methods and parameters used to produce the current results.</p></body></html>", None))
+        self.tab_widget_result_views.setTabToolTip(self.tab_widget_result_views.indexOf(self.tab_result_metadata), QCoreApplication.translate("MainWindow", u"<html><head/><body><p>Shows the methods and parameters used to produce the current results.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.label_showing_section_result.setText("")
         self.menu_file.setTitle(QCoreApplication.translate("MainWindow", u"File", None))

@@ -17,7 +17,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QSizePolicy, QVBoxLayout, QWidget)
 
-from qfluentwidgets import (IndeterminateProgressRing, PushButton, TitleLabel)
+from qfluentwidgets import (IndeterminateProgressRing, TitleLabel)
 from . import resources_rc
 
 class Ui_OverlayWidget(object):
@@ -56,14 +56,6 @@ class Ui_OverlayWidget(object):
 
         self.verticalLayout_3.addWidget(self.progress_bar, 0, Qt.AlignmentFlag.AlignHCenter|Qt.AlignmentFlag.AlignVCenter)
 
-        self.btn_cancel = PushButton(self.widget)
-        self.btn_cancel.setObjectName(u"btn_cancel")
-        self.btn_cancel.setMinimumSize(QSize(0, 31))
-        self.btn_cancel.setStyleSheet(u"background: lightgray;\n"
-"color: black;")
-
-        self.verticalLayout_3.addWidget(self.btn_cancel, 0, Qt.AlignmentFlag.AlignHCenter|Qt.AlignmentFlag.AlignBottom)
-
 
         self.verticalLayout_2.addWidget(self.widget, 0, Qt.AlignmentFlag.AlignHCenter|Qt.AlignmentFlag.AlignVCenter)
 
@@ -79,6 +71,5 @@ class Ui_OverlayWidget(object):
     def retranslateUi(self, OverlayWidget):
         OverlayWidget.setWindowTitle(QCoreApplication.translate("OverlayWidget", u"Form", None))
         self.label.setText(QCoreApplication.translate("OverlayWidget", u"Calculating...", None))
-        self.btn_cancel.setText(QCoreApplication.translate("OverlayWidget", u"Cancel", None))
     # retranslateUi
 

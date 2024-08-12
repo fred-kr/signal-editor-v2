@@ -437,7 +437,7 @@
          </widget>
         </item>
         <item row="1" column="0" colspan="3">
-         <widget class="QTabWidget" name="container_result_preview">
+         <widget class="QTabWidget" name="tab_widget_result_views">
           <property name="currentIndex">
            <number>0</number>
           </property>
@@ -446,16 +446,6 @@
             <string>Peak Indices</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_2">
-            <item>
-             <widget class="CommandBar" name="cb_result_peak_info">
-              <property name="frameShape">
-               <enum>QFrame::Shape::StyledPanel</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Shadow::Raised</enum>
-              </property>
-             </widget>
-            </item>
             <item>
              <widget class="TableView" name="table_view_result_peaks">
               <property name="editTriggers">
@@ -476,16 +466,6 @@
             <string>Calculated Rate / Summary Statistics</string>
            </attribute>
            <layout class="QVBoxLayout" name="verticalLayout_4">
-            <item>
-             <widget class="CommandBar" name="cb_result_rate_info">
-              <property name="frameShape">
-               <enum>QFrame::Shape::StyledPanel</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Shadow::Raised</enum>
-              </property>
-             </widget>
-            </item>
             <item>
              <widget class="TableView" name="table_view_result_rate">
               <property name="editTriggers">
@@ -532,18 +512,8 @@
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Shows the methods and parameters used to produce the current results.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </attribute>
            <layout class="QGridLayout" name="gridLayout_4">
-            <item row="1" column="0">
-             <widget class="TreeView" name="tree_view_result_metadata"/>
-            </item>
             <item row="0" column="0">
-             <widget class="CommandBar" name="cb_result_metadata">
-              <property name="frameShape">
-               <enum>QFrame::Shape::StyledPanel</enum>
-              </property>
-              <property name="frameShadow">
-               <enum>QFrame::Shadow::Raised</enum>
-              </property>
-             </widget>
+             <widget class="TreeView" name="tree_view_result_metadata"/>
             </item>
            </layout>
           </widget>
@@ -998,12 +968,6 @@
    <class>ListView</class>
    <extends>QListView</extends>
    <header>qfluentwidgets</header>
-  </customwidget>
-  <customwidget>
-   <class>CommandBar</class>
-   <extends>QFrame</extends>
-   <header>qfluentwidgets</header>
-   <container>1</container>
   </customwidget>
  </customwidgets>
  <tabstops>

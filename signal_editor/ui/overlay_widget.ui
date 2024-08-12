@@ -79,23 +79,6 @@ color: white;</string>
          <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignVCenter">
           <widget class="IndeterminateProgressRing" name="progress_bar"/>
          </item>
-         <item alignment="Qt::AlignmentFlag::AlignHCenter|Qt::AlignmentFlag::AlignBottom">
-          <widget class="PushButton" name="btn_cancel">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>31</height>
-            </size>
-           </property>
-           <property name="styleSheet">
-            <string notr="true">background: lightgray;
-color: black;</string>
-           </property>
-           <property name="text">
-            <string>Cancel</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </widget>
       </item>
@@ -108,11 +91,6 @@ color: black;</string>
   <customwidget>
    <class>TitleLabel</class>
    <extends>QLabel</extends>
-   <header>qfluentwidgets</header>
-  </customwidget>
-  <customwidget>
-   <class>PushButton</class>
-   <extends>QPushButton</extends>
    <header>qfluentwidgets</header>
   </customwidget>
   <customwidget>

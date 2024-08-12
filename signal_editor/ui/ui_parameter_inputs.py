@@ -98,10 +98,11 @@ class Ui_ParameterInputs(object):
         self.command_bar_processing = CommandBar(self.tab_processing)
         self.command_bar_processing.setObjectName(u"command_bar_processing")
         self.command_bar_processing.setMinimumSize(QSize(0, 31))
-        self.command_bar_processing.setFrameShape(QFrame.Shape.StyledPanel)
+        self.command_bar_processing.setStyleSheet(u"background: transparent;")
+        self.command_bar_processing.setFrameShape(QFrame.Shape.NoFrame)
         self.command_bar_processing.setFrameShadow(QFrame.Shadow.Raised)
 
-        self.gridLayout_2.addWidget(self.command_bar_processing, 0, 0, 1, 6, Qt.AlignmentFlag.AlignHCenter)
+        self.gridLayout_2.addWidget(self.command_bar_processing, 0, 0, 1, 6)
 
         self.verticalSpacer_5 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
@@ -334,10 +335,11 @@ class Ui_ParameterInputs(object):
         self.command_bar_peak_detection = CommandBar(self.tab_peak_detection)
         self.command_bar_peak_detection.setObjectName(u"command_bar_peak_detection")
         self.command_bar_peak_detection.setMinimumSize(QSize(0, 31))
-        self.command_bar_peak_detection.setFrameShape(QFrame.Shape.StyledPanel)
+        self.command_bar_peak_detection.setStyleSheet(u"background: transparent;")
+        self.command_bar_peak_detection.setFrameShape(QFrame.Shape.NoFrame)
         self.command_bar_peak_detection.setFrameShadow(QFrame.Shadow.Raised)
 
-        self.gridLayout_3.addWidget(self.command_bar_peak_detection, 0, 0, 1, 2, Qt.AlignmentFlag.AlignHCenter)
+        self.gridLayout_3.addWidget(self.command_bar_peak_detection, 0, 0, 1, 2)
 
         self.label_7 = StrongBodyLabel(self.tab_peak_detection)
         self.label_7.setObjectName(u"label_7")

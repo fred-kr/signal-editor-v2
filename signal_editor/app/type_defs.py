@@ -315,11 +315,12 @@ PeakDetectionMethodParameters = t.Union[
 class SelectedFileMetadataDict(t.TypedDict):
     file_name: str
     file_format: str
-    name_signal_column: str
     sampling_rate: int
-    measured_date: t.NotRequired[str | datetime.datetime | None]
-    subject_id: t.NotRequired[str | None]
-    oxygen_condition: t.NotRequired[str | None]
+    name_signal_column: str
+    name_info_column: str | None
+    # measured_date: t.NotRequired[str | datetime.datetime | None]
+    # subject_id: t.NotRequired[str | None]
+    # oxygen_condition: t.NotRequired[str | None]
 
 
 class MutableMetadataAttributes(t.TypedDict, total=False):
@@ -349,6 +350,7 @@ class SectionMetadataDict(t.TypedDict):
     global_bounds: tuple[int, int]
     sampling_rate: int
     processing_parameters: ProcessingParametersDict
+    rate_computation_method: str
 
 
 class SectionSummaryDict(t.TypedDict):
@@ -380,8 +382,9 @@ class DetailedSectionResultDict(t.TypedDict):
     metadata: SectionMetadataDict
     section_dataframe: npt.NDArray[np.void]
     manual_peak_edits: ManualPeakEditsDict
-    compact_result: npt.NDArray[np.void]
-    rate_data: npt.NDArray[np.void]
+    section_result: SectionResultDict
+    # compact_result: npt.NDArray[np.void]
+    # rate_data: npt.NDArray[np.void]
     rate_per_temperature: npt.NDArray[np.void]
 
 

@@ -178,7 +178,7 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
                 self.ui.action_restore_defaults_peak_detection,
             ]
         )
-        self.ui.command_bar_peak_detection.resizeToSuitableWidth()
+        # self.ui.command_bar_peak_detection.resizeToSuitableWidth()
 
         # Processing
         self.ui.command_bar_processing.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
@@ -189,7 +189,7 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
                 self.ui.action_restore_defaults_processing,
             ]
         )
-        self.ui.command_bar_processing.resizeToSuitableWidth()
+        # self.ui.command_bar_processing.resizeToSuitableWidth()
 
     @QtCore.Slot()
     def _on_pipeline_changed(self) -> None:

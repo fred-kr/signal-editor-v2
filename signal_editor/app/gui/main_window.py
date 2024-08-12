@@ -139,11 +139,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter
         )
         self.table_view_result_peaks.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.table_view_result_peaks.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.table_view_result_peaks.customContextMenuRequested.connect(self.show_result_view_context_menu)
 
         self.table_view_result_rate.horizontalHeader().setDefaultAlignment(
             QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter
         )
         self.table_view_result_rate.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.table_view_result_rate.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.table_view_result_rate.customContextMenuRequested.connect(self.show_result_view_context_menu)
 
         layout = QtWidgets.QVBoxLayout()
         data_tree_widget = DataTreeWidgetContainer()
@@ -153,6 +157,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.data_tree_widget_additional_metadata = data_tree_widget
 
         self.btn_export_all_results.setIcon(Icons.ArrowExportLtr.icon())
+        self.btn_export_all_results.clicked.connect(lambda: self.sig_export_requested.emit("hdf5"))
 
         self.stackedWidget.setCurrentIndex(0)
 
@@ -219,15 +224,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         )
 
         self.dock_sections.main_layout.insertWidget(1, cb_section_list)
-        self.tool_bar_section_list = cb_section_list
+        self.command_bar_section_list = cb_section_list
 
-        self.cb_result_peak_info.addActions([self.action_export_to_csv, self.action_export_to_xlsx])
-        self.cb_result_rate_info.addActions([self.action_export_to_csv, self.action_export_to_xlsx])
-        self.cb_result_metadata.addActions([self.action_export_to_hdf5])
-
-        for cb in [self.cb_result_peak_info, self.cb_result_rate_info, self.cb_result_metadata]:
-            cb.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-
+        self.action_remove_section.triggered.connect(self.dock_sections.list_view.emit_delete_current_request)
+        self.action_show_section_summary.triggered.connect(self.dock_sections.list_view.emit_show_summary_request)
+        self.dock_sections.list_view.customContextMenuRequested.connect(self.show_section_list_context_menu)
+        
     def _setup_toolbar(self, name: str, actions: list[QtGui.QAction], movable: bool = False) -> QtWidgets.QToolBar:
         tb = QtWidgets.QToolBar(name)
         tb.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
@@ -237,6 +239,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.addToolBar(tb)
         return tb
 
+    @QtCore.Slot(QtCore.QPoint)
+    def show_section_list_context_menu(self, pos: QtCore.QPoint) -> None:
+        menu = qfw.RoundMenu(parent=self.dock_sections.list_view)
+        menu.addAction(self.action_remove_section)
+        menu.addAction(self.action_show_section_summary)
+        menu.exec(QtGui.QCursor.pos())
+        
     def _setup_menus(self) -> None:
         self.menu_view.addActions(
             [
@@ -292,9 +301,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_sections.btn_confirm.clicked.connect(self.action_confirm_section.trigger)
         self.dock_sections.btn_cancel.clicked.connect(self.action_cancel_section.trigger)
 
-        self.action_export_to_csv.triggered.connect(lambda: self.show_export_dialog("csv"))
-        self.action_export_to_xlsx.triggered.connect(lambda: self.show_export_dialog("xlsx"))
-        self.action_export_to_hdf5.triggered.connect(lambda: self.show_export_dialog("hdf5"))
+        self.action_export_to_csv.triggered.connect(lambda: self.sig_export_requested.emit("csv"))
+        self.action_export_to_xlsx.triggered.connect(lambda: self.sig_export_requested.emit("xlsx"))
+        self.action_export_to_hdf5.triggered.connect(lambda: self.sig_export_requested.emit("hdf5"))
 
     @QtCore.Slot(QtCore.QPoint)
     def show_data_view_context_menu(self, pos: QtCore.QPoint) -> None:
@@ -302,8 +311,24 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         action = QtGui.QAction(Icons.ArrowSync.icon(), "Refresh", self.table_view_import_data)
         action.triggered.connect(self.sig_table_refresh_requested.emit)
         menu.addAction(action)
-        menu.exec(self.table_view_import_data.mapToGlobal(pos))
+        menu.exec(QtGui.QCursor.pos())
 
+    @QtCore.Slot(QtCore.QPoint)
+    def show_result_view_context_menu(self, pos: QtCore.QPoint) -> None:
+        current_result_tab = self.tab_widget_result_views.currentIndex()
+        if current_result_tab == 0:
+            table_view = self.table_view_result_peaks
+        elif current_result_tab == 1:
+            table_view = self.table_view_result_rate
+        else:
+            return
+        menu = qfw.RoundMenu(parent=table_view)
+        action_copy_table = qfw.Action(Icons.Copy.icon(), "Copy to Clipboard", triggered=lambda: table_view.model().df.write_clipboard())
+        menu.addAction(action_copy_table)
+        menu.addAction(self.action_export_to_csv)
+        menu.addAction(self.action_export_to_xlsx)
+        menu.exec(QtGui.QCursor.pos())
+        
     def show_section_summary_box(self, summary: _t.SectionSummaryDict) -> None:
         msg_box = SectionSummaryBox("Section Summary", summary, parent=self)
         msg_box.open()
@@ -313,11 +338,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.show_section_confirm_cancel(False)
         if index in {0, 2, 3, 4}:
             self.tool_bar_editing.setEnabled(False)
-            self.tool_bar_section_list.setEnabled(False)
+            self.command_bar_section_list.setEnabled(False)
             self.dock_parameters.hide()
         elif index == 1:
             self.tool_bar_editing.setEnabled(True)
-            self.tool_bar_section_list.setEnabled(True)
+            self.command_bar_section_list.setEnabled(True)
             self.dock_sections.show()
             self.dock_parameters.show()
 
@@ -372,7 +397,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self._overlay_widget.set_text(text)
         self._overlay_widget.setGeometry(self.centralWidget().geometry())
-        self._overlay_widget.btn_cancel.setEnabled(True)
+        # self._overlay_widget.btn_cancel.setEnabled(True)
         self._overlay_widget.raise_()
         self._overlay_widget.show()
 

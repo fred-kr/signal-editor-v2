@@ -12,8 +12,8 @@ class RateComputationMethod(enum.StrEnum):
     RollingWindow = "rolling_window"
     RollingWindowNoOverlap = "rolling_window_no_overlap"
 
-    def __str__(self) -> str:
-        return self.name
+    # def __str__(self) -> str:
+    #     return self.name
 
 
 class TextFileSeparator(enum.StrEnum):

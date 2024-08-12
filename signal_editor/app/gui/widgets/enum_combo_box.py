@@ -3,7 +3,7 @@ import typing as t
 
 from PySide6 import QtWidgets
 
-from ...models import EnumModel
+from ...models.enum_model import EnumModel
 
 
 class EnumComboBox(QtWidgets.QComboBox):

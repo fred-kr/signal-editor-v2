@@ -178,6 +178,7 @@ class SignalEditorIcon(IconBase, enum.Enum):
     Code = ":/icons/fluent-icons/Code.svg"
     Color = ":/icons/fluent-icons/Color.svg"
     ConvertToTable = ":/icons/fluent-icons/ConvertToTable.svg"
+    Copy = ":/icons/fluent-icons/Copy.svg"
     DataArea = ":/icons/fluent-icons/DataArea.svg"
     DataHistogram = ":/icons/fluent-icons/DataHistogram.svg"
     DataScatter = ":/icons/fluent-icons/DataScatter.svg"

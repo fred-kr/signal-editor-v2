@@ -2,22 +2,25 @@ import typing as t
 
 from PySide6 import QtCore
 
-from ..core.section import Section, SectionID
+from ..core.section import SectionID
 from ..gui.icons import SignalEditorIcon as Icons
-from . import ModelIndex, ItemDataRole
+from . import ItemDataRole, ModelIndex
+
+if t.TYPE_CHECKING:
+    from ..core.section import Section
 
 
 class SectionListModel(QtCore.QAbstractListModel):
     def __init__(
         self,
-        sections: list[Section] | None = None,
+        sections: list["Section"] | None = None,
         parent: QtCore.QObject | None = None,
     ) -> None:
         super().__init__(parent)
         self._sections = sections or []
 
     @property
-    def editable_sections(self) -> list[Section]:
+    def editable_sections(self) -> list["Section"]:
         return list(self._sections)[1:]
 
     def rowCount(self, parent: ModelIndex | None = None) -> int:
@@ -48,7 +51,7 @@ class SectionListModel(QtCore.QAbstractListModel):
             return Icons.LockClosed.icon() if section.is_locked else Icons.LockOpen.icon()
         return None
 
-    def add_section(self, section: Section) -> None:
+    def add_section(self, section: "Section") -> None:
         parent = self.index(0, 0)
         self.beginInsertRows(parent, self.rowCount(), self.rowCount())
         self._sections.append(section)
@@ -63,10 +66,10 @@ class SectionListModel(QtCore.QAbstractListModel):
         self.refresh_section_ids()
         self.endRemoveRows()
 
-    def get_section(self, index: QtCore.QModelIndex) -> Section | None:
+    def get_section(self, index: QtCore.QModelIndex) -> "Section | None":
         return self._sections[index.row()] if index.isValid() else None
 
-    def get_base_section(self) -> Section | None:
+    def get_base_section(self) -> "Section | None":
         return self._sections[0] if self._sections else None
 
     def clear(self) -> None:

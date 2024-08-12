@@ -1,4 +1,3 @@
-import datetime
 import typing as t
 
 import attrs
@@ -76,8 +75,7 @@ class DetailedSectionResult:
     metadata: "SectionMetadata" = attrs.field()
     section_dataframe: pl.DataFrame = attrs.field()
     manual_peak_edits: "ManualPeakEdits" = attrs.field()
-    compact_result: CompactSectionResult = attrs.field()
-    rate_data: pl.DataFrame = attrs.field()
+    section_result: SectionResult = attrs.field()
     rate_per_temperature: pl.DataFrame = attrs.field()
 
     def to_dict(self) -> _t.DetailedSectionResultDict:
@@ -85,8 +83,7 @@ class DetailedSectionResult:
             metadata=self.metadata.to_dict(),
             section_dataframe=self.section_dataframe.to_numpy(structured=True),
             manual_peak_edits=self.manual_peak_edits.to_dict(),
-            compact_result=self.compact_result.to_structured_array(),
-            rate_data=self.rate_data.to_numpy(structured=True),
+            section_result=self.section_result.to_dict(),
             rate_per_temperature=self.rate_per_temperature.to_numpy(structured=True),
         )
 
@@ -95,21 +92,17 @@ class DetailedSectionResult:
 class SelectedFileMetadata:
     file_name: str = attrs.field()
     file_format: str = attrs.field()
-    name_signal_column: str = attrs.field()
     sampling_rate: int = attrs.field()
-    measured_date: str | datetime.datetime | None = attrs.field(default=None)
-    subject_id: str | None = attrs.field(default=None)
-    oxygen_condition: str | None = attrs.field(default=None)
+    name_signal_column: str = attrs.field()
+    name_info_column: str | None = attrs.field(default=None)
 
     def to_dict(self) -> _t.SelectedFileMetadataDict:
         return _t.SelectedFileMetadataDict(
             file_name=self.file_name,
             file_format=self.file_format,
-            name_signal_column=self.name_signal_column,
             sampling_rate=self.sampling_rate,
-            measured_date=self.measured_date,
-            subject_id=self.subject_id,
-            oxygen_condition=self.oxygen_condition,
+            name_signal_column=self.name_signal_column,
+            name_info_column=self.name_info_column,
         )
 
 

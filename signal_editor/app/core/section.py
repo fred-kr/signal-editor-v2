@@ -13,7 +13,7 @@ from loguru import logger
 from .. import type_defs as _t
 from ..config import Config
 from ..enum_defs import FilterMethod, PeakDetectionMethod, PreprocessPipeline, RateComputationMethod
-from ..models.result_models import CompactSectionResult, DetailedSectionResult, SectionResult
+from ..models.result_models import DetailedSectionResult, SectionResult
 from ..utils import format_long_sequence
 from .peak_detection import find_peaks
 from .processing import (
@@ -138,6 +138,7 @@ class SectionMetadata:
     global_bounds: tuple[int, int] = attrs.field()
     sampling_rate: int = attrs.field()
     processing_parameters: ProcessingParameters = attrs.field()
+    rate_computation_method: RateComputationMethod = attrs.field()
 
     def to_dict(self) -> _t.SectionMetadataDict:
         return _t.SectionMetadataDict(
@@ -146,6 +147,7 @@ class SectionMetadata:
             global_bounds=self.global_bounds,
             sampling_rate=self.sampling_rate,
             processing_parameters=self.processing_parameters.to_dict(),
+            rate_computation_method=str(self.rate_computation_method),
         )
 
     def __repr__(self) -> str:
@@ -336,8 +338,6 @@ class Section:
         else:
             sig_data = self.processed_signal.to_numpy(allow_copy=False)
         method = kwargs.get("method", None)
-        # filtered = np.empty_like(sig_data)
-        # filtered = sig_data.clear(n=len(sig_data))
         filter_params: _t.SignalFilterParameters = {}
         additional_params: _t.SignalFilterParameters | None = None
 
@@ -463,7 +463,7 @@ class Section:
             .alias("is_peak")
         )
 
-        self._manual_peak_edits.clear()
+        self.manual_peak_edits.clear()
         self._rate_is_synced = False
         if update_rate:
             self.update_rate_data()
@@ -512,9 +512,9 @@ class Section:
         self.data = self.data.with_columns(is_peak=updated_data)
 
         if action == "add":
-            self._manual_peak_edits.new_added(changed_indices)
+            self.manual_peak_edits.new_added(changed_indices)
         else:
-            self._manual_peak_edits.new_removed(changed_indices)
+            self.manual_peak_edits.new_removed(changed_indices)
 
         self._rate_is_synced = False
         if update_rate and self.peaks_local.len() > 3:
@@ -547,7 +547,9 @@ class Section:
 
         self._rate_is_synced = True
 
-    def _calc_rate_instant(self, peaks: npt.NDArray[np.int32] | pl.Series | None = None, desired_length: int | None = None) -> None:
+    def _calc_rate_instant(
+        self, peaks: npt.NDArray[np.int32] | pl.Series | None = None, desired_length: int | None = None
+    ) -> None:
         if peaks is None:
             peaks = self.peaks_local
         if peaks.shape[0] < 2:
@@ -561,7 +563,7 @@ class Section:
             desired_length = self.data.height
         inst_rate = signal_rate(peaks, self.sampling_rate, desired_length)
 
-        self.rate_data = pl.DataFrame({"x": pl.int_range(inst_rate.size, dtype=pl.Int32, eager=True), "y": inst_rate})
+        self.rate_data = pl.DataFrame({"section_index": pl.int_range(inst_rate.size, dtype=pl.Int32, eager=True), "rate_bpm": inst_rate})
 
     def _calc_rate_rolling(
         self,
@@ -596,7 +598,7 @@ class Section:
         if (self.info_name in self.data.columns) and full_info:
             info_col = self.info_name
             rr_df = rr_df.agg(
-                pl.sum("is_peak").alias("y"),
+                pl.sum("is_peak").alias("rate_bpm"),
                 pl.mean(info_col).name.suffix("_mean"),
                 pl.median(info_col).name.suffix("_median"),
                 pl.std(info_col).name.suffix("_std"),
@@ -606,44 +608,38 @@ class Section:
             ).collect()[:-n_incomplete_windows]
         else:
             rr_df = rr_df.agg(
-                pl.sum("is_peak").alias("y"),
+                pl.sum("is_peak").alias("rate_bpm"),
             ).collect()[:-n_incomplete_windows]
 
-        rr_df = rr_df.rename({"section_index": "x"})
-
-        self.rate_data = rr_df.with_columns(pl.col("x").shrink_dtype(), pl.col("y").shrink_dtype()).shrink_to_fit()
+        self.rate_data = rr_df.with_columns(pl.col("section_index").shrink_dtype(), pl.col("rate_bpm").shrink_dtype()).shrink_to_fit()
 
     def get_mean_rate_per_temperature(self) -> pl.DataFrame:
         info_col = self.info_name
         return (
-            self.rate_data.group_by(pl.col(f"{info_col}_mean"))
+            self.rate_data.group_by(pl.col(f"{info_col}_mean").round(1))
             .agg(
-                pl.mean("y").alias("rate_mean"),
-                pl.median("y").alias("rate_median"),
-                pl.std("y").alias("rate_std"),
-                pl.min("y").alias("rate_min"),
-                pl.max("y").alias("rate_max"),
+                pl.mean("rate_bpm").alias("rate_mean"),
+                pl.median("rate_bpm").alias("rate_median"),
+                pl.std("rate_bpm").alias("rate_std"),
+                pl.min("rate_bpm").alias("rate_min"),
+                pl.max("rate_bpm").alias("rate_max"),
             )
             .sort(f"{info_col}_mean")
         )
 
     def _add_manual_peak_edits_column(self) -> None:
-        pl_added = pl.Series("added", self._manual_peak_edits.added, pl.Int32)
-        pl_removed = pl.Series("removed", self._manual_peak_edits.removed, pl.Int32)
+        pl_added = pl.Series("added", self.manual_peak_edits.added, pl.Int32)
+        pl_removed = pl.Series("removed", self.manual_peak_edits.removed, pl.Int32)
 
-        self.data = (
-            self.data.lazy()
-            .with_columns(
+        self.data = self.data.with_columns(
                 pl.when(pl.col("section_index").is_in(pl_added))
                 .then(pl.lit(1))
                 .when(pl.col("section_index").is_in(pl_removed))
                 .then(pl.lit(-1))
                 .otherwise(pl.lit(0))
-                .shrink_dtype()
+                .cast(pl.Int8)
                 .alias("is_manual")
             )
-            .collect()
-        )
 
     def get_metadata(self) -> SectionMetadata:
         return SectionMetadata(
@@ -652,6 +648,7 @@ class Section:
             sampling_rate=self.sampling_rate,
             global_bounds=self.global_bounds,
             processing_parameters=self._processing_parameters,
+            rate_computation_method=Config().editing.RateMethod,
         )
 
     def get_peak_pos(self) -> pl.DataFrame:
@@ -659,39 +656,10 @@ class Section:
             self.data.lazy()
             .filter(pl.col("is_peak") == 1)
             .select(
-                pl.col("section_index").alias("x"),
-                pl.col(self.processed_signal_name).alias("y"),
+                pl.col("section_index"),
+                pl.col(self.processed_signal_name),
             )
             .collect()
-        )
-
-    def get_focused_result(self, info_column: str | None = None) -> CompactSectionResult:
-        section_peaks = self.peaks_local
-
-        if section_peaks.len() < 3:
-            raise RuntimeError(f"Need at least 3 detected peaks to create a result, got {section_peaks.len()}")
-        sampling_rate = self.sampling_rate
-
-        global_peaks = self.peaks_global
-        section_time = section_peaks / sampling_rate
-        global_time = global_peaks / sampling_rate
-
-        peak_intervals = section_peaks.diff().fill_null(0)
-        if info_column in self.data.columns:
-            info_values = self.data.get_column(info_column).gather(section_peaks)
-        else:
-            info_values = None
-
-        self.update_rate_data(full_info=True, force=True)
-
-        return CompactSectionResult(
-            peaks_global_index=global_peaks,
-            peaks_section_index=section_peaks,
-            seconds_since_global_start=global_time,
-            seconds_since_section_start=section_time,
-            peak_intervals=peak_intervals,
-            info_values=info_values,
-            rate_data=self.rate_data,
         )
 
     def lock_result(self) -> None:
@@ -699,20 +667,19 @@ class Section:
         self.update_rate_data(full_info=True, force=True)
         self._result_data.is_locked = True
 
-    def get_detailed_result(self, info_column: str | None = None) -> DetailedSectionResult:
+    def get_detailed_result(self) -> DetailedSectionResult:
         metadata = self.get_metadata()
+        self._add_manual_peak_edits_column()
         section_df = self.data
-        manual_edits = self._manual_peak_edits
-        compact_result = self.get_focused_result(info_column)
-        rate = self.rate_data
-        rate_per_temperature = self.get_mean_rate_per_temperature()
+        manual_edits = self.manual_peak_edits
 
+        section_result = self._result_data
+        rate_per_temperature = self.get_mean_rate_per_temperature()
         return DetailedSectionResult(
             metadata=metadata,
             section_dataframe=section_df,
             manual_peak_edits=manual_edits,
-            compact_result=compact_result,
-            rate_data=rate,
+            section_result=section_result,
             rate_per_temperature=rate_per_temperature,
         )
 
@@ -728,7 +695,7 @@ class Section:
         if section_peaks.len() < 3:
             raise RuntimeError(f"Need at least 3 detected peaks to create a result, got {section_peaks.len()}")
 
-        peak_df = self.get_peak_pos().rename({"x": "section_index", "y": self.processed_signal_name})
+        peak_df = self.get_peak_pos()
 
         if include_global:
             peak_df = peak_df.with_columns(self.peaks_global.alias("global_index"))
@@ -756,7 +723,7 @@ class Section:
             )
             .collect()
         )
-        self._manual_peak_edits.clear()
+        self.manual_peak_edits.clear()
         self._is_filtered = False
         self._is_standardized = False
         self._is_processed = False
@@ -771,7 +738,7 @@ class Section:
             )
             .collect()
         )
-        self._manual_peak_edits.clear()
+        self.manual_peak_edits.clear()
         self._processing_parameters.reset(peaks_only=True)
 
     def get_summary(self) -> _t.SectionSummaryDict:

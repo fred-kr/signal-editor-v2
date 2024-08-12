@@ -5,6 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import numpy.typing as npt
+import xlsxwriter
 from loguru import logger
 from PySide6 import QtCore, QtWidgets
 
@@ -20,8 +21,8 @@ from .app.enum_defs import (
     StandardizationMethod,
 )
 from .app.gui.main_window import MainWindow
-from .app.utils import safe_multi_disconnect
 from .app.models.file_list_model import FileListModel
+from .app.utils import safe_multi_disconnect
 
 if t.TYPE_CHECKING:
     from .app.core.section import Section
@@ -90,7 +91,7 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.recent_files_model = FileListModel(self.config.internal.RecentFiles, max_files=10, parent=self)
         self.recent_files_model.validate_files()
-        
+
         self.mw.list_view_recent_files.setModel(self.recent_files_model)
 
         self._connect_signals()
@@ -131,9 +132,9 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.mw.dock_sections.list_view.sig_delete_current_item.connect(self.delete_section)
         self.mw.dock_sections.list_view.sig_show_summary.connect(self.show_section_summary)
-        self.mw.action_show_section_summary.triggered.connect(
-            lambda: self.show_section_summary(self.mw.dock_sections.list_view.currentIndex())
-        )
+        # self.mw.action_show_section_summary.triggered.connect(
+        #     lambda: self.show_section_summary(self.mw.dock_sections.list_view.currentIndex())
+        # )
         self.mw.action_mark_section_done.triggered.connect(self.get_section_result)
 
         self.mw.dock_parameters.sig_filter_requested.connect(self.filter_active_signal)
@@ -189,11 +190,12 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot()
     def refresh_peak_data(self) -> None:
-        pos = self.data.active_section.get_peak_pos()
-        self.plot.set_peak_data(pos.get_column("x"), pos.get_column("y"))
-        self.data.active_section.update_rate_data()
-        rate_data = self.data.active_section.rate_data.select("x", "y")
-        self.plot.set_rate_data(x_data=rate_data.get_column("x"), y_data=rate_data.get_column("y"))
+        cas = self.data.active_section
+        pos = cas.get_peak_pos()
+        self.plot.set_peak_data(pos.get_column("section_index"), pos.get_column(cas.processed_signal_name))
+        cas.update_rate_data()
+        rate_data = cas.rate_data.select("section_index", "rate_bpm")
+        self.plot.set_rate_data(x_data=rate_data.get_column("section_index"), y_data=rate_data.get_column("rate_bpm"))
 
     def update_status_indicators(self) -> None:
         self.mw.dock_parameters.set_filter_status(
@@ -465,16 +467,6 @@ class SignalEditor(QtWidgets.QApplication):
         self.config.internal.InputDir = Path(file_path).parent.resolve().as_posix()
         self._on_file_opened(file_path)
 
-    # def update_recent_files(self, file_path: str) -> None:
-    #     # if file_path in self.recent_files:
-    #         # self.recent_files.remove(file_path)
-    #     # self.recent_files.insert(0, file_path)
-    #     # self.recent_files = self.recent_files[:10]
-    #     self.recent_files_model.add_file(file_path)
-    #     # self.config.internal.RecentFiles = self.recent_files
-    #     # self.mw.list_widget_recent_files.clear()
-    #     # self.mw.list_widget_recent_files.addItems(self.recent_files)
-
     def _on_file_opened(self, file_path: str) -> None:
         self.mw.line_edit_active_file.setText(Path(file_path).name)
 
@@ -501,7 +493,6 @@ class SignalEditor(QtWidgets.QApplication):
     @QtCore.Slot()
     def read_data(self) -> None:
         if self.data.has_data:
-            # loaded_file = self.mw.line_edit_active_file.text()
             loaded_file = self.data.metadata.file_path
             self.close_file()
             self._on_file_opened(loaded_file)
@@ -575,24 +566,47 @@ class SignalEditor(QtWidgets.QApplication):
         self._on_worker_started("Creating section result...")
         self.thread_pool.start(worker)
 
-    @QtCore.Slot(dict)
-    def export_result(self, info_dict: _t.ExportInfoDict) -> None:
-        path = info_dict["out_path"]
-
-        result = self.data.get_complete_result(
-            measured_date=info_dict["measured_date"],
-            subject_id=info_dict["subject_id"],
-            oxygen_condition=info_dict["oxygen_condition"],
+    @QtCore.Slot(str)
+    def export_result(self, format: str) -> None:
+        dir_path = Path(self.config.internal.OutputDir) / f"Result_{Path(self.data.metadata.file_path).stem}"
+        out_path, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self.mw,
+            f"Export {format.upper()}",
+            dir_path.as_posix(),
+            filter=f"{format.upper()} files (*.{format})",
         )
-        try:
-            write_hdf5(path, result)
-        except Exception as e:
-            logger.error(f"Error writing HDF5 file: {e}")
-            self.mw.show_error("Error", f"Error writing HDF5 file: {e}")
+        if not out_path:
             return
-        else:
-            logger.success(f"Result exported to {path}.")
-            self.mw.show_success("Success", f"Result exported to:\n{path}.")
 
-    # @QtCore.Slot(str)
-    # def export_result2(self, format: str) -> None:
+        if format == "csv":
+            if self.mw.tab_widget_result_views.currentIndex() == 0:
+                df = self.data.active_section.peak_data
+            elif self.mw.tab_widget_result_views.currentIndex() == 1:
+                df = self.data.active_section.rate_data
+            else:
+                raise NotImplementedError
+
+            df.write_csv(out_path)
+
+        elif format == "hdf5":
+            result = self.data.get_complete_result()
+            write_hdf5(Path(out_path), result.to_dict())
+
+        elif format == "xlsx":
+            df_peaks = self.data.active_section.peak_data
+            df_rate = self.data.active_section.rate_data
+
+            with xlsxwriter.Workbook(out_path) as wb:
+                df_peaks.write_excel(
+                    workbook=wb,
+                    worksheet="Detected Peaks",
+                )
+                df_rate.write_excel(
+                    workbook=wb,
+                    worksheet="Rate Data",
+                )
+
+        else:
+            raise NotImplementedError
+
+        logger.success(f"Result exported to {out_path}.")

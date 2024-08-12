@@ -1,4 +1,3 @@
-import datetime
 import functools
 import typing as t
 from pathlib import Path
@@ -8,9 +7,8 @@ import polars as pl
 from loguru import logger
 from PySide6 import QtCore
 
-from ..const_defs import COLUMN_PLACEHOLDER
-from .. import type_defs as _t
 from ..config import Config
+from ..const_defs import COLUMN_PLACEHOLDER
 from ..core.file_io import detect_sampling_rate, read_edf
 from ..core.section import Section
 from ..enum_defs import TextFileSeparator
@@ -34,7 +32,6 @@ class DataController(QtCore.QObject):
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
         self.has_data = False
-        # self._sampling_rate = Config().internal.LastSamplingRate
 
         self.data_model = DataFrameModel(self)
 
@@ -66,19 +63,11 @@ class DataController(QtCore.QObject):
     def sections(self) -> SectionListModel:
         return self._sections
 
-    # @property
-    # def sampling_rate(self) -> int:
-    # return self.metadata.sampling_rate
-
     @property
     def metadata(self) -> FileMetadata:
         if self._metadata is None:
             raise ValueError("No data available.")
         return self._metadata
-
-    # @QtCore.Slot(int)
-    # def on_sampling_rate_changed(self, value: int) -> None:
-    #     self.sections.update_sampling_rate(value)
 
     def get_base_section(self) -> Section:
         if self._base_section is None:
@@ -242,19 +231,10 @@ class DataController(QtCore.QObject):
         self.sections.remove_section(idx)
         self.set_active_section(self.base_section_index)
 
-    def get_complete_result(self, **kwargs: t.Unpack[_t.MutableMetadataAttributes]) -> CompleteResult:
-        meas_date = kwargs.get("measured_date")
-        subject_id = kwargs.get("subject_id")
-        oxy_condition = kwargs.get("oxygen_condition")
-        optional_info: dict[str, str | datetime.datetime] = {}
-        if meas_date:
-            optional_info["meas_date"] = meas_date
-        if subject_id:
-            optional_info["subject_id"] = subject_id
-        if oxy_condition:
-            optional_info["oxygen_condition"] = oxy_condition
-
+    def get_complete_result(self) -> CompleteResult:
         base_df = self.get_base_section().data
+
+        section_results = {s.section_id: s.get_detailed_result() for s in self.sections.editable_sections}
 
         section_dfs: list[pl.DataFrame] = []
         for s in self.sections.editable_sections:
@@ -274,16 +254,13 @@ class DataController(QtCore.QObject):
         info_col = self.metadata.info_column
         if info_col == COLUMN_PLACEHOLDER:
             info_col = None
-        section_results = {s.section_id: s.get_detailed_result(info_col) for s in self.sections.editable_sections}
 
         metadata = SelectedFileMetadata(
             file_name=self.metadata.file_name,
             file_format=str(self.metadata.file_format),
-            name_signal_column=self.metadata.signal_column,
             sampling_rate=self.metadata.sampling_rate,
-            measured_date=meas_date,
-            subject_id=subject_id,
-            oxygen_condition=oxy_condition,
+            name_signal_column=self.metadata.signal_column,
+            name_info_column=self.metadata.info_column,
         )
 
         return CompleteResult(
