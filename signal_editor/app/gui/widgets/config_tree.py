@@ -1,24 +1,10 @@
-import enum
-import typing as t
-
 import qfluentwidgets as qfw
 from PySide6 import QtCore, QtGui, QtWidgets
 
+from . import EnumComboBox
+
 from ...enum_defs import RateComputationMethod, SVGColors, TextFileSeparator
-from ...models import EnumModel, ItemDataRole, ModelIndex
-
-
-class EnumComboBox(QtWidgets.QComboBox):
-    def __init__(self, enum_class: t.Type[enum.Enum], parent: QtWidgets.QWidget | None = None) -> None:
-        super().__init__(parent)
-        self._enum_class = enum_class
-        self.setModel(EnumModel(enum_class))
-
-    def current_enum(self) -> enum.Enum:
-        return self._enum_class(self.currentData())
-
-    def set_current_enum(self, value: enum.Enum) -> None:
-        self.setCurrentText(value.name)
+from ...models import ItemDataRole, ModelIndex
 
 
 class ConfigItemDelegate(QtWidgets.QStyledItemDelegate):

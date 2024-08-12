@@ -23,7 +23,6 @@ from .widgets import (
     SectionSummaryBox,
     StatusMessageDock,
 )
-from .widgets.jupyter_console_widget import ConsoleWindow
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -128,7 +127,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def _setup_widgets(self) -> None:
         self.dialog_meta = MetadataDialog(self)
         self.dialog_config = ConfigDialog(self)
-        # self.dialog_export = ExportDialog(self)
 
         self.table_view_import_data.horizontalHeader().setDefaultAlignment(
             QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter
@@ -176,6 +174,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_parameters.setEnabled(False)
 
     def _add_console_dock(self) -> None:
+        try:
+            from .widgets.jupyter_console_widget import ConsoleWindow
+        except ImportError:
+            logger.warning("Unable to import the console widget. Console is unavailable.")
+            return
+        
         console_window = ConsoleWindow()
         console_window.setVisible(False)
 

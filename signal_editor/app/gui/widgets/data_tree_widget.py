@@ -88,7 +88,6 @@ class DataTreeWidget(qfw.TreeWidget):
                 widget = qfw.PlainTextEdit()
                 widget.setReadOnly(True)
                 widget.setPlainText(desc)
-            # self._create_desc_toggle(desc, node)
         else:
             node.setText(2, desc)
 
@@ -101,22 +100,6 @@ class DataTreeWidget(qfw.TreeWidget):
 
         for key, child_data in childs.items():
             self.build_tree(child_data, node, str(key), path=path + (key,))
-
-    def _create_desc_toggle(self, desc: str, node: QtWidgets.QTreeWidgetItem) -> None:
-        short_desc = f"{desc[:97]}..."
-        node.setText(2, short_desc)
-        full_text_widget = qfw.PlainTextEdit()
-        full_text_widget.setPlainText(desc)
-        full_text_widget.setReadOnly(True)
-        btn_expand = qfw.PushButton("Show full text", self)
-        btn_expand.clicked.connect(lambda: self.toggle_full_text(node, full_text_widget))
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(btn_expand)
-        layout.addWidget(full_text_widget)
-        full_text_widget.hide()
-        container = QtWidgets.QWidget()
-        container.setLayout(layout)
-        self.setItemWidget(node, 2, container)
 
     def parse_data(self, data: t.Any) -> tuple[str, str, dict[int, t.Any], QtWidgets.QWidget | None]:
         """
@@ -236,7 +219,7 @@ class DataTreeWidget(qfw.TreeWidget):
 
 
 class DataTreeWidgetContainer(QtWidgets.QWidget):
-    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+    def __init__(self, allow_edit: bool = False, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         layout = QtWidgets.QVBoxLayout()
 
@@ -246,7 +229,7 @@ class DataTreeWidgetContainer(QtWidgets.QWidget):
         self.btn_sort = qfw.PushButton("Sort")
         self.btn_sort.clicked.connect(self.toggle_sort)
 
-        self.data_tree = DataTreeWidget()
+        self.data_tree = DataTreeWidget(allow_edit=allow_edit)
 
         layout.addWidget(self.search_bar)
         layout.addWidget(self.btn_sort)

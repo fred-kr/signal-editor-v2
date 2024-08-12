@@ -1,10 +1,11 @@
 import qfluentwidgets as qfw
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from signal_editor.app.gui.widgets.data_tree_widget import DataTreeWidget
+# from signal_editor.app.gui.widgets.data_tree_widget import DataTreeWidget
 
 from ... import type_defs as _t
 from ..icons import SignalEditorIcon as Icons
+from . import DataTreeWidgetContainer
 
 
 class MessageBox(qfw.MessageBoxBase):
@@ -84,7 +85,7 @@ class SectionSummaryBox(QtWidgets.QDialog):
     def __init__(self, title: str, summary: _t.SectionSummaryDict, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
 
-        summary_tree = DataTreeWidget()
+        summary_tree = DataTreeWidgetContainer(allow_edit=False)
         summary_tree.set_data(dict(summary), hide_root=True)
 
         layout = QtWidgets.QVBoxLayout()

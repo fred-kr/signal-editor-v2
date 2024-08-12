@@ -4,7 +4,7 @@ from .section_list import SectionListDock
 from .data_tree_widget import DataTreeWidgetContainer
 from .message_box import MessageBox, SectionSummaryBox
 from .overlay_widget import OverlayWidget
-from .jupyter_console_widget import ConsoleWindow
+from .enum_combo_box import EnumComboBox
 
 __all__ = [
     "StatusMessageDock",
@@ -14,5 +14,5 @@ __all__ = [
     "MessageBox",
     "SectionSummaryBox",
     "OverlayWidget",
-    "ConsoleWindow",
+    "EnumComboBox",
 ]
