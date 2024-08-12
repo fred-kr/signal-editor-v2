@@ -3,7 +3,7 @@ import typing as t
 from PySide6 import QtCore
 
 from .. import type_defs as _t
-from ..const_defs import COLUMN_PLACEHOLDER
+from ..constants import COLUMN_PLACEHOLDER
 from ..config import Config
 from ..enum_defs import FileFormat
 

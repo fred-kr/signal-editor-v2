@@ -100,21 +100,12 @@ class PlotController(QtCore.QObject):
             self.region_selector = None
 
     def _setup_plot_data_items(self) -> None:
-        self.initialize_signal_curve()
-        self.initialize_peak_scatter()
-        self.initialize_rate_curve()
+        self._init_signal_curve()
+        self._init_peak_scatter()
+        self._init_rate_curve()
         self._setup_region_selector()
 
-    def initialize_signal_curve(self, pen_color: _t.PGColor | None = None) -> None:
-        """
-        Create the PlotDataItem representing the signal curve.
-
-        Parameters
-        ----------
-        pen_color : PGColor | None
-            The color of the pen used to draw the signal curve, by default None
-        """
-
+    def _init_signal_curve(self, pen_color: _t.PGColor | None = None) -> None:
         if pen_color is None:
             pen_color = Config().plot.LineColor
         click_width = Config().plot.LineClickWidth
@@ -139,7 +130,7 @@ class PlotController(QtCore.QObject):
         self.signal_curve.setParent(None)
         self.signal_curve = None
 
-    def initialize_peak_scatter(
+    def _init_peak_scatter(
         self,
         brush_color: _t.PGColor | None = None,
         hover_pen: _t.PGColor = "black",
@@ -174,7 +165,7 @@ class PlotController(QtCore.QObject):
         self.peak_scatter.setParent(None)
         self.peak_scatter = None
 
-    def initialize_rate_curve(self, pen_color: _t.PGColor | None = None) -> None:
+    def _init_rate_curve(self, pen_color: _t.PGColor | None = None) -> None:
         if pen_color is None:
             pen_color = "crimson"
         rate_curve = pg.PlotDataItem(
@@ -206,10 +197,10 @@ class PlotController(QtCore.QObject):
         for plt_item in (self.pw_main.getPlotItem(), self.pw_rate.getPlotItem()):
             plt_item.getAxis("top").setScale(1 / sampling_rate)
 
-    @QtCore.Slot(int)
-    def reset_view_range(self, upper_bound: int) -> None:
-        self.pw_main.plotItem.vb.setRange(xRange=(0, upper_bound), disableAutoRange=False)
-        self.pw_rate.plotItem.vb.setRange(xRange=(0, upper_bound), disableAutoRange=False)
+    # @QtCore.Slot(int)
+    # def reset_view_range(self, upper_bound: int) -> None:
+    #     self.pw_main.plotItem.vb.setRange(xRange=(0, upper_bound), disableAutoRange=False)
+    #     self.pw_rate.plotItem.vb.setRange(xRange=(0, upper_bound), disableAutoRange=False)
 
     @QtCore.Slot(object)
     def set_view_limits(self, plt_data_item: pg.PlotDataItem) -> None:
@@ -218,7 +209,9 @@ class PlotController(QtCore.QObject):
         len_data = plt_data_item.xData.size
         self.pw_main.plotItem.vb.setLimits(xMin=-0.25 * len_data, xMax=1.25 * len_data, maxYRange=1e5, minYRange=0.1)
         self.pw_rate.plotItem.vb.setLimits(xMin=-0.25 * len_data, xMax=1.25 * len_data, maxYRange=1e5, minYRange=0.1)
-        self.reset_view_range(len_data)
+        # self.reset_view_range(len_data)
+        self.pw_main.plotItem.vb.setRange(xRange=(0, len_data), disableAutoRange=False)
+        self.pw_rate.plotItem.vb.setRange(xRange=(0, len_data), disableAutoRange=False)
 
     def reset(self) -> None:
         self.pw_main.clear()
@@ -447,20 +440,20 @@ class PlotController(QtCore.QObject):
     def get_selection_area(self) -> QtCore.QRectF | None:
         return self.pw_main.plotItem.vb.mapped_selection_rect  # type: ignore
 
-    def draw_rolling_rate(
-        self,
-        x: npt.NDArray[np.float64],
-        y: npt.NDArray[np.float64],
-        color: str = "green",
-        marker: str = "o",
-        markersize: int = 12,
-    ) -> None:
-        subplot = self.mpw_result.fig.add_subplot(111)
-        subplot.scatter(x, y, s=markersize, c=color, marker=marker)
-        subplot.set_xlabel("Temperature (°C)")
-        subplot.set_ylabel("HR (bpm)")
-        self.mpw_result.fig.tight_layout()
-        self.mpw_result.draw()
+    # def draw_rolling_rate(
+    #     self,
+    #     x: npt.NDArray[np.float64],
+    #     y: npt.NDArray[np.float64],
+    #     color: str = "green",
+    #     marker: str = "o",
+    #     markersize: int = 12,
+    # ) -> None:
+    #     subplot = self.mpw_result.fig.add_subplot(111)
+    #     subplot.scatter(x, y, s=markersize, c=color, marker=marker)
+    #     subplot.set_xlabel("Temperature (°C)")
+    #     subplot.set_ylabel("HR (bpm)")
+    #     self.mpw_result.fig.tight_layout()
+    #     self.mpw_result.draw()
 
     @QtCore.Slot(QtGui.QColor)
     def set_background_color(self, color: QtGui.QColor) -> None:

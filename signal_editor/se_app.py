@@ -227,7 +227,7 @@ class SignalEditor(QtWidgets.QApplication):
         method = standardization_params.pop("method")
         window_size = standardization_params.pop("window_size")
         robust = method == StandardizationMethod.ZScoreRobust
-        self.data.active_section.scale_signal(method=method, robust=robust, window_size=window_size)
+        self.data.active_section.standardize_signal(method=method, robust=robust, window_size=window_size)
         self.refresh_plot_data()
 
     def refresh_plot_data(self) -> None:
@@ -556,6 +556,7 @@ class SignalEditor(QtWidgets.QApplication):
     def update_result_views(self) -> None:
         self.data.result_model_peaks.set_df(self.data.active_section.peak_data)
         self.data.result_model_rate.set_df(self.data.active_section.rate_data)
+        
 
     @QtCore.Slot()
     def get_section_result(self) -> None:
@@ -609,4 +610,4 @@ class SignalEditor(QtWidgets.QApplication):
         else:
             raise NotImplementedError
 
-        logger.success(f"Result exported to {out_path}.")
+        self.mw.show_success("Success!", "Result exported successfully!")

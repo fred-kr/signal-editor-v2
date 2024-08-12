@@ -136,24 +136,3 @@ def rolling_rate(
             pl.mean(temperature_col).round(1).name.suffix("_mean"),
         )[:-remove_row_count]
     )
-
-
-def mean_bpm_per_temperature(
-    df: pl.DataFrame,
-    grp_col: str,
-    temperature_col: str,
-    sampling_rate: int,
-    sec_new_window_every: int = 10,
-    sec_window_length: int = 60,
-    sec_start_at: int = 0,
-) -> pl.DataFrame:
-    rr = rolling_rate(
-        df,
-        grp_col,
-        temperature_col,
-        sampling_rate,
-        sec_new_window_every,
-        sec_window_length,
-        sec_start_at,
-    )
-    return rr.group_by(pl.col(f"{temperature_col}_mean")).agg(pl.mean("n_peaks").name.suffix("_mean"))

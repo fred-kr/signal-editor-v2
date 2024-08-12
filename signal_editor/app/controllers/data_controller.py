@@ -8,7 +8,7 @@ from loguru import logger
 from PySide6 import QtCore
 
 from ..config import Config
-from ..const_defs import COLUMN_PLACEHOLDER
+from ..constants import COLUMN_PLACEHOLDER
 from ..core.file_io import detect_sampling_rate, read_edf
 from ..core.section import Section
 from ..enum_defs import TextFileSeparator

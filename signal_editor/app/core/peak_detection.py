@@ -391,8 +391,6 @@ def find_peaks(
     elif method == PeakDetectionMethod.ECGNeuroKit2:
         assert "method" in method_parameters, "NeuroKit2 ECG peak detection method not specified"
         return _find_peaks_nk_ecg(method_parameters, sig, sampling_rate)
-    else:
-        raise ValueError(f"Unsupported peak detection method: {method}")
 
 
 def _find_peaks_nk_ecg(

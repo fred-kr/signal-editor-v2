@@ -1,6 +1,4 @@
 import os
-import typing as t
-from pathlib import Path
 
 import qfluentwidgets as qfw
 from loguru import logger
@@ -8,7 +6,6 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 
 from ...ui.ui_main_window import Ui_MainWindow
-
 from .. import type_defs as _t
 from ..config import Config
 from ..enum_defs import LogLevel
@@ -184,7 +181,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         except ImportError:
             logger.warning("Unable to import the console widget. Console is unavailable.")
             return
-        
+
         console_window = ConsoleWindow()
         console_window.setVisible(False)
 
@@ -229,7 +226,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.action_remove_section.triggered.connect(self.dock_sections.list_view.emit_delete_current_request)
         self.action_show_section_summary.triggered.connect(self.dock_sections.list_view.emit_show_summary_request)
         self.dock_sections.list_view.customContextMenuRequested.connect(self.show_section_list_context_menu)
-        
+
     def _setup_toolbar(self, name: str, actions: list[QtGui.QAction], movable: bool = False) -> QtWidgets.QToolBar:
         tb = QtWidgets.QToolBar(name)
         tb.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
@@ -245,7 +242,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         menu.addAction(self.action_remove_section)
         menu.addAction(self.action_show_section_summary)
         menu.exec(QtGui.QCursor.pos())
-        
+
     def _setup_menus(self) -> None:
         self.menu_view.addActions(
             [
@@ -277,7 +274,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._on_page_changed(0)
 
     def _connect_signals(self) -> None:
-        self.action_show_settings.triggered.connect(self.show_settings_dialog)
+        self.action_show_settings.triggered.connect(self.dialog_config.open)
         self.action_remove_section.triggered.connect(self.dock_sections.list_view.emit_delete_current_request)
 
         self.stackedWidget.currentChanged.connect(self._on_page_changed)
@@ -323,12 +320,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         else:
             return
         menu = qfw.RoundMenu(parent=table_view)
-        action_copy_table = qfw.Action(Icons.Copy.icon(), "Copy to Clipboard", triggered=lambda: table_view.model().df.write_clipboard())
+        action_copy_table = qfw.Action(
+            Icons.Copy.icon(), "Copy to Clipboard", triggered=lambda: table_view.model().df.write_clipboard()  # type: ignore
+        )
         menu.addAction(action_copy_table)
         menu.addAction(self.action_export_to_csv)
         menu.addAction(self.action_export_to_xlsx)
         menu.exec(QtGui.QCursor.pos())
-        
+
     def show_section_summary_box(self, summary: _t.SectionSummaryDict) -> None:
         msg_box = SectionSummaryBox("Section Summary", summary, parent=self)
         msg_box.open()
@@ -361,35 +360,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.restoreGeometry(config.internal.WindowGeometry)
         self.restoreState(config.internal.WindowState)
 
-    @QtCore.Slot()
-    def show_settings_dialog(self) -> None:
-        self.dialog_config.open()
-
-    @QtCore.Slot(str)
-    def show_export_dialog(self, format: t.Literal["csv", "xlsx", "hdf5"]) -> None:
-        # section = self.combo_box_result_section.currentText()
-        # selected_results = self.list_view_result_selection.selectedIndexes()
-
-        curr_file_name = self.line_edit_active_file.text()
-        if not curr_file_name:
-            return
-        result_path = Path(Path(Config().internal.OutputDir) / f"Result_{Path(curr_file_name).stem}").with_suffix(
-            f".{format}"
-        )
-
-        out_name, _ = QtWidgets.QFileDialog.getSaveFileName(
-            self, dir=result_path.as_posix(), filter=f"{format.upper()} files (*.{format})"
-        )
-
-        if not out_name:
-            return
-
-        Config().internal.OutputDir = Path(out_name).parent.as_posix()
-        self.sig_export_requested.emit(out_name)
-
-        # self.dialog_export.line_edit_output_file_name.setText(out_name)
-        # self.dialog_export.open()
-
     def show_overlay(self, text: str = "Calculating...") -> None:
         self.centralWidget().setEnabled(False)
         self.dock_parameters.setEnabled(False)
@@ -397,7 +367,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         self._overlay_widget.set_text(text)
         self._overlay_widget.setGeometry(self.centralWidget().geometry())
-        # self._overlay_widget.btn_cancel.setEnabled(True)
         self._overlay_widget.raise_()
         self._overlay_widget.show()
 
@@ -425,7 +394,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         qfw.InfoBar.success(
             title=title,
             content=text,
-            duration=3000,
+            duration=5000,
+            position=qfw.InfoBarPosition.TOP,
             parent=self,
         )
 
@@ -433,7 +403,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         qfw.InfoBar.error(
             title=title,
             content=text,
-            duration=3000,
+            duration=5000,
+            position=qfw.InfoBarPosition.TOP,
             parent=self,
         )
 
@@ -485,8 +456,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             parent = self
             if self.dialog_meta.isVisible():
                 parent = self.dialog_meta
-            # elif self.dialog_export.isVisible():
-            # parent = self.dialog_export
             elif self.dialog_config.isVisible():
                 parent = self.dialog_config
 

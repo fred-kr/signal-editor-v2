@@ -380,7 +380,7 @@ class Section:
 
         self.data = self.data.with_columns(pl.Series(self.processed_signal_name, filtered))
 
-    def scale_signal(self, **kwargs: t.Unpack[_t.StandardizationParameters]) -> None:
+    def standardize_signal(self, **kwargs: t.Unpack[_t.StandardizationParameters]) -> None:
         """
         Standardize this section's signal using the specified parameters. Based on `neurokit2.standardize`.
 
@@ -563,7 +563,9 @@ class Section:
             desired_length = self.data.height
         inst_rate = signal_rate(peaks, self.sampling_rate, desired_length)
 
-        self.rate_data = pl.DataFrame({"section_index": pl.int_range(inst_rate.size, dtype=pl.Int32, eager=True), "rate_bpm": inst_rate})
+        self.rate_data = pl.DataFrame(
+            {"section_index": pl.int_range(inst_rate.size, dtype=pl.Int32, eager=True), "rate_bpm": inst_rate}
+        )
 
     def _calc_rate_rolling(
         self,
@@ -611,7 +613,9 @@ class Section:
                 pl.sum("is_peak").alias("rate_bpm"),
             ).collect()[:-n_incomplete_windows]
 
-        self.rate_data = rr_df.with_columns(pl.col("section_index").shrink_dtype(), pl.col("rate_bpm").shrink_dtype()).shrink_to_fit()
+        self.rate_data = rr_df.with_columns(
+            pl.col("section_index").shrink_dtype(), pl.col("rate_bpm").shrink_dtype()
+        ).shrink_to_fit()
 
     def get_mean_rate_per_temperature(self) -> pl.DataFrame:
         info_col = self.info_name
@@ -632,14 +636,14 @@ class Section:
         pl_removed = pl.Series("removed", self.manual_peak_edits.removed, pl.Int32)
 
         self.data = self.data.with_columns(
-                pl.when(pl.col("section_index").is_in(pl_added))
-                .then(pl.lit(1))
-                .when(pl.col("section_index").is_in(pl_removed))
-                .then(pl.lit(-1))
-                .otherwise(pl.lit(0))
-                .cast(pl.Int8)
-                .alias("is_manual")
-            )
+            pl.when(pl.col("section_index").is_in(pl_added))
+            .then(pl.lit(1))
+            .when(pl.col("section_index").is_in(pl_removed))
+            .then(pl.lit(-1))
+            .otherwise(pl.lit(0))
+            .cast(pl.Int8)
+            .alias("is_manual")
+        )
 
     def get_metadata(self) -> SectionMetadata:
         return SectionMetadata(
