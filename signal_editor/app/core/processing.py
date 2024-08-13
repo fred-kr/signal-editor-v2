@@ -12,7 +12,7 @@ from .. import type_defs as _t
 from ..enum_defs import FilterMethod
 
 
-def rolling_standardize[T: (pl.Expr | pl.Series)](sig: T, window_size: int) -> T:
+def rolling_standardize(sig: pl.Series, window_size: int) -> pl.Series:
     roll_mean = sig.rolling_mean(window_size, min_periods=0)
     roll_std = sig.rolling_std(window_size, min_periods=0)
     return (sig - roll_mean) / roll_std

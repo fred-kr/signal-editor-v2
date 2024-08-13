@@ -188,7 +188,7 @@ class ConfigModel(QtCore.QAbstractItemModel):
             elif col == 1:
                 if isinstance(item.value, QtGui.QColor):
                     return SVGColors(item.value.name()).name
-                elif isinstance(item.value, TextFileSeparator):
+                elif isinstance(item.value, (TextFileSeparator, RateComputationMethod)):
                     return item.value.name
                 elif isinstance(item.value, bool) or item.value is None:
                     return ""

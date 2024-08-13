@@ -1,9 +1,9 @@
 import jupyter_client
+import qfluentwidgets as qfw
 from PySide6 import QtCore, QtGui, QtWidgets
+from qframelesswindow import FramelessWindow
 from qtconsole import inprocess
 from rich import inspect, print
-from qframelesswindow import FramelessWindow
-import qfluentwidgets as qfw
 
 from ..icons import SignalEditorIcon as Icons
 
