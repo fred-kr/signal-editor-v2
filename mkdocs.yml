@@ -1,4 +1,4 @@
-site_name: Signal Editor Help
+site_name: Signal Editor
 site_url: https://fred-kr.github.io/
 repo_url: https://github.com/fred-kr/signal-editor-v2
 theme:
@@ -19,6 +19,7 @@ nav:
     - 'Configuration': 'user_guide/configuration.md'
   - 'UI Components':
     - 'Menu Bar': 'ui_components/menu_bar.md'
+    - 'Tool Bar': 'ui_components/tool_bar.md'
     - 'Section List': 'ui_components/section_list.md'
     - 'Parameter Inputs': 'ui_components/parameter_inputs.md'
     - 'Status Log': 'ui_components/status_log.md'

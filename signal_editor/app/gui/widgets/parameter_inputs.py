@@ -2,7 +2,7 @@ import enum
 import typing as t
 
 import qfluentwidgets as qfw
-from loguru import logger
+# from loguru import logger
 from PySide6 import QtCore, QtWidgets
 
 from ....ui.ui_parameter_inputs import Ui_ParameterInputs
@@ -251,7 +251,7 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
     @QtCore.Slot()
     def _on_run_processing(self) -> None:
         pipeline = self.ui.combo_pipeline.currentData()
-        logger.debug(f"Pipeline: {pipeline}")
+        # logger.debug(f"Pipeline: {pipeline}")
         if pipeline is not None:
             pipeline = PreprocessPipeline(pipeline)
             self.sig_pipeline_requested.emit(pipeline)

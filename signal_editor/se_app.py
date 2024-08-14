@@ -217,7 +217,7 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot(object)
     def run_preprocess_pipeline(self, pipeline: PreprocessPipeline) -> None:
-        if pipeline not in {PreprocessPipeline.PPGElgendi, PreprocessPipeline.ECGNeuroKit2}:
+        if pipeline not in PreprocessPipeline:
             return
         self.data.active_section.filter_signal(pipeline)
         self.refresh_plot_data()

@@ -1,6 +1,6 @@
 # Loading Data
 
-To load data into the application, use the `Open File` button in the [File menu](../ui_components/) or on the `Import` page, then select the file you want to load.
+To load data into the application, use the `Open File` command in the [file menu](../ui_components/menu_bar.md), [tool bar](../ui_components/tool_bar.md) or the **Import** page, then select the file you want to load.
 
 The selected file is searched for available columns or channels of data by either reading the available metadata (EDF files) or scanning the first few rows of the file. If any are found, their names are made available for selection in the `Signal Data` and `Additional Data` fields.
 
