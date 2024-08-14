@@ -5,7 +5,7 @@ from qframelesswindow import FramelessWindow
 from qtconsole import inprocess
 from rich import inspect, print
 
-from ..icons import SignalEditorIcon as Icons
+from ..icons import SignalEditorIcons as Icons
 
 
 class JupyterConsoleWidget(inprocess.QtInProcessRichJupyterWidget):

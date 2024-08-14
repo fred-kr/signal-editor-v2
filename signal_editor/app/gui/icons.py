@@ -134,7 +134,7 @@ class IconBase:
 #         return f":/icons/{self.value}"
 
 
-class SignalEditorIcon(IconBase, enum.Enum):
+class SignalEditorIcons(IconBase, enum.Enum):
     SignalEditor = ":/icons/app_icon.svg"
     Add = ":/icons/fluent-icons/Add.svg"
     AddCircle = ":/icons/fluent-icons/AddCircle.svg"

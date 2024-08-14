@@ -2,7 +2,7 @@ import qfluentwidgets as qfw
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from ... import type_defs as _t
-from ..icons import SignalEditorIcon as Icons
+from ..icons import SignalEditorIcons as Icons
 from . import DataTreeWidgetContainer
 
 

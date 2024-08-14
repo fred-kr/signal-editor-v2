@@ -10,7 +10,7 @@ from .. import type_defs as _t
 from ..config import Config
 from ..enum_defs import LogLevel
 from .dialogs import ConfigDialog, MetadataDialog
-from .icons import SignalEditorIcon as Icons
+from .icons import SignalEditorIcons as Icons
 from .widgets import (
     DataTreeWidgetContainer,
     MessageBox,
@@ -321,7 +321,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             return
         menu = qfw.RoundMenu(parent=table_view)
         action_copy_table = qfw.Action(
-            Icons.Copy.icon(), "Copy to Clipboard", triggered=lambda: table_view.model().df.write_clipboard()  # type: ignore
+            Icons.Copy.icon(),
+            "Copy to Clipboard",
+            triggered=lambda: table_view.model().df.write_clipboard(),  # type: ignore
         )
         menu.addAction(action_copy_table)
         menu.addAction(self.action_export_to_csv)

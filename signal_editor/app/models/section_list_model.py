@@ -3,7 +3,7 @@ import typing as t
 from PySide6 import QtCore
 
 from ..core.section import SectionID
-from ..gui.icons import SignalEditorIcon as Icons
+from ..gui.icons import SignalEditorIcons as Icons
 from . import ItemDataRole, ModelIndex
 
 if t.TYPE_CHECKING:

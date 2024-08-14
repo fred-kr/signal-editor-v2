@@ -4,7 +4,7 @@ import qfluentwidgets as qfw
 from loguru import logger
 from PySide6 import QtCore, QtWidgets
 
-from ..icons import SignalEditorIcon as Icons
+from ..icons import SignalEditorIcons as Icons
 
 
 class LoggingWindow(qfw.TextEdit):

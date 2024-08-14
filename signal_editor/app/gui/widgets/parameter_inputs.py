@@ -2,6 +2,7 @@ import enum
 import typing as t
 
 import qfluentwidgets as qfw
+
 # from loguru import logger
 from PySide6 import QtCore, QtWidgets
 
@@ -15,7 +16,7 @@ from ...enum_defs import (
     StandardizationMethod,
     WFDBPeakDirection,
 )
-from ..icons import SignalEditorIcon as Icons
+from ..icons import SignalEditorIcons as Icons
 from ._widget_defaults import PEAK_DETECTION, PROCESSING
 
 

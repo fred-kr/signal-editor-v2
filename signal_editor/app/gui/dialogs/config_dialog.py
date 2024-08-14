@@ -1,8 +1,8 @@
-from PySide6 import QtCore, QtGui, QtWidgets
 import qfluentwidgets as qfw
+from PySide6 import QtCore, QtGui, QtWidgets
 
 from ...models.config_model import ConfigModel
-from ..icons import SignalEditorIcon as Icons
+from ..icons import SignalEditorIcons as Icons
 from ..widgets.config_tree import ConfigTreeView
 
 

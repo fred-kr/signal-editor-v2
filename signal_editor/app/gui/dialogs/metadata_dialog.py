@@ -3,7 +3,7 @@ from PySide6 import QtCore, QtWidgets
 from signal_editor.ui.ui_dialog_metadata import Ui_MetadataDialog
 
 from ...config import Config
-from ..icons import SignalEditorIcon as Icons
+from ..icons import SignalEditorIcons as Icons
 
 
 class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
