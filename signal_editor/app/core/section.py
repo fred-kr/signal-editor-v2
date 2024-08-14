@@ -17,8 +17,14 @@ from ..models.result_models import DetailedSectionResult, SectionResult
 from ..utils import format_long_sequence
 from .peak_detection import find_peaks
 from .processing import (
-    filter_elgendi,
-    filter_neurokit2,
+    ecg_clean_biosppy,
+    ecg_clean_elgendi,
+    ecg_clean_engzee,
+    ecg_clean_hamilton,
+    ecg_clean_pantompkins,
+    ecg_clean_vgraph,
+    ppg_clean_elgendi,
+    ecg_clean_neurokit,
     filter_signal,
     signal_rate,
     standardize_signal,
@@ -350,17 +356,11 @@ class Section:
                 filtered, filter_params = filter_signal(sig_data, self.sampling_rate, **kwargs)
                 self._is_filtered = True
         elif pipeline == PreprocessPipeline.PPGElgendi:
-            filtered = filter_elgendi(sig_data, self.sampling_rate)
-            filter_params = {
-                "highcut": 8.0,
-                "lowcut": 0.5,
-                "method": str(FilterMethod.Butterworth),
-                "order": 3,
-            }
+            filtered, filter_params = ppg_clean_elgendi(sig_data, self.sampling_rate)
             self._is_processed = True
         elif pipeline == PreprocessPipeline.ECGNeuroKit2:
             pow_line = kwargs.get("powerline", 50)
-            filtered = filter_neurokit2(sig_data, self.sampling_rate, powerline=int(pow_line))
+            filtered = ecg_clean_neurokit(sig_data, self.sampling_rate, powerline=int(pow_line))
             # Applies two filters to the signal: first a highpass butterworth, then a powerline filter
             filter_params = {
                 "lowcut": 0.5,
@@ -372,7 +372,25 @@ class Section:
                 "powerline": pow_line,
             }
             self._is_processed = True
-
+        elif pipeline == PreprocessPipeline.ECGBioSPPy:
+            filtered, filter_params = ecg_clean_biosppy(sig_data, self.sampling_rate)
+            self._is_processed = True
+        elif pipeline == PreprocessPipeline.ECGPanTompkins1985:
+            filtered, filter_params = ecg_clean_pantompkins(sig_data, self.sampling_rate)
+            self._is_processed = True
+        elif pipeline == PreprocessPipeline.ECGHamilton2002:
+            filtered, filter_params = ecg_clean_hamilton(sig_data, self.sampling_rate)
+            self._is_processed = True
+        elif pipeline == PreprocessPipeline.ECGElgendi2010:
+            filtered, filter_params = ecg_clean_elgendi(sig_data, self.sampling_rate)
+            self._is_processed = True
+        elif pipeline == PreprocessPipeline.ECGEngzeeMod2012:
+            filtered, filter_params = ecg_clean_engzee(sig_data, self.sampling_rate)
+            self._is_processed = True
+        elif pipeline == PreprocessPipeline.ECGVisibilityGraph:
+            filtered, filter_params = ecg_clean_vgraph(sig_data, self.sampling_rate)
+            self._is_processed = True
+            
         self._processing_parameters.processing_pipeline = pipeline
         self._processing_parameters.filter_parameters.append(filter_params)
         if additional_params is not None:

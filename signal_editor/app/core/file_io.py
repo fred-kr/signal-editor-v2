@@ -168,22 +168,22 @@ def write_hdf5(file_path: Path, data: _t.CompleteResultDict) -> None:
         for k, v in data["metadata"].items():
             h5f.set_node_attr(h5f.root, k, v)
 
-        h5f.create_table(h5f.root, "combined_data", data["global_dataframe"], "Combined Section Dataframe")
+        h5f.create_table(h5f.root, name="combined_data", title="Combined Section Dataframe", obj=data["global_dataframe"])
 
         section_results = h5f.create_group(h5f.root, "section_results", "Results by Section")
 
         for section_id, section_data in data["section_results"].items():
             section_group = h5f.create_group(section_results, section_id, f"Results for {section_id.pretty_name()}")
 
-            h5f.create_table(section_group, "peak_result", section_data["section_result"]["peak_data"], "Peak Results")
-            h5f.create_table(section_group, "rate_result", section_data["section_result"]["rate_data"], "Rate Results")
+            h5f.create_table(section_group, name="peak_result", obj=section_data["section_result"]["peak_data"], title="Peak Results")
+            h5f.create_table(section_group, name="rate_result", obj=section_data["section_result"]["rate_data"], title="Rate Results")
 
             # Section dataframe
             h5f.create_table(
                 section_group,
-                "data",
-                section_data["section_dataframe"],
-                "Section Dataframe",
+                name="data",
+                obj=section_data["section_dataframe"],
+                title="Section Dataframe",
             )
 
             # Processing info

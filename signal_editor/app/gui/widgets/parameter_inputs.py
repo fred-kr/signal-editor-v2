@@ -316,7 +316,7 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
         method = NK2ECGPeakDetectionMethod(method)
         if method == NK2ECGPeakDetectionMethod.Default:
             self.ui.stacked_nk2_method_parameters.setCurrentWidget(self.ui.nk2_page_neurokit)
-        elif method == NK2ECGPeakDetectionMethod.All:
+        elif method == NK2ECGPeakDetectionMethod.Promac:
             self.ui.stacked_nk2_method_parameters.setCurrentWidget(self.ui.nk2_page_promac)
         elif method == NK2ECGPeakDetectionMethod.Gamboa2008:
             self.ui.stacked_nk2_method_parameters.setCurrentWidget(self.ui.nk2_page_gamboa)
@@ -343,7 +343,7 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
                     minlenweight=self.ui.peak_neurokit2_minlenweight.value(),
                     mindelay=self.ui.peak_neurokit2_mindelay.value(),
                 )
-            elif nk_algorithm == NK2ECGPeakDetectionMethod.All:
+            elif nk_algorithm == NK2ECGPeakDetectionMethod.Promac:
                 nk_params = _t.NK2PeaksPromac(
                     threshold=self.ui.peak_promac_threshold.value(),
                     gaussian_sd=self.ui.peak_promac_gaussian_sd.value(),

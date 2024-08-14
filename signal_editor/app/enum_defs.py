@@ -53,6 +53,7 @@ class FileFormat(enum.StrEnum):
 class FilterMethod(enum.StrEnum):
     Butterworth = "butterworth"
     ButterworthLegacy = "butterworth_ba"
+    ButterworthZI = "butterworth_zi"
     SavGol = "savgol"
     FIR = "fir"
     Bessel = "bessel"
@@ -70,6 +71,12 @@ class PreprocessPipeline(enum.StrEnum):
     # Custom = "custom"
     PPGElgendi = "ppg_elgendi"
     ECGNeuroKit2 = "ecg_neurokit2"
+    ECGBioSPPy = "biosppy"
+    ECGPanTompkins1985 = "pantompkins1985"
+    ECGHamilton2002 = "hamilton2002"
+    ECGElgendi2010 = "elgendi2010"
+    ECGEngzeeMod2012 = "engzeemod2012"
+    ECGVisibilityGraph = "vg"
 
 
 class StandardizationMethod(enum.StrEnum):
@@ -102,7 +109,7 @@ class NK2ECGPeakDetectionMethod(enum.StrEnum):
     Rodrigues2020 = "rodrigues2020"
     Emrich2023 = "emrich2023"
     # SlopeSumFunction = "ssf"
-    All = "promac"
+    Promac = "promac"
 
 
 class WFDBPeakDirection(enum.StrEnum):

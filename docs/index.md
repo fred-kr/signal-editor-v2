@@ -1,4 +1,4 @@
 # Signal Editor
 
-A tool that allows simple editing of bio-signal data.
+A GUI application for working with large biosignal datasets. Built using Python and PySide6.
 

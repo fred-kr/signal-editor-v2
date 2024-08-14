@@ -1,7 +1,4 @@
-# Filters and Standardization
-
-## Filters
-
+# Signal Preprocessing
 
 ## Standardization
 

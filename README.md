@@ -1,7 +1,4 @@
-# Signal Editor (v2)
+# BioSignal Exploration and Analysis Tool (BEAT)
 
-Version 2 of my signal editor app, it now makes better use of Qt's capabilities and is more user-friendly.
+The BioSignal Exploration and Analysis Tool (BEAT) is a GUI application for working with large biosignal datasets (currently limited to ECG and PPG signals).
 
-## About
-
-Icons: [Fugue Icons](https://p.yusukekamiyamane.com/)

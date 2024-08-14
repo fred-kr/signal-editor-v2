@@ -64,6 +64,12 @@
            <height>31</height>
           </size>
          </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Clean the signal using a pre-defined signal processing pipeline&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Different signal cleaning pipelines. For sources see 'Help'.&lt;/p&gt;&lt;p&gt;Implemented via the `neurokit2` python package.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -118,6 +124,9 @@
               <height>31</height>
              </size>
             </property>
+            <property name="toolTip">
+             <string>Lower cutoff frequency in Hz</string>
+            </property>
             <property name="text">
              <string>Lower cutoff frequency</string>
             </property>
@@ -137,6 +146,9 @@
               <height>31</height>
              </size>
             </property>
+            <property name="toolTip">
+             <string>Upper cutoff frequency in Hz</string>
+            </property>
             <property name="text">
              <string>Upper cutoff frequency</string>
             </property>
@@ -149,6 +161,9 @@
               <width>0</width>
               <height>31</height>
              </size>
+            </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only used if &lt;span style=&quot; font-weight:700;&quot;&gt;Filter Method&lt;/span&gt; is &amp;quot;Powerline&amp;quot;.&lt;/p&gt;&lt;p&gt;The powerline frequency (normally 50 Hz or 60 Hz).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="frame">
              <bool>false</bool>
@@ -184,6 +199,9 @@
               <height>31</height>
              </size>
             </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only used if &lt;span style=&quot; font-weight:700;&quot;&gt;Filter Method&lt;/span&gt; is &amp;quot;Butterworth&amp;quot; or &amp;quot;SavGol&amp;quot;. &lt;/p&gt;&lt;p&gt;Order of the filter (default is 2).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
              <string>Select Filter Order</string>
             </property>
@@ -196,6 +214,9 @@
               <width>0</width>
               <height>31</height>
              </size>
+            </property>
+            <property name="toolTip">
+             <string>Upper cutoff frequency in Hz</string>
             </property>
             <property name="frame">
              <bool>false</bool>
@@ -234,6 +255,9 @@
               <height>31</height>
              </size>
             </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only used if &lt;span style=&quot; font-weight:700;&quot;&gt;Filter Method&lt;/span&gt; is &amp;quot;Butterworth&amp;quot; or &amp;quot;SavGol&amp;quot;. &lt;/p&gt;&lt;p&gt;Order of the filter (default is 2).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="frame">
              <bool>false</bool>
             </property>
@@ -262,6 +286,9 @@
               <height>31</height>
              </size>
             </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only used if &lt;span style=&quot; font-weight:700;&quot;&gt;Filter Method&lt;/span&gt; is &amp;quot;SavGol&amp;quot; (length of the filter window i.e. the number of coefficients) or &amp;quot;FIR&amp;quot; (length of the filter). &lt;/p&gt;&lt;p&gt;Must be an odd integer. If &amp;quot;Auto&amp;quot;, a fitting size is chosen automatically.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="text">
              <string>Filter Window Size</string>
             </property>
@@ -274,6 +301,9 @@
               <width>0</width>
               <height>31</height>
              </size>
+            </property>
+            <property name="toolTip">
+             <string>Lower cutoff frequency in Hz</string>
             </property>
             <property name="frame">
              <bool>false</bool>
@@ -312,6 +342,9 @@
               <height>31</height>
              </size>
             </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only used if &lt;span style=&quot; font-weight:700;&quot;&gt;Filter Method&lt;/span&gt; is &amp;quot;SavGol&amp;quot; (length of the filter window i.e. the number of coefficients) or &amp;quot;FIR&amp;quot; (length of the filter). &lt;/p&gt;&lt;p&gt;Must be an odd integer. If &amp;quot;Auto&amp;quot;, a fitting size is chosen automatically.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            </property>
             <property name="frame">
              <bool>false</bool>
             </property>
@@ -348,6 +381,9 @@
               <width>0</width>
               <height>31</height>
              </size>
+            </property>
+            <property name="toolTip">
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Only used if &lt;span style=&quot; font-weight:700;&quot;&gt;Filter Method&lt;/span&gt; is &amp;quot;Powerline&amp;quot;.&lt;/p&gt;&lt;p&gt;The powerline frequency (normally 50 Hz or 60 Hz).&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="text">
              <string>Powerline Frequency</string>
@@ -402,9 +438,6 @@
            <width>0</width>
            <height>31</height>
           </size>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::Shape::StyledPanel</enum>
          </property>
          <property name="text">
           <string>Method Parameters</string>
@@ -492,6 +525,12 @@
            <horstretch>0</horstretch>
            <verstretch>0</verstretch>
           </sizepolicy>
+         </property>
+         <property name="toolTip">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Clean the signal using a pre-defined signal processing pipeline&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+         </property>
+         <property name="whatsThis">
+          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Different signal cleaning pipelines. For sources see 'Help'.&lt;/p&gt;&lt;p&gt;Implemented via the `neurokit2` python package.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
          <property name="text">
           <string>Pipeline:</string>
