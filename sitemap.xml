@@ -36,6 +36,11 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
+         <loc>https://fred-kr.github.io/ui_components/tool_bar/</loc>
+         <lastmod>2024-08-14</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
          <loc>https://fred-kr.github.io/user_guide/configuration/</loc>
          <lastmod>2024-08-14</lastmod>
          <changefreq>daily</changefreq>
