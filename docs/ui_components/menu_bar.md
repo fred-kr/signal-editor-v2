@@ -2,7 +2,7 @@
 
 [![](../img/menu_bar.png)](../img/menu_bar.png)
 
-The menu bar is the topmost part of the window. It contains the following items:
+The menu bar is the topmost part of the window. It contains the following menus:
 
 ## File
 
