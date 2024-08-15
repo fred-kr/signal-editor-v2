@@ -2,77 +2,77 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://fred-kr.github.io/</loc>
-         <lastmod>2024-08-14</lastmod>
+         <lastmod>2024-08-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fred-kr.github.io/about/license/</loc>
-         <lastmod>2024-08-14</lastmod>
+         <lastmod>2024-08-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fred-kr.github.io/about/references/</loc>
-         <lastmod>2024-08-14</lastmod>
+         <lastmod>2024-08-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fred-kr.github.io/ui_components/menu_bar/</loc>
-         <lastmod>2024-08-14</lastmod>
+         <lastmod>2024-08-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fred-kr.github.io/ui_components/parameter_inputs/</loc>
-         <lastmod>2024-08-14</lastmod>
+         <lastmod>2024-08-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fred-kr.github.io/ui_components/section_list/</loc>
-         <lastmod>2024-08-14</lastmod>
+         <lastmod>2024-08-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fred-kr.github.io/ui_components/status_log/</loc>
-         <lastmod>2024-08-14</lastmod>
+         <lastmod>2024-08-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fred-kr.github.io/ui_components/tool_bar/</loc>
-         <lastmod>2024-08-14</lastmod>
+         <lastmod>2024-08-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fred-kr.github.io/user_guide/configuration/</loc>
-         <lastmod>2024-08-14</lastmod>
+         <lastmod>2024-08-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fred-kr.github.io/user_guide/exporting_results/</loc>
-         <lastmod>2024-08-14</lastmod>
+         <lastmod>2024-08-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fred-kr.github.io/user_guide/introduction/</loc>
-         <lastmod>2024-08-14</lastmod>
+         <lastmod>2024-08-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fred-kr.github.io/user_guide/loading_data/</loc>
-         <lastmod>2024-08-14</lastmod>
+         <lastmod>2024-08-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fred-kr.github.io/user_guide/peak_detection/</loc>
-         <lastmod>2024-08-14</lastmod>
+         <lastmod>2024-08-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fred-kr.github.io/user_guide/sections/</loc>
-         <lastmod>2024-08-14</lastmod>
+         <lastmod>2024-08-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://fred-kr.github.io/user_guide/signal_preprocessing/</loc>
-         <lastmod>2024-08-14</lastmod>
+         <lastmod>2024-08-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>

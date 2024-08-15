@@ -367,6 +367,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#csv-tsv-txt" class="md-nav__link">
+    <span class="md-ellipsis">
+      CSV / TSV / TXT
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -769,6 +778,15 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#csv-tsv-txt" class="md-nav__link">
+    <span class="md-ellipsis">
+      CSV / TSV / TXT
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -793,18 +811,28 @@
 
 
 <h1 id="loading-data">Loading Data</h1>
-<p>To load data into the application, use the <code>Open File</code> command in the <a href="../../ui_components/menu_bar/">file menu</a>, <a href="../../ui_components/tool_bar/">tool bar</a> or the <strong>Import</strong> page, then select the file you want to load.</p>
-<p>The selected file is searched for available columns or channels of data by either reading the available metadata (EDF files) or scanning the first few rows of the file. If any are found, their names are made available for selection in the <code>Signal Data</code> and <code>Additional Data</code> fields.</p>
+<p>To start working with the app, use the <code>Open File</code> command in the <a href="../../ui_components/menu_bar/">file</a> menu, <a href="../../ui_components/tool_bar/">tool bar</a> or the <strong>Import</strong> page, then select the file you want to load.</p>
+<p>The selected file is searched for available columns or channels of data by either reading the available metadata (EDF files) or scanning the first few rows of the file <sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>. If any are found, their names are made available for selection in the <code>Signal Data</code> and <code>Additional Data</code> fields.</p>
 <p>The sampling rate of the data is also retrieved from the file's metadata (EDF files). For other file formats, an attempt is made to detect the sampling rate automatically. If the attempt fails, the user is prompted to enter the sampling rate manually.</p>
 <h2 id="supported-file-formats">Supported File Formats</h2>
 <h3 id="edf-european-data-format">EDF (European Data Format)</h3>
-<p>EDF files are read using the <a href="https://mne.tools/stable/index.html">mne</a> library. The full metadata can be viewed in the <code>Additional Metadata</code> tab of the <code>File Metadata</code> dialog (open by clicking on the <code>File Metadata</code> button in the Toolbar or the <code>File</code> menu).</p>
+<p>EDF files are read using the <a href="https://mne.tools/stable/index.html">mne</a> library. The full metadata can be viewed in the <code>Additional Metadata</code> tab of the <code>File Metadata</code> dialog (open by clicking on the <code>File Metadata</code> button in the <a href="../../ui_components/tool_bar/">tool bar</a> or the <a href="../../ui_components/menu_bar/">file</a> menu).</p>
+<h3 id="csv-tsv-txt">CSV / TSV / TXT</h3>
+<p>CSV (comma-separated values), TSV (tab-separated values) and TXT (text) files are read using the <a href="https://pola.rs/">polars</a> dataframe library. </p>
 <ul>
 <li>CSV / TSV / TXT</li>
 <li>XLSX</li>
 <li>Arrow IPC / Feather (v2)</li>
 <li>HDF5 result files (created by the application)</li>
 </ul>
+<div class="footnote">
+<hr />
+<ol>
+<li id="fn:1">
+<p>This is done to avoid reading the entire file into memory, which can be slow for large files. Can't be done for XLSX files, as they don't support lazy reading. In this case, the entire file is read into memory to extract the column names.&#160;<a class="footnote-backref" href="#fnref:1" title="Jump back to footnote 1 in the text">&#8617;</a></p>
+</li>
+</ol>
+</div>
 
 
 
