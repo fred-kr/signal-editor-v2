@@ -71,6 +71,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#configuration" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -409,6 +414,19 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Configuration
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -419,6 +437,52 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plot
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#editing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Editing
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -516,6 +580,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../ui_components/pages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Pages
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../ui_components/section_list/" class="md-nav__link">
         
   
@@ -558,11 +643,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ui_components/status_log/" class="md-nav__link">
+      <a href="../../ui_components/log_window/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Status Log
+    Log Window
   </span>
   
 
@@ -680,6 +765,43 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#plot" class="md-nav__link">
+    <span class="md-ellipsis">
+      Plot
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#editing" class="md-nav__link">
+    <span class="md-ellipsis">
+      Editing
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#data" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -697,9 +819,35 @@
   
 
 
-  <h1>Configuration</h1>
-
-
+<h1 id="configuration">Configuration</h1>
+<p>The configuration allows the user to set various options that affect the look and behavior of the application.
+It can be accessed by opening the <a href="../../ui_components/menu_bar/#settings-menu">Settings</a> menu and selecting the <strong>Preferences</strong> option.</p>
+<p>The available options are:</p>
+<h2 id="plot">Plot</h2>
+<p>These options modify the look and interaction behavior of plots on the <a href="../../ui_components/pages/#editing">Editing</a> page.</p>
+<ul>
+<li><strong>Background</strong>: The background color of the plot.</li>
+<li><strong>Foreground</strong>: The foreground (text, axis, etc.) color of the plot.</li>
+<li><strong>LineColor</strong>: The color of the line representing the signal data.</li>
+<li><strong>PointColor</strong>: The color of the points representing the detected peaks.</li>
+<li><strong>SectionColor</strong>: The color of the sections in the overview plot.</li>
+<li><strong>LineClickWidth</strong>: The area around the signal line in pixels where a click is considered to be on the line.</li>
+<li><strong>ClickRadius</strong>: The radius in data points around a click in which to search for a maximum or minimum value.</li>
+</ul>
+<h2 id="editing">Editing</h2>
+<p>These options control how the data is processed and how results are calculated.</p>
+<ul>
+<li><strong>FilterStacking</strong>: If enabled, filters can be applied to an already filtered signal. If disabled, the signal data needs to be reset before applying a new filter.</li>
+<li><strong>RateMethod</strong>: How to calculate the signal rate from the detected peaks. Options are:</li>
+<li><strong>RollingWindow</strong>: Calculate the rate by counting the number of peaks in a window with a size of one minute, with a new window every 10 seconds.</li>
+<li><strong>Instantaneous</strong>: Calculate the rate per minute as <code>60 / period</code>, where the <code>period</code> is the time between the peaks.</li>
+</ul>
+<h2 id="data">Data</h2>
+<p>These options control how data is read and displayed.</p>
+<ul>
+<li><strong>FloatPrecision</strong>: The number of decimal places to show for floating-point numbers.</li>
+<li><strong>TextSeparatorChar</strong>: The character used to separate fields when reading from text files.</li>
+</ul>
 
 
 

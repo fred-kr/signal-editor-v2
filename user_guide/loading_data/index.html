@@ -368,9 +368,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#csv-tsv-txt" class="md-nav__link">
+  <a href="#tabular-data" class="md-nav__link">
     <span class="md-ellipsis">
-      CSV / TSV / TXT
+      Tabular Data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hdf5" class="md-nav__link">
+    <span class="md-ellipsis">
+      HDF5
     </span>
   </a>
   
@@ -586,6 +595,27 @@
   
   
     <li class="md-nav__item">
+      <a href="../../ui_components/pages/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Pages
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../ui_components/section_list/" class="md-nav__link">
         
   
@@ -628,11 +658,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../../ui_components/status_log/" class="md-nav__link">
+      <a href="../../ui_components/log_window/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Status Log
+    Log Window
   </span>
   
 
@@ -779,9 +809,18 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#csv-tsv-txt" class="md-nav__link">
+  <a href="#tabular-data" class="md-nav__link">
     <span class="md-ellipsis">
-      CSV / TSV / TXT
+      Tabular Data
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hdf5" class="md-nav__link">
+    <span class="md-ellipsis">
+      HDF5
     </span>
   </a>
   
@@ -811,20 +850,17 @@
 
 
 <h1 id="loading-data">Loading Data</h1>
-<p>To start working with the app, use the <code>Open File</code> command in the <a href="../../ui_components/menu_bar/">file</a> menu, <a href="../../ui_components/tool_bar/">tool bar</a> or the <strong>Import</strong> page, then select the file you want to load.</p>
+<p>To start working with the app, use the <code>Open File</code> command in the <a href="../../ui_components/menu_bar/#file-menu">File Menu</a>, <a href="../../ui_components/tool_bar/">Toolbar</a> or the <a href="../../ui_components/pages/#import">Import Page</a>, then select the file you want to load.</p>
 <p>The selected file is searched for available columns or channels of data by either reading the available metadata (EDF files) or scanning the first few rows of the file <sup id="fnref:1"><a class="footnote-ref" href="#fn:1">1</a></sup>. If any are found, their names are made available for selection in the <code>Signal Data</code> and <code>Additional Data</code> fields.</p>
 <p>The sampling rate of the data is also retrieved from the file's metadata (EDF files). For other file formats, an attempt is made to detect the sampling rate automatically. If the attempt fails, the user is prompted to enter the sampling rate manually.</p>
 <h2 id="supported-file-formats">Supported File Formats</h2>
 <h3 id="edf-european-data-format">EDF (European Data Format)</h3>
 <p>EDF files are read using the <a href="https://mne.tools/stable/index.html">mne</a> library. The full metadata can be viewed in the <code>Additional Metadata</code> tab of the <code>File Metadata</code> dialog (open by clicking on the <code>File Metadata</code> button in the <a href="../../ui_components/tool_bar/">tool bar</a> or the <a href="../../ui_components/menu_bar/">file</a> menu).</p>
-<h3 id="csv-tsv-txt">CSV / TSV / TXT</h3>
-<p>CSV (comma-separated values), TSV (tab-separated values) and TXT (text) files are read using the <a href="https://pola.rs/">polars</a> dataframe library. </p>
-<ul>
-<li>CSV / TSV / TXT</li>
-<li>XLSX</li>
-<li>Arrow IPC / Feather (v2)</li>
-<li>HDF5 result files (created by the application)</li>
-</ul>
+<h3 id="tabular-data">Tabular Data</h3>
+<p>This includes .csv, .txt, .tsv, .xlsx and .feather files.</p>
+<p>The separator character to use when reading .txt files can be set via the <code>TextSeparatorChar</code> setting in the <a href="../configuration/#data">Settings</a>.</p>
+<h3 id="hdf5">HDF5</h3>
+<p>HDF5 file reading is not yet implemented.</p>
 <div class="footnote">
 <hr />
 <ol>
