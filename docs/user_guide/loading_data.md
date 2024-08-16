@@ -1,6 +1,6 @@
 # Loading Data
 
-To start working with the app, use the `Open File` command in the [file](../ui_components/menu_bar.md) menu, [tool bar](../ui_components/tool_bar.md) or the **Import** page, then select the file you want to load.
+To start working with the app, use the `Open File` command in the [File Menu](../ui_components/menu_bar.md#file-menu), [Toolbar](../ui_components/tool_bar.md) or the [Import Page](../ui_components/pages.md#import), then select the file you want to load.
 
 The selected file is searched for available columns or channels of data by either reading the available metadata (EDF files) or scanning the first few rows of the file [^1]. If any are found, their names are made available for selection in the `Signal Data` and `Additional Data` fields.
 
@@ -14,12 +14,12 @@ The sampling rate of the data is also retrieved from the file's metadata (EDF fi
 
 EDF files are read using the [mne](https://mne.tools/stable/index.html) library. The full metadata can be viewed in the `Additional Metadata` tab of the `File Metadata` dialog (open by clicking on the `File Metadata` button in the [tool bar](../ui_components/tool_bar.md) or the [file](../ui_components/menu_bar.md) menu).
 
-### CSV / TSV / TXT
+### Tabular Data
 
-CSV (comma-separated values), TSV (tab-separated values) and TXT (text) files are read using the [polars](https://pola.rs/) dataframe library. 
+This includes .csv, .txt, .tsv, .xlsx and .feather files.
 
+The separator character to use when reading .txt files can be set via the `TextSeparatorChar` setting in the [Settings](../user_guide/configuration.md#data).
 
-- CSV / TSV / TXT
-- XLSX
-- Arrow IPC / Feather (v2)
-- HDF5 result files (created by the application)
+### HDF5
+
+HDF5 file reading is not yet implemented.

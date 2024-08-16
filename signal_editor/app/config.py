@@ -59,7 +59,7 @@ class _PlotConfig:
         default=20,
         metadata={
             "path": "Plot/ClickRadius",
-            "Description": "The radius of the area around the signal line in pixels that is considered to be a click on the line.",
+            "Description": "The radius in data points around a click in which to search for a maximum or minimum value.",
         },
     )
 

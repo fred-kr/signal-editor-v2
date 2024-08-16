@@ -22,9 +22,10 @@ nav:
   - 'UI Components':
     - 'Menu Bar': 'ui_components/menu_bar.md'
     - 'Tool Bar': 'ui_components/tool_bar.md'
+    - 'Pages': 'ui_components/pages.md'
     - 'Section List': 'ui_components/section_list.md'
     - 'Parameter Inputs': 'ui_components/parameter_inputs.md'
-    - 'Status Log': 'ui_components/status_log.md'
+    - 'Log Window': 'ui_components/log_window.md'
   - About:
     - 'License': 'about/license.md'
     - 'References': 'about/references.md'

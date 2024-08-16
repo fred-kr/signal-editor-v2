@@ -6,7 +6,7 @@ The Section List shows all available [sections](../user_guide/sections.md) along
 
 ## Section Controls
 
-- **New Section**:
+- **New Section**: 
 - **Remove Section**:
 - **Mark Done**:
 - **Unlock Section**:
