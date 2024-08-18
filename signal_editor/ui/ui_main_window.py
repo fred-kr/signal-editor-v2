@@ -16,6 +16,7 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
+from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFormLayout, QFrame,
     QGridLayout, QGroupBox, QHBoxLayout, QHeaderView,
     QMainWindow, QMenuBar, QSizePolicy, QStackedWidget,
@@ -422,6 +423,12 @@ class Ui_MainWindow(object):
         self.stacked_page_test.setObjectName(u"stacked_page_test")
         self.gridLayout_6 = QGridLayout(self.stacked_page_test)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.web_view = QWebEngineView(self.stacked_page_test)
+        self.web_view.setObjectName(u"web_view")
+        self.web_view.setUrl(QUrl(u"about:blank"))
+
+        self.gridLayout_6.addWidget(self.web_view, 0, 0, 1, 1)
+
         self.stackedWidget.addWidget(self.stacked_page_test)
 
         self.h_layout_centralwidget.addWidget(self.stackedWidget)

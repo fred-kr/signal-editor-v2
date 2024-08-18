@@ -10,11 +10,11 @@ python = ">=3.12,<3.13"
 pyarrow = "^17.0.0"
 pyopengl-accelerate = "^3.1.7"
 wfdb = "^4.1.2"
-polars = "^1.4.1"
+polars = "^1.5.0"
 pyopengl = "^3.1.7"
 mne = "^1.7.1"
 pywavelets = "^1.7.0"
-numpy = "==1.26.4"
+numpy = "^2.0.1"
 scipy = "^1.14.0"
 xlsxwriter = "^3.2.0"
 xlsx2csv = "^0.8.3"
@@ -22,7 +22,7 @@ numexpr = "^2.10.1"
 numba = "^0.60.0"
 pyqtgraph = {git = "https://github.com/pyqtgraph/pyqtgraph.git", rev = "master"}
 loguru = "^0.7.2"
-neurokit2 = "0.2.9"
+neurokit2 = "0.2.10"
 qtconsole = "^5.5.2"
 pyside6 = "^6.7.2"
 darkdetect = "^0.8.0"
@@ -30,7 +30,8 @@ pyside6-fluent-widgets = {extras = ["full"], version = "^1.6.0"}
 attrs = "^24.2.0"
 ts2vg = "^1.2.4"
 rich = {extras = ["jupyter"], version = "^13.7.1"}
-tables = {version = "^3.10.0", allow-prereleases = true}
+tables = {version = "^3.10.1", allow-prereleases = true}
+oxy-utils = {git = "https://github.com/fred-kr/oxy-utils.git"}
 
 
 [tool.poetry.group.dev.dependencies]
@@ -38,11 +39,11 @@ ipython = "^8.26.0"
 pyinstaller = "^6.10.0"
 pyinstaller-hooks-contrib = "^2024.8"
 sourcery = "^1.22.0"
-ruff = "^0.5.7"
+ruff = "^0.6.1"
 python-dotenv = "^1.0.1"
 pytest = "^8.3.2"
 mkdocs-material = "^9.5.31"
-pyright = "^1.1.375"
+pyright = "^1.1.376"
 jedi = "^0.19.1"
 pyside6-examples = "^6.7.2"
 xmltodict = "^0.13.0"
