@@ -156,7 +156,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_export_all_results.setIcon(Icons.ArrowExportLtr.icon())
         self.btn_export_all_results.clicked.connect(lambda: self.sig_export_requested.emit("hdf5"))
 
-        self.web_view.load(QtCore.QUrl("https://fred-kr.github.io/signal-editor-v2/"))
+        self.web_view.load("https://fred-kr.github.io/signal-editor-v2/")
 
         self.stackedWidget.setCurrentIndex(0)
 

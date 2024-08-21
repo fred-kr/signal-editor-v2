@@ -41,12 +41,6 @@
 		"ruff.lint.args": [
 			"--config=${workspaceFolder}/pyproject.toml"
 		],
-		"mypy-type-checker.args": [
-			"--config-file=${workspaceFolder}/pyproject.toml"
-		],
-		"mypy-type-checker.importStrategy": "fromEnvironment",
-		"mypy-type-checker.preferDaemon": true,
-		"mypy-type-checker.reportingScope": "workspace",
 		"workbench.colorCustomizations": {
 			"activityBar.activeBackground": "#1f6fd0",
 			"activityBar.background": "#1f6fd0",
