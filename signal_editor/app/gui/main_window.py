@@ -278,7 +278,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _connect_signals(self) -> None:
         self.action_show_settings.triggered.connect(self.dialog_config.open)
-        self.action_remove_section.triggered.connect(self.dock_sections.list_view.emit_delete_current_request)
+        # self.action_remove_section.triggered.connect(self.dock_sections.list_view.emit_delete_current_request)
 
         self.stackedWidget.currentChanged.connect(self._on_page_changed)
 
