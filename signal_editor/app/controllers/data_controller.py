@@ -139,7 +139,7 @@ class DataController(QtCore.QObject):
         if file_path.suffix == ".edf":
             edf_info = mne.io.read_raw_edf(file_path, preload=False, verbose=False)
             sampling_rate = t.cast(int, edf_info.info["sfreq"])
-            column_names = edf_info.ch_names
+            column_names: list[str] = edf_info.ch_names
             other_info = dict(edf_info.info)
         elif file_path.suffix in {".feather", ".csv", ".txt", ".tsv"}:
             lf = self._reader_funcs[file_path.suffix](file_path)
@@ -187,7 +187,7 @@ class DataController(QtCore.QObject):
             columns.append(info_col)
         row_index_col = "index"
         if row_index_col in columns:
-            logger.error("Column name 'index' is reserved for internal use and cannot be used as a column name.")
+            logger.exception("Column name 'index' is reserved for internal use and cannot be used as a column name.")
             return
 
         if suffix == ".csv":

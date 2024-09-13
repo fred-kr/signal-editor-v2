@@ -344,9 +344,10 @@ class SVGColors(enum.StrEnum):
 
 
 class LogLevel(enum.IntEnum):
+    TRACE = 5
     DEBUG = 10
     INFO = 20
+    SUCCESS = 25
     WARNING = 30
     ERROR = 40
     CRITICAL = 50
-    SUCCESS = 60

@@ -30,7 +30,6 @@
 			"**/build/**",
 			"**/output/**",
 			"**/.idea/**",
-			// "**/ui_*.py",
 		],
 		"python.analysis.ignore": [
 			"**/ui_*.py",
@@ -42,21 +41,21 @@
 			"--config=${workspaceFolder}/pyproject.toml"
 		],
 		"workbench.colorCustomizations": {
-			"activityBar.activeBackground": "#1f6fd0",
-			"activityBar.background": "#1f6fd0",
+			"activityBar.activeBackground": "#0d3e63",
+			"activityBar.background": "#0d3e63",
 			"activityBar.foreground": "#e7e7e7",
 			"activityBar.inactiveForeground": "#e7e7e799",
-			"activityBarBadge.background": "#ee90bb",
-			"activityBarBadge.foreground": "#15202b",
+			"activityBarBadge.background": "#c51a7c",
+			"activityBarBadge.foreground": "#e7e7e7",
 			"commandCenter.border": "#e7e7e799",
-			"titleBar.activeBackground": "#1857a4",
+			"titleBar.activeBackground": "#072236",
 			"titleBar.activeForeground": "#e7e7e7",
-			"titleBar.inactiveBackground": "#1857a499",
+			"titleBar.inactiveBackground": "#07223699",
 			"titleBar.inactiveForeground": "#e7e7e799",
-			"sash.hoverBorder": "#1f6fd0",
-			"editorGroup.border": "#1f6fd0",
-			"tab.activeBorder": "#1f6fd0"
+			"sash.hoverBorder": "#0d3e63",
+			"editorGroup.border": "#0d3e63",
+			"tab.activeBorder": "#0d3e63"
 		},
-		"peacock.color": "#1857a4",
+		"peacock.color": "#072236",
 	}
 }

@@ -19,7 +19,7 @@ class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
 
     @QtCore.Slot()
     def accept(self) -> None:
-        metadata_dict = {
+        metadata_dict: dict[str, int | str] = {
             "sampling_rate": self.spin_box_sampling_rate.value(),
             "signal_column": self.combo_box_signal_column.currentText(),
             "info_column": self.combo_box_info_column.currentText(),

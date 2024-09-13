@@ -1,7 +1,6 @@
 import typing as t
 import sys
 from PySide6 import QtCore, QtGui, QtWidgets
-import qfluentwidgets as qfw
 
 
 class TreeComboBox(QtWidgets.QComboBox):
@@ -47,7 +46,7 @@ class ComboBoxDelegate(QtWidgets.QStyledItemDelegate):
 
     def paint(self, painter: QtGui.QPainter, option: QtWidgets.QStyleOptionViewItem, index: QtCore.QModelIndex | QtCore.QPersistentModelIndex) -> None:
         typ_ = str(index.data(QtCore.Qt.ItemDataRole.AccessibleDescriptionRole))
-        option = QtWidgets.QStyleOption
+        # option = QtWidgets.QStyleOptionViewItem(option)
         if typ_ == "separator":
             super().paint(painter, option, index)
             y = (option.rect.top() + option.rect.bottom()) // 2

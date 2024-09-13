@@ -1,6 +1,7 @@
 import os
 
 import qfluentwidgets as qfw
+import stackprinter
 from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
@@ -416,46 +417,20 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     def maybe_show_error_dialog(
         self,
         message: str,
-        msg_log_level: int,
-        plain_message: str,
+        msg_log_level: LogLevel,
+        record_dict: _t.LogRecordDict,
         threshold: LogLevel = LogLevel.WARNING,
     ) -> None:
-        """
-        Slot that listens for log messages and shows a QMessageBox if the message is above a certain
-        log level.
 
-        Parameters
-        ----------
-        message : str
-            The log message to be displayed.
-        msg_log_level : LogLevel, optional
-            The log level of the message.
-        plain_message : str
-            The original log message without HTML formatting.
-        threshold : LogLevel, optional
-            The log level threshold for showing the message as a QMessageBox.
-        """
-        try:
-            msg_log_level = LogLevel(msg_log_level)
-        except ValueError:
-            msg_log_level = LogLevel.DEBUG
-            logger.debug(
-                f"Invalid log level {msg_log_level} passed to maybe_show_error_dialog.\nOriginal message: {message}"
-            )
         if os.environ.get("DEBUG") == "1":
             threshold = LogLevel.DEBUG
 
         if msg_log_level >= threshold:
-            time = plain_message.split("|", 1)[0].strip().split(" ", 1)[1]
-            text = message.split(" - ", 1)[1]
+            traceback_text = "No traceback available"
             # If a traceback is included, show it in the detailed text instead of the message
-            traceback = plain_message
-            if "Traceback" in text:
-                split_text = text.split("Traceback", 1)
-                text = split_text[0]
-                traceback = f"Traceback: {split_text[1]}"
+            if record_dict["exception"] is not None:
+                traceback_text = stackprinter.format(record_dict["exception"])
 
-            title = f"Message: {msg_log_level.name} - {time}"
             icon = self._msg_box_icons[msg_log_level]
             parent = self
             if self.dialog_meta.isVisible():
@@ -463,8 +438,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             elif self.dialog_config.isVisible():
                 parent = self.dialog_config
 
-            msg_box = MessageBox(title, text, icon=icon, parent=parent)
-            msg_box.set_detailed_text(traceback)
+            msg_box = MessageBox(title=msg_log_level.name, text=message, icon=icon, parent=parent)
+            msg_box.set_detailed_text(traceback_text)
 
             msg_box.open()
 

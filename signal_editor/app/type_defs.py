@@ -18,11 +18,12 @@ from .enum_defs import (
 
 if t.TYPE_CHECKING:
     import mne
+    from loguru import RecordException, RecordFile, RecordLevel, RecordProcess, RecordThread
     from PySide6 import QtCore, QtGui
 
     from ..app.core.section import SectionID
 
-PGColor = t.Union[str, int, float, tuple[int, int, int], tuple[int, int, int, int], "QtGui.QColor", SVGColors]
+type PGColor = t.Union[str, int, float, tuple[int, int, int], tuple[int, int, int, int], "QtGui.QColor", SVGColors]
 
 
 class PGPenKwargs(t.TypedDict, total=False):
@@ -441,3 +442,19 @@ class CompleteResultDict(t.TypedDict):
     metadata: SelectedFileMetadataDict
     global_dataframe: npt.NDArray[np.void]
     section_results: dict["SectionID", DetailedSectionResultDict]
+
+
+class LogRecordDict(t.TypedDict):
+    elapsed: datetime.timedelta
+    exception: "RecordException | None"
+    extra: dict[str, t.Any]
+    file: "RecordFile"
+    function: str
+    level: "RecordLevel"
+    line: int | None
+    message: str
+    module: str
+    name: str | None
+    process: "RecordProcess"
+    thread: "RecordThread"
+    time: datetime.datetime
