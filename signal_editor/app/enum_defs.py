@@ -1,6 +1,6 @@
 import enum
 
-from PySide6 import QtCore, QtGui
+from PySide6 import QtGui
 
 
 class RateComputationMethod(enum.StrEnum):
@@ -10,10 +10,6 @@ class RateComputationMethod(enum.StrEnum):
 
     Instantaneous = "instantaneous"
     RollingWindow = "rolling_window"
-    RollingWindowNoOverlap = "rolling_window_no_overlap"
-
-    # def __str__(self) -> str:
-    #     return self.name
 
 
 class TextFileSeparator(enum.StrEnum):
@@ -22,13 +18,6 @@ class TextFileSeparator(enum.StrEnum):
     Comma = ","
     Semicolon = ";"
     Pipe = "|"
-
-    def qicon(self) -> QtGui.QIcon:
-        pixmap = QtGui.QPixmap(16, 16)
-        painter = QtGui.QPainter(pixmap)
-        painter.drawText(QtCore.QRect(0, 0, 16, 16), QtCore.Qt.AlignmentFlag.AlignCenter, self.value)
-        painter.end()
-        return QtGui.QIcon(pixmap)
 
 
 class ExportFormatCompact(enum.StrEnum):
@@ -58,7 +47,6 @@ class FilterMethod(enum.StrEnum):
     FIR = "fir"
     Bessel = "bessel"
     Powerline = "powerline"
-    # NoFilter = "none"
 
 
 class FilterType(enum.StrEnum):
@@ -68,7 +56,6 @@ class FilterType(enum.StrEnum):
 
 
 class PreprocessPipeline(enum.StrEnum):
-    # Custom = "custom"
     PPGElgendi = "ppg_elgendi"
     ECGNeuroKit2 = "ecg_neurokit2"
     ECGBioSPPy = "biosppy"
@@ -82,7 +69,6 @@ class PreprocessPipeline(enum.StrEnum):
 class StandardizationMethod(enum.StrEnum):
     ZScore = "std"
     ZScoreRobust = "mad"
-    # NoStandardization = "none"
 
 
 class PeakDetectionMethod(enum.StrEnum):
@@ -336,11 +322,6 @@ class SVGColors(enum.StrEnum):
 
     def qcolor(self) -> QtGui.QColor:
         return QtGui.QColor(self.value)
-
-    def qicon(self) -> QtGui.QIcon:
-        pixmap = QtGui.QPixmap(16, 16)
-        pixmap.fill(QtGui.QColor(self.value))
-        return QtGui.QIcon(pixmap)
 
 
 class LogLevel(enum.IntEnum):

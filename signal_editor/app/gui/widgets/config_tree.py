@@ -1,10 +1,10 @@
 import qfluentwidgets as qfw
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from . import EnumComboBox
-
 from ...enum_defs import RateComputationMethod, SVGColors, TextFileSeparator
 from ...models import ItemDataRole, ModelIndex
+from ...models.config_model import ConfigModel
+from . import EnumComboBox
 
 
 class ConfigItemDelegate(QtWidgets.QStyledItemDelegate):
@@ -17,7 +17,7 @@ class ConfigItemDelegate(QtWidgets.QStyledItemDelegate):
         if value is not None and not isinstance(value, self._editable_types):
             # If the value is not editable, we disable the item.
             my_option = QtWidgets.QStyleOptionViewItem(option)
-            my_option.state &= ~QtWidgets.QStyle.StateFlag.State_Enabled  # pyright: ignore[reportAttributeAccessIssue]
+            my_option.state &= ~QtWidgets.QStyle.StateFlag.State_Enabled
             super().paint(painter, my_option, index)
             return
 
@@ -32,6 +32,7 @@ class ConfigItemDelegate(QtWidgets.QStyledItemDelegate):
 
         if isinstance(initial_value, (RateComputationMethod, TextFileSeparator)):
             editor = EnumComboBox(initial_value.__class__, parent=parent)
+
         elif isinstance(initial_value, bool):
             editor = None
         elif isinstance(initial_value, int):
@@ -42,6 +43,7 @@ class ConfigItemDelegate(QtWidgets.QStyledItemDelegate):
             editor.setMinimum(0)
         elif isinstance(initial_value, QtGui.QColor):
             editor = EnumComboBox(SVGColors, parent=parent)
+            editor.set_decoration_role_getter(lambda c: c.qcolor())
         else:
             editor = super().createEditor(parent, option, index)
 
@@ -108,6 +110,10 @@ class ConfigTreeView(QtWidgets.QTreeView):
         self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_context_menu)
 
+        self._config_model = ConfigModel(self)
+
+        self.setModel(self._config_model)
+
     def sizeHint(self) -> QtCore.QSize:
         return QtCore.QSize(800, 600)
 
@@ -120,15 +126,15 @@ class ConfigTreeView(QtWidgets.QTreeView):
         )
 
         if msg_box.exec():
-            self.model().restore_defaults()  # type: ignore
+            self._config_model.restore_defaults()
 
     @QtCore.Slot()
     def reset_current_item(self) -> None:
-        self.model().reset_item(self.currentIndex())  # type: ignore
+        self._config_model.reset_item(self.currentIndex())
 
     @QtCore.Slot(QtCore.QPoint)
     def show_context_menu(self, pos: QtCore.QPoint) -> None:
         menu = QtWidgets.QMenu(self)
         menu.addAction("Restore Defaults", self.restore_defaults)
         menu.addAction("Reset Selected", self.reset_current_item)
-        menu.exec(self.mapToGlobal(pos))
+        menu.exec(QtGui.QCursor.pos())

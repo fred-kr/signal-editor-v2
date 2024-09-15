@@ -30,6 +30,7 @@
 			"**/build/**",
 			"**/output/**",
 			"**/.idea/**",
+			"**/ui_*.py",
 		],
 		"python.analysis.ignore": [
 			"**/ui_*.py",

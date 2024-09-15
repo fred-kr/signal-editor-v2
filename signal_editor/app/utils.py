@@ -1,6 +1,7 @@
 import datetime
-from pathlib import Path
+import enum
 import typing as t
+from pathlib import Path
 
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -130,3 +131,10 @@ def format_file_path(path: str, max_len: int = 50) -> str:
 
     prefix = path_obj.parent.as_posix()[:len_prefix]
     return f"{prefix}.../{name}"
+
+
+def search_enum[T: enum.Enum](value: t.Any, enum_class: t.Type[T]) -> T:
+    try:
+        return enum_class[value]
+    except KeyError:
+        return enum_class(value)

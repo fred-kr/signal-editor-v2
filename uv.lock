@@ -3586,6 +3586,15 @@ wheels = [
 ]
 
 [[package]]
+name = "pyside-config"
+version = "0.1.0"
+source = { git = "https://github.com/fred-kr/pyside-config.git#8508f527161bd3d589b583797385aa2d32cf9dac" }
+dependencies = [
+    { name = "attrs" },
+    { name = "pyside6" },
+]
+
+[[package]]
 name = "pyside6"
 version = "6.7.2"
 source = { registry = "https://pypi.org/simple" }
@@ -4045,6 +4054,7 @@ dependencies = [
     { name = "pyopengl" },
     { name = "pyopengl-accelerate" },
     { name = "pyqtgraph" },
+    { name = "pyside-config" },
     { name = "pyside6" },
     { name = "pyside6-fluent-widgets" },
     { name = "pywavelets" },
@@ -4090,6 +4100,7 @@ requires-dist = [
     { name = "pyopengl", specifier = ">=3.1.7" },
     { name = "pyopengl-accelerate", specifier = ">=3.1.7" },
     { name = "pyqtgraph", git = "https://github.com/pyqtgraph/pyqtgraph.git" },
+    { name = "pyside-config", git = "https://github.com/fred-kr/pyside-config.git" },
     { name = "pyside6", specifier = ">=6.7.2" },
     { name = "pyside6-fluent-widgets", specifier = ">=1.6.3" },
     { name = "pywavelets", specifier = ">=1.7.0" },

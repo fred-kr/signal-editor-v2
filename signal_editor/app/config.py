@@ -1,3 +1,4 @@
+import functools
 import typing as t
 
 import attrs
@@ -5,7 +6,7 @@ from PySide6 import QtCore, QtGui
 
 from . import type_defs as _t
 from .enum_defs import RateComputationMethod, SVGColors, TextFileSeparator
-from .utils import app_dir_posix, make_qcolor
+from .utils import app_dir_posix, make_qcolor, search_enum
 
 type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 
@@ -115,6 +116,7 @@ class _EditingConfig:
     )
     RateMethod: RateComputationMethod = attrs.field(
         default=RateComputationMethod.RollingWindow,
+        converter=functools.partial(search_enum, enum_class=RateComputationMethod),
         metadata={
             "path": "Editing/RateMethod",
             "Description": "Which method to use for computing the rate displayed in the lower plot on the editing page, either 'instantaneous' or 'rolling_window'.",
@@ -129,7 +131,7 @@ class _EditingConfig:
         settings = QtCore.QSettings()
         settings.beginGroup("Editing")
         fs = settings.value("FilterStacking", False, type=bool)
-        rm = RateComputationMethod(settings.value("RateMethod", RateComputationMethod.RollingWindow))
+        rm = settings.value("RateMethod", RateComputationMethod.RollingWindow)
         settings.endGroup()
 
         return cls(
@@ -141,7 +143,7 @@ class _EditingConfig:
         settings = QtCore.QSettings()
         settings.beginGroup("Editing")
         settings.setValue("FilterStacking", self.FilterStacking)
-        settings.setValue("RateMethod", self.RateMethod.value)
+        settings.setValue("RateMethod", str(self.RateMethod))
         settings.endGroup()
 
         settings.sync()
@@ -158,6 +160,7 @@ class _DataConfig:
     )
     TextSeparatorChar: TextFileSeparator = attrs.field(
         default=TextFileSeparator.Tab,
+        converter=functools.partial(search_enum, enum_class=TextFileSeparator),
         metadata={
             "path": "Data/TextSeparatorChar",
             "Description": "Character used to separate fields when reading from a text (.txt) file.",
@@ -172,7 +175,7 @@ class _DataConfig:
         settings = QtCore.QSettings()
         settings.beginGroup("Data")
         fp = settings.value("FloatPrecision", 3, type=int)
-        tfs = TextFileSeparator(settings.value("TextSeparatorChar", TextFileSeparator.Tab))
+        tfs = settings.value("TextSeparatorChar", TextFileSeparator.Tab)
         settings.endGroup()
 
         return cls(
@@ -184,7 +187,7 @@ class _DataConfig:
         settings = QtCore.QSettings()
         settings.beginGroup("Data")
         settings.setValue("FloatPrecision", self.FloatPrecision)
-        settings.setValue("TextSeparatorChar", self.TextSeparatorChar.value)
+        settings.setValue("TextSeparatorChar", str(self.TextSeparatorChar))
         settings.endGroup()
 
         settings.sync()

@@ -556,8 +556,8 @@ class Section:
         method = Config().editing.RateMethod
         if method == RateComputationMethod.RollingWindow:
             self._calc_rate_rolling(full_info=full_info)
-        elif method == RateComputationMethod.RollingWindowNoOverlap:
-            self._calc_rate_rolling(sec_new_window_every=60, full_info=full_info)
+        # elif method == RateComputationMethod.RollingWindowNoOverlap:
+        #     self._calc_rate_rolling(sec_new_window_every=60, full_info=full_info)
         elif method == RateComputationMethod.Instantaneous:
             self._calc_rate_instant()
         else:

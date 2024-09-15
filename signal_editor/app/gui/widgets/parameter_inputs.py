@@ -2,8 +2,6 @@ import enum
 import typing as t
 
 import qfluentwidgets as qfw
-
-# from loguru import logger
 from PySide6 import QtCore, QtWidgets
 
 from ....ui.ui_parameter_inputs import Ui_ParameterInputs

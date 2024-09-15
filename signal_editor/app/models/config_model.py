@@ -7,10 +7,9 @@ from attr._make import Factory
 from loguru import logger
 from PySide6 import QtCore, QtGui
 
-from . import ModelIndex, ItemDataRole
 from ..config import Config
 from ..enum_defs import RateComputationMethod, SVGColors, TextFileSeparator
-
+from . import ItemDataRole, ModelIndex
 
 _ConfigType = t.Union[
     QtGui.QColor, int, bool, RateComputationMethod, TextFileSeparator, str, None, list[str], QtCore.QByteArray
@@ -128,7 +127,7 @@ class ConfigItem:
     def parent(self) -> "ConfigItem | None":
         return self.parent_item
 
-    @logger.catch(message="Error setting config value")
+    @logger.catch
     def set_value(self, value: _ConfigType) -> bool:
         if self.value == value:
             return False
@@ -141,7 +140,7 @@ class ConfigItem:
         if self.value == self.default_value:
             return False
         if isinstance(self.default_value, Factory):
-            default_value = self.default_value.factory()  # type: ignore
+            default_value = self.default_value.factory()
         else:
             default_value = self.default_value
 

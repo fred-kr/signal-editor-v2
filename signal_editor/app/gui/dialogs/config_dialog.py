@@ -1,7 +1,6 @@
 import qfluentwidgets as qfw
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ...models.config_model import ConfigModel
 from ..icons import SignalEditorIcons as Icons
 from ..widgets.config_tree import ConfigTreeView
 
@@ -19,7 +18,7 @@ class ConfigDialog(QtWidgets.QDialog):
         buttons.rejected.connect(self.reject)
 
         self.config_tree = ConfigTreeView(self)
-        self.config_tree.setModel(ConfigModel(self))
+        # self.config_tree.setModel(ConfigModel(self))
 
         toolbar = qfw.CommandBar(self)
         toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
