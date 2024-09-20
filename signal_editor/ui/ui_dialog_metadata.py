@@ -31,6 +31,7 @@ class Ui_MetadataDialog(object):
         icon = QIcon()
         icon.addFile(u":/icons/app_icon.svg", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         MetadataDialog.setWindowIcon(icon)
+        MetadataDialog.setStyleSheet(u"")
         self.gridLayout = QGridLayout(MetadataDialog)
         self.gridLayout.setObjectName(u"gridLayout")
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
@@ -99,8 +100,11 @@ class Ui_MetadataDialog(object):
         self.spin_box_sampling_rate = SpinBox(self.container_form_layout)
         self.spin_box_sampling_rate.setObjectName(u"spin_box_sampling_rate")
         self.spin_box_sampling_rate.setMinimumSize(QSize(0, 31))
+        self.spin_box_sampling_rate.setStyleSheet(u"")
         self.spin_box_sampling_rate.setFrame(False)
         self.spin_box_sampling_rate.setMaximum(10000)
+        self.spin_box_sampling_rate.setProperty("mandatoryField", True)
+        self.spin_box_sampling_rate.setProperty("requiresInput", False)
 
         self.formLayout.setWidget(2, QFormLayout.FieldRole, self.spin_box_sampling_rate)
 
@@ -113,6 +117,8 @@ class Ui_MetadataDialog(object):
         self.combo_box_signal_column = ComboBox(self.container_form_layout)
         self.combo_box_signal_column.setObjectName(u"combo_box_signal_column")
         self.combo_box_signal_column.setMinimumSize(QSize(0, 31))
+        self.combo_box_signal_column.setProperty("mandatoryField", True)
+        self.combo_box_signal_column.setProperty("requiresInput", False)
 
         self.formLayout.setWidget(3, QFormLayout.FieldRole, self.combo_box_signal_column)
 

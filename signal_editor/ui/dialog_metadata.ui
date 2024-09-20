@@ -17,6 +17,9 @@
    <iconset resource="../resources/resources.qrc">
     <normaloff>:/icons/app_icon.svg</normaloff>:/icons/app_icon.svg</iconset>
   </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="1" column="0">
     <spacer name="horizontalSpacer">
@@ -144,6 +147,9 @@
               <height>31</height>
              </size>
             </property>
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
             <property name="frame">
              <bool>false</bool>
             </property>
@@ -155,6 +161,12 @@
             </property>
             <property name="maximum">
              <number>10000</number>
+            </property>
+            <property name="mandatoryField" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="requiresInput" stdset="0">
+             <bool>false</bool>
             </property>
            </widget>
           </item>
@@ -187,6 +199,12 @@
             </property>
             <property name="text">
              <string/>
+            </property>
+            <property name="mandatoryField" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="requiresInput" stdset="0">
+             <bool>false</bool>
             </property>
            </widget>
           </item>
