@@ -11,6 +11,7 @@ import polars.selectors as ps
 from loguru import logger
 
 from .. import type_defs as _t
+from ..constants import INDEX_COL, IS_MANUAL_COL, IS_PEAK_COL, SECTION_INDEX_COL
 from ..config import Config
 from ..enum_defs import FilterMethod, PeakDetectionMethod, PreprocessPipeline, RateComputationMethod
 from ..models.result_models import DetailedSectionResult, SectionResult
@@ -187,27 +188,27 @@ class Section:
         self._is_standardized: bool = False
         self._is_processed: bool = False  # flag to indicate if the section has been processed using a pipeline
 
-        if "section_index" in data.columns:
-            data.drop_in_place("section_index")
+        if SECTION_INDEX_COL in data.columns:
+            data.drop_in_place(SECTION_INDEX_COL)
 
         self.data = (
-            data.with_row_index("section_index")
+            data.with_row_index(SECTION_INDEX_COL)
             .lazy()
-            .select(ps.by_name("index", "section_index"), ~ps.by_name("index", "section_index"))
-            .set_sorted("index")
-            .set_sorted("section_index")
+            .select(ps.by_name(INDEX_COL, SECTION_INDEX_COL), ~ps.by_name(INDEX_COL, SECTION_INDEX_COL))
+            .set_sorted(INDEX_COL)
+            .set_sorted(SECTION_INDEX_COL)
             .with_columns(
                 pl.col(signal_name).alias(self.processed_signal_name),
-                pl.lit(0, pl.Int8).alias("is_peak"),
-                pl.lit(0, pl.Int8).alias("is_manual"),
+                pl.lit(0, pl.Int8).alias(IS_PEAK_COL),
+                pl.lit(0, pl.Int8).alias(IS_MANUAL_COL),
             )
             .collect()
         )
 
         self.sampling_rate = Config().internal.LastSamplingRate
         self.global_bounds: tuple[int, int] = (
-            self.data.item(0, "index"),
-            self.data.item(-1, "index"),
+            self.data.item(0, INDEX_COL),
+            self.data.item(-1, INDEX_COL),
         )
 
         self._rate_is_synced = False
@@ -284,16 +285,16 @@ class Section:
         """Returns the indices of the peaks in the processed signal."""
         return (
             self.data.lazy()
-            .filter(pl.col("is_peak") == 1)
-            .select("section_index")
+            .filter(pl.col(IS_PEAK_COL) == 1)
+            .select(SECTION_INDEX_COL)
             .collect()
-            .get_column("section_index")
+            .get_column(SECTION_INDEX_COL)
         )
 
     @property
     def peaks_global(self) -> pl.Series:
         """Returns the indices of the peaks relative to the entire signal."""
-        return self.data.lazy().filter(pl.col("is_peak") == 1).select("index").collect().get_column("index")
+        return self.data.lazy().filter(pl.col(IS_PEAK_COL) == 1).select(INDEX_COL).collect().get_column(INDEX_COL)
 
     @property
     def manual_peak_edits(self) -> ManualPeakEdits:
@@ -474,11 +475,11 @@ class Section:
         pl_peaks = pl.Series("", peaks, pl.Int32)
 
         self.data = self.data.with_columns(
-            pl.when(pl.col("section_index").is_in(pl_peaks))
+            pl.when(pl.col(SECTION_INDEX_COL).is_in(pl_peaks))
             .then(pl.lit(1))
             .otherwise(pl.lit(0))
             .cast(pl.Int8)
-            .alias("is_peak")
+            .alias(IS_PEAK_COL)
         )
 
         self.manual_peak_edits.clear()
@@ -515,17 +516,17 @@ class Section:
         updated_data = (
             self.data.lazy()
             .select(
-                pl.when(pl.col("section_index").is_in(pl_peaks))
+                pl.when(pl.col(SECTION_INDEX_COL).is_in(pl_peaks))
                 .then(pl.lit(then_value))
-                .otherwise(pl.col("is_peak"))
+                .otherwise(pl.col(IS_PEAK_COL))
                 .cast(pl.Int8)
-                .alias("is_peak")
+                .alias(IS_PEAK_COL)
             )
             .collect()
-            .get_column("is_peak")
+            .get_column(IS_PEAK_COL)
         )
 
-        changed_indices = pl.arg_where(updated_data != self.data.get_column("is_peak"), eager=True)
+        changed_indices = pl.arg_where(updated_data != self.data.get_column(IS_PEAK_COL), eager=True)
 
         self.data = self.data.with_columns(is_peak=updated_data)
 
@@ -556,8 +557,6 @@ class Section:
         method = Config().editing.RateMethod
         if method == RateComputationMethod.RollingWindow:
             self._calc_rate_rolling(full_info=full_info)
-        # elif method == RateComputationMethod.RollingWindowNoOverlap:
-        #     self._calc_rate_rolling(sec_new_window_every=60, full_info=full_info)
         elif method == RateComputationMethod.Instantaneous:
             self._calc_rate_instant()
         else:
@@ -582,27 +581,24 @@ class Section:
         inst_rate = signal_rate(peaks, self.sampling_rate, desired_length)
 
         self.rate_data = pl.DataFrame(
-            {"section_index": pl.int_range(inst_rate.size, dtype=pl.Int32, eager=True), "rate_bpm": inst_rate}
+            {SECTION_INDEX_COL: pl.int_range(inst_rate.size, dtype=pl.Int32, eager=True), "rate_bpm": inst_rate}
         )
 
     def _calc_rate_rolling(
         self,
-        grp_col: str = "section_index",
+        grp_col: str = SECTION_INDEX_COL,
         sec_new_window_every: int = 10,
         sec_window_length: int = 60,
         sec_start_at: int = 0,
         full_info: bool = False,
+        remove_incomplete_windows: bool = False,
     ) -> None:
         sampling_rate = self.sampling_rate
 
         every = sec_new_window_every * sampling_rate
         period = sec_window_length * sampling_rate
         offset = sec_start_at * sampling_rate
-        if grp_col not in self.data.columns:
-            raise ValueError(f"Column '{grp_col}' must exist in the dataframe")
-        if self.data.lazy().select(pl.col(grp_col)).collect_schema().dtypes()[0] not in pl.INTEGER_DTYPES:
-            raise ValueError(f"Column '{grp_col}' must be of integer type")
-        n_incomplete_windows = period // every
+        # n_incomplete_windows = period // every
 
         rr_df = (
             self.data.lazy()
@@ -613,26 +609,41 @@ class Section:
                 every=f"{every}i",
                 period=f"{period}i",
                 offset=f"{offset}i",
+                include_boundaries=True,
             )
         )
         if (self.info_name in self.data.columns) and full_info:
             info_col = self.info_name
             rr_df = rr_df.agg(
-                pl.sum("is_peak").alias("rate_bpm"),
+                # pl.sum(IS_PEAK_COL).alias("rate_bpm"),
+                pl.sum(IS_PEAK_COL).alias("num_peaks"),
+                pl.first("_lower_bound").alias("start"),
+                pl.last("_upper_bound").alias("end"),
                 pl.mean(info_col).name.suffix("_mean"),
                 pl.median(info_col).name.suffix("_median"),
                 pl.std(info_col).name.suffix("_std"),
                 pl.min(info_col).name.suffix("_min"),
                 pl.max(info_col).name.suffix("_max"),
                 pl.var(info_col).name.suffix("_var"),
-            ).collect()[:-n_incomplete_windows]
+            )#.collect()[:-n_incomplete_windows]
         else:
             rr_df = rr_df.agg(
-                pl.sum("is_peak").alias("rate_bpm"),
-            ).collect()[:-n_incomplete_windows]
+                # pl.sum(IS_PEAK_COL).alias("rate_bpm"),
+                pl.sum(IS_PEAK_COL).alias("num_peaks"),
+                pl.first("_lower_bound").alias("start"),
+                pl.last("_upper_bound").alias("end"),
+            )#.collect()[:-n_incomplete_windows]
 
+        rr_df = rr_df.with_columns(
+            (pl.col("end") - pl.col("start")).alias("window_length_in_samples"),
+            ((pl.col("end") - pl.col("start")) / sampling_rate).alias("window_length_in_seconds"),
+            (pl.col("num_peaks") / pl.col("window_length_in_seconds") * 60).alias("rate_bpm"),
+        ).collect()
+        
         self.rate_data = rr_df.with_columns(
-            pl.col("section_index").shrink_dtype(), pl.col("rate_bpm").shrink_dtype()
+            pl.col("start").shrink_dtype(),
+            pl.col(SECTION_INDEX_COL).shrink_dtype(),
+            pl.col("rate_bpm").shrink_dtype()
         ).shrink_to_fit()
 
     def get_mean_rate_per_temperature(self) -> pl.DataFrame:
@@ -654,13 +665,13 @@ class Section:
         pl_removed = pl.Series("removed", self.manual_peak_edits.removed, pl.Int32)
 
         self.data = self.data.with_columns(
-            pl.when(pl.col("section_index").is_in(pl_added))
+            pl.when(pl.col(SECTION_INDEX_COL).is_in(pl_added))
             .then(pl.lit(1))
-            .when(pl.col("section_index").is_in(pl_removed))
+            .when(pl.col(SECTION_INDEX_COL).is_in(pl_removed))
             .then(pl.lit(-1))
             .otherwise(pl.lit(0))
             .cast(pl.Int8)
-            .alias("is_manual")
+            .alias(IS_MANUAL_COL)
         )
 
     def get_metadata(self) -> SectionMetadata:
@@ -676,9 +687,9 @@ class Section:
     def get_peak_pos(self) -> pl.DataFrame:
         return (
             self.data.lazy()
-            .filter(pl.col("is_peak") == 1)
+            .filter(pl.col(IS_PEAK_COL) == 1)
             .select(
-                pl.col("section_index"),
+                pl.col(SECTION_INDEX_COL),
                 pl.col(self.processed_signal_name),
             )
             .collect()
@@ -723,7 +734,7 @@ class Section:
             peak_df = peak_df.with_columns(self.peaks_global.alias("global_index"))
         if include_times:
             peak_df = peak_df.with_columns(
-                (pl.col("section_index") / self.sampling_rate).alias("seconds_since_section_start")
+                (pl.col(SECTION_INDEX_COL) / self.sampling_rate).alias("seconds_since_section_start")
             )
         if include_intervals:
             peak_df = peak_df.with_columns(section_peaks.diff().fill_null(0).alias("peak_intervals"))
@@ -740,8 +751,8 @@ class Section:
             self.data.lazy()
             .with_columns(
                 pl.col(self.signal_name).alias(self.processed_signal_name),
-                pl.lit(0, pl.Int8).alias("is_peak"),
-                pl.lit(0, pl.Int8).alias("is_manual"),
+                pl.lit(0, pl.Int8).alias(IS_PEAK_COL),
+                pl.lit(0, pl.Int8).alias(IS_MANUAL_COL),
             )
             .collect()
         )
@@ -755,8 +766,8 @@ class Section:
         self.data = (
             self.data.lazy()
             .with_columns(
-                pl.lit(0, pl.Int8).alias("is_peak"),
-                pl.lit(0, pl.Int8).alias("is_manual"),
+                pl.lit(0, pl.Int8).alias(IS_PEAK_COL),
+                pl.lit(0, pl.Int8).alias(IS_MANUAL_COL),
             )
             .collect()
         )

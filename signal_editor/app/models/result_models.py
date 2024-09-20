@@ -1,8 +1,6 @@
 import typing as t
 
 import attrs
-import numpy as np
-import numpy.typing as npt
 import polars as pl
 
 from .. import type_defs as _t
@@ -11,48 +9,11 @@ if t.TYPE_CHECKING:
     from ..core.section import ManualPeakEdits, SectionID, SectionMetadata
 
 
-@attrs.define(frozen=True)
-class CompactSectionResult:
-    peaks_global_index: pl.Series = attrs.field()
-    peaks_section_index: pl.Series = attrs.field()
-    seconds_since_global_start: pl.Series = attrs.field()
-    seconds_since_section_start: pl.Series = attrs.field()
-    peak_intervals: pl.Series = attrs.field()
-    info_values: pl.Series | None = attrs.field()
-    rate_data: pl.DataFrame = attrs.field()
-
-    def to_polars_df(self) -> pl.DataFrame:
-        schema = {
-            "peaks_global_index": pl.Int32,
-            "peaks_section_index": pl.Int32,
-            "seconds_since_global_start": pl.Float64,
-            "seconds_since_section_start": pl.Float64,
-            "peak_intervals": pl.Int32,
-        }
-        if self.info_values is not None:
-            schema["info_values"] = pl.Float64
-
-        return pl.DataFrame({k: getattr(self, k) for k in schema}, schema)
-
-    def to_structured_array(self) -> npt.NDArray[np.void]:
-        return self.to_polars_df().to_numpy(structured=True)
-
-    def to_dict(self) -> _t.CompactSectionResultDict:
-        out = _t.CompactSectionResultDict(
-            peaks_global_index=self.peaks_global_index.to_numpy(),
-            peaks_section_index=self.peaks_section_index.to_numpy(),
-            seconds_since_global_start=self.seconds_since_global_start.to_numpy(),
-            seconds_since_section_start=self.seconds_since_section_start.to_numpy(),
-            peak_intervals=self.peak_intervals.to_numpy(),
-            rate_data=self.rate_data.to_numpy(structured=True),
-        )
-        if self.info_values is not None:
-            out["info_values"] = self.info_values.to_numpy()
-        return out
-
-
 @attrs.define(repr=True)
 class SectionResult:
+    """
+    Stores the detected peaks along with the computed rate data for a single section. Created for each new section.
+    """
     peak_data: pl.DataFrame = attrs.field(factory=pl.DataFrame)
     rate_data: pl.DataFrame = attrs.field(factory=pl.DataFrame)
     is_locked: bool = attrs.field(default=False)
@@ -72,6 +33,9 @@ class SectionResult:
 
 @attrs.define(frozen=True, repr=True)
 class DetailedSectionResult:
+    """
+    Class containing detailed information about a section. Created when a complete result is requested by the user.
+    """
     metadata: "SectionMetadata" = attrs.field()
     section_dataframe: pl.DataFrame = attrs.field()
     manual_peak_edits: "ManualPeakEdits" = attrs.field()

@@ -1,8 +1,8 @@
 import typing as t
 
 import numpy as np
-import polars as pl
 import numpy.typing as npt
+import polars as pl
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
@@ -229,9 +229,8 @@ class PlotController(QtCore.QObject):
 
     @QtCore.Slot(bool)
     def toggle_regions(self, visible: bool) -> None:
-        for i, region in enumerate(
-            self.regions, start=1
-        ):  # Start at 1 since section 0 is the base from which all others are added
+        # Start at 1 since section 0 is the base from which all others are added
+        for i, region in enumerate(self.regions, start=1):
             region.section_id = i
             region.setToolTip(f"Section {i:03}")
             region.setVisible(visible)
@@ -335,7 +334,9 @@ class PlotController(QtCore.QObject):
         else:
             self.rate_curve.setData(y_data)
 
-    def set_peak_data(self, x_data: npt.NDArray[np.intp | np.uintp] | pl.Series, y_data: npt.NDArray[np.float64] | pl.Series) -> None:
+    def set_peak_data(
+        self, x_data: npt.NDArray[np.intp | np.uintp] | pl.Series, y_data: npt.NDArray[np.float64] | pl.Series
+    ) -> None:
         if self.peak_scatter is None:
             return
         self.peak_scatter.setData(x=x_data, y=y_data)
@@ -421,7 +422,7 @@ class PlotController(QtCore.QObject):
 
     @QtCore.Slot()
     def remove_peaks_in_selection(self) -> None:
-        vb: EditingViewBox = self.pw_main.plotItem.vb  # type: ignore
+        vb: EditingViewBox = self.pw_main.plotItem.vb
         if vb.mapped_selection_rect is None or self.peak_scatter is None:
             return
 
@@ -438,22 +439,7 @@ class PlotController(QtCore.QObject):
         vb.selection_box = None
 
     def get_selection_area(self) -> QtCore.QRectF | None:
-        return self.pw_main.plotItem.vb.mapped_selection_rect  # type: ignore
-
-    # def draw_rolling_rate(
-    #     self,
-    #     x: npt.NDArray[np.float64],
-    #     y: npt.NDArray[np.float64],
-    #     color: str = "green",
-    #     marker: str = "o",
-    #     markersize: int = 12,
-    # ) -> None:
-    #     subplot = self.mpw_result.fig.add_subplot(111)
-    #     subplot.scatter(x, y, s=markersize, c=color, marker=marker)
-    #     subplot.set_xlabel("Temperature (°C)")
-    #     subplot.set_ylabel("HR (bpm)")
-    #     self.mpw_result.fig.tight_layout()
-    #     self.mpw_result.draw()
+        return self.pw_main.plotItem.vb.mapped_selection_rect
 
     @QtCore.Slot(QtGui.QColor)
     def set_background_color(self, color: QtGui.QColor) -> None:

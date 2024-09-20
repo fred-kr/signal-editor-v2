@@ -82,12 +82,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.add_sub_interface(self.stacked_page_edit, Icons.Edit.icon(), "Editing")
         self.add_sub_interface(self.stacked_page_export, Icons.DocumentArrowRight.icon(), "Results")
 
-        self.add_sub_interface(
-            self.stacked_page_test,
-            Icons.Bug.icon(),
-            "Test Page",
-            position=NavigationItemPosition.BOTTOM,
-        )
+        # self.add_sub_interface(
+        #     self.stacked_page_test,
+        #     Icons.Bug.icon(),
+        #     "Test Page",
+        #     position=NavigationItemPosition.BOTTOM,
+        # )
         qrouter.setDefaultRouteKey(self.stackedWidget, self.stacked_page_import.objectName())
         self.navigation_interface.setExpandWidth(250)
 
@@ -157,7 +157,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_export_all_results.setIcon(Icons.ArrowExportLtr.icon())
         self.btn_export_all_results.clicked.connect(lambda: self.sig_export_requested.emit("hdf5"))
 
-        self.web_view.load("https://fred-kr.github.io/signal-editor-v2/")
+        # self.web_view.load("https://fred-kr.github.io/signal-editor-v2/")
 
         self.stackedWidget.setCurrentIndex(0)
 
@@ -289,13 +289,11 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.combo_box_signal_column_import_page.currentTextChanged.connect(
             self.dialog_meta.combo_box_signal_column.setCurrentText
         )
-        self.dialog_meta.spin_box_sampling_rate.valueChanged.connect(self.spin_box_sampling_rate_import_page.setValue)
+        self.dialog_meta.spin_box_sampling_rate.valueChanged.connect(self._on_dialog_sampling_rate_changed)
         self.dialog_meta.combo_box_info_column.currentTextChanged.connect(
             self.combo_box_info_column_import_page.setCurrentText
         )
-        self.dialog_meta.combo_box_signal_column.currentTextChanged.connect(
-            self.combo_box_signal_column_import_page.setCurrentText
-        )
+        self.dialog_meta.combo_box_signal_column.currentTextChanged.connect(self._on_dialog_signal_column_changed)
 
         self.dock_status_log.log_text_box.sig_log_message.connect(self.maybe_show_error_dialog)
         self.dock_sections.btn_confirm.clicked.connect(self.action_confirm_section.trigger)
@@ -304,6 +302,29 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.action_export_to_csv.triggered.connect(lambda: self.sig_export_requested.emit("csv"))
         self.action_export_to_xlsx.triggered.connect(lambda: self.sig_export_requested.emit("xlsx"))
         self.action_export_to_hdf5.triggered.connect(lambda: self.sig_export_requested.emit("hdf5"))
+
+    @QtCore.Slot(int)
+    def _on_dialog_sampling_rate_changed(self, value: int) -> None:
+        if value > 0:
+            self.dialog_meta.spin_box_sampling_rate.setProperty("requiresInput", False)
+        else:
+            self.dialog_meta.spin_box_sampling_rate.setProperty("requiresInput", True)
+        self.dialog_meta.spin_box_sampling_rate.style().unpolish(self.dialog_meta.spin_box_sampling_rate)
+        self.dialog_meta.spin_box_sampling_rate.style().polish(self.dialog_meta.spin_box_sampling_rate)
+        self.dialog_meta.spin_box_sampling_rate.update()
+        
+        self.spin_box_sampling_rate_import_page.setValue(value)
+
+    @QtCore.Slot(str)
+    def _on_dialog_signal_column_changed(self, value: str) -> None:
+        if value != "index":
+            self.dialog_meta.combo_box_signal_column.setProperty("requiresInput", False)
+        else:
+            self.dialog_meta.combo_box_signal_column.setProperty("requiresInput", True)
+        self.dialog_meta.combo_box_signal_column.style().unpolish(self.dialog_meta.combo_box_signal_column)
+        self.dialog_meta.combo_box_signal_column.style().polish(self.dialog_meta.combo_box_signal_column)
+        self.dialog_meta.combo_box_signal_column.update()
+        self.combo_box_signal_column_import_page.setCurrentText(value)
 
     @QtCore.Slot(QtCore.QPoint)
     def show_data_view_context_menu(self, pos: QtCore.QPoint) -> None:
@@ -421,7 +442,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         record_dict: _t.LogRecordDict,
         threshold: LogLevel = LogLevel.WARNING,
     ) -> None:
-
         if os.environ.get("DEBUG") == "1":
             threshold = LogLevel.DEBUG
 

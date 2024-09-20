@@ -263,6 +263,8 @@ class _InternalConfig:
 
 
 class Config:
+    __slots__ = ("_plot_config", "_editing_config", "_data_config", "_internal_config")
+    
     _instance: "Config | None" = None
 
     def __new__(cls, use_qsettings: bool = True) -> "Config":

@@ -1,17 +1,27 @@
-from pathlib import Path
 import typing as t
+from pathlib import Path
+
 from PySide6 import QtCore
 
 from .. import type_defs as _t
-from ..constants import COLUMN_PLACEHOLDER
 from ..config import Config
-from ..enum_defs import FileFormat
+from ..constants import NOT_SET_OPTION, RESERVED_COLUMN_NAMES
+from ..enum_defs import InputFileFormat
 
 
 class FileMetadata:
+    __slots__ = (
+        "required_fields",
+        "file_info",
+        "_sampling_rate",
+        "_columns",
+        "_signal_column",
+        "_info_column",
+        "other_info",
+    )
+
     def __init__(self, file_path: Path | str, columns: list[str], sampling_rate: int) -> None:
         self.required_fields: list[str] = []
-        self._placeholder = COLUMN_PLACEHOLDER
         self.file_info = QtCore.QFileInfo(file_path)
         self._sampling_rate = sampling_rate
         if self._sampling_rate == 0:
@@ -19,14 +29,14 @@ class FileMetadata:
 
         self._columns = columns
         signal_col = Config().internal.LastSignalColumn
-        if signal_col not in self._columns:
+        if signal_col not in self._columns or signal_col in RESERVED_COLUMN_NAMES:
             self.required_fields.append("signal_column")
             signal_col = self._columns[0]
         self._signal_column = signal_col
 
         info_col = Config().internal.LastInfoColumn
         if info_col not in self._columns:
-            info_col = self._placeholder
+            info_col = NOT_SET_OPTION
         self._info_column = info_col
 
         self.other_info: dict[str, t.Any] = {}
@@ -40,12 +50,12 @@ class FileMetadata:
         return self.file_info.canonicalFilePath()
 
     @property
-    def file_format(self) -> FileFormat:
-        return FileFormat(f".{self.file_info.suffix()}")
+    def file_format(self) -> InputFileFormat:
+        return InputFileFormat(f".{self.file_info.suffix()}")
 
     @property
     def column_names(self) -> list[str]:
-        return [self._placeholder] + self._columns
+        return [NOT_SET_OPTION] + self._columns
 
     @column_names.setter
     def column_names(self, value: list[str]) -> None:
@@ -73,7 +83,9 @@ class FileMetadata:
 
     @signal_column.setter
     def signal_column(self, value: str) -> None:
-        if "signal_column" in self.required_fields:
+        if value in RESERVED_COLUMN_NAMES:
+            self.required_fields.append("signal_column")
+        elif "signal_column" in self.required_fields:
             self.required_fields.remove("signal_column")
         self._signal_column = value
 
@@ -84,7 +96,7 @@ class FileMetadata:
     @info_column.setter
     def info_column(self, value: str | None) -> None:
         if value is None:
-            value = self._placeholder
+            value = NOT_SET_OPTION
         self._info_column = value
 
     def to_dict(self) -> _t.MetadataDict:

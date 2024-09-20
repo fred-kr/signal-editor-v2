@@ -393,10 +393,25 @@ class SignalEditor(QtWidgets.QApplication):
             sampling_rate = metadata.sampling_rate
             self.mw.dialog_meta.spin_box_sampling_rate.setValue(sampling_rate)
             self.mw.spin_box_sampling_rate_import_page.setValue(sampling_rate)
+            self.mw.dialog_meta.spin_box_sampling_rate.setProperty("requiresInput", False)
+        else:
+            self.mw.dialog_meta.spin_box_sampling_rate.setProperty("requiresInput", True)
+
+        self.mw.dialog_meta.spin_box_sampling_rate.style().unpolish(self.mw.dialog_meta.spin_box_sampling_rate)
+        self.mw.dialog_meta.spin_box_sampling_rate.style().polish(self.mw.dialog_meta.spin_box_sampling_rate)
+        self.mw.dialog_meta.spin_box_sampling_rate.update()
+
         if "signal_column" not in required_fields:
             signal_col = metadata.signal_column
             self.mw.dialog_meta.combo_box_signal_column.setCurrentText(signal_col)
             self.mw.combo_box_signal_column_import_page.setCurrentText(signal_col)
+            self.mw.dialog_meta.combo_box_signal_column.setProperty("requiresInput", False)
+        else:
+            self.mw.dialog_meta.combo_box_signal_column.setProperty("requiresInput", True)
+
+        self.mw.dialog_meta.combo_box_signal_column.style().unpolish(self.mw.dialog_meta.combo_box_signal_column)
+        self.mw.dialog_meta.combo_box_signal_column.style().polish(self.mw.dialog_meta.combo_box_signal_column)
+        self.mw.dialog_meta.combo_box_signal_column.update()
 
         self.mw.dialog_meta.combo_box_info_column.setCurrentText(info_col)
         self.mw.combo_box_info_column_import_page.setCurrentText(info_col)
@@ -556,7 +571,6 @@ class SignalEditor(QtWidgets.QApplication):
     def update_result_views(self) -> None:
         self.data.result_model_peaks.set_df(self.data.active_section.peak_data)
         self.data.result_model_rate.set_df(self.data.active_section.rate_data)
-        
 
     @QtCore.Slot()
     def get_section_result(self) -> None:
@@ -569,7 +583,10 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot(str)
     def export_result(self, format: str) -> None:
-        dir_path = Path(self.config.internal.OutputDir) / f"Result_{Path(self.data.metadata.file_path).stem}"
+        dir_path = (
+            Path(self.config.internal.OutputDir)
+            / f"Result_{self.data.active_section.signal_name.title()}_{Path(self.data.metadata.file_path).stem}"
+        )
         out_path, _ = QtWidgets.QFileDialog.getSaveFileName(
             self.mw,
             f"Export {format.upper()}",
@@ -578,6 +595,7 @@ class SignalEditor(QtWidgets.QApplication):
         )
         if not out_path:
             return
+        self.config.internal.OutputDir = Path(out_path).parent.resolve().as_posix()
 
         if format == "csv":
             if self.mw.tab_widget_result_views.currentIndex() == 0:

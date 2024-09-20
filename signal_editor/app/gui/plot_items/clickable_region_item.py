@@ -2,6 +2,7 @@ import typing as t
 
 import pyqtgraph as pg
 from PySide6 import QtCore
+
 from ... import type_defs as _t
 
 if t.TYPE_CHECKING:
@@ -9,6 +10,16 @@ if t.TYPE_CHECKING:
 
 
 class ClickableRegionItem(pg.LinearRegionItem):
+    """
+    A clickable region item for pyqtgraph plots.
+
+    This class extends `pg.LinearRegionItem` to allow for click events on the region.
+
+    Attributes:
+        sig_clicked (QtCore.Signal): Emitted when the region is clicked.
+            The signal carries an integer value representing the section ID.
+    """
+
     sig_clicked: t.ClassVar[QtCore.Signal] = QtCore.Signal(int)
 
     def __init__(

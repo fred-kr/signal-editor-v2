@@ -73,9 +73,9 @@ def ecg_clean_biosppy(sig: npt.NDArray[np.float64], sampling_rate: int) -> tuple
     a = np.array([1])
     b = scipy.signal.firwin(numtaps=order, cutoff=frequency, pass_zero=False)  # type: ignore
 
-    filtered = scipy.signal.filtfilt(b, a, sig)  # type: ignore
+    filtered = scipy.signal.filtfilt(b, a, sig)
 
-    filtered -= np.mean(filtered)  # type: ignore
+    filtered -= np.mean(filtered)
 
     return filtered, {"lowcut": 0.67, "highcut": 45, "method": FilterMethod.FIR, "order": order}  # type: ignore
 

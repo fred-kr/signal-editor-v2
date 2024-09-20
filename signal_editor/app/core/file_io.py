@@ -9,7 +9,7 @@ import tables as tb
 from loguru import logger
 
 from .. import type_defs as _t
-from ..constants import COLUMN_PLACEHOLDER
+from ..constants import NOT_SET_OPTION
 from ..enum_defs import PeakDetectionMethod
 
 
@@ -136,12 +136,12 @@ def read_edf(
     filter_all_zeros: bool = True,
 ) -> pl.DataFrame:
     if info_channel is None:
-        info_channel = COLUMN_PLACEHOLDER
+        info_channel = NOT_SET_OPTION
     raw_edf = mne.io.read_raw_edf(file_path, include=[data_channel, info_channel])
     channel_names: list[str] = raw_edf.ch_names  # type: ignore
     data = raw_edf.get_data(start=start, stop=stop).squeeze()  # type: ignore
     out = pl.from_numpy(data, channel_names)  # type: ignore
-    if info_channel != COLUMN_PLACEHOLDER:
+    if info_channel != NOT_SET_OPTION:
         out = out.select(pl.col(data_channel), pl.col(info_channel))
         if filter_all_zeros:
             out = out.filter((pl.col(data_channel) != 0) & (pl.col(info_channel) != 0))
@@ -168,15 +168,21 @@ def write_hdf5(file_path: Path, data: _t.CompleteResultDict) -> None:
         for k, v in data["metadata"].items():
             h5f.set_node_attr(h5f.root, k, v)
 
-        h5f.create_table(h5f.root, name="combined_data", title="Combined Section Dataframe", obj=data["global_dataframe"])
+        h5f.create_table(
+            h5f.root, name="combined_data", title="Combined Section Dataframe", obj=data["global_dataframe"]
+        )
 
         section_results = h5f.create_group(h5f.root, "section_results", "Results by Section")
 
         for section_id, section_data in data["section_results"].items():
             section_group = h5f.create_group(section_results, section_id, f"Results for {section_id.pretty_name()}")
 
-            h5f.create_table(section_group, name="peak_result", obj=section_data["section_result"]["peak_data"], title="Peak Results")
-            h5f.create_table(section_group, name="rate_result", obj=section_data["section_result"]["rate_data"], title="Rate Results")
+            h5f.create_table(
+                section_group, name="peak_result", obj=section_data["section_result"]["peak_data"], title="Peak Results"
+            )
+            h5f.create_table(
+                section_group, name="rate_result", obj=section_data["section_result"]["rate_data"], title="Rate Results"
+            )
 
             # Section dataframe
             h5f.create_table(

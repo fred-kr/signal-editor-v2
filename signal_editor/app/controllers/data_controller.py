@@ -8,10 +8,10 @@ from loguru import logger
 from PySide6 import QtCore
 
 from ..config import Config
-from ..constants import COLUMN_PLACEHOLDER
+from ..constants import NOT_SET_OPTION
 from ..core.file_io import detect_sampling_rate, read_edf
 from ..core.section import Section
-from ..enum_defs import TextFileSeparator
+from ..enum_defs import InputFileFormat, TextFileSeparator
 from ..models.df_model import DataFrameModel
 from ..models.metadata import FileMetadata
 from ..models.result_models import CompleteResult, SelectedFileMetadata
@@ -26,8 +26,6 @@ class DataController(QtCore.QObject):
     sig_active_section_changed = QtCore.Signal(bool)
     sig_section_added = QtCore.Signal(str)
     sig_section_removed = QtCore.Signal(str)
-
-    SUPPORTED_FILE_FORMATS = frozenset([".edf", ".feather", ".csv", ".txt", ".tsv", ".xlsx", ".hdf5"])
 
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
@@ -124,13 +122,13 @@ class DataController(QtCore.QObject):
             logger.error(
                 f"Path: {file_path} \n\nNo file exists at the specified path. Please check the path and try again."
             )
-        if file_path.suffix not in self.SUPPORTED_FILE_FORMATS:
+        if file_path.suffix not in InputFileFormat:
             logger.error(
-                f"Unsupported file format: {file_path.suffix}. Allowed formats: {', '.join(self.SUPPORTED_FILE_FORMATS)}"
+                f"Unsupported file format: {file_path.suffix}. Allowed formats: {', '.join(InputFileFormat)}"
             )
 
         config = Config()
-        last_sampling_rate = config.internal.LastSamplingRate
+        # last_sampling_rate = config.internal.LastSamplingRate
         last_signal_col = config.internal.LastSignalColumn
         last_info_col = config.internal.LastInfoColumn
 
@@ -147,16 +145,16 @@ class DataController(QtCore.QObject):
             try:
                 sampling_rate = detect_sampling_rate(lf)
             except Exception:
-                sampling_rate = last_sampling_rate
+                sampling_rate = 0
         elif file_path.suffix == ".xlsx":
             lf = pl.read_excel(file_path).lazy()
             column_names = lf.collect_schema().names()
             try:
                 sampling_rate = detect_sampling_rate(lf)
             except Exception:
-                sampling_rate = last_sampling_rate
+                sampling_rate = 0
         elif file_path.suffix == ".hdf5":
-            raise NotImplementedError("HDF5 file support is not yet implemented.")
+            raise NotImplementedError("Reading HDF5 files is not yet supported.")
         else:
             raise ValueError(f"Unsupported file format: {file_path.suffix}. Please select a valid file format.")
 
@@ -183,7 +181,7 @@ class DataController(QtCore.QObject):
         signal_col = self.metadata.signal_column
         info_col = self.metadata.info_column
         columns = [signal_col]
-        if info_col != COLUMN_PLACEHOLDER:
+        if info_col != NOT_SET_OPTION:
             columns.append(info_col)
         row_index_col = "index"
         if row_index_col in columns:
@@ -206,11 +204,11 @@ class DataController(QtCore.QObject):
         elif suffix == ".edf":
             df = read_edf(Path(file_path), signal_col, info_col)
         elif suffix == ".hdf5":
-            raise NotImplementedError("HDF5 file support is not yet implemented.")
+            raise NotImplementedError("Reading HDF5 files is not yet supported.")
         elif suffix == ".xlsx":
             df = pl.read_excel(file_path, columns=columns)
         else:
-            raise NotImplementedError(f"Can't read file type: {suffix}")
+            raise NotImplementedError(f"Unsupported file format: {suffix}.")
 
         self.data_model.set_df(df)
         self._base_section = self.get_base_section()
@@ -252,7 +250,7 @@ class DataController(QtCore.QObject):
         )
 
         info_col = self.metadata.info_column
-        if info_col == COLUMN_PLACEHOLDER:
+        if info_col == NOT_SET_OPTION:
             info_col = None
 
         metadata = SelectedFileMetadata(

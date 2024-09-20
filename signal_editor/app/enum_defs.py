@@ -30,7 +30,7 @@ class ExportFormatDetailed(enum.StrEnum):
     HDF5 = ".hdf5"
 
 
-class FileFormat(enum.StrEnum):
+class InputFileFormat(enum.StrEnum):
     CSV = ".csv"
     TXT = ".txt"
     TSV = ".tsv"
@@ -47,12 +47,6 @@ class FilterMethod(enum.StrEnum):
     FIR = "fir"
     Bessel = "bessel"
     Powerline = "powerline"
-
-
-class FilterType(enum.StrEnum):
-    LowPass = "lowpass"
-    HighPass = "highpass"
-    BandPass = "bandpass"
 
 
 class PreprocessPipeline(enum.StrEnum):
