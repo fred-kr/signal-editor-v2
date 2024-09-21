@@ -2,7 +2,12 @@ import functools
 import typing as t
 
 import attrs
+import qfluentwidgets as qfw
 from PySide6 import QtCore, QtGui
+from pyside_config import ConfigBase
+from pyside_config.properties import EditorWidgetInfo, SpinBoxProperties
+from pyside_config.utils import sync
+from pyside_config.widgets import EnumComboBox
 
 from . import type_defs as _t
 from .enum_defs import RateComputationMethod, SVGColors, TextFileSeparator
@@ -12,14 +17,220 @@ type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 
 ItemDataRole = QtCore.Qt.ItemDataRole
 
+app_dir = app_dir_posix()
 
-def sync[T](inst: attrs.AttrsInstance, attr: t.Any, value: T) -> T:
-    path = attr.metadata.get("path", None)
-    settings = QtCore.QSettings()
-    if path and path in settings.allKeys():
-        settings.setValue(path, value)
-        settings.sync()
-    return value
+
+@attrs.define(on_setattr=sync)
+class PlotConfig(ConfigBase):
+    background_color: QtGui.QColor = attrs.field(
+        default=SVGColors.Black.qcolor(),
+        metadata={
+            "editor": EditorWidgetInfo(
+                label="Background color",
+                widget_factory=functools.partial(qfw.ColorPickerButton, color=SVGColors.Black.qcolor(), title=""),
+                change_signal_name="colorChanged",
+                set_value_name="setColor",
+            ),
+            "description": "The background color of the plot.",
+        },
+    )
+    foreground_color: QtGui.QColor = attrs.field(
+        default=SVGColors.Grey.qcolor(),
+        metadata={
+            "editor": EditorWidgetInfo(
+                label="Foreground color",
+                widget_factory=functools.partial(qfw.ColorPickerButton, color=SVGColors.Grey.qcolor(), title=""),
+                change_signal_name="colorChanged",
+                set_value_name="setColor",
+            ),
+            "description": "The foreground color of the plot.",
+        },
+    )
+    line_click_width: int = attrs.field(
+        default=70,
+        converter=int,
+        metadata={
+            "editor": EditorWidgetInfo(
+                label="Line click width",
+                widget_factory=qfw.SpinBox,
+                change_signal_name="valueChanged",
+                set_value_name="setValue",
+                widget_properties=SpinBoxProperties(
+                    minimum=0,
+                    maximum=10_000,
+                    singleStep=10,
+                    frame=False,
+                    suffix=" px",
+                ),
+            ),
+            "description": "Area in pixels around the line in which a click will be counted as a click on the line.",
+        },
+    )
+    click_radius: int = attrs.field(
+        default=20,
+        converter=int,
+        metadata={
+            "editor": EditorWidgetInfo(
+                label="Click radius",
+                widget_factory=qfw.SpinBox,
+                change_signal_name="valueChanged",
+                set_value_name="setValue",
+                widget_properties=SpinBoxProperties(
+                    minimum=0,
+                    maximum=1_000,
+                    singleStep=1,
+                    frame=False,
+                    suffix=" samples",
+                ),
+            ),
+            "description": "Area in pixels around a click on the line that will be considered a click on the line.",
+        },
+    )
+
+
+@attrs.define(on_setattr=sync)
+class EditingConfig(ConfigBase):
+    filter_stacking: bool = attrs.field(
+        default=False,
+        converter=attrs.converters.to_bool,
+        metadata={
+            "editor": EditorWidgetInfo(
+                label="Filter stacking",
+                widget_factory=qfw.SwitchButton,
+                change_signal_name="checkedChanged",
+                set_value_name="setChecked",
+            ),
+            "description": "Whether to allow applying multiple filters to the same data.",
+        },
+    )
+    rate_computation_method: RateComputationMethod = attrs.field(
+        default=RateComputationMethod.RollingWindow,
+        converter=functools.partial(search_enum, enum_class=RateComputationMethod),
+        metadata={
+            "editor": EditorWidgetInfo(
+                label="Rate computation method",
+                widget_factory=functools.partial(EnumComboBox[RateComputationMethod], enum_class=RateComputationMethod),
+                change_signal_name="sig_current_enum_changed",
+                set_value_name="set_current_enum",
+            ),
+            "description": "How to compute the signal rate from the detected peaks.",
+        },
+    )
+
+
+@attrs.define(on_setattr=sync)
+class DataConfig(ConfigBase):
+    float_precision: int = attrs.field(
+        default=3,
+        converter=int,
+        metadata={
+            "editor": EditorWidgetInfo(
+                label="Float precision",
+                widget_factory=qfw.SpinBox,
+                change_signal_name="valueChanged",
+                set_value_name="setValue",
+            ),
+            "description": "Amount of decimal places to display when displaying data in tables.",
+        },
+    )
+    text_file_separator: TextFileSeparator = attrs.field(
+        default=TextFileSeparator.Tab,
+        converter=functools.partial(search_enum, enum_class=TextFileSeparator),
+        metadata={
+            "editor": EditorWidgetInfo(
+                label="Text file separator",
+                widget_factory=functools.partial(EnumComboBox[TextFileSeparator], enum_class=TextFileSeparator),
+                change_signal_name="sig_current_enum_changed",
+                set_value_name="set_current_enum",
+            ),
+            "description": "Character used to separate fields when reading from a text (.txt) file.",
+        },
+    )
+
+
+@attrs.define(on_setattr=sync)
+class InternalConfig(ConfigBase):
+    last_input_dir: str = attrs.field(
+        default=app_dir,
+        metadata={
+            "editor": EditorWidgetInfo(
+                label="Last input directory",
+                widget_factory=qfw.LineEdit,
+                change_signal_name="textEdited",
+                set_value_name="setText",
+            ),
+            "description": "The directory from which the last file was loaded.",
+        },
+    )
+    last_output_dir: str = attrs.field(
+        default=app_dir,
+        metadata={
+            "editor": EditorWidgetInfo(
+                label="Last output directory",
+                widget_factory=qfw.LineEdit,
+                change_signal_name="textEdited",
+                set_value_name="setText",
+            ),
+            "description": "The directory to which the last file was saved.",
+        },
+    )
+    last_sampling_rate: int = attrs.field(
+        default=0,
+        converter=int,
+        metadata={
+            "editor": EditorWidgetInfo(
+                label="Last sampling rate",
+                widget_factory=qfw.SpinBox,
+                change_signal_name="valueChanged",
+                set_value_name="setValue",
+            ),
+            "description": "The sampling rate from which the last file was loaded.",
+        },
+    )
+    recent_files: list[str] = attrs.field(
+        factory=list,
+        metadata={
+            "editor": None,
+            "description": "List of recently opened files.",
+        },
+    )
+    last_signal_column: str = attrs.field(
+        default="",
+        metadata={
+            "editor": None,
+            "description": "The name of the signal column in the last file.",
+        },
+    )
+    last_info_column: str = attrs.field(
+        default="",
+        metadata={
+            "editor": None,
+            "description": "The name of the info column in the last file.",
+        },
+    )
+    window_geometry: QtCore.QByteArray = attrs.field(
+        factory=QtCore.QByteArray,
+        metadata={
+            "editor": None,
+            "description": "Geometry of the main window.",
+        },
+    )
+    window_state: QtCore.QByteArray = attrs.field(
+        factory=QtCore.QByteArray,
+        metadata={
+            "editor": None,
+            "description": "State of the main window.",
+        },
+    )
+
+
+# def sync[T](inst: attrs.AttrsInstance, attr: t.Any, value: T) -> T:
+#     path = attr.metadata.get("path", None)
+#     settings = QtCore.QSettings()
+#     if path and path in settings.allKeys():
+#         settings.setValue(path, value)
+#         settings.sync()
+#     return value
 
 
 @attrs.define(on_setattr=sync)
@@ -264,7 +475,7 @@ class _InternalConfig:
 
 class Config:
     __slots__ = ("_plot_config", "_editing_config", "_data_config", "_internal_config")
-    
+
     _instance: "Config | None" = None
 
     def __new__(cls, use_qsettings: bool = True) -> "Config":
@@ -274,34 +485,36 @@ class Config:
 
     def __init__(self, use_qsettings: bool = True) -> None:
         if use_qsettings:
-            self._plot_config = _PlotConfig.from_qsettings()
-            self._editing_config = _EditingConfig.from_qsettings()
-            self._data_config = _DataConfig.from_qsettings()
-            self._internal_config = _InternalConfig.from_qsettings()
+            self._plot_config = PlotConfig.from_qsettings()
+            # self._editing_config = _EditingConfig.from_qsettings()
+            self._editing_config = EditingConfig.from_qsettings()
+            self._data_config = DataConfig.from_qsettings()
+            self._internal_config = InternalConfig.from_qsettings()
         else:
-            self._plot_config = _PlotConfig()
-            self._editing_config = _EditingConfig()
-            self._data_config = _DataConfig()
-            self._internal_config = _InternalConfig()
+            self._plot_config = PlotConfig()
+            # self._editing_config = _EditingConfig()
+            self._editing_config = EditingConfig()
+            self._data_config = DataConfig()
+            self._internal_config = InternalConfig()
 
     def __repr__(self) -> str:
         out = self.to_dict()
         return str(out)
 
     @property
-    def plot(self) -> _PlotConfig:
+    def plot(self) -> PlotConfig:
         return self._plot_config
 
     @property
-    def editing(self) -> _EditingConfig:
+    def editing(self) -> EditingConfig:
         return self._editing_config
 
     @property
-    def data(self) -> _DataConfig:
+    def data(self) -> DataConfig:
         return self._data_config
 
     @property
-    def internal(self) -> _InternalConfig:
+    def internal(self) -> InternalConfig:
         return self._internal_config
 
     def update_value(self, group: str | None, key: str, value: t.Any) -> None:
@@ -349,13 +562,13 @@ class Config:
 
     def save(self) -> None:
         self.plot.save_all()
-        self.editing.save_all()
+        self.editing.to_qsettings()
         self.data.save_all()
         self.internal.save_all()
 
     def reset(self) -> None:
         self._plot_config = _PlotConfig()
-        self._editing_config = _EditingConfig()
+        self._editing_config = EditingConfig()
         self._data_config = _DataConfig()
         self._internal_config = _InternalConfig()
         self.save()
