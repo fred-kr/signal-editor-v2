@@ -42,7 +42,7 @@ dependencies = [
 
     "darkdetect>=0.8.0",
 
-    "pyside6-fluent-widgets>=1.6.3",
+    "pyside6-fluent-widgets>=1.6.5",
 
     "attrs>=24.2.0",
 
@@ -65,11 +65,11 @@ dev-dependencies = [
     "pyinstaller>=6.10.0",
     "pyinstaller-hooks-contrib>=2024.8",
     "sourcery>=1.22.0",
-    "ruff>=0.6.4",
+    "ruff>=0.6.6",
     "python-dotenv>=1.0.1",
     "pytest>=8.3.3",
-    "mkdocs-material>=9.5.34",
-    "pyright>=1.1.380",
+    "mkdocs-material>=9.5.35",
+    "pyright>=1.1.381",
     "jedi>=0.19.1",
     "pyside6-examples>=6.7.2",
     "xmltodict>=0.13.0",

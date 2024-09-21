@@ -7,6 +7,7 @@ import numpy.typing as npt
 
 from .enum_defs import (
     FilterMethod,
+    IncompleteWindowMethod,
     NK2ECGPeakDetectionMethod,
     PointSymbols,
     RateComputationMethod,
@@ -458,3 +459,9 @@ class LogRecordDict(t.TypedDict):
     process: "RecordProcess"
     thread: "RecordThread"
     time: datetime.datetime
+
+
+class RollingRateKwargsDict(t.TypedDict, total=False):
+    sec_new_window_every: int
+    sec_window_length: int
+    incomplete_window_method: IncompleteWindowMethod

@@ -1,5 +1,5 @@
-from pathlib import Path
 import typing as t
+from pathlib import Path
 
 from PySide6 import QtCore
 
@@ -65,7 +65,7 @@ class FileListModel(QtCore.QAbstractListModel):
         self._recent_files.insert(0, file_path)
         self.endInsertRows()
 
-        if self.rowCount() >= self._max_files:
+        if self.rowCount() > self._max_files:
             # Remove the oldest file, i.e. the last one
             self.beginRemoveRows(parent, self.rowCount() - 1, self.rowCount() - 1)
             self._recent_files.pop()
@@ -77,7 +77,7 @@ class FileListModel(QtCore.QAbstractListModel):
         row = index.row()
         parent = self.index(0, 0)
         self.beginRemoveRows(parent, row, row)
-        self._recent_files.remove(self._recent_files[row])
+        del self._recent_files[row]
         self.endRemoveRows()
 
         self.sig_files_changed.emit()
@@ -100,9 +100,9 @@ class FileListModel(QtCore.QAbstractListModel):
         return self._recent_files
 
     def validate_files(self) -> None:
-        for file_path in self._recent_files:
+        for i, file_path in enumerate(self._recent_files):
             if not Path(file_path).is_file():
-                self.remove_file(self.index(self._recent_files.index(file_path)))
+                self.remove_file(self.index(i))
 
     @QtCore.Slot()
     def update_config(self) -> None:

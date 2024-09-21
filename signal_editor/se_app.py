@@ -9,6 +9,8 @@ import xlsxwriter
 from loguru import logger
 from PySide6 import QtCore, QtWidgets
 
+from .app.constants import SECTION_INDEX_COL
+
 from .app import type_defs as _t
 from .app.config import Config
 from .app.controllers.data_controller import DataController
@@ -18,6 +20,7 @@ from .app.core.peak_detection import find_peaks
 from .app.enum_defs import (
     PeakDetectionMethod,
     PreprocessPipeline,
+    RateComputationMethod,
     StandardizationMethod,
 )
 from .app.gui.main_window import MainWindow
@@ -37,18 +40,19 @@ class _WorkerSignals(QtCore.QObject):
 
 class PeakDetectionWorker(QtCore.QRunnable):
     def __init__(
-        self, section: "Section", method: PeakDetectionMethod, params: _t.PeakDetectionMethodParameters
+        self, section: "Section", method: PeakDetectionMethod, params: _t.PeakDetectionMethodParameters, **kwargs: t.Unpack[_t.RollingRateKwargsDict]
     ) -> None:
         super().__init__()
         self.section = section
         self.method = method
         self.params = params
+        self.kwargs = kwargs
         self.signals = _WorkerSignals()
 
     @QtCore.Slot()
     def run(self) -> None:
         try:
-            self.section.detect_peaks(self.method, self.params)
+            self.section.detect_peaks(self.method, self.params, **self.kwargs)
         except Exception as e:
             self.signals.sig_failed.emit(e)
         else:
@@ -166,7 +170,9 @@ class SignalEditor(QtWidgets.QApplication):
         self.plot.remove_selection_rect()
 
         peak_method = PeakDetectionMethod(self.mw.dock_parameters.ui.combo_peak_method.currentData())
-        peak_params = self.mw.dock_parameters.get_peak_detection_params(peak_method)
+        param_dock = self.mw.dock_parameters
+        peak_params = param_dock.get_peak_detection_params(peak_method)
+        rolling_rate_params = param_dock.get_rate_calculation_params()
 
         edge_buffer = 10
         b_left = max(left + edge_buffer, 0)
@@ -180,22 +186,27 @@ class SignalEditor(QtWidgets.QApplication):
             method_parameters=peak_params,
         )
         peaks = peaks + b_left
-        active_section.update_peaks("add", peaks)
+        active_section.update_peaks("add", peaks, **rolling_rate_params)
         self.sig_peaks_updated.emit()
 
     @QtCore.Slot(str, object)
     def handle_peak_edit(self, action: _t.UpdatePeaksAction, indices: npt.NDArray[np.int32]) -> None:
-        self.data.active_section.update_peaks(action, indices)
+        rolling_rate_kwargs = self.mw.dock_parameters.get_rate_calculation_params()
+        self.data.active_section.update_peaks(action, indices, **rolling_rate_kwargs)
         self.sig_peaks_updated.emit()
 
     @QtCore.Slot()
     def refresh_peak_data(self) -> None:
         cas = self.data.active_section
         pos = cas.get_peak_pos()
-        self.plot.set_peak_data(pos.get_column("section_index"), pos.get_column(cas.processed_signal_name))
-        cas.update_rate_data()
-        rate_data = cas.rate_data.select("section_index", "rate_bpm")
-        self.plot.set_rate_data(x_data=rate_data.get_column("section_index"), y_data=rate_data.get_column("rate_bpm"))
+        self.plot.set_peak_data(pos.get_column(SECTION_INDEX_COL), pos.get_column(cas.processed_signal_name))
+        if self.config.editing.RateMethod == RateComputationMethod.RollingWindow:
+            rolling_rate_kwargs = self.mw.dock_parameters.get_rate_calculation_params()
+            cas.update_rate_data(**rolling_rate_kwargs)
+        else:
+            cas.update_rate_data()
+        rate_data = cas.rate_data.select(SECTION_INDEX_COL, "rate_bpm")
+        self.plot.set_rate_data(x_data=rate_data.get_column(SECTION_INDEX_COL), y_data=rate_data.get_column("rate_bpm"))
 
     def update_status_indicators(self) -> None:
         self.mw.dock_parameters.set_filter_status(
@@ -236,7 +247,8 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot(enum.StrEnum, dict)
     def run_peak_detection_worker(self, method: PeakDetectionMethod, params: _t.PeakDetectionMethodParameters) -> None:
-        worker = PeakDetectionWorker(self.data.active_section, method, params)
+        rolling_rate_kwargs = self.mw.dock_parameters.get_rate_calculation_params()
+        worker = PeakDetectionWorker(self.data.active_section, method, params, **rolling_rate_kwargs)
         worker.signals.sig_success.connect(self.refresh_peak_data)
         worker.signals.sig_done.connect(self._on_worker_finished)
         # worker.signals.sig_failed.connect(self.mw.sb_progress.error)

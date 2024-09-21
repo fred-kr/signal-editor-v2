@@ -908,6 +908,58 @@ class Ui_ParameterInputs(object):
         self.gridLayout_3.addWidget(self.stacked_peak_parameters, 2, 0, 1, 2)
 
         self.tab_widget_parameter_inputs.addTab(self.tab_peak_detection, "")
+        self.tab_rate_calculation = QWidget()
+        self.tab_rate_calculation.setObjectName(u"tab_rate_calculation")
+        self.gridLayout_6 = QGridLayout(self.tab_rate_calculation)
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.label_18 = BodyLabel(self.tab_rate_calculation)
+        self.label_18.setObjectName(u"label_18")
+
+        self.gridLayout_6.addWidget(self.label_18, 2, 0, 1, 2)
+
+        self.sb_period_seconds = SpinBox(self.tab_rate_calculation)
+        self.sb_period_seconds.setObjectName(u"sb_period_seconds")
+        self.sb_period_seconds.setMinimumSize(QSize(0, 31))
+        self.sb_period_seconds.setFrame(False)
+        self.sb_period_seconds.setMinimum(1)
+        self.sb_period_seconds.setMaximum(10000)
+        self.sb_period_seconds.setValue(60)
+
+        self.gridLayout_6.addWidget(self.sb_period_seconds, 1, 1, 1, 1)
+
+        self.sb_every_seconds = SpinBox(self.tab_rate_calculation)
+        self.sb_every_seconds.setObjectName(u"sb_every_seconds")
+        self.sb_every_seconds.setMinimumSize(QSize(0, 31))
+        self.sb_every_seconds.setFrame(False)
+        self.sb_every_seconds.setMinimum(1)
+        self.sb_every_seconds.setMaximum(600)
+        self.sb_every_seconds.setValue(10)
+
+        self.gridLayout_6.addWidget(self.sb_every_seconds, 0, 1, 1, 1)
+
+        self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_6.addItem(self.verticalSpacer_6, 4, 0, 1, 2)
+
+        self.combo_incomplete_window_method = ComboBox(self.tab_rate_calculation)
+        self.combo_incomplete_window_method.setObjectName(u"combo_incomplete_window_method")
+        self.combo_incomplete_window_method.setMinimumSize(QSize(0, 31))
+
+        self.gridLayout_6.addWidget(self.combo_incomplete_window_method, 3, 0, 1, 2)
+
+        self.label_11 = BodyLabel(self.tab_rate_calculation)
+        self.label_11.setObjectName(u"label_11")
+        self.label_11.setMinimumSize(QSize(0, 31))
+
+        self.gridLayout_6.addWidget(self.label_11, 0, 0, 1, 1)
+
+        self.label_12 = BodyLabel(self.tab_rate_calculation)
+        self.label_12.setObjectName(u"label_12")
+        self.label_12.setMinimumSize(QSize(0, 31))
+
+        self.gridLayout_6.addWidget(self.label_12, 1, 0, 1, 1)
+
+        self.tab_widget_parameter_inputs.addTab(self.tab_rate_calculation, "")
 
         self.layout_parameter_inputs.addWidget(self.tab_widget_parameter_inputs)
 
@@ -1171,5 +1223,12 @@ class Ui_ParameterInputs(object):
         self.adjustPeaksLabel.setText(QCoreApplication.translate("ParameterInputs", u"Adjust Peaks", None))
         self.peak_xqrs_peak_dir.setText("")
         self.tab_widget_parameter_inputs.setTabText(self.tab_widget_parameter_inputs.indexOf(self.tab_peak_detection), QCoreApplication.translate("ParameterInputs", u"Peak Detection", None))
+        self.label_18.setText(QCoreApplication.translate("ParameterInputs", u"How to handle incomplete windows (i.e. those at the end of the signal):", None))
+        self.sb_period_seconds.setSuffix(QCoreApplication.translate("ParameterInputs", u" s", None))
+        self.sb_every_seconds.setSuffix(QCoreApplication.translate("ParameterInputs", u" s", None))
+        self.combo_incomplete_window_method.setText("")
+        self.label_11.setText(QCoreApplication.translate("ParameterInputs", u"Create a new window every:", None))
+        self.label_12.setText(QCoreApplication.translate("ParameterInputs", u"Window length:", None))
+        self.tab_widget_parameter_inputs.setTabText(self.tab_widget_parameter_inputs.indexOf(self.tab_rate_calculation), QCoreApplication.translate("ParameterInputs", u"Rate Calculation", None))
     # retranslateUi
 

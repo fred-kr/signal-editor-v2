@@ -326,3 +326,9 @@ class LogLevel(enum.IntEnum):
     WARNING = 30
     ERROR = 40
     CRITICAL = 50
+
+
+class IncompleteWindowMethod(enum.StrEnum):
+    Drop = "drop"
+    Approximate = "approximate"
+    RepeatLast = "repeat_last"

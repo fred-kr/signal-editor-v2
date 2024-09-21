@@ -8,12 +8,22 @@ from ... import type_defs as _t
 
 
 def _mk_pen(*args: _t.PGPen, **kwargs: t.Unpack[_t.PGPenKwargs]) -> QtGui.QPen:
+    """
+    Wrapper for pg.mkPen which avoids creating a new QPen object if passed one as its
+    sole argument. This is used to avoid unnecessary cache misses in SymbolAtlas which
+    uses the QPen object id in its key.
+    """
     if len(args) == 1 and isinstance(args[0], QtGui.QPen):
         return args[0]
     return pg.mkPen(*args, **kwargs)
 
 
 def _mk_brush(*args: _t.PGBrush, **kwargs: t.Unpack[_t.PGBrushKwargs]) -> QtGui.QBrush:
+    """
+    Wrapper for pg.mkBrush which avoids creating a new QBrush object if passed one as its
+    sole argument. This is used to avoid unnecessary cache misses in SymbolAtlas which
+    uses the QBrush object id in its key.
+    """
     if len(args) == 1 and isinstance(args[0], QtGui.QBrush):
         return args[0]
     return pg.mkBrush(*args, **kwargs)

@@ -8,6 +8,7 @@ from ....ui.ui_parameter_inputs import Ui_ParameterInputs
 from ... import type_defs as _t
 from ...enum_defs import (
     FilterMethod,
+    IncompleteWindowMethod,
     NK2ECGPeakDetectionMethod,
     PeakDetectionMethod,
     PreprocessPipeline,
@@ -136,6 +137,7 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
         _fill_combo_box_with_enum(self.ui.combo_standardize_method, StandardizationMethod, allow_none=True)
         _fill_combo_box_with_enum(self.ui.peak_neurokit2_algorithm_used, NK2ECGPeakDetectionMethod)
         _fill_combo_box_with_enum(self.ui.peak_xqrs_peak_dir, WFDBPeakDirection)
+        _fill_combo_box_with_enum(self.ui.combo_incomplete_window_method, IncompleteWindowMethod)
 
     def _setup_actions(self) -> None:
         # Peak Detection
@@ -375,6 +377,17 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
             peak_params = _t.PeaksWFDBXQRS(search_radius=self.ui.peak_xqrs_search_radius.value(), peak_dir=peak_dir)
 
         return peak_params
+
+    def get_rate_calculation_params(self) -> _t.RollingRateKwargsDict:
+        new_window_every = self.ui.sb_every_seconds.value()
+        window_length = self.ui.sb_period_seconds.value()
+        incomplete_window_method = self.ui.combo_incomplete_window_method.currentData()
+
+        return {
+            "sec_new_window_every": new_window_every,
+            "sec_window_length": window_length,
+            "incomplete_window_method": IncompleteWindowMethod(incomplete_window_method),
+        }
 
     @QtCore.Slot()
     def _on_restore_defaults_peak_detection(self) -> None:

@@ -108,9 +108,10 @@ class PlotController(QtCore.QObject):
     def _init_signal_curve(self, pen_color: _t.PGColor | None = None) -> None:
         if pen_color is None:
             pen_color = Config().plot.LineColor
+        pen = pg.mkPen(color=pen_color, width=1)
         click_width = Config().plot.LineClickWidth
         signal = pg.PlotDataItem(
-            pen=pen_color,
+            pen=pen,
             skipFiniteCheck=True,
             autoDownsample=True,
             name="Signal",
@@ -138,17 +139,20 @@ class PlotController(QtCore.QObject):
     ) -> None:
         if brush_color is None:
             brush_color = Config().plot.PointColor
+        brush = pg.mkBrush(brush_color)
+        h_brush = pg.mkBrush(hover_brush)
+        h_pen = pg.mkPen(hover_pen, width=1)
         scatter = CustomScatterPlotItem(
             pxMode=True,
             size=10,
             pen=None,
-            brush=brush_color,
+            brush=brush,
             useCache=True,
             name="Peaks",
             hoverable=True,
-            hoverPen=hover_pen,
+            hoverPen=h_pen,
             hoverSymbol=PointSymbols.Cross,
-            hoverBrush=hover_brush,
+            hoverBrush=h_brush,
             hoverSize=15,
             tip=None,
         )
@@ -168,8 +172,9 @@ class PlotController(QtCore.QObject):
     def _init_rate_curve(self, pen_color: _t.PGColor | None = None) -> None:
         if pen_color is None:
             pen_color = "crimson"
+        pen = pg.mkPen(color=pen_color, width=1)
         rate_curve = pg.PlotDataItem(
-            pen=pen_color,
+            pen=pen,
             skipFiniteCheck=True,
             autoDownsample=True,
             name="Rate",
@@ -197,11 +202,6 @@ class PlotController(QtCore.QObject):
         for plt_item in (self.pw_main.getPlotItem(), self.pw_rate.getPlotItem()):
             plt_item.getAxis("top").setScale(1 / sampling_rate)
 
-    # @QtCore.Slot(int)
-    # def reset_view_range(self, upper_bound: int) -> None:
-    #     self.pw_main.plotItem.vb.setRange(xRange=(0, upper_bound), disableAutoRange=False)
-    #     self.pw_rate.plotItem.vb.setRange(xRange=(0, upper_bound), disableAutoRange=False)
-
     @QtCore.Slot(object)
     def set_view_limits(self, plt_data_item: pg.PlotDataItem) -> None:
         if plt_data_item.xData is None or plt_data_item.xData.size == 0:
@@ -209,7 +209,6 @@ class PlotController(QtCore.QObject):
         len_data = plt_data_item.xData.size
         self.pw_main.plotItem.vb.setLimits(xMin=-0.25 * len_data, xMax=1.25 * len_data, maxYRange=1e5, minYRange=0.1)
         self.pw_rate.plotItem.vb.setLimits(xMin=-0.25 * len_data, xMax=1.25 * len_data, maxYRange=1e5, minYRange=0.1)
-        # self.reset_view_range(len_data)
         self.pw_main.plotItem.vb.setRange(xRange=(0, len_data), disableAutoRange=False)
         self.pw_rate.plotItem.vb.setRange(xRange=(0, len_data), disableAutoRange=False)
 
@@ -289,7 +288,7 @@ class PlotController(QtCore.QObject):
         brush_color.setAlpha(50)
         brush = pg.mkBrush(brush_color)
         hover_brush = pg.mkBrush(brush_color.lighter(180))
-        pen_color = QtGui.QColor(SVGColors.Orange)
+        pen_color = SVGColors.Orange.qcolor()
         pen = pg.mkPen(color=pen_color, width=2, style=QtCore.Qt.PenStyle.DashLine)
         hover_pen = pg.mkPen(color=pen_color.darker(200), width=2, style=QtCore.Qt.PenStyle.DashLine)
 

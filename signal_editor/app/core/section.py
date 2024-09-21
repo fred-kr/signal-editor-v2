@@ -11,9 +11,15 @@ import polars.selectors as ps
 from loguru import logger
 
 from .. import type_defs as _t
-from ..constants import INDEX_COL, IS_MANUAL_COL, IS_PEAK_COL, SECTION_INDEX_COL
 from ..config import Config
-from ..enum_defs import FilterMethod, PeakDetectionMethod, PreprocessPipeline, RateComputationMethod
+from ..constants import INDEX_COL, IS_MANUAL_COL, IS_PEAK_COL, SECTION_INDEX_COL
+from ..enum_defs import (
+    FilterMethod,
+    IncompleteWindowMethod,
+    PeakDetectionMethod,
+    PreprocessPipeline,
+    RateComputationMethod,
+)
 from ..models.result_models import DetailedSectionResult, SectionResult
 from ..utils import format_long_sequence
 from .peak_detection import find_peaks
@@ -22,11 +28,11 @@ from .processing import (
     ecg_clean_elgendi,
     ecg_clean_engzee,
     ecg_clean_hamilton,
+    ecg_clean_neurokit,
     ecg_clean_pantompkins,
     ecg_clean_vgraph,
-    ppg_clean_elgendi,
-    ecg_clean_neurokit,
     filter_signal,
+    ppg_clean_elgendi,
     signal_rate,
     standardize_signal,
 )
@@ -302,10 +308,10 @@ class Section:
         self._manual_peak_edits.sort_and_deduplicate()
         return self._manual_peak_edits
 
-    def update_sampling_rate(self, sampling_rate: int) -> None:
+    def update_sampling_rate(self, sampling_rate: int, **kwargs: t.Unpack[_t.RollingRateKwargsDict]) -> None:
         self.sampling_rate = sampling_rate
         with contextlib.suppress(Exception):
-            self.update_rate_data()
+            self.update_rate_data(**kwargs)
         self._processing_parameters.sampling_rate = sampling_rate
 
     def filter_signal(
@@ -391,7 +397,7 @@ class Section:
         elif pipeline == PreprocessPipeline.ECGVisibilityGraph:
             filtered, filter_params = ecg_clean_vgraph(sig_data, self.sampling_rate)
             self._is_processed = True
-            
+
         self._processing_parameters.processing_pipeline = pipeline
         self._processing_parameters.filter_parameters.append(filter_params)
         if additional_params is not None:
@@ -431,7 +437,12 @@ class Section:
         self._processing_parameters.standardization_parameters = kwargs
 
     @logger.catch(message="Peak detection failed. Please check the parameters and try again.")
-    def detect_peaks(self, method: PeakDetectionMethod, method_parameters: _t.PeakDetectionMethodParameters) -> None:
+    def detect_peaks(
+        self,
+        method: PeakDetectionMethod,
+        method_parameters: _t.PeakDetectionMethodParameters,
+        **kwargs: t.Unpack[_t.RollingRateKwargsDict],
+    ) -> None:
         """
         Find peaks in the processed signal using the specified method and parameters.
 
@@ -452,12 +463,13 @@ class Section:
         self._processing_parameters.peak_detection_method = method
         self._processing_parameters.peak_detection_method_parameters = method_parameters
 
-        self.set_peaks(peaks)
+        self.set_peaks(peaks, **kwargs)
 
     def set_peaks(
         self,
         peaks: npt.NDArray[np.int32],
         update_rate: bool = True,
+        **kwargs: t.Unpack[_t.RollingRateKwargsDict],
     ) -> None:
         """
         Sets the `is_peak` column in `self.data` to 1 at the indices provided in `peaks`, and to 0
@@ -485,13 +497,14 @@ class Section:
         self.manual_peak_edits.clear()
         self._rate_is_synced = False
         if update_rate:
-            self.update_rate_data()
+            self.update_rate_data(**kwargs)
 
     def update_peaks(
         self,
         action: _t.UpdatePeaksAction,
         peaks: npt.NDArray[np.int32],
         update_rate: bool = True,
+        **kwargs: t.Unpack[_t.RollingRateKwargsDict],
     ) -> None:
         """
         Updates the `is_peak` column in `self.data` at the given indices according to the provided
@@ -537,9 +550,11 @@ class Section:
 
         self._rate_is_synced = False
         if update_rate and self.peaks_local.len() > 3:
-            self.update_rate_data()
+            self.update_rate_data(**kwargs)
 
-    def update_rate_data(self, full_info: bool = False, force: bool = False) -> None:
+    def update_rate_data(
+        self, full_info: bool = False, force: bool = False, **kwargs: t.Unpack[_t.RollingRateKwargsDict]
+    ) -> None:
         """
         Recalculates the signal rate based on the current peaks.
 
@@ -556,7 +571,7 @@ class Section:
 
         method = Config().editing.RateMethod
         if method == RateComputationMethod.RollingWindow:
-            self._calc_rate_rolling(full_info=full_info)
+            self._calc_rate_rolling(full_info=full_info, **kwargs)
         elif method == RateComputationMethod.Instantaneous:
             self._calc_rate_instant()
         else:
@@ -591,14 +606,31 @@ class Section:
         sec_window_length: int = 60,
         sec_start_at: int = 0,
         full_info: bool = False,
-        remove_incomplete_windows: bool = False,
+        label: t.Literal["left", "right", "datapoint"] = "datapoint",
+        incomplete_window_method: IncompleteWindowMethod = IncompleteWindowMethod.Drop,
+        include_intermediate_columns: bool = False,
     ) -> None:
+        # logger.debug(
+        #     f"Rolling rate calculation parameters:\n{sec_new_window_every=}, {sec_window_length=}, {str(incomplete_window_method)=}"
+        # )
         sampling_rate = self.sampling_rate
 
         every = sec_new_window_every * sampling_rate
         period = sec_window_length * sampling_rate
         offset = sec_start_at * sampling_rate
-        # n_incomplete_windows = period // every
+
+        samples_in_minute = 60 * sampling_rate
+        peaks_in_window_to_peaks_per_minute = samples_in_minute / period
+        # Sampling rate: 400 Hz, window length: 30 seconds:
+        # samples_in_minute = 60 * 400 = 24000
+        # period = 30 * 400 = 12000
+        # peaks_in_window_to_peaks_per_minute = 24000 / 12000 = 2
+        # rate_bpm = peaks_in_window * 2
+        # Sampling rate: 400 Hz, window length: 90 seconds:
+        # samples_in_minute = 60 * 400 = 24000
+        # period = 90 * 400 = 36000
+        # peaks_in_window_to_peaks_per_minute = 24000 / 36000 = 0.666
+        # rate_bpm = peaks_in_window * 0.666
 
         rr_df = (
             self.data.lazy()
@@ -609,42 +641,54 @@ class Section:
                 every=f"{every}i",
                 period=f"{period}i",
                 offset=f"{offset}i",
-                include_boundaries=True,
+                label=label,
             )
         )
         if (self.info_name in self.data.columns) and full_info:
             info_col = self.info_name
             rr_df = rr_df.agg(
-                # pl.sum(IS_PEAK_COL).alias("rate_bpm"),
-                pl.sum(IS_PEAK_COL).alias("num_peaks"),
-                pl.first("_lower_bound").alias("start"),
-                pl.last("_upper_bound").alias("end"),
+                pl.sum(IS_PEAK_COL).alias("peaks_in_window"),
+                pl.len().alias("rows_in_window"),
                 pl.mean(info_col).name.suffix("_mean"),
                 pl.median(info_col).name.suffix("_median"),
                 pl.std(info_col).name.suffix("_std"),
                 pl.min(info_col).name.suffix("_min"),
                 pl.max(info_col).name.suffix("_max"),
                 pl.var(info_col).name.suffix("_var"),
-            )#.collect()[:-n_incomplete_windows]
+            )
         else:
             rr_df = rr_df.agg(
-                # pl.sum(IS_PEAK_COL).alias("rate_bpm"),
-                pl.sum(IS_PEAK_COL).alias("num_peaks"),
-                pl.first("_lower_bound").alias("start"),
-                pl.last("_upper_bound").alias("end"),
-            )#.collect()[:-n_incomplete_windows]
+                pl.sum(IS_PEAK_COL).alias("peaks_in_window"),
+                pl.len().alias("rows_in_window"),
+            )
 
-        rr_df = rr_df.with_columns(
-            (pl.col("end") - pl.col("start")).alias("window_length_in_samples"),
-            ((pl.col("end") - pl.col("start")) / sampling_rate).alias("window_length_in_seconds"),
-            (pl.col("num_peaks") / pl.col("window_length_in_seconds") * 60).alias("rate_bpm"),
-        ).collect()
-        
-        self.rate_data = rr_df.with_columns(
-            pl.col("start").shrink_dtype(),
-            pl.col(SECTION_INDEX_COL).shrink_dtype(),
-            pl.col("rate_bpm").shrink_dtype()
-        ).shrink_to_fit()
+        if incomplete_window_method == IncompleteWindowMethod.Drop:
+            rr_df = rr_df.filter(pl.col("rows_in_window") == period).with_columns(
+                (pl.col("peaks_in_window") * peaks_in_window_to_peaks_per_minute).alias("rate_bpm")
+            )
+        elif incomplete_window_method == IncompleteWindowMethod.Approximate:
+            rr_df = rr_df.with_columns(
+                (
+                    (pl.col("peaks_in_window") * period / pl.col("rows_in_window"))
+                    * peaks_in_window_to_peaks_per_minute
+                ).alias("rate_bpm")
+            )
+        elif incomplete_window_method == IncompleteWindowMethod.RepeatLast:
+            rr_df = rr_df.with_columns(
+                (
+                    pl.when(pl.col("rows_in_window") != period).then(None).otherwise(pl.col("peaks_in_window"))
+                    * peaks_in_window_to_peaks_per_minute
+                ).alias("rate_bpm")
+            ).with_columns(pl.col("rate_bpm").forward_fill())
+
+        if include_intermediate_columns:
+            rr_df = rr_df.with_columns(pl.all().exclude("rate_bpm").shrink_dtype())
+        else:
+            rr_df = rr_df.select(
+                pl.col(grp_col).cast(pl.Int32),
+                pl.col("rate_bpm").cast(pl.Float64),
+            )
+        self.rate_data = rr_df.collect().shrink_to_fit()
 
     def get_mean_rate_per_temperature(self) -> pl.DataFrame:
         info_col = self.info_name
