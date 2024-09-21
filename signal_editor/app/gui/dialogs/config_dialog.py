@@ -18,7 +18,6 @@ class ConfigDialog(QtWidgets.QDialog):
         buttons.rejected.connect(self.reject)
 
         self.config_tree = ConfigTreeView(self)
-        # self.config_tree.setModel(ConfigModel(self))
 
         toolbar = qfw.CommandBar(self)
         toolbar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextBesideIcon)

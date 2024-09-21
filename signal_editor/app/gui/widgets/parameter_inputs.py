@@ -381,12 +381,12 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
     def get_rate_calculation_params(self) -> _t.RollingRateKwargsDict:
         new_window_every = self.ui.sb_every_seconds.value()
         window_length = self.ui.sb_period_seconds.value()
-        incomplete_window_method = self.ui.combo_incomplete_window_method.currentData()
+        incomplete_window_method = IncompleteWindowMethod(self.ui.combo_incomplete_window_method.currentData())
 
         return {
             "sec_new_window_every": new_window_every,
             "sec_window_length": window_length,
-            "incomplete_window_method": IncompleteWindowMethod(incomplete_window_method),
+            "incomplete_window_method": incomplete_window_method,
         }
 
     @QtCore.Slot()

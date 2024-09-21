@@ -610,9 +610,6 @@ class Section:
         incomplete_window_method: IncompleteWindowMethod = IncompleteWindowMethod.Drop,
         include_intermediate_columns: bool = False,
     ) -> None:
-        # logger.debug(
-        #     f"Rolling rate calculation parameters:\n{sec_new_window_every=}, {sec_window_length=}, {str(incomplete_window_method)=}"
-        # )
         sampling_rate = self.sampling_rate
 
         every = sec_new_window_every * sampling_rate

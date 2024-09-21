@@ -44,6 +44,7 @@ if __name__ == "__main__":
         enableExperimental=use_opengl,
         useNumba=use_opengl,
         segmentedLineMode="on",
+        
     )
 
     app = SignalEditor(sys.argv)
