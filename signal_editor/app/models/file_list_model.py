@@ -53,7 +53,7 @@ class FileListModel(QtCore.QAbstractListModel):
     def add_file(self, file_path: str) -> None:
         if not Path(file_path).is_file():
             return
-        parent = self.index(0, 0)
+        parent = QtCore.QModelIndex()
 
         if file_path in self._recent_files:
             file_index = self._recent_files.index(file_path)
@@ -106,4 +106,4 @@ class FileListModel(QtCore.QAbstractListModel):
 
     @QtCore.Slot()
     def update_config(self) -> None:
-        Config().internal.RecentFiles = self._recent_files
+        Config().internal.recent_files = self._recent_files

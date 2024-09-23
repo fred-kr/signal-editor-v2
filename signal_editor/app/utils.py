@@ -11,38 +11,6 @@ from . import type_defs as _t
 MICRO: t.Final = "\u03bc"
 
 
-class NonAsciiCharAndPosition(t.NamedTuple):
-    char: str
-    position: int
-
-
-class NonAsciiResult(t.NamedTuple):
-    has_non_ascii: bool
-    non_ascii_chars: list[NonAsciiCharAndPosition]
-
-
-def check_string_for_non_ascii(string: str) -> NonAsciiResult:
-    """
-    Checks a file name for possible non-ASCII characters.
-
-    Parameters
-    ----------
-    string : str
-        The string to check.
-
-    Returns
-    -------
-    NonAsciiResult
-        An instance of ``NonAsciiResult`` containing a boolean indicating whether non-ASCII
-        characters were found and a list of ``NonAsciiCharAndPosition`` named tuples containing the
-        detected non-ASCII characters and their positions in the input string.
-    """
-
-    non_ascii_chars = [NonAsciiCharAndPosition(char, idx) for idx, char in enumerate(string) if ord(char) > 127]
-
-    return NonAsciiResult(has_non_ascii=bool(non_ascii_chars), non_ascii_chars=non_ascii_chars)
-
-
 def human_readable_timedelta(
     time_delta: datetime.timedelta | None = None,
     seconds: int | None = None,
@@ -116,6 +84,14 @@ def format_long_sequence(seq: t.Sequence[int | float]) -> str:
 
 def make_qcolor(*args: _t.PGColor) -> QtGui.QColor:
     return args[0] if isinstance(args[0], QtGui.QColor) else pg.mkColor(*args)
+
+
+def make_qpen(*args: _t.PGPen, **kwargs: t.Unpack[_t.PGPenKwargs]) -> QtGui.QPen:
+    return args[0] if isinstance(args[0], QtGui.QPen) else pg.mkPen(*args, **kwargs)
+
+
+def make_qbrush(*args: _t.PGBrush, **kwargs: t.Unpack[_t.PGBrushKwargs]) -> QtGui.QBrush:
+    return args[0] if isinstance(args[0], QtGui.QBrush) else pg.mkBrush(*args, **kwargs)
 
 
 def format_file_path(path: str, max_len: int = 50) -> str:

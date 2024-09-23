@@ -10,7 +10,6 @@ from .enum_defs import (
     IncompleteWindowMethod,
     NK2ECGPeakDetectionMethod,
     PointSymbols,
-    RateComputationMethod,
     StandardizationMethod,
     SVGColors,
     TextFileSeparator,
@@ -59,48 +58,6 @@ class MetadataDict(t.TypedDict):
     signal_column: str
     info_column: str | None
     column_names: list[str]
-
-
-# region NewConfig
-class PlotConfigDict(t.TypedDict):
-    Background: "QtGui.QColor"
-    Foreground: "QtGui.QColor"
-    LineColor: "QtGui.QColor"
-    PointColor: "QtGui.QColor"
-    SectionColor: "QtGui.QColor"
-    LineClickWidth: int
-    ClickRadius: int
-
-
-class EditingConfigDict(t.TypedDict):
-    FilterStacking: bool
-    RateComputationMethod: "RateComputationMethod"
-
-
-class DataConfigDict(t.TypedDict):
-    FloatPrecision: int
-    TextSeparatorChar: "TextFileSeparator"
-
-
-class InternalConfigDict(t.TypedDict):
-    InputDir: str
-    OutputDir: str
-    RecentFiles: list[str]
-    LastSignalColumn: str
-    LastInfoColumn: str
-    LastSamplingRate: int
-    WindowGeometry: "QtCore.QByteArray"
-    WindowState: "QtCore.QByteArray"
-
-
-class ConfigDict(t.TypedDict):
-    Plot: PlotConfigDict
-    Editing: EditingConfigDict
-    Data: DataConfigDict
-    Internal: t.NotRequired[InternalConfigDict]
-
-
-# endregion NewConfig
 
 
 class ReadFileKwargs(t.TypedDict, total=False):
@@ -280,7 +237,6 @@ class NK2PeaksGamboa(t.TypedDict):
     tol: float
 
 
-# NOTE: Needs `ts2vg` package which currently doesnt work (py=3.12.3, windows)
 class NK2PeaksEmrich(t.TypedDict):
     window_seconds: float  # seconds
     window_overlap: float  # percentage (0-1)
@@ -385,8 +341,6 @@ class DetailedSectionResultDict(t.TypedDict):
     section_dataframe: npt.NDArray[np.void]
     manual_peak_edits: ManualPeakEditsDict
     section_result: SectionResultDict
-    # compact_result: npt.NDArray[np.void]
-    # rate_data: npt.NDArray[np.void]
     rate_per_temperature: npt.NDArray[np.void]
 
 

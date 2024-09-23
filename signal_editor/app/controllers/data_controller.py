@@ -43,7 +43,7 @@ class DataController(QtCore.QObject):
         self.result_model_rate = DataFrameModel(self)
 
         try:
-            self._txt_separator = Config().data.TextSeparatorChar
+            self._txt_separator = Config().data.text_file_separator
         except Exception:
             self._txt_separator = TextFileSeparator.Tab
         self._reader_funcs = {
@@ -129,15 +129,15 @@ class DataController(QtCore.QObject):
 
         config = Config()
         # last_sampling_rate = config.internal.LastSamplingRate
-        last_signal_col = config.internal.LastSignalColumn
-        last_info_col = config.internal.LastInfoColumn
+        last_signal_col = config.internal.last_signal_column
+        last_info_col = config.internal.last_info_column
 
         other_info: dict[str, t.Any] = {}
 
         if file_path.suffix == ".edf":
             edf_info = mne.io.read_raw_edf(file_path, preload=False, verbose=False)
             sampling_rate = t.cast(int, edf_info.info["sfreq"])
-            column_names: list[str] = edf_info.ch_names
+            column_names: list[str] = edf_info.ch_names  # type: ignore
             other_info = dict(edf_info.info)
         elif file_path.suffix in {".feather", ".csv", ".txt", ".tsv"}:
             lf = self._reader_funcs[file_path.suffix](file_path)
@@ -158,7 +158,7 @@ class DataController(QtCore.QObject):
         else:
             raise ValueError(f"Unsupported file format: {file_path.suffix}. Please select a valid file format.")
 
-        metadata = FileMetadata(file_path, column_names, sampling_rate)
+        metadata = FileMetadata(file_path, column_names, sampling_rate)  # type: ignore
         if last_signal_col in metadata.valid_columns:
             metadata.signal_column = last_signal_col
         if last_info_col in metadata.valid_columns:
@@ -176,7 +176,7 @@ class DataController(QtCore.QObject):
             return
         suffix = self.metadata.file_format
         file_path = self.metadata.file_path
-        separator = Config().data.TextSeparatorChar
+        separator = Config().data.text_file_separator
 
         signal_col = self.metadata.signal_column
         info_col = self.metadata.info_column

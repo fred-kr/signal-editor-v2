@@ -49,17 +49,11 @@ def _fit_loess(
     return y_predicted
 
 
-def _signal_smoothing_median(sig: npt.NDArray[np.float64 | np.intp], size: int = 5) -> npt.NDArray[np.float64]:
-    if size % 2 == 0:
-        size += 1
-    return ndimage.median_filter(sig, size=size)
-
-
 def _signal_smoothing(
     sig: npt.NDArray[np.float64 | np.intp], kernel: SmoothingKernels, size: int = 5
 ) -> npt.NDArray[np.float64]:
-    window: npt.NDArray[np.float64] = signal.get_window(kernel, size)
-    w: npt.NDArray[np.float64] = window / window.sum()
+    window = signal.get_window(kernel, size)
+    w = window / window.sum()
 
     x = np.concatenate((sig[0] * np.ones(size), sig, sig[-1] * np.ones(size)))
 
@@ -88,7 +82,8 @@ def _signal_smooth(
             x = ndimage.uniform_filter1d(sig, size=size, mode="nearest")
             smoothed = _signal_smoothing(x, kernel=SmoothingKernels.PARZEN, size=size)
         elif kernel == SmoothingKernels.MEDIAN:
-            smoothed = _signal_smoothing_median(sig, size=size)
+            size = size if size % 2 == 0 else size + 1
+            smoothed = ndimage.median_filter(sig, size=size)
         else:
             smoothed = _signal_smoothing(sig, kernel=kernel, size=size)
 
@@ -343,9 +338,10 @@ def _find_peaks_xqrs(
     peak_dir: WFDBPeakDirection = WFDBPeakDirection.Up,
 ) -> npt.NDArray[np.int32]:
     xqrs_out = wp.XQRS(sig, sampling_rate)
-    xqrs_out.detect(verbose=False)
-    qrs_locations = np.array(xqrs_out.qrs_inds, dtype=np.int32)
-    peak_indices = _adjust_peak_positions(sig, peaks=qrs_locations, radius=radius, direction=peak_dir)
+    xqrs_out.detect(verbose=False, learn=True)
+    peak_indices = _adjust_peak_positions(
+        sig, peaks=np.array(xqrs_out.qrs_inds, dtype=np.int32), radius=radius, direction=peak_dir
+    )
 
     return _sanitize_qrs_locations(sig, peak_indices, min_peak_distance)
 
@@ -360,33 +356,33 @@ def find_peaks(
     if method == PeakDetectionMethod.LocalMaxima:
         return find_extrema(
             sig,
-            search_radius=method_parameters.get("search_radius", sampling_rate // 2),
+            search_radius=method_parameters["search_radius"],
             direction="up",
-            min_peak_distance=method_parameters.get("min_distance", 10),
+            min_peak_distance=method_parameters["min_distance"],
         )
     elif method == PeakDetectionMethod.LocalMinima:
         return find_extrema(
             sig,
-            search_radius=method_parameters.get("search_radius", sampling_rate // 2),
+            search_radius=method_parameters["search_radius"],
             direction="down",
-            min_peak_distance=method_parameters.get("min_distance", 10),
+            min_peak_distance=method_parameters["min_distance"],
         )
     elif method == PeakDetectionMethod.PPGElgendi:
         return _find_peaks_ppg_elgendi(
             sig,
             sampling_rate,
-            peakwindow=method_parameters.get("peakwindow", 0.111),
-            beatwindow=method_parameters.get("beatwindow", 0.667),
-            beatoffset=method_parameters.get("beatoffset", 0.02),
-            mindelay=method_parameters.get("mindelay", 0.3),
+            peakwindow=method_parameters["peakwindow"],
+            beatwindow=method_parameters["beatwindow"],
+            beatoffset=method_parameters["beatoffset"],
+            mindelay=method_parameters["mindelay"],
         )
     elif method == PeakDetectionMethod.WFDBXQRS:
         return _find_peaks_xqrs(
             sig,
             sampling_rate,
-            radius=method_parameters.get("search_radius", sampling_rate // 2),
-            min_peak_distance=kwargs.get("min_peak_distance", 20),
-            peak_dir=method_parameters.get("peak_dir", WFDBPeakDirection.Up),
+            radius=method_parameters["search_radius"],
+            min_peak_distance=kwargs["min_peak_distance"],
+            peak_dir=method_parameters["peak_dir"],
         )
     elif method == PeakDetectionMethod.ECGNeuroKit2:
         assert "method" in method_parameters, "NeuroKit2 ECG peak detection method not specified"
@@ -408,4 +404,4 @@ def _find_peaks_nk_ecg(
         method=nk_method,
         show=False,
         **params,
-    )["ECG_R_Peaks"]  # type: ignore
+    )["ECG_R_Peaks"]

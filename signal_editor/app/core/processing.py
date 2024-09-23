@@ -50,7 +50,9 @@ def ecg_clean_neurokit(
     return nk.signal_filter(clean, sampling_rate=sampling_rate, method=FilterMethod.Powerline, powerline=powerline)
 
 
-def ppg_clean_elgendi(sig: npt.NDArray[np.float64], sampling_rate: int) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
+def ppg_clean_elgendi(
+    sig: npt.NDArray[np.float64], sampling_rate: int
+) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
     return nk.signal_filter(
         sig,
         sampling_rate=sampling_rate,
@@ -61,7 +63,9 @@ def ppg_clean_elgendi(sig: npt.NDArray[np.float64], sampling_rate: int) -> tuple
     ), {"lowcut": 0.5, "highcut": 8, "method": FilterMethod.Butterworth, "order": 3}
 
 
-def ecg_clean_biosppy(sig: npt.NDArray[np.float64], sampling_rate: int) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
+def ecg_clean_biosppy(
+    sig: npt.NDArray[np.float64], sampling_rate: int
+) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
     order = int(1.5 * sampling_rate)
     if order % 2 == 0:
         order += 1
@@ -71,16 +75,18 @@ def ecg_clean_biosppy(sig: npt.NDArray[np.float64], sampling_rate: int) -> tuple
     frequency = 2 * np.array(frequency) / sampling_rate  # Normalize frequency to Nyquist Frequency
 
     a = np.array([1])
-    b = scipy.signal.firwin(numtaps=order, cutoff=frequency, pass_zero=False)  # type: ignore
+    b = scipy.signal.firwin(numtaps=order, cutoff=frequency, pass_zero=False)
 
     filtered = scipy.signal.filtfilt(b, a, sig)
 
     filtered -= np.mean(filtered)
 
-    return filtered, {"lowcut": 0.67, "highcut": 45, "method": FilterMethod.FIR, "order": order}  # type: ignore
+    return filtered, {"lowcut": 0.67, "highcut": 45, "method": FilterMethod.FIR, "order": order}
 
 
-def ecg_clean_pantompkins(sig: npt.NDArray[np.float64], sampling_rate: int) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
+def ecg_clean_pantompkins(
+    sig: npt.NDArray[np.float64], sampling_rate: int
+) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
     return nk.signal_filter(
         sig,
         sampling_rate=sampling_rate,
@@ -91,7 +97,9 @@ def ecg_clean_pantompkins(sig: npt.NDArray[np.float64], sampling_rate: int) -> t
     ), {"lowcut": 5, "highcut": 15, "method": FilterMethod.ButterworthZI, "order": 1}
 
 
-def ecg_clean_hamilton(sig: npt.NDArray[np.float64], sampling_rate: int) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
+def ecg_clean_hamilton(
+    sig: npt.NDArray[np.float64], sampling_rate: int
+) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
     return nk.signal_filter(
         sig,
         sampling_rate=sampling_rate,
@@ -102,7 +110,9 @@ def ecg_clean_hamilton(sig: npt.NDArray[np.float64], sampling_rate: int) -> tupl
     ), {"lowcut": 8, "highcut": 16, "method": FilterMethod.ButterworthZI, "order": 1}
 
 
-def ecg_clean_elgendi(sig: npt.NDArray[np.float64], sampling_rate: int) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
+def ecg_clean_elgendi(
+    sig: npt.NDArray[np.float64], sampling_rate: int
+) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
     return nk.signal_filter(
         sig,
         sampling_rate=sampling_rate,
@@ -113,7 +123,9 @@ def ecg_clean_elgendi(sig: npt.NDArray[np.float64], sampling_rate: int) -> tuple
     ), {"lowcut": 8, "highcut": 20, "method": FilterMethod.ButterworthZI, "order": 2}
 
 
-def ecg_clean_engzee(sig: npt.NDArray[np.float64], sampling_rate: int) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
+def ecg_clean_engzee(
+    sig: npt.NDArray[np.float64], sampling_rate: int
+) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
     return nk.signal_filter(
         sig,
         sampling_rate=sampling_rate,
@@ -124,7 +136,9 @@ def ecg_clean_engzee(sig: npt.NDArray[np.float64], sampling_rate: int) -> tuple[
     ), {"lowcut": 52, "highcut": 48, "method": FilterMethod.ButterworthZI, "order": 4}
 
 
-def ecg_clean_vgraph(sig: npt.NDArray[np.float64], sampling_rate: int) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
+def ecg_clean_vgraph(
+    sig: npt.NDArray[np.float64], sampling_rate: int
+) -> tuple[npt.NDArray[np.float64], _t.SignalFilterParameters]:
     return nk.signal_filter(
         sig,
         sampling_rate=sampling_rate,
@@ -176,38 +190,3 @@ def signal_rate(
         period[last_index + 1 :] = fill_value[1]
 
     return np.divide(60, period)
-
-
-def rolling_rate(
-    df: pl.DataFrame,
-    grp_col: str,
-    temperature_col: str,
-    sampling_rate: int,
-    sec_new_window_every: int = 10,
-    sec_window_length: int = 60,
-    sec_start_at: int = 0,
-) -> pl.DataFrame:
-    every = sec_new_window_every * sampling_rate
-    period = sec_window_length * sampling_rate
-    offset = sec_start_at * sampling_rate
-    remove_row_count = period // every
-
-    if grp_col not in df.columns or temperature_col not in df.columns:
-        raise ValueError(f"Columns '{grp_col}' and '{temperature_col}' must exist in the dataframe")
-    if df.get_column(grp_col).dtype not in pl.INTEGER_DTYPES:
-        raise ValueError(f"Column '{grp_col}' must be of integer type")
-    return (
-        df.sort(grp_col)
-        .with_columns(pl.col(grp_col).cast(pl.Int64))
-        .group_by_dynamic(
-            pl.col(grp_col),
-            include_boundaries=True,
-            every=f"{every}i",
-            period=f"{period}i",
-            offset=f"{offset}i",
-        )
-        .agg(
-            pl.count().alias("n_peaks"),
-            pl.mean(temperature_col).round(1).name.suffix("_mean"),
-        )[:-remove_row_count]
-    )

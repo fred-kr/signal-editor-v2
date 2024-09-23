@@ -10,11 +10,10 @@ from ...ui.ui_main_window import Ui_MainWindow
 from .. import type_defs as _t
 from ..config import Config
 from ..enum_defs import LogLevel
-from .dialogs import ConfigDialog, MetadataDialog
+from .dialogs import MetadataDialog
 from .icons import SignalEditorIcons as Icons
 from .widgets import (
     DataTreeWidgetContainer,
-    MessageBox,
     OverlayWidget,
     ParameterInputsDock,
     SectionListDock,
@@ -124,7 +123,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _setup_widgets(self) -> None:
         self.dialog_meta = MetadataDialog(self)
-        self.dialog_config = ConfigDialog(self)
+        # self.dialog_config = ConfigDialog(self)
 
         self.table_view_import_data.horizontalHeader().setDefaultAlignment(
             QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter
@@ -277,7 +276,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._on_page_changed(0)
 
     def _connect_signals(self) -> None:
-        self.action_show_settings.triggered.connect(self.dialog_config.open)
+        # self.action_show_settings.triggered.connect(self._on_action_show_settings)
         # self.action_remove_section.triggered.connect(self.dock_sections.list_view.emit_delete_current_request)
 
         self.stackedWidget.currentChanged.connect(self._on_page_changed)
@@ -312,7 +311,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dialog_meta.spin_box_sampling_rate.style().unpolish(self.dialog_meta.spin_box_sampling_rate)
         self.dialog_meta.spin_box_sampling_rate.style().polish(self.dialog_meta.spin_box_sampling_rate)
         self.dialog_meta.spin_box_sampling_rate.update()
-        
+
         self.spin_box_sampling_rate_import_page.setValue(value)
 
     @QtCore.Slot(str)
@@ -376,15 +375,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def write_settings(self) -> None:
         config = Config()
-        config.internal.WindowGeometry = self.saveGeometry()
-        config.internal.WindowState = self.saveState()
+        config.internal.window_geometry = self.saveGeometry()
+        config.internal.window_state = self.saveState()
 
         config.save()
 
     def read_settings(self) -> None:
         config = Config()
-        self.restoreGeometry(config.internal.WindowGeometry)
-        self.restoreState(config.internal.WindowState)
+        self.restoreGeometry(config.internal.window_geometry)
+        self.restoreState(config.internal.window_state)
 
     def show_overlay(self, text: str = "Calculating...") -> None:
         self.centralWidget().setEnabled(False)
@@ -406,8 +405,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.write_settings()
-        if self.dialog_config.isVisible():
-            self.dialog_config.done(QtWidgets.QDialog.DialogCode.Accepted)
         self.dock_status_log.close()
         self.dock_parameters.close()
         self.dock_sections.close()
@@ -445,23 +442,23 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if os.environ.get("DEBUG") == "1":
             threshold = LogLevel.DEBUG
 
+        parent = self
+        if self.dialog_meta.isVisible():
+            parent = self.dialog_meta
+
+        msg_box = QtWidgets.QMessageBox(parent)
+        msg_box.setText(record_dict["level"].name)
+        msg_box.setIconPixmap(self._msg_box_icons[msg_log_level].pixmap(32, 32))
+        msg_box.setInformativeText(message)
+
         if msg_log_level >= threshold:
-            traceback_text = "No traceback available"
-            # If a traceback is included, show it in the detailed text instead of the message
+            traceback_text = "No details available"
             if record_dict["exception"] is not None:
                 traceback_text = stackprinter.format(record_dict["exception"])
 
-            icon = self._msg_box_icons[msg_log_level]
-            parent = self
-            if self.dialog_meta.isVisible():
-                parent = self.dialog_meta
-            elif self.dialog_config.isVisible():
-                parent = self.dialog_config
+            msg_box.setDetailedText(traceback_text)
 
-            msg_box = MessageBox(title=msg_log_level.name, text=message, icon=icon, parent=parent)
-            msg_box.set_detailed_text(traceback_text)
-
-            msg_box.open()
+        msg_box.exec()
 
     def set_active_section_label(self, label_text: str) -> None:
         self.dock_sections.label_active_section.setText(f"Active Section: {label_text}")

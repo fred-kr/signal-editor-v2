@@ -106,8 +106,8 @@ class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
         }
         self.sig_property_has_changed.emit(metadata_dict)
         config = Config()
-        config.internal.LastSignalColumn = self.combo_box_signal_column.currentText()
-        config.internal.LastInfoColumn = self.combo_box_info_column.currentText()
-        config.internal.LastSamplingRate = self.spin_box_sampling_rate.value()
+        config.internal.last_signal_column = self.combo_box_signal_column.currentText()
+        config.internal.last_info_column = self.combo_box_info_column.currentText()
+        config.internal.last_sampling_rate = self.spin_box_sampling_rate.value()
 
         super().accept()

@@ -14,11 +14,11 @@ class DataFrameModel(QtCore.QAbstractTableModel):
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
         self.df = pl.DataFrame()
-        self._float_precision = Config().data.FloatPrecision
+        self._float_precision = Config().data.float_precision
 
     def set_df(self, df: pl.DataFrame) -> None:
         self.beginResetModel()
-        self._float_precision = Config().data.FloatPrecision
+        self._float_precision = Config().data.float_precision
         self.df = df
         self.endResetModel()
 
@@ -124,7 +124,7 @@ class LazyDataFrameModel(QtCore.QAbstractTableModel):
                 return f"{value:_}"
             elif value_type.is_float():
                 return np.format_float_positional(
-                    value, trim="0", precision=Config().data.FloatPrecision, fractional=True
+                    value, trim="0", precision=Config().data.float_precision, fractional=True
                 )
             elif value_type.is_temporal():
                 if isinstance(value, datetime.timedelta):

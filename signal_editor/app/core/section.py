@@ -4,6 +4,7 @@ import re
 import typing as t
 
 import attrs
+import neurokit2 as nk
 import numpy as np
 import numpy.typing as npt
 import polars as pl
@@ -33,7 +34,6 @@ from .processing import (
     ecg_clean_vgraph,
     filter_signal,
     ppg_clean_elgendi,
-    signal_rate,
     standardize_signal,
 )
 
@@ -46,7 +46,7 @@ class ProcessingParameters:
     standardization_parameters: _t.StandardizationParameters | None = attrs.field(default=None)
     peak_detection_method: PeakDetectionMethod | None = attrs.field(default=None)
     peak_detection_method_parameters: _t.PeakDetectionMethodParameters | None = attrs.field(default=None)
-    rate_computation_method: RateComputationMethod = attrs.field(default=Config().editing.RateMethod)
+    rate_computation_method: RateComputationMethod = attrs.field(default=Config().editing.rate_computation_method)
 
     def to_dict(self) -> _t.ProcessingParametersDict:
         return {
@@ -69,7 +69,7 @@ class ProcessingParameters:
         self.standardization_parameters = None
         self.peak_detection_method = None
         self.peak_detection_method_parameters = None
-        self.rate_computation_method = Config().editing.RateMethod
+        self.rate_computation_method = Config().editing.rate_computation_method
 
     def __repr__(self) -> str:
         return pprint.pformat(self.to_dict(), indent=2, width=120, underscore_numbers=True)
@@ -143,6 +143,10 @@ class SectionID(str):
         sig_name = self.split("_")[1]
         return f"Section {self[-3:]} ({sig_name.upper()})"
 
+    def as_num(self) -> int:
+        """Get the section number as an int"""
+        return int(self.split("_")[2])
+
 
 @attrs.define
 class SectionMetadata:
@@ -200,7 +204,7 @@ class Section:
         self.data = (
             data.with_row_index(SECTION_INDEX_COL)
             .lazy()
-            .select(ps.by_name(INDEX_COL, SECTION_INDEX_COL), ~ps.by_name(INDEX_COL, SECTION_INDEX_COL))
+            .select(ps.by_name(INDEX_COL, SECTION_INDEX_COL).cast(pl.Int32), ~ps.by_name(INDEX_COL, SECTION_INDEX_COL))
             .set_sorted(INDEX_COL)
             .set_sorted(SECTION_INDEX_COL)
             .with_columns(
@@ -211,7 +215,7 @@ class Section:
             .collect()
         )
 
-        self.sampling_rate = Config().internal.LastSamplingRate
+        self.sampling_rate = Config().internal.last_sampling_rate
         self.global_bounds: tuple[int, int] = (
             self.data.item(0, INDEX_COL),
             self.data.item(-1, INDEX_COL),
@@ -300,7 +304,13 @@ class Section:
     @property
     def peaks_global(self) -> pl.Series:
         """Returns the indices of the peaks relative to the entire signal."""
-        return self.data.lazy().filter(pl.col(IS_PEAK_COL) == 1).select(INDEX_COL).collect().get_column(INDEX_COL)
+        return (
+            self.data.lazy()
+            .filter(pl.col(IS_PEAK_COL) == 1)
+            .select(INDEX_COL)
+            .collect()
+            .get_column(INDEX_COL)
+        )
 
     @property
     def manual_peak_edits(self) -> ManualPeakEdits:
@@ -342,7 +352,7 @@ class Section:
         powerline : int | float
             The powerline frequency to use, only used with method="powerline"
         """
-        allow_stacking = Config().editing.FilterStacking
+        allow_stacking = Config().editing.filter_stacking
         if self.is_filtered and not allow_stacking:
             logger.warning(
                 "Applying filter to raw signal. To apply to already processed signal, enable\n\n'Settings > Preferences > Editing > FilterStacking'."
@@ -569,7 +579,7 @@ class Section:
         if (not force and self._rate_is_synced) or self.is_locked:
             return
 
-        method = Config().editing.RateMethod
+        method = Config().editing.rate_computation_method
         if method == RateComputationMethod.RollingWindow:
             self._calc_rate_rolling(full_info=full_info, **kwargs)
         elif method == RateComputationMethod.Instantaneous:
@@ -592,11 +602,13 @@ class Section:
             )
             return
         if desired_length is None:
-            desired_length = self.data.height
-        inst_rate = signal_rate(peaks, self.sampling_rate, desired_length)
+            desired_length = len(self.processed_signal)
+        # inst_rate = signal_rate(peaks, self.sampling_rate, desired_length)
+        inst_rate = nk.signal_rate(peaks, sampling_rate=self.sampling_rate, desired_length=desired_length)
 
         self.rate_data = pl.DataFrame(
-            {SECTION_INDEX_COL: pl.int_range(inst_rate.size, dtype=pl.Int32, eager=True), "rate_bpm": inst_rate}
+            {SECTION_INDEX_COL: self.data.get_column(SECTION_INDEX_COL), "rate_bpm": inst_rate},
+            schema_overrides={SECTION_INDEX_COL: pl.Int32, "rate_bpm": pl.Float64},
         )
 
     def _calc_rate_rolling(
@@ -722,7 +734,7 @@ class Section:
             sampling_rate=self.sampling_rate,
             global_bounds=self.global_bounds,
             processing_parameters=self._processing_parameters,
-            rate_computation_method=Config().editing.RateMethod,
+            rate_computation_method=Config().editing.rate_computation_method,
         )
 
     def get_peak_pos(self) -> pl.DataFrame:
@@ -736,10 +748,10 @@ class Section:
             .collect()
         )
 
-    def lock_result(self) -> None:
-        self.update_peak_data(include_global=True, include_times=True, include_intervals=True, include_info=True)
-        self.update_rate_data(full_info=True, force=True)
-        self._result_data.is_locked = True
+    def lock_result(self, **kwargs: t.Unpack[_t.RollingRateKwargsDict]) -> None:
+        self.update_peak_data(include_global=True, include_info=True)
+        self.update_rate_data(full_info=True, force=True, **kwargs)
+        self.set_locked(True)
 
     def get_detailed_result(self) -> DetailedSectionResult:
         metadata = self.get_metadata()

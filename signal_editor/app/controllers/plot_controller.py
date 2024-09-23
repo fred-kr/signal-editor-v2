@@ -6,11 +6,10 @@ import polars as pl
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from .. import type_defs as _t
 from ..config import Config
 from ..enum_defs import PointSymbols, SVGColors
 from ..gui.plot_items import ClickableRegionItem, CustomScatterPlotItem, EditingViewBox, TimeAxisItem
-from ..utils import safe_disconnect
+from ..utils import make_qbrush, make_qpen, safe_disconnect
 
 if t.TYPE_CHECKING:
     from pyqtgraph.GraphicsScene import mouseEvents
@@ -37,7 +36,7 @@ class PlotController(QtCore.QObject):
         self._setup_plot_items()
         self._setup_plot_data_items()
 
-        self.search_around_click_radius = Config().plot.ClickRadius
+        self.search_around_click_radius = Config().plot.click_radius
         self.block_clicks = False
 
     def _setup_plot_widgets(self) -> None:
@@ -69,24 +68,29 @@ class PlotController(QtCore.QObject):
 
         self.pw_main.getPlotItem().getViewBox().setXLink("rate_plot")
 
-        self.set_background_color(Config().plot.Background)
-        self.set_foreground_color(Config().plot.Foreground)
+        self.set_background_color(Config().plot.background_color)
+        self.set_foreground_color(Config().plot.foreground_color)
 
     def _setup_region_selector(self) -> None:
-        brush_col = Config().plot.SectionColor
+        brush_col = SVGColors.LimeGreen.qcolor()
         hover_brush_col = brush_col
         hover_brush_col.setAlpha(90)
-        line_pen = pg.mkPen(color="red", width=2)
+
+        brush = make_qbrush(brush_col)
+        line_pen = make_qpen(SVGColors.DarkGreen, width=3)
+
+        hover_brush = make_qbrush(hover_brush_col)
+        hover_pen = make_qpen(SVGColors.GreenYellow, width=5)
         self.region_selector = pg.LinearRegionItem(
-            brush=brush_col,
+            brush=brush,
             pen=line_pen,
-            hoverBrush=hover_brush_col,
-            hoverPen={"color": "darkred", "width": 3},
+            hoverBrush=hover_brush,
+            hoverPen=hover_pen,
         )
         self.region_selector.setVisible(False)
         self.region_selector.setZValue(1e3)
         for line in self.region_selector.lines:
-            line.addMarker("<|>", position=0.5, size=13)
+            line.addMarker("<|>", position=0.5, size=15)
 
         self.pw_main.addItem(self.region_selector)
 
@@ -105,11 +109,9 @@ class PlotController(QtCore.QObject):
         self._init_rate_curve()
         self._setup_region_selector()
 
-    def _init_signal_curve(self, pen_color: _t.PGColor | None = None) -> None:
-        if pen_color is None:
-            pen_color = Config().plot.LineColor
-        pen = pg.mkPen(color=pen_color, width=1)
-        click_width = Config().plot.LineClickWidth
+    def _init_signal_curve(self) -> None:
+        pen = make_qpen(SVGColors.DodgerBlue, width=1)
+        click_width = Config().plot.line_click_width
         signal = pg.PlotDataItem(
             pen=pen,
             skipFiniteCheck=True,
@@ -133,15 +135,11 @@ class PlotController(QtCore.QObject):
 
     def _init_peak_scatter(
         self,
-        brush_color: _t.PGColor | None = None,
-        hover_pen: _t.PGColor = "black",
-        hover_brush: _t.PGColor = "red",
     ) -> None:
-        if brush_color is None:
-            brush_color = Config().plot.PointColor
-        brush = pg.mkBrush(brush_color)
-        h_brush = pg.mkBrush(hover_brush)
-        h_pen = pg.mkPen(hover_pen, width=1)
+        brush = make_qbrush(SVGColors.GoldenRod)
+        hover_brush = make_qbrush(SVGColors.Red)
+        hover_pen = make_qpen(SVGColors.Black, width=1)
+
         scatter = CustomScatterPlotItem(
             pxMode=True,
             size=10,
@@ -150,9 +148,9 @@ class PlotController(QtCore.QObject):
             useCache=True,
             name="Peaks",
             hoverable=True,
-            hoverPen=h_pen,
+            hoverPen=hover_pen,
             hoverSymbol=PointSymbols.Cross,
-            hoverBrush=h_brush,
+            hoverBrush=hover_brush,
             hoverSize=15,
             tip=None,
         )
@@ -169,10 +167,8 @@ class PlotController(QtCore.QObject):
         self.peak_scatter.setParent(None)
         self.peak_scatter = None
 
-    def _init_rate_curve(self, pen_color: _t.PGColor | None = None) -> None:
-        if pen_color is None:
-            pen_color = "crimson"
-        pen = pg.mkPen(color=pen_color, width=1)
+    def _init_rate_curve(self) -> None:
+        pen = make_qpen(SVGColors.IndianRed, width=1)
         rate_curve = pg.PlotDataItem(
             pen=pen,
             skipFiniteCheck=True,
@@ -235,20 +231,25 @@ class PlotController(QtCore.QObject):
             region.setVisible(visible)
         self._show_regions = visible
 
-    def remove_region(
-        self, region: ClickableRegionItem | None = None, bounds: tuple[float, float] | None = None
-    ) -> None:
-        if region is not None:
-            safe_disconnect(region, region.sig_clicked, self._on_region_clicked)
-            self.regions.remove(region)
-        if bounds is not None:
+    def remove_region(self, section_index: QtCore.QModelIndex) -> None:
+        # if region is not None:
+        #     safe_disconnect(region, region.sig_clicked, self._on_region_clicked)
+        #     self.regions.remove(region)
+        # if bounds is not None:
+        #     for region in self.regions:
+        #         reg_bounds = region.getRegion()
+        #         if np.allclose(bounds, reg_bounds):
+        #             region.setParent(None)  # Not sure if necessary?
+        #             self.regions.remove(region)
+        #             self.pw_main.removeItem(region)
+        #             break
+        if section_index.row() > 0:
             for region in self.regions:
-                reg_bounds = region.getRegion()
-                if np.allclose(bounds, reg_bounds):
-                    region.setParent(None)  # Not sure if necessary?
+                if region.section_id == section_index.row():
+                    safe_disconnect(region, region.sig_clicked, self._on_region_clicked)
+                    region.setParent(None)
                     self.regions.remove(region)
                     self.pw_main.removeItem(region)
-                    break
 
         self.toggle_regions(self._show_regions)
 
@@ -284,13 +285,16 @@ class PlotController(QtCore.QObject):
 
     @QtCore.Slot(int, int)
     def mark_region(self, x1: int, x2: int) -> None:
-        brush_color = Config().plot.SectionColor
+        brush_color = SVGColors.Aquamarine.qcolor()
         brush_color.setAlpha(50)
-        brush = pg.mkBrush(brush_color)
-        hover_brush = pg.mkBrush(brush_color.lighter(180))
+        brush = make_qbrush(brush_color)
+
+        hover_brush = make_qbrush(brush_color.lighter(180))
+
         pen_color = SVGColors.Orange.qcolor()
-        pen = pg.mkPen(color=pen_color, width=2, style=QtCore.Qt.PenStyle.DashLine)
-        hover_pen = pg.mkPen(color=pen_color.darker(200), width=2, style=QtCore.Qt.PenStyle.DashLine)
+        pen = make_qpen(pen_color, width=3, style=QtCore.Qt.PenStyle.DashLine)
+
+        hover_pen = make_qpen(pen_color.darker(200), width=5, style=QtCore.Qt.PenStyle.DashLine)
 
         marked_region = ClickableRegionItem(
             values=(x1, x2),
@@ -422,7 +426,7 @@ class PlotController(QtCore.QObject):
     @QtCore.Slot()
     def remove_peaks_in_selection(self) -> None:
         vb: EditingViewBox = self.pw_main.plotItem.vb
-        if vb.mapped_selection_rect is None or self.peak_scatter is None:
+        if vb.mapped_selection_rect is None or self.peak_scatter is None or self.block_clicks:
             return
 
         r = vb.mapped_selection_rect
@@ -459,22 +463,11 @@ class PlotController(QtCore.QObject):
                 rate_axis.setTextPen(color)
 
     def apply_settings(self) -> None:
-        bg_color = Config().plot.Background
-        fg_color = Config().plot.Foreground
-        point_color = Config().plot.PointColor
-        signal_line_color = Config().plot.LineColor
-        section_marker_color = Config().plot.SectionColor
+        bg_color = Config().plot.background_color
+        fg_color = Config().plot.foreground_color
 
         self.set_background_color(bg_color)
         self.set_foreground_color(fg_color)
-        if self.peak_scatter is not None:
-            self.peak_scatter.setBrush(point_color)
-        if self.signal_curve is not None:
-            self.signal_curve.setPen(color=signal_line_color)
-        if self.rate_curve is not None:
-            self.rate_curve.setPen(color="crimson")
-        for r in self.regions:
-            r.setBrush(color=section_marker_color)
 
     @QtCore.Slot(bool)
     def toggle_auto_scaling(self, state: bool) -> None:
