@@ -43,15 +43,17 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.new_central_widget = QtWidgets.QWidget()
         self._h_layout = QtWidgets.QHBoxLayout(self.new_central_widget)
         self.navigation_interface = NavigationInterface(self, showMenuButton=True)
+        self.navigation_interface.panel.expandAni.setDuration(0)
 
         self.progress_dlg: QtWidgets.QProgressDialog | None = None
-        self._overlay_widget = OverlayWidget(self)
-        self._overlay_widget.hide()
 
         self._setup_layout()
         self.setCentralWidget(self.new_central_widget)
         self._setup_navigation()
-        self._setup_window()
+        # self._setup_window()
+        
+        self._overlay_widget = OverlayWidget(self)
+        self._overlay_widget.hide()
 
         self._setup_docks()
         self._setup_actions()
@@ -360,15 +362,15 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.Slot(int)
     def _on_page_changed(self, index: int) -> None:
         self.show_section_confirm_cancel(False)
-        if index in {0, 2, 3, 4}:
-            self.tool_bar_editing.setEnabled(False)
-            self.command_bar_section_list.setEnabled(False)
-            self.dock_parameters.hide()
-        elif index == 1:
+        if index == 1:
             self.tool_bar_editing.setEnabled(True)
             self.command_bar_section_list.setEnabled(True)
             self.dock_sections.show()
             self.dock_parameters.show()
+        else:
+            self.tool_bar_editing.setEnabled(False)
+            self.command_bar_section_list.setEnabled(False)
+            self.dock_parameters.hide()
 
     def show_section_confirm_cancel(self, show: bool) -> None:
         self.dock_sections.btn_container.setVisible(show)
@@ -391,7 +393,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_sections.setEnabled(False)
 
         self._overlay_widget.set_text(text)
-        self._overlay_widget.setGeometry(self.centralWidget().geometry())
+        
+        self._overlay_widget.setGeometry(self.geometry())
+        self._overlay_widget.move(0, 0)
+
         self._overlay_widget.raise_()
         self._overlay_widget.show()
 
@@ -441,6 +446,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     ) -> None:
         if os.environ.get("DEBUG") == "1":
             threshold = LogLevel.DEBUG
+
+        if msg_log_level < threshold:
+            return
 
         parent = self
         if self.dialog_meta.isVisible():

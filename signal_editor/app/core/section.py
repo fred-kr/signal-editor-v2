@@ -304,13 +304,7 @@ class Section:
     @property
     def peaks_global(self) -> pl.Series:
         """Returns the indices of the peaks relative to the entire signal."""
-        return (
-            self.data.lazy()
-            .filter(pl.col(IS_PEAK_COL) == 1)
-            .select(INDEX_COL)
-            .collect()
-            .get_column(INDEX_COL)
-        )
+        return self.data.lazy().filter(pl.col(IS_PEAK_COL) == 1).select(INDEX_COL).collect().get_column(INDEX_COL)
 
     @property
     def manual_peak_edits(self) -> ManualPeakEdits:

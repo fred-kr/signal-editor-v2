@@ -9,7 +9,7 @@ from pyside_config.properties import ComboBoxProperties, SpinBoxProperties
 from pyside_config.widgets import EnumComboBox
 
 from .enum_defs import RateComputationMethod, TextFileSeparator
-from .utils import app_dir_posix, search_enum
+from .utils import app_dir_posix, make_qcolor, search_enum
 
 type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 

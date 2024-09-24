@@ -1,5 +1,4 @@
 import enum
-import sys
 import typing as t
 
 from PySide6 import QtCore, QtGui, QtWidgets
@@ -109,34 +108,3 @@ class GroupedComboBoxDelegate(QtWidgets.QStyledItemDelegate):
             return False  # Prevent selection of non-child items
 
         return super().editorEvent(event, model, option, index)
-
-
-class Window(QtWidgets.QWidget):
-    def __init__(self):
-        super().__init__()
-
-        self.combo = GroupedComboBox(self)
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(self.combo)
-
-        self.setLayout(layout)
-        self.combo.clear()
-
-        self.combo.add_parent_item("PPG")
-        self.combo.add_child_item("Child 1", "data1")
-        self.combo.add_child_item("Child 2", "data2")
-        self.combo.add_separator()
-        self.combo.add_parent_item("Parent 2")
-        self.combo.add_child_item("Child 3", "data3")
-        self.combo.add_child_item("Child 4", "data4")
-        self.combo.add_separator()
-        self.combo.add_parent_item("Parent 3")
-        self.combo.add_child_item("Child 5", "data5")
-        self.combo.add_child_item("Child 6", "data6")
-
-
-if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
-    win = Window()
-    win.show()
-    sys.exit(app.exec())

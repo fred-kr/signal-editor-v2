@@ -24,11 +24,11 @@ class Ui_OverlayWidget(object):
     def setupUi(self, OverlayWidget):
         if not OverlayWidget.objectName():
             OverlayWidget.setObjectName(u"OverlayWidget")
-        OverlayWidget.resize(561, 341)
+        OverlayWidget.resize(772, 461)
         self.verticalLayout = QVBoxLayout(OverlayWidget)
         self.verticalLayout.setSpacing(0)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.verticalLayout.setContentsMargins(-1, 0, 0, 0)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.gridWidget = QWidget(OverlayWidget)
         self.gridWidget.setObjectName(u"gridWidget")
         self.gridWidget.setStyleSheet(u"background-color: rgba(0, 0, 0, 128);")

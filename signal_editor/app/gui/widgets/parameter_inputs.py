@@ -4,6 +4,8 @@ import typing as t
 import qfluentwidgets as qfw
 from PySide6 import QtCore, QtWidgets
 
+from ...constants import NOT_SET_OPTION
+
 from ....ui.ui_parameter_inputs import Ui_ParameterInputs
 from ... import type_defs as _t
 from ...enum_defs import (
@@ -25,7 +27,7 @@ def _fill_combo_box_with_enum(combo_box: qfw.ComboBox, enum_class: t.Type[enum.E
         combo_box.addItem(enum_value.name, userData=enum_value.value)
 
     if allow_none:
-        combo_box.insertItem(0, "---", userData=None)
+        combo_box.insertItem(0, NOT_SET_OPTION, userData=None)
 
 
 class ParameterInputs(QtWidgets.QWidget, Ui_ParameterInputs):

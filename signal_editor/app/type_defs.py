@@ -85,7 +85,7 @@ class StandardizationParameters(t.TypedDict, total=False):
 
 
 class SpotDict(t.TypedDict):
-    pos: t.Union[tuple[float, float], "QtCore.QPointF"]
+    pos: "tuple[float, float] | QtCore.QPointF"
     size: float
     pen: PGPen
     brush: PGBrush
