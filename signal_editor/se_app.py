@@ -606,7 +606,8 @@ class SignalEditor(QtWidgets.QApplication):
     @QtCore.Slot()
     def _unlock_section(self) -> None:
         self.data.active_section.set_locked(False)
-        self.plot.block_clicks = False
+        self._on_worker_finished()
+
 
 
     @QtCore.Slot(str)

@@ -306,20 +306,6 @@ class Config:
         dlg.setModal(True)
         dlg.setWindowTitle("Settings")
 
-        # btn_done = QtWidgets.QPushButton("Done")
-        # # btn_done.setStyleSheet("QPushButton { min-height: 25px; font-size: 14px; }")
-        # btn_done.clicked.connect(dlg.accept)
-
-        # btn_cancel = QtWidgets.QPushButton("Cancel")
-        # # btn_cancel.setStyleSheet("QPushButton { min-height: 25px; font-size: 14px; }")
-        # btn_cancel.clicked.connect(dlg.reject)
-        
-        # btn_layout = QtWidgets.QHBoxLayout()
-        # btn_layout.addStretch()
-        # btn_layout.addWidget(btn_done)
-        # btn_layout.addWidget(btn_cancel)
-        # btn_layout.setContentsMargins(0, 0, 0, 0)
-
         btn_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.StandardButton.Save | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
         btn_box.accepted.connect(dlg.accept)
         btn_box.rejected.connect(dlg.reject)

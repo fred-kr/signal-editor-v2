@@ -36,7 +36,6 @@ class PlotController(QtCore.QObject):
         self._setup_plot_items()
         self._setup_plot_data_items()
 
-        self.search_around_click_radius = Config().plot.click_radius
         self.block_clicks = False
 
     def _setup_plot_widgets(self) -> None:
@@ -384,7 +383,7 @@ class PlotController(QtCore.QObject):
         if x_data is None or y_data is None:
             return
 
-        scatter_search_radius = self.search_around_click_radius
+        scatter_search_radius = Config().plot.click_radius
 
         left_index = np.searchsorted(x_data, click_x - scatter_search_radius, side="left")
         right_index = np.searchsorted(x_data, click_x + scatter_search_radius, side="right")

@@ -4,8 +4,10 @@ import qfluentwidgets as qfw
 import stackprinter
 from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
-from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 from pyside_widgets import OverlayWidget
+from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
+
+from ..constants import INDEX_COL
 
 from ...ui.ui_main_window import Ui_MainWindow
 from .. import type_defs as _t
@@ -15,10 +17,8 @@ from .dialogs import MetadataDialog
 from .icons import SignalEditorIcons as Icons
 from .widgets import (
     DataTreeWidgetContainer,
-    # OverlayWidget,
     ParameterInputsDock,
     SectionListDock,
-    SectionSummaryBox,
     StatusMessageDock,
 )
 
@@ -52,7 +52,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.setCentralWidget(self.new_central_widget)
         self._setup_navigation()
         self._setup_window()
-        
+
         self.overlay_widget = OverlayWidget(self)
         self.overlay_widget.hide()
 
@@ -316,7 +316,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     @QtCore.Slot(str)
     def _on_dialog_signal_column_changed(self, value: str) -> None:
-        if value != "index":
+        if value != INDEX_COL:
             self.dialog_meta.combo_box_signal_column.setProperty("requiresInput", False)
         else:
             self.dialog_meta.combo_box_signal_column.setProperty("requiresInput", True)
@@ -354,8 +354,19 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         menu.exec(QtGui.QCursor.pos())
 
     def show_section_summary_box(self, summary: _t.SectionSummaryDict) -> None:
-        msg_box = SectionSummaryBox("Section Summary", summary, parent=self)
-        msg_box.open()
+        dlg = QtWidgets.QDialog(self)
+        dlg.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
+        dlg.setModal(True)
+
+        summary_tree = DataTreeWidgetContainer(allow_edit=False)
+        summary_tree.set_data(dict(summary), hide_root=True)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addWidget(summary_tree)
+
+        dlg.setLayout(layout)
+        dlg.resize(600, 400)
+        dlg.open()
 
     @QtCore.Slot(int)
     def _on_page_changed(self, index: int) -> None:
