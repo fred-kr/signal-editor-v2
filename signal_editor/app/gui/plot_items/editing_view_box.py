@@ -7,6 +7,7 @@ from pyqtgraph.Point import Point
 from PySide6 import QtCore, QtGui, QtWidgets
 
 from ...enum_defs import MouseButtons
+from ...utils import make_qpen, make_qbrush
 
 if t.TYPE_CHECKING:
     from pyqtgraph.GraphicsScene import mouseEvents
@@ -28,7 +29,7 @@ def _get_button_type(ev: "mouseEvents.MouseDragEvent") -> MouseButtons:
 
 class EditingViewBox(pg.ViewBox):
     """
-    Custom `pyqtgraph.ViewBox` subclass that adds some features for enhanced editing.
+    Custom `pyqtgraph.ViewBox` that adds some features for enhanced editing.
     """
 
     def __init__(self, *args: t.Any, **kargs: t.Any) -> None:
@@ -40,8 +41,10 @@ class EditingViewBox(pg.ViewBox):
     def selection_box(self) -> QtWidgets.QGraphicsRectItem:
         if self._selection_box is None:
             selection_box = QtWidgets.QGraphicsRectItem(0, 0, 1, 1)
-            selection_box.setPen(pg.mkPen(color=(255, 165, 0, 255)))
-            selection_box.setBrush(pg.mkBrush((255, 165, 0, 100)))
+            pen = make_qpen((255, 165, 0, 255))
+            brush = make_qbrush((255, 165, 0, 100))
+            selection_box.setPen(pen)
+            selection_box.setBrush(brush)
             selection_box.setZValue(1e9)
             selection_box.hide()
             self._selection_box = selection_box

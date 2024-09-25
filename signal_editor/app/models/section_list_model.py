@@ -77,9 +77,9 @@ class SectionListModel(QtCore.QAbstractListModel):
         self._sections.clear()
         self.endResetModel()
 
-    def update_sampling_rate(self, sampling_rate: int) -> None:
-        for section in self._sections:
-            section.update_sampling_rate(sampling_rate)
+    # def update_sampling_rate(self, sampling_rate: int) -> None:
+    #     for section in self._sections:
+    #         section.update_sampling_rate(sampling_rate)
 
     def refresh_section_ids(self) -> None:
         for i, section in enumerate(self._sections):

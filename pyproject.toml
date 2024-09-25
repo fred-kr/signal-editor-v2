@@ -31,6 +31,7 @@ dependencies = [
     "pyqtgraph",
     "stackprinter>=0.2.12",
     "pyside-config",
+    "pyside-widgets",
 ]
 
 [tool.uv]
@@ -52,6 +53,7 @@ dev-dependencies = [
 [tool.uv.sources]
 pyqtgraph = { git = "https://github.com/pyqtgraph/pyqtgraph.git" }
 pyside-config = { git = "https://github.com/fred-kr/pyside-config.git" }
+pyside-widgets = { git = "https://github.com/fred-kr/pyside-widgets.git" }
 
 [tool.ruff]
 target-version = "py312"

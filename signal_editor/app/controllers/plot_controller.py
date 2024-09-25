@@ -232,17 +232,6 @@ class PlotController(QtCore.QObject):
         self._show_regions = visible
 
     def remove_region(self, section_index: QtCore.QModelIndex) -> None:
-        # if region is not None:
-        #     safe_disconnect(region, region.sig_clicked, self._on_region_clicked)
-        #     self.regions.remove(region)
-        # if bounds is not None:
-        #     for region in self.regions:
-        #         reg_bounds = region.getRegion()
-        #         if np.allclose(bounds, reg_bounds):
-        #             region.setParent(None)  # Not sure if necessary?
-        #             self.regions.remove(region)
-        #             self.pw_main.removeItem(region)
-        #             break
         if section_index.row() > 0:
             for region in self.regions:
                 if region.section_id == section_index.row():
@@ -356,7 +345,7 @@ class PlotController(QtCore.QObject):
         self.pw_rate.invalidateScene()
 
     def remove_selection_rect(self) -> None:
-        vb: EditingViewBox = self.pw_main.plotItem.vb  # type: ignore
+        vb: EditingViewBox = self.pw_main.plotItem.vb
         vb.selection_box = None
         vb.mapped_selection_rect = None
 
@@ -427,6 +416,7 @@ class PlotController(QtCore.QObject):
     def remove_peaks_in_selection(self) -> None:
         vb: EditingViewBox = self.pw_main.plotItem.vb
         if vb.mapped_selection_rect is None or self.peak_scatter is None or self.block_clicks:
+            self.remove_selection_rect()
             return
 
         r = vb.mapped_selection_rect
@@ -438,8 +428,7 @@ class PlotController(QtCore.QObject):
 
         self.peak_scatter.setData(x=scatter_x[mask], y=scatter_y[mask])
         self.sig_scatter_data_changed.emit("remove", scatter_x[~mask].astype(np.int32))
-        vb.mapped_selection_rect = None
-        vb.selection_box = None
+        self.remove_selection_rect()
 
     def get_selection_area(self) -> QtCore.QRectF | None:
         return self.pw_main.plotItem.vb.mapped_selection_rect

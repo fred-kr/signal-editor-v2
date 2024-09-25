@@ -46,14 +46,17 @@ class CustomScatterPlotItem(pg.ScatterPlotItem):
             if isinstance(pos, np.ndarray):
                 kargs["x"], kargs["y"] = pos[:, 0], pos[:, 1]
             else:
-                kargs["x"] = [p.x() if isinstance(p, QtCore.QPointF) else p[0] for p in pos]
-                kargs["y"] = [p.y() if isinstance(p, QtCore.QPointF) else p[1] for p in pos]
+                kargs["x"], kargs["y"] = zip(
+                    *((p.x(), p.y()) if isinstance(p, QtCore.QPointF) else p for p in pos), strict=True
+                )
+                # kargs["x"] = [p.x() if isinstance(p, QtCore.QPointF) else p[0] for p in pos]
+                # kargs["y"] = [p.y() if isinstance(p, QtCore.QPointF) else p[1] for p in pos]
 
-        spots: list[_t.SpotDict] | None = kargs.get("spots")
+        spots = kargs.get("spots")
         x = kargs.get("x")
         y = kargs.get("y")
 
-        # Calculate number of points
+        # Determine how many spots we have
         num_pts = (
             len(spots)
             if spots is not None
@@ -66,9 +69,12 @@ class CustomScatterPlotItem(pg.ScatterPlotItem):
 
         # Initialize new data array
         self.data["item"][...] = None
+
         old_data = self.data
         self.data = np.empty(len(old_data) + num_pts, dtype=self.data.dtype)
+
         self.data[: len(old_data)] = old_data
+
         new_data = self.data[len(old_data) :]
         new_data["size"] = -1
         new_data["visible"] = True

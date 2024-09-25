@@ -5,6 +5,7 @@ import stackprinter
 from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
+from pyside_widgets import OverlayWidget
 
 from ...ui.ui_main_window import Ui_MainWindow
 from .. import type_defs as _t
@@ -14,7 +15,7 @@ from .dialogs import MetadataDialog
 from .icons import SignalEditorIcons as Icons
 from .widgets import (
     DataTreeWidgetContainer,
-    OverlayWidget,
+    # OverlayWidget,
     ParameterInputsDock,
     SectionListDock,
     SectionSummaryBox,
@@ -50,10 +51,10 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._setup_layout()
         self.setCentralWidget(self.new_central_widget)
         self._setup_navigation()
-        # self._setup_window()
+        self._setup_window()
         
-        self._overlay_widget = OverlayWidget(self)
-        self._overlay_widget.hide()
+        self.overlay_widget = OverlayWidget(self)
+        self.overlay_widget.hide()
 
         self._setup_docks()
         self._setup_actions()
@@ -181,12 +182,12 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _add_console_dock(self) -> None:
         try:
-            from .widgets.jupyter_console_widget import ConsoleWindow
+            from pyside_widgets import JupyterConsoleWindow
         except ImportError:
             logger.warning("Unable to import the console widget. Console is unavailable.")
             return
 
-        console_window = ConsoleWindow()
+        console_window = JupyterConsoleWindow()
         console_window.setVisible(False)
 
         self.menu_view.addSeparator()
@@ -278,9 +279,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._on_page_changed(0)
 
     def _connect_signals(self) -> None:
-        # self.action_show_settings.triggered.connect(self._on_action_show_settings)
-        # self.action_remove_section.triggered.connect(self.dock_sections.list_view.emit_delete_current_request)
-
         self.stackedWidget.currentChanged.connect(self._on_page_changed)
 
         self.spin_box_sampling_rate_import_page.valueChanged.connect(self.dialog_meta.spin_box_sampling_rate.setValue)
@@ -387,26 +385,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.restoreGeometry(config.internal.window_geometry)
         self.restoreState(config.internal.window_state)
 
-    def show_overlay(self, text: str = "Calculating...") -> None:
-        self.centralWidget().setEnabled(False)
-        self.dock_parameters.setEnabled(False)
-        self.dock_sections.setEnabled(False)
-
-        self._overlay_widget.set_text(text)
-        
-        self._overlay_widget.setGeometry(self.geometry())
-        self._overlay_widget.move(0, 0)
-
-        self._overlay_widget.raise_()
-        self._overlay_widget.show()
-
-    def hide_overlay(self) -> None:
-        self.centralWidget().setEnabled(True)
-        self.dock_parameters.setEnabled(True)
-        self.dock_sections.setEnabled(True)
-
-        self._overlay_widget.hide()
-
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
         self.write_settings()
@@ -420,15 +398,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def show_success(self, title: str, text: str) -> None:
         qfw.InfoBar.success(
-            title=title,
-            content=text,
-            duration=5000,
-            position=qfw.InfoBarPosition.TOP,
-            parent=self,
-        )
-
-    def show_error(self, title: str, text: str) -> None:
-        qfw.InfoBar.error(
             title=title,
             content=text,
             duration=5000,

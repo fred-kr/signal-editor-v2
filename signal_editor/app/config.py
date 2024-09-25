@@ -9,7 +9,7 @@ from pyside_config.properties import ComboBoxProperties, SpinBoxProperties
 from pyside_config.widgets import EnumComboBox
 
 from .enum_defs import RateComputationMethod, TextFileSeparator
-from .utils import app_dir_posix, make_qcolor, search_enum
+from .utils import app_dir_posix, search_enum
 
 type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 
@@ -35,24 +35,24 @@ class PlotConfig(ConfigBase):
         default=QtGui.QColor("#000000"),
         metadata={
             "editor": EditorWidgetInfo(
-                label="Set background color",
-                widget_factory=functools.partial(qfw.ColorPickerButton, color=QtGui.QColor("#000000"), title="Choose"),
+                label="Background Color",
+                widget_factory=functools.partial(qfw.ColorPickerButton, color=QtGui.QColor("#000000"), title=""),
                 sig_value_changed="colorChanged",
                 set_value_method="setColor",
             ),
-            "description": "The background color of the plot.",
+            "description": "Plot background color.",
         },
     )
     foreground_color: QtGui.QColor = attrs.field(
         default=QtGui.QColor("#969696"),
         metadata={
             "editor": EditorWidgetInfo(
-                label="Set foreground color",
-                widget_factory=functools.partial(qfw.ColorPickerButton, color=QtGui.QColor("#969696"), title="Choose"),
+                label="Foreground Color",
+                widget_factory=functools.partial(qfw.ColorPickerButton, color=QtGui.QColor("#969696"), title=""),
                 sig_value_changed="colorChanged",
                 set_value_method="setColor",
             ),
-            "description": "The foreground color of the plot.",
+            "description": "Plot foreground color.",
         },
     )
     line_click_width: int = attrs.field(
@@ -306,15 +306,24 @@ class Config:
         dlg.setModal(True)
         dlg.setWindowTitle("Settings")
 
-        btn_done = QtWidgets.QPushButton("Done")
-        btn_done.setStyleSheet("QPushButton { min-height: 31px; font-weight: bold; }")
-        btn_done.clicked.connect(dlg.accept)
+        # btn_done = QtWidgets.QPushButton("Done")
+        # # btn_done.setStyleSheet("QPushButton { min-height: 25px; font-size: 14px; }")
+        # btn_done.clicked.connect(dlg.accept)
 
-        btn_layout = QtWidgets.QHBoxLayout()
-        btn_layout.addStretch()
-        btn_layout.addWidget(btn_done)
-        btn_layout.setContentsMargins(0, 0, 0, 0)
+        # btn_cancel = QtWidgets.QPushButton("Cancel")
+        # # btn_cancel.setStyleSheet("QPushButton { min-height: 25px; font-size: 14px; }")
+        # btn_cancel.clicked.connect(dlg.reject)
+        
+        # btn_layout = QtWidgets.QHBoxLayout()
+        # btn_layout.addStretch()
+        # btn_layout.addWidget(btn_done)
+        # btn_layout.addWidget(btn_cancel)
+        # btn_layout.setContentsMargins(0, 0, 0, 0)
 
+        btn_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.StandardButton.Save | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
+        btn_box.accepted.connect(dlg.accept)
+        btn_box.rejected.connect(dlg.reject)
+        
         tab_widget = QtWidgets.QTabWidget()
         tab_widget.addTab(self.plot.create_editor(), "Plot")
         tab_widget.addTab(self.editing.create_editor(), "Editing")
@@ -325,7 +334,21 @@ class Config:
 
         layout = QtWidgets.QVBoxLayout()
         layout.addWidget(tab_widget)
-        layout.addLayout(btn_layout)
+        layout.addWidget(btn_box)
         dlg.setLayout(layout)
-
+        dlg.resize(800, 600)
+        
         return dlg
+
+    def get_snapshot(self) -> dict[str, t.Any]:
+        return {
+            "plot": attrs.asdict(self.plot),
+            "editing": attrs.asdict(self.editing),
+            "data": attrs.asdict(self.data),
+            "internal": attrs.asdict(self.internal),
+        }
+
+    def restore_snapshot(self, snapshot: dict[str, t.Any]) -> None:
+        for grp, grp_dict in snapshot.items():
+            for key, value in grp_dict.items():
+                self.update_value(grp, key, value)
