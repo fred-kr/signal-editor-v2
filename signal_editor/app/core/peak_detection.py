@@ -191,7 +191,7 @@ def _find_peaks_local_min(sig: npt.NDArray[np.float64], search_radius: int) -> n
 
 
 def find_extrema(
-    sig: npt.NDArray[np.float64], search_radius: int, direction: t.Literal["up", "down"], min_peak_distance: int = 10
+    sig: npt.NDArray[np.float64], search_radius: int, direction: t.Literal["up", "down"], min_peak_distance: int
 ) -> npt.NDArray[np.int32]:
     if direction == "up":
         peaks = _find_peaks_local_max(sig, search_radius)
@@ -297,7 +297,7 @@ def _handle_close_peaks(
     qrs_locations: npt.NDArray[np.int32],
     n_std: float,
     find_peak_func: t.Callable[..., np.intp],
-    min_peak_distance: int = 10,
+    min_peak_distance: int,
 ) -> npt.NDArray[np.int32]:
     qrs_diffs = np.diff(qrs_locations)
     close_indices = np.where(qrs_diffs <= min_peak_distance)[0]
@@ -351,7 +351,6 @@ def find_peaks(
     sampling_rate: int,
     method: PeakDetectionMethod,
     method_parameters: _t.PeakDetectionMethodParameters,
-    **kwargs: t.Unpack[_t.FindPeaksKwargs],
 ) -> npt.NDArray[np.int32]:
     if method == PeakDetectionMethod.LocalMaxima:
         return find_extrema(
@@ -381,8 +380,8 @@ def find_peaks(
             sig,
             sampling_rate,
             radius=method_parameters["search_radius"],
-            min_peak_distance=kwargs["min_peak_distance"],
-            peak_dir=method_parameters["peak_dir"],
+            min_peak_distance=method_parameters["min_peak_distance"],
+            peak_dir=WFDBPeakDirection(method_parameters["peak_dir"]),
         )
     elif method == PeakDetectionMethod.ECGNeuroKit2:
         assert "method" in method_parameters, "NeuroKit2 ECG peak detection method not specified"

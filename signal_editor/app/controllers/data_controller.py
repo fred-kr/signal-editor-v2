@@ -19,13 +19,12 @@ from ..models.section_list_model import SectionListModel
 
 
 class DataController(QtCore.QObject):
-    sig_non_ascii_in_file_name = QtCore.Signal(list, bool)
     sig_user_input_required = QtCore.Signal(set)
     sig_new_metadata = QtCore.Signal(object)
     sig_new_data = QtCore.Signal()
     sig_active_section_changed = QtCore.Signal(bool)
-    sig_section_added = QtCore.Signal(str)
-    sig_section_removed = QtCore.Signal(str)
+    # sig_section_added = QtCore.Signal(str)
+    # sig_section_removed = QtCore.Signal(str)
 
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
@@ -223,7 +222,7 @@ class DataController(QtCore.QObject):
         data = self.base_df.filter(pl.col("index").is_between(start, stop))
         section = Section(data, self.metadata.signal_column, info_column=self.metadata.info_column)
         self.sections.add_section(section)
-        self.sig_section_added.emit(section.section_id)
+        # self.sig_section_added.emit(section.section_id)
 
     def delete_section(self, idx: QtCore.QModelIndex) -> None:
         self.sections.remove_section(idx)

@@ -9,10 +9,9 @@ import xlsxwriter
 from loguru import logger
 from PySide6 import QtCore, QtWidgets
 
-from .app.constants import SECTION_INDEX_COL
-
 from .app import type_defs as _t
 from .app.config import Config
+from .app.constants import SECTION_INDEX_COL
 from .app.controllers.data_controller import DataController
 from .app.controllers.plot_controller import PlotController
 from .app.core.file_io import write_hdf5
@@ -40,7 +39,12 @@ class _WorkerSignals(QtCore.QObject):
 
 class PeakDetectionWorker(QtCore.QRunnable):
     def __init__(
-        self, section: "Section", method: PeakDetectionMethod, params: _t.PeakDetectionMethodParameters, *, rr_params: _t.RollingRateKwargsDict | None = None
+        self,
+        section: "Section",
+        method: PeakDetectionMethod,
+        params: _t.PeakDetectionMethodParameters,
+        *,
+        rr_params: _t.RollingRateKwargsDict | None = None,
     ) -> None:
         super().__init__()
         self.section = section
@@ -135,9 +139,6 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.mw.dock_sections.list_view.sig_delete_current_item.connect(self.delete_section)
         self.mw.dock_sections.list_view.sig_show_summary.connect(self.show_section_summary)
-        # self.mw.action_show_section_summary.triggered.connect(
-        #     lambda: self.show_section_summary(self.mw.dock_sections.list_view.currentIndex())
-        # )
         self.mw.action_mark_section_done.triggered.connect(self._lock_section)
         self.mw.action_unlock_section.triggered.connect(self._unlock_section)
 
@@ -157,12 +158,12 @@ class SignalEditor(QtWidgets.QApplication):
     @QtCore.Slot()
     def _on_action_show_settings(self) -> None:
         snapshot = Config().get_snapshot()
-        
+
         settings_dlg = Config().create_editor_widgets(self.mw)
         settings_dlg.accepted.connect(self.apply_settings)
         settings_dlg.rejected.connect(lambda: Config().restore_snapshot(snapshot))
         settings_dlg.open()
-    
+
     @QtCore.Slot()
     def clear_peaks(self) -> None:
         self.plot.clear_peaks()
@@ -595,7 +596,7 @@ class SignalEditor(QtWidgets.QApplication):
     @QtCore.Slot()
     def _lock_section(self) -> None:
         rate_params = self.mw.dock_parameters.get_rate_calculation_params()
-        
+
         worker = SectionResultWorker(self.data.active_section, rr_params=rate_params)
         worker.signals.sig_success.connect(self.update_result_views)
         worker.signals.sig_done.connect(self._on_worker_finished)
@@ -607,8 +608,6 @@ class SignalEditor(QtWidgets.QApplication):
     def _unlock_section(self) -> None:
         self.data.active_section.set_locked(False)
         self._on_worker_finished()
-
-
 
     @QtCore.Slot(str)
     def export_result(self, format: str) -> None:

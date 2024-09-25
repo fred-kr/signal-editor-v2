@@ -860,22 +860,11 @@ class Ui_ParameterInputs(object):
         self.page_peak_xqrs.setObjectName(u"page_peak_xqrs")
         self.gridLayout_5 = QGridLayout(self.page_peak_xqrs)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
-        self.peak_xqrs_info = QTextBrowser(self.page_peak_xqrs)
-        self.peak_xqrs_info.setObjectName(u"peak_xqrs_info")
-        self.peak_xqrs_info.setMaximumSize(QSize(16777215, 90))
-        self.peak_xqrs_info.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.peak_xqrs_peak_dir = ComboBox(self.page_peak_xqrs)
+        self.peak_xqrs_peak_dir.setObjectName(u"peak_xqrs_peak_dir")
+        self.peak_xqrs_peak_dir.setMinimumSize(QSize(0, 31))
 
-        self.gridLayout_5.addWidget(self.peak_xqrs_info, 0, 0, 1, 2)
-
-        self.peak_xqrs_search_radius = SpinBox(self.page_peak_xqrs)
-        self.peak_xqrs_search_radius.setObjectName(u"peak_xqrs_search_radius")
-        self.peak_xqrs_search_radius.setMinimumSize(QSize(0, 31))
-        self.peak_xqrs_search_radius.setFrame(False)
-        self.peak_xqrs_search_radius.setMinimum(5)
-        self.peak_xqrs_search_radius.setMaximum(99999)
-        self.peak_xqrs_search_radius.setValue(90)
-
-        self.gridLayout_5.addWidget(self.peak_xqrs_search_radius, 1, 1, 1, 1)
+        self.gridLayout_5.addWidget(self.peak_xqrs_peak_dir, 2, 1, 1, 1)
 
         self.searchRadiusLabel = BodyLabel(self.page_peak_xqrs)
         self.searchRadiusLabel.setObjectName(u"searchRadiusLabel")
@@ -893,15 +882,40 @@ class Ui_ParameterInputs(object):
 
         self.gridLayout_5.addWidget(self.adjustPeaksLabel, 2, 0, 1, 1)
 
-        self.peak_xqrs_peak_dir = ComboBox(self.page_peak_xqrs)
-        self.peak_xqrs_peak_dir.setObjectName(u"peak_xqrs_peak_dir")
-        self.peak_xqrs_peak_dir.setMinimumSize(QSize(0, 31))
+        self.peak_xqrs_info = QTextBrowser(self.page_peak_xqrs)
+        self.peak_xqrs_info.setObjectName(u"peak_xqrs_info")
+        self.peak_xqrs_info.setMaximumSize(QSize(16777215, 90))
+        self.peak_xqrs_info.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
 
-        self.gridLayout_5.addWidget(self.peak_xqrs_peak_dir, 2, 1, 1, 1)
+        self.gridLayout_5.addWidget(self.peak_xqrs_info, 0, 0, 1, 2)
+
+        self.peak_xqrs_search_radius = SpinBox(self.page_peak_xqrs)
+        self.peak_xqrs_search_radius.setObjectName(u"peak_xqrs_search_radius")
+        self.peak_xqrs_search_radius.setMinimumSize(QSize(0, 31))
+        self.peak_xqrs_search_radius.setFrame(False)
+        self.peak_xqrs_search_radius.setMinimum(5)
+        self.peak_xqrs_search_radius.setMaximum(99999)
+        self.peak_xqrs_search_radius.setValue(90)
+
+        self.gridLayout_5.addWidget(self.peak_xqrs_search_radius, 1, 1, 1, 1)
 
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_5.addItem(self.verticalSpacer, 3, 0, 1, 2)
+        self.gridLayout_5.addItem(self.verticalSpacer, 4, 0, 1, 2)
+
+        self.peak_xqrs_min_peak_distance = SpinBox(self.page_peak_xqrs)
+        self.peak_xqrs_min_peak_distance.setObjectName(u"peak_xqrs_min_peak_distance")
+        self.peak_xqrs_min_peak_distance.setMinimumSize(QSize(0, 31))
+        self.peak_xqrs_min_peak_distance.setFrame(False)
+        self.peak_xqrs_min_peak_distance.setMaximum(100000)
+        self.peak_xqrs_min_peak_distance.setValue(10)
+
+        self.gridLayout_5.addWidget(self.peak_xqrs_min_peak_distance, 3, 1, 1, 1)
+
+        self.label_17 = BodyLabel(self.page_peak_xqrs)
+        self.label_17.setObjectName(u"label_17")
+
+        self.gridLayout_5.addWidget(self.label_17, 3, 0, 1, 1)
 
         self.stacked_peak_parameters.addWidget(self.page_peak_xqrs)
 
@@ -967,7 +981,7 @@ class Ui_ParameterInputs(object):
         self.retranslateUi(ParameterInputs)
 
         self.tab_widget_parameter_inputs.setCurrentIndex(0)
-        self.stacked_peak_parameters.setCurrentIndex(3)
+        self.stacked_peak_parameters.setCurrentIndex(0)
         self.stacked_nk2_method_parameters.setCurrentIndex(1)
 
 
@@ -1104,7 +1118,7 @@ class Ui_ParameterInputs(object):
 #if QT_CONFIG(whatsthis)
         self.minDistanceLabel.setWhatsThis(QCoreApplication.translate("ParameterInputs", u"After a peak is detected, how many values to skip ahead before starting to search for the next peak", None))
 #endif // QT_CONFIG(whatsthis)
-        self.minDistanceLabel.setText(QCoreApplication.translate("ParameterInputs", u"Min. Distance:", None))
+        self.minDistanceLabel.setText(QCoreApplication.translate("ParameterInputs", u"Min. Distance", None))
         self.peak_local_min_info.setHtml(QCoreApplication.translate("ParameterInputs", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
@@ -1120,7 +1134,7 @@ class Ui_ParameterInputs(object):
 #if QT_CONFIG(whatsthis)
         self.minDistanceLabel_2.setWhatsThis(QCoreApplication.translate("ParameterInputs", u"After a minimum is detected, how many values to skip ahead before starting to search for the next minimum", None))
 #endif // QT_CONFIG(whatsthis)
-        self.minDistanceLabel_2.setText(QCoreApplication.translate("ParameterInputs", u"Min. Distance:", None))
+        self.minDistanceLabel_2.setText(QCoreApplication.translate("ParameterInputs", u"Min. Distance", None))
         self.peak_neurokit2_info.setHtml(QCoreApplication.translate("ParameterInputs", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
@@ -1210,6 +1224,9 @@ class Ui_ParameterInputs(object):
         self.peak_promac_gaussian_sd.setSuffix(QCoreApplication.translate("ParameterInputs", u" ms", None))
         self.peak_neurokit2_algorithm_used.setText("")
         self.algorithmLabel.setText(QCoreApplication.translate("ParameterInputs", u"Algorithm", None))
+        self.peak_xqrs_peak_dir.setText("")
+        self.searchRadiusLabel.setText(QCoreApplication.translate("ParameterInputs", u"Search Radius", None))
+        self.adjustPeaksLabel.setText(QCoreApplication.translate("ParameterInputs", u"Adjust Peaks", None))
         self.peak_xqrs_info.setHtml(QCoreApplication.translate("ParameterInputs", u"<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><meta charset=\"utf-8\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
@@ -1219,9 +1236,7 @@ class Ui_ParameterInputs(object):
 "</style></head><body style=\" font-family:'Segoe UI'; font-size:9pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Uses XQRS detection from the 'wfdb' library, with a slightly modified peak correction step afterwards.</p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\">Can take a while to finish when used on sections longer than 1e6 samples.</p></body></html>", None))
-        self.searchRadiusLabel.setText(QCoreApplication.translate("ParameterInputs", u"Search Radius", None))
-        self.adjustPeaksLabel.setText(QCoreApplication.translate("ParameterInputs", u"Adjust Peaks", None))
-        self.peak_xqrs_peak_dir.setText("")
+        self.label_17.setText(QCoreApplication.translate("ParameterInputs", u"Min. Distance", None))
         self.tab_widget_parameter_inputs.setTabText(self.tab_widget_parameter_inputs.indexOf(self.tab_peak_detection), QCoreApplication.translate("ParameterInputs", u"Peak Detection", None))
         self.label_18.setText(QCoreApplication.translate("ParameterInputs", u"How to handle incomplete windows (i.e. those at the end of the signal):", None))
         self.sb_period_seconds.setSuffix(QCoreApplication.translate("ParameterInputs", u" s", None))

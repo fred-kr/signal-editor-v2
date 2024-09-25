@@ -7,11 +7,10 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from pyside_widgets import OverlayWidget
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 
-from ..constants import INDEX_COL
-
 from ...ui.ui_main_window import Ui_MainWindow
 from .. import type_defs as _t
 from ..config import Config
+from ..constants import INDEX_COL
 from ..enum_defs import LogLevel
 from .dialogs import MetadataDialog
 from .icons import SignalEditorIcons as Icons
@@ -46,8 +45,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.navigation_interface = NavigationInterface(self, showMenuButton=True)
         self.navigation_interface.panel.expandAni.setDuration(0)
 
-        self.progress_dlg: QtWidgets.QProgressDialog | None = None
-
         self._setup_layout()
         self.setCentralWidget(self.new_central_widget)
         self._setup_navigation()
@@ -80,8 +77,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._h_layout.setStretchFactor(self.stackedWidget, 1)
 
     def _setup_navigation(self) -> None:
-        self.add_sub_interface(self.stacked_page_import, Icons.DocumentArrowLeft.icon(), "Import")
-        self.add_sub_interface(self.stacked_page_edit, Icons.Edit.icon(), "Editing")
+        self.add_sub_interface(self.stacked_page_import, Icons.DocumentArrowLeft.icon(), "Input Data")
+        self.add_sub_interface(self.stacked_page_edit, Icons.Edit.icon(), "View & Edit")
         self.add_sub_interface(self.stacked_page_export, Icons.DocumentArrowRight.icon(), "Results")
 
         # self.add_sub_interface(
@@ -126,7 +123,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
     def _setup_widgets(self) -> None:
         self.dialog_meta = MetadataDialog(self)
-        # self.dialog_config = ConfigDialog(self)
 
         self.table_view_import_data.horizontalHeader().setDefaultAlignment(
             QtCore.Qt.AlignmentFlag.AlignLeft | QtCore.Qt.AlignmentFlag.AlignVCenter
@@ -215,18 +211,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             "tool_bar_help", [self.action_show_user_guide, self.action_toggle_whats_this_mode]
         )
 
-        cb_section_list = qfw.CommandBar()
-        cb_section_list.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        cb_section_list.setObjectName("command_bar_section_list")
-        cb_section_list.addActions(
+        self.dock_sections.command_bar.addActions(
             [self.action_create_new_section, self.action_remove_section, self.action_mark_section_done]
         )
-        cb_section_list.addHiddenActions(
+        self.dock_sections.command_bar.addHiddenActions(
             [self.action_unlock_section, self.action_show_section_summary, self.action_show_section_overview]
         )
 
-        self.dock_sections.main_layout.insertWidget(1, cb_section_list)
-        self.command_bar_section_list = cb_section_list
+        self.command_bar_section_list = self.dock_sections.command_bar
 
         self.action_remove_section.triggered.connect(self.dock_sections.list_view.emit_delete_current_request)
         self.action_show_section_summary.triggered.connect(self.dock_sections.list_view.emit_show_summary_request)
@@ -346,7 +338,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         action_copy_table = qfw.Action(
             Icons.Copy.icon(),
             "Copy to Clipboard",
-            triggered=lambda: table_view.model().df.write_clipboard(),  # type: ignore
+            triggered=lambda: table_view.model().df.write_clipboard(),
         )
         menu.addAction(action_copy_table)
         menu.addAction(self.action_export_to_csv)
@@ -436,7 +428,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
 
         msg_box = QtWidgets.QMessageBox(parent)
         msg_box.setText(record_dict["level"].name)
-        msg_box.setIconPixmap(self._msg_box_icons[msg_log_level].pixmap(32, 32))
+        msg_box.setIconPixmap(self._msg_box_icons[msg_log_level].pixmap(48, 48))
         msg_box.setInformativeText(message)
 
         if msg_log_level >= threshold:

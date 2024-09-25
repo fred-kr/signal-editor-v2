@@ -223,6 +223,7 @@ class PeaksLocalMinima(t.TypedDict):
 class PeaksWFDBXQRS(t.TypedDict):
     search_radius: int
     peak_dir: WFDBPeakDirection
+    min_peak_distance: int
 
 
 class NK2PeaksNeuroKit(t.TypedDict):

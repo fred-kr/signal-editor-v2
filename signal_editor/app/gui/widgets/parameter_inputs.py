@@ -128,9 +128,9 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
         if not hasattr(widget, "default_value"):
             return
         if isinstance(widget, (qfw.CheckBox, QtWidgets.QCheckBox, qfw.SwitchButton)):
-            widget.setChecked(widget.default_value)  # type: ignore
+            widget.setChecked(widget.default_value)
         else:
-            widget.setValue(widget.default_value)  # type: ignore
+            widget.setValue(widget.default_value)
 
     def _setup_enum_combo_boxes(self) -> None:
         _fill_combo_box_with_enum(self.ui.combo_pipeline, PreprocessPipeline, allow_none=True)
@@ -375,8 +375,11 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
             )
 
         elif method == PeakDetectionMethod.WFDBXQRS:
-            peak_dir = WFDBPeakDirection(self.ui.peak_xqrs_peak_dir.currentData())
-            peak_params = _t.PeaksWFDBXQRS(search_radius=self.ui.peak_xqrs_search_radius.value(), peak_dir=peak_dir)
+            peak_params = _t.PeaksWFDBXQRS(
+                search_radius=self.ui.peak_xqrs_search_radius.value(),
+                peak_dir=WFDBPeakDirection(self.ui.peak_xqrs_peak_dir.currentData()),
+                min_peak_distance=self.ui.peak_xqrs_min_peak_distance.value(),
+            )
 
         return peak_params
 

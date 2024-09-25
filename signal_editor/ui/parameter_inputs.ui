@@ -649,7 +649,7 @@
           <enum>QFrame::Shape::NoFrame</enum>
          </property>
          <property name="currentIndex">
-          <number>3</number>
+          <number>0</number>
          </property>
          <widget class="QWidget" name="page_peak_elgendi_ppg">
           <layout class="QFormLayout" name="formLayout_2">
@@ -954,7 +954,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
               <string>After a peak is detected, how many values to skip ahead before starting to search for the next peak</string>
              </property>
              <property name="text">
-              <string>Min. Distance:</string>
+              <string>Min. Distance</string>
              </property>
             </widget>
            </item>
@@ -1079,7 +1079,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
               <string>After a minimum is detected, how many values to skip ahead before starting to search for the next minimum</string>
              </property>
              <property name="text">
-              <string>Min. Distance:</string>
+              <string>Min. Distance</string>
              </property>
             </widget>
            </item>
@@ -1829,6 +1829,57 @@ li.checked::marker { content: &quot;\2612&quot;; }
          </widget>
          <widget class="QWidget" name="page_peak_xqrs">
           <layout class="QGridLayout" name="gridLayout_5">
+           <item row="2" column="1">
+            <widget class="ComboBox" name="peak_xqrs_peak_dir">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="BodyLabel" name="searchRadiusLabel">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Search Radius</string>
+             </property>
+            </widget>
+           </item>
+           <item row="2" column="0">
+            <widget class="BodyLabel" name="adjustPeaksLabel">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>Adjust Peaks</string>
+             </property>
+            </widget>
+           </item>
            <item row="0" column="0" colspan="2">
             <widget class="QTextBrowser" name="peak_xqrs_info">
              <property name="maximumSize">
@@ -1875,58 +1926,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
              </property>
             </widget>
            </item>
-           <item row="1" column="0">
-            <widget class="BodyLabel" name="searchRadiusLabel">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>31</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Search Radius</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="BodyLabel" name="adjustPeaksLabel">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>31</height>
-              </size>
-             </property>
-             <property name="text">
-              <string>Adjust Peaks</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="ComboBox" name="peak_xqrs_peak_dir">
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>31</height>
-              </size>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0" colspan="2">
+           <item row="4" column="0" colspan="2">
             <spacer name="verticalSpacer">
              <property name="orientation">
               <enum>Qt::Orientation::Vertical</enum>
@@ -1938,6 +1938,32 @@ li.checked::marker { content: &quot;\2612&quot;; }
               </size>
              </property>
             </spacer>
+           </item>
+           <item row="3" column="1">
+            <widget class="SpinBox" name="peak_xqrs_min_peak_distance">
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>31</height>
+              </size>
+             </property>
+             <property name="frame">
+              <bool>false</bool>
+             </property>
+             <property name="maximum">
+              <number>100000</number>
+             </property>
+             <property name="value">
+              <number>10</number>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="BodyLabel" name="label_17">
+             <property name="text">
+              <string>Min. Distance</string>
+             </property>
+            </widget>
            </item>
           </layout>
          </widget>

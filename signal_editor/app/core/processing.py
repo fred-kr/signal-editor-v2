@@ -4,9 +4,7 @@ import neurokit2 as nk
 import numpy as np
 import numpy.typing as npt
 import polars as pl
-import scipy.interpolate
-import scipy.signal
-import scipy.stats
+from scipy import signal
 
 from .. import type_defs as _t
 from ..enum_defs import FilterMethod
@@ -75,9 +73,9 @@ def ecg_clean_biosppy(
     frequency = 2 * np.array(frequency) / sampling_rate  # Normalize frequency to Nyquist Frequency
 
     a = np.array([1])
-    b = scipy.signal.firwin(numtaps=order, cutoff=frequency, pass_zero=False)
+    b = signal.firwin(numtaps=order, cutoff=frequency, pass_zero=False)
 
-    filtered = scipy.signal.filtfilt(b, a, sig)
+    filtered = signal.filtfilt(b, a, sig)
 
     filtered -= np.mean(filtered)
 
@@ -162,31 +160,3 @@ def filter_signal(
     out = nk.signal_filter(sig, sampling_rate=sampling_rate, **kwargs)  # type: ignore
 
     return np.asarray(out, dtype=np.float64), kwargs
-
-
-def signal_rate(
-    peaks: npt.NDArray[np.int32] | pl.Series,
-    sampling_rate: int,
-    desired_length: int | None = None,
-) -> npt.NDArray[np.float64]:
-    period = np.ediff1d(peaks, to_begin=0) / sampling_rate
-    # For the first period, use the mean of the first 10 periods
-    period[0] = np.mean(period[1:10])
-
-    if desired_length is not None:
-        # Create a new set of indexes for the desired length
-        x_new = np.arange(desired_length, dtype=np.int32)
-        # Interpolate the period values to the new length
-        period = scipy.interpolate.PchipInterpolator(peaks, period, extrapolate=True)(x_new)
-        # Find the index of the first and last peaks in the new indexes
-        first_index = np.searchsorted(x_new, peaks[0])
-        last_index = np.searchsorted(x_new, peaks[-1])
-        # Fill the beginning and end of the array with the first and last period values
-        fill_value = (
-            np.repeat([period[first_index]], first_index),
-            np.repeat([period[last_index]], len(x_new) - last_index - 1),
-        )
-        period[:first_index] = fill_value[0]
-        period[last_index + 1 :] = fill_value[1]
-
-    return np.divide(60, period)

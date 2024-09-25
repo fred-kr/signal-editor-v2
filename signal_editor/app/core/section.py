@@ -593,6 +593,7 @@ class Section:
     ) -> None:
         if peaks is None:
             peaks = self.peaks_local
+        peaks = np.asarray(peaks, dtype=np.int32)
         if peaks.shape[0] < 2:
             logger.warning(
                 "The currently selected peak detection method finds less than 2 peaks. "
@@ -602,7 +603,6 @@ class Section:
             return
         if desired_length is None:
             desired_length = len(self.processed_signal)
-        # inst_rate = signal_rate(peaks, self.sampling_rate, desired_length)
         inst_rate = nk.signal_rate(peaks, sampling_rate=self.sampling_rate, desired_length=desired_length)
 
         self.rate_data = pl.DataFrame(

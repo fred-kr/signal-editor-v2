@@ -29,22 +29,22 @@ class SectionListView(qfw.ListView):
         self.sig_show_summary.emit(index)
 
 
-class SectionListDock(QtWidgets.QDockWidget):
+class SectionListWidget(QtWidgets.QWidget):
     def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
-        self.setVisible(False)
-        self.setObjectName("SectionListDock")
-        self.setWindowTitle("Section List")
-        self.setWindowIcon(Icons.SignalEditor.icon())
+        layout = QtWidgets.QVBoxLayout()
 
         self.list_view = SectionListView()
-        self.toggleViewAction().setIcon(Icons.List.icon())
-        main_widget = QtWidgets.QWidget(self)
-        main_layout = QtWidgets.QVBoxLayout(main_widget)
 
-        label_active_section = qfw.StrongBodyLabel("Active Section: ", main_widget)
-        main_layout.addWidget(label_active_section)
+        label_active_section = qfw.StrongBodyLabel("Active Section: ", self)
+        layout.addWidget(label_active_section)
         self.label_active_section = label_active_section
+
+        command_bar = qfw.CommandBar()
+        command_bar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        command_bar.setObjectName("command_bar_section_list")
+        layout.addWidget(command_bar)
+        self.command_bar = command_bar
 
         confirm_cancel_btns = QtWidgets.QWidget()
         confirm_cancel_layout = QtWidgets.QHBoxLayout(confirm_cancel_btns)
@@ -60,9 +60,27 @@ class SectionListDock(QtWidgets.QDockWidget):
 
         self.btn_container = confirm_cancel_btns
         confirm_cancel_btns.setLayout(confirm_cancel_layout)
-        main_layout.addWidget(confirm_cancel_btns)
+        layout.addWidget(confirm_cancel_btns)
 
-        main_layout.addWidget(self.list_view)
-        self.main_layout = main_layout
+        layout.addWidget(self.list_view)
+        self.main_layout = layout
+        self.setLayout(layout)
 
-        self.setWidget(main_widget)
+
+class SectionListDock(QtWidgets.QDockWidget):
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setVisible(False)
+        self.setObjectName("SectionListDock")
+        self.setWindowTitle("Section List")
+        self.setWindowIcon(Icons.SignalEditor.icon())
+
+        self._widget = SectionListWidget()
+        self.list_view = self._widget.list_view
+        self.command_bar = self._widget.command_bar
+        self.label_active_section = self._widget.label_active_section
+        self.btn_confirm = self._widget.btn_confirm
+        self.btn_cancel = self._widget.btn_cancel
+        self.btn_container = self._widget.btn_container
+
+        self.setWidget(self._widget)

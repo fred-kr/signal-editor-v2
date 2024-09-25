@@ -26,6 +26,7 @@ PEAK_DETECTION = {
     },
     "peak_xqrs": {
         "search_radius": 50,
+        "min_peak_distance": 10,
         # "peak_dir": 0,  # Index
     },
     "peak_promac": {
