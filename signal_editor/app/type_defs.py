@@ -21,7 +21,7 @@ if t.TYPE_CHECKING:
     from loguru import RecordException, RecordFile, RecordLevel, RecordProcess, RecordThread
     from PySide6 import QtCore, QtGui
 
-    from ..app.core.section import SectionID
+    from ..app.logic.section import SectionID
 
 type PGColor = t.Union[str, int, float, tuple[int, int, int], tuple[int, int, int, int], "QtGui.QColor", SVGColors]
 

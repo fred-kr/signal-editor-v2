@@ -14,8 +14,8 @@ from .app.config import Config
 from .app.constants import SECTION_INDEX_COL
 from .app.controllers.data_controller import DataController
 from .app.controllers.plot_controller import PlotController
-from .app.core.file_io import write_hdf5
-from .app.core.peak_detection import find_peaks
+from .app.logic.file_io import write_hdf5
+from .app.logic.peak_detection import find_peaks
 from .app.enum_defs import (
     PeakDetectionMethod,
     PreprocessPipeline,
@@ -27,8 +27,8 @@ from .app.models.file_list_model import FileListModel
 from .app.utils import safe_multi_disconnect
 
 if t.TYPE_CHECKING:
-    from .app.core.section import Section
-    from .app.models.metadata import FileMetadata
+    from .app.logic.section import Section
+    from .app.logic.metadata import FileMetadata
 
 
 class _WorkerSignals(QtCore.QObject):

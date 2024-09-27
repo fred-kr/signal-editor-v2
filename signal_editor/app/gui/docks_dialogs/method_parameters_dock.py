@@ -18,7 +18,7 @@ from ...enum_defs import (
     WFDBPeakDirection,
 )
 from ..icons import SignalEditorIcons as Icons
-from ._widget_defaults import PEAK_DETECTION, PROCESSING
+from ._default_method_parameters import PEAK_DETECTION, PROCESSING
 
 
 def _fill_combo_box_with_enum(combo_box: qfw.ComboBox, enum_class: t.Type[enum.Enum], allow_none: bool = False) -> None:
@@ -28,6 +28,18 @@ def _fill_combo_box_with_enum(combo_box: qfw.ComboBox, enum_class: t.Type[enum.E
 
     if allow_none:
         combo_box.insertItem(0, NOT_SET_OPTION, userData=None)
+
+
+def _reset_widget(widget: QtWidgets.QWidget | QtCore.QObject) -> None:
+    if isinstance(widget, (qfw.ComboBox, QtWidgets.QComboBox)):
+        widget.setCurrentIndex(0)
+        return
+    if not hasattr(widget, "default_value"):
+        return
+    if isinstance(widget, (qfw.CheckBox, QtWidgets.QCheckBox, qfw.SwitchButton)):
+        widget.setChecked(widget.default_value)
+    else:
+        widget.setValue(widget.default_value)
 
 
 class ParameterInputs(QtWidgets.QWidget, Ui_ParameterInputs):
@@ -121,17 +133,6 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
             widget = getattr(self.ui, name)
             widget.default_value = default_value
 
-    def _restore_default_value(self, widget: QtWidgets.QWidget | QtCore.QObject) -> None:
-        if isinstance(widget, (qfw.ComboBox, QtWidgets.QComboBox)):
-            widget.setCurrentIndex(0)
-            return
-        if not hasattr(widget, "default_value"):
-            return
-        if isinstance(widget, (qfw.CheckBox, QtWidgets.QCheckBox, qfw.SwitchButton)):
-            widget.setChecked(widget.default_value)
-        else:
-            widget.setValue(widget.default_value)
-
     def _setup_enum_combo_boxes(self) -> None:
         _fill_combo_box_with_enum(self.ui.combo_pipeline, PreprocessPipeline, allow_none=True)
         _fill_combo_box_with_enum(self.ui.combo_filter_method, FilterMethod, allow_none=True)
@@ -210,7 +211,7 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
         if filter_method is None:
             for widget in self.filter_inputs:
                 widget.setEnabled(False)
-                self._restore_default_value(widget)
+                _reset_widget(widget)
         elif filter_method in [FilterMethod.Butterworth, FilterMethod.ButterworthLegacy, FilterMethod.Bessel]:
             self.ui.dbl_sb_lower_cutoff.setEnabled(True)
             self.ui.dbl_sb_upper_cutoff.setEnabled(True)
@@ -242,7 +243,7 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
         if standardize_method is None:
             for widget in self.standardization_inputs:
                 widget.setEnabled(False)
-                self._restore_default_value(widget)
+                _reset_widget(widget)
         elif standardize_method == StandardizationMethod.ZScore:
             self.ui.switch_btn_standardize_rolling_window.setEnabled(True)
         else:
@@ -398,11 +399,11 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
     def _on_restore_defaults_peak_detection(self) -> None:
         current_input_page = self.ui.stacked_peak_parameters.currentWidget()
         for child in current_input_page.children():
-            self._restore_default_value(child)
+            _reset_widget(child)
 
         if current_input_page == self.ui.page_peak_neurokit2:
             for child in self.ui.stacked_nk2_method_parameters.currentWidget().children():
-                self._restore_default_value(child)
+                _reset_widget(child)
 
     @QtCore.Slot()
     def _on_restore_defaults_processing(self) -> None:

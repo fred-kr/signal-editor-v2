@@ -2,12 +2,12 @@ import typing as t
 
 from PySide6 import QtCore
 
-from ..core.section import SectionID
+from ..logic.section import SectionID
 from ..gui.icons import SignalEditorIcons as Icons
 from . import ItemDataRole, ModelIndex
 
 if t.TYPE_CHECKING:
-    from ..core.section import Section
+    from ..logic.section import Section
 
 
 class SectionListModel(QtCore.QAbstractListModel):

@@ -20,7 +20,6 @@ from ..enum_defs import (
     PreprocessPipeline,
     RateComputationMethod,
 )
-from ..models.result_models import DetailedSectionResult, SectionResult
 from ..utils import format_long_sequence
 from .peak_detection import find_peaks
 from .processing import (
@@ -168,6 +167,51 @@ class SectionMetadata:
 
     def __repr__(self) -> str:
         return pprint.pformat(self.to_dict(), indent=2, width=120, underscore_numbers=True)
+
+
+@attrs.define(repr=True)
+class SectionResult:
+    """
+    Stores the detected peaks along with the computed rate data for a single section. Created for each new section.
+    """
+
+    peak_data: pl.DataFrame = attrs.field(factory=pl.DataFrame)
+    rate_data: pl.DataFrame = attrs.field(factory=pl.DataFrame)
+    is_locked: bool = attrs.field(default=False)
+
+    def has_peak_data(self) -> bool:
+        return not self.peak_data.is_empty()
+
+    def has_rate_data(self) -> bool:
+        return not self.rate_data.is_empty()
+
+    def to_dict(self) -> _t.SectionResultDict:
+        return _t.SectionResultDict(
+            peak_data=self.peak_data.to_numpy(structured=True),
+            rate_data=self.rate_data.to_numpy(structured=True),
+        )
+
+
+@attrs.define(frozen=True, repr=True)
+class DetailedSectionResult:
+    """
+    Class containing detailed information about a section. Created when a complete result is requested by the user.
+    """
+
+    metadata: "SectionMetadata" = attrs.field()
+    section_dataframe: pl.DataFrame = attrs.field()
+    manual_peak_edits: "ManualPeakEdits" = attrs.field()
+    section_result: SectionResult = attrs.field()
+    rate_per_temperature: pl.DataFrame = attrs.field()
+
+    def to_dict(self) -> _t.DetailedSectionResultDict:
+        return _t.DetailedSectionResultDict(
+            metadata=self.metadata.to_dict(),
+            section_dataframe=self.section_dataframe.to_numpy(structured=True),
+            manual_peak_edits=self.manual_peak_edits.to_dict(),
+            section_result=self.section_result.to_dict(),
+            rate_per_temperature=self.rate_per_temperature.to_numpy(structured=True),
+        )
 
 
 class Section:
@@ -682,13 +726,12 @@ class Section:
                 ).alias("rate_bpm")
             ).with_columns(pl.col("rate_bpm").forward_fill())
 
-
         if not full_info:
             rr_df = rr_df.select(
                 pl.col(grp_col).cast(pl.Int32),
                 pl.col("rate_bpm").cast(pl.Float64),
             )
-            
+
         self.rate_data = rr_df.collect().shrink_to_fit()
 
     def get_mean_rate_per_temperature(self) -> pl.DataFrame:

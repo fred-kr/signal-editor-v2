@@ -8,6 +8,7 @@ from pyside_config import ConfigBase, EditorWidgetInfo, config
 from pyside_config.properties import ComboBoxProperties, SpinBoxProperties
 from pyside_config.widgets import EnumComboBox
 
+from .constants import STYLE_SHEET_ENUM_COMBO_BOX
 from .enum_defs import RateComputationMethod, TextFileSeparator
 from .utils import app_dir_posix, search_enum
 
@@ -16,17 +17,6 @@ type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
 ItemDataRole = QtCore.Qt.ItemDataRole
 
 app_dir = app_dir_posix()
-
-ENUM_COMBOBOX_STYLE_SHEET = """
-QComboBox {
-    min-width: 150px;
-    min-height: 31px;
-    padding-left: 10px;
-}
-QComboBox QAbstractItemView::item {
-    min-height: 31px;
-}
-"""
 
 
 @config
@@ -122,7 +112,7 @@ class EditingConfig(ConfigBase):
                 sig_value_changed="sig_current_enum_changed",
                 set_value_method="set_current_enum",
                 widget_properties=ComboBoxProperties(
-                    styleSheet=ENUM_COMBOBOX_STYLE_SHEET,
+                    styleSheet=STYLE_SHEET_ENUM_COMBO_BOX,
                     hasFrame=False,
                 ),
             ),
@@ -162,7 +152,7 @@ class DataConfig(ConfigBase):
                 sig_value_changed="sig_current_enum_changed",
                 set_value_method="set_current_enum",
                 widget_properties=ComboBoxProperties(
-                    styleSheet=ENUM_COMBOBOX_STYLE_SHEET,
+                    styleSheet=STYLE_SHEET_ENUM_COMBO_BOX,
                     hasFrame=False,
                 ),
             ),
@@ -306,10 +296,12 @@ class Config:
         dlg.setModal(True)
         dlg.setWindowTitle("Settings")
 
-        btn_box = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.StandardButton.Save | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
+        btn_box = QtWidgets.QDialogButtonBox(
+            QtWidgets.QDialogButtonBox.StandardButton.Save | QtWidgets.QDialogButtonBox.StandardButton.Cancel
+        )
         btn_box.accepted.connect(dlg.accept)
         btn_box.rejected.connect(dlg.reject)
-        
+
         tab_widget = QtWidgets.QTabWidget()
         tab_widget.addTab(self.plot.create_editor(), "Plot")
         tab_widget.addTab(self.editing.create_editor(), "Editing")
@@ -323,7 +315,7 @@ class Config:
         layout.addWidget(btn_box)
         dlg.setLayout(layout)
         dlg.resize(800, 600)
-        
+
         return dlg
 
     def get_snapshot(self) -> dict[str, t.Any]:

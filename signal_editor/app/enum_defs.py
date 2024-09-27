@@ -13,6 +13,10 @@ class RateComputationMethod(enum.StrEnum):
 
 
 class TextFileSeparator(enum.StrEnum):
+    """
+    Separator to use when reading text files.
+    """
+
     Tab = "\t"
     Space = " "
     Comma = ","
@@ -20,17 +24,11 @@ class TextFileSeparator(enum.StrEnum):
     Pipe = "|"
 
 
-class ExportFormatCompact(enum.StrEnum):
-    XLSX = ".xlsx"
-    CSV = ".csv"
-    TXT = ".txt"
-
-
-class ExportFormatDetailed(enum.StrEnum):
-    HDF5 = ".hdf5"
-
-
 class InputFileFormat(enum.StrEnum):
+    """
+    Supported file formats.
+    """
+
     CSV = ".csv"
     TXT = ".txt"
     TSV = ".tsv"
@@ -40,6 +38,10 @@ class InputFileFormat(enum.StrEnum):
 
 
 class FilterMethod(enum.StrEnum):
+    """
+    Available signal filtering methods.
+    """
+
     Butterworth = "butterworth"
     ButterworthLegacy = "butterworth_ba"
     ButterworthZI = "butterworth_zi"
@@ -50,6 +52,10 @@ class FilterMethod(enum.StrEnum):
 
 
 class PreprocessPipeline(enum.StrEnum):
+    """
+    Processing pipelines available in the `neurokit2` package.
+    """
+
     PPGElgendi = "ppg_elgendi"
     ECGNeuroKit2 = "ecg_neurokit2"
     ECGBioSPPy = "biosppy"
@@ -75,6 +81,7 @@ class PeakDetectionMethod(enum.StrEnum):
 
 class NK2ECGPeakDetectionMethod(enum.StrEnum):
     Default = "neurokit"
+    Emrich2023 = "emrich2023"
     PanTompkins1985 = "pantompkins"
     Nabian2018 = "nabian2018"
     Gamboa2008 = "gamboa2008"
@@ -87,8 +94,6 @@ class NK2ECGPeakDetectionMethod(enum.StrEnum):
     Kalidas2017 = "kalidas2017"
     Martinez2004 = "martinez2004"
     Rodrigues2020 = "rodrigues2020"
-    Emrich2023 = "emrich2023"
-    # SlopeSumFunction = "ssf"
     Promac = "promac"
 
 
@@ -97,12 +102,6 @@ class WFDBPeakDirection(enum.StrEnum):
     Down = "down"
     Both = "both"
     Compare = "compare"
-
-
-class OxygenCondition(enum.StrEnum):
-    Normoxic = "normoxic"
-    Hypoxic = "hypoxic"
-    Unknown = "unknown"
 
 
 class PointSymbols(enum.StrEnum):
@@ -126,6 +125,10 @@ class PointSymbols(enum.StrEnum):
 
 
 class SmoothingKernels(enum.StrEnum):
+    """
+    Smoothing kernels available in the `scipy.signal` package.
+    """
+
     BARTHANN = "barthann"
     BARTLETT = "bartlett"
     BLACKMAN = "blackman"
@@ -166,6 +169,10 @@ class MouseButtons(enum.StrEnum):
 
 
 class SVGColors(enum.StrEnum):
+    """
+    SVG color names understood by QtGui.QColor
+    """
+
     AliceBlue = "#f0f8ff"
     AntiqueWhite = "#faebd7"
     Aqua = "#00ffff"

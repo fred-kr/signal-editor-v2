@@ -2,31 +2,9 @@ import typing as t
 
 import numpy as np
 import pyqtgraph as pg
-from PySide6 import QtCore, QtGui
+from PySide6 import QtCore
 
-from ... import type_defs as _t
-
-
-def _mk_pen(*args: _t.PGPen, **kwargs: t.Unpack[_t.PGPenKwargs]) -> QtGui.QPen:
-    """
-    Wrapper for pg.mkPen which avoids creating a new QPen object if passed one as its
-    sole argument. This is used to avoid unnecessary cache misses in SymbolAtlas which
-    uses the QPen object id in its key.
-    """
-    if len(args) == 1 and isinstance(args[0], QtGui.QPen):
-        return args[0]
-    return pg.mkPen(*args, **kwargs)
-
-
-def _mk_brush(*args: _t.PGBrush, **kwargs: t.Unpack[_t.PGBrushKwargs]) -> QtGui.QBrush:
-    """
-    Wrapper for pg.mkBrush which avoids creating a new QBrush object if passed one as its
-    sole argument. This is used to avoid unnecessary cache misses in SymbolAtlas which
-    uses the QBrush object id in its key.
-    """
-    if len(args) == 1 and isinstance(args[0], QtGui.QBrush):
-        return args[0]
-    return pg.mkBrush(*args, **kwargs)
+from ...utils import make_qbrush, make_qpen
 
 
 class CustomScatterPlotItem(pg.ScatterPlotItem):
@@ -49,8 +27,6 @@ class CustomScatterPlotItem(pg.ScatterPlotItem):
                 kargs["x"], kargs["y"] = zip(
                     *((p.x(), p.y()) if isinstance(p, QtCore.QPointF) else p for p in pos), strict=True
                 )
-                # kargs["x"] = [p.x() if isinstance(p, QtCore.QPointF) else p[0] for p in pos]
-                # kargs["y"] = [p.y() if isinstance(p, QtCore.QPointF) else p[1] for p in pos]
 
         spots = kargs.get("spots")
         x = kargs.get("x")
@@ -92,9 +68,9 @@ class CustomScatterPlotItem(pg.ScatterPlotItem):
                         new_data[i]["x"] = x
                         new_data[i]["y"] = y
                     elif k == "pen":
-                        new_data[i][k] = _mk_pen(v)
+                        new_data[i][k] = make_qpen(v)
                     elif k == "brush":
-                        new_data[i][k] = _mk_brush(v)
+                        new_data[i][k] = make_qbrush(v)
                     elif k in ("x", "y", "size", "symbol", "data"):
                         new_data[i][k] = v
                     else:
@@ -123,9 +99,9 @@ class CustomScatterPlotItem(pg.ScatterPlotItem):
             elif k in ("hoverPen", "hoverBrush", "hoverSymbol", "hoverSize"):
                 vh = kargs[k]
                 if k == "hoverPen":
-                    vh = _mk_pen(vh)
+                    vh = make_qpen(vh)
                 elif k == "hoverBrush":
-                    vh = _mk_brush(vh)
+                    vh = make_qbrush(vh)
                 self.opts[k] = vh
             elif k == "data":
                 self.setPointData(kargs["data"], dataSet=new_data)

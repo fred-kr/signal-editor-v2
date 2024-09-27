@@ -4,7 +4,7 @@ import qfluentwidgets as qfw
 import stackprinter
 from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
-from pyside_widgets import OverlayWidget
+from pyside_widgets import DataTreeWidgetContainer, OverlayWidget
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 
 from ...ui.ui_main_window import Ui_MainWindow
@@ -12,14 +12,13 @@ from .. import type_defs as _t
 from ..config import Config
 from ..constants import INDEX_COL
 from ..enum_defs import LogLevel
-from .dialogs import MetadataDialog
-from .icons import SignalEditorIcons as Icons
-from .widgets import (
-    DataTreeWidgetContainer,
+from .docks_dialogs import (
+    MetadataDialog,
     ParameterInputsDock,
     SectionListDock,
     StatusMessageDock,
 )
+from .icons import SignalEditorIcons as Icons
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -81,12 +80,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.add_sub_interface(self.stacked_page_edit, Icons.Edit.icon(), "View & Edit")
         self.add_sub_interface(self.stacked_page_export, Icons.DocumentArrowRight.icon(), "Results")
 
-        # self.add_sub_interface(
-        #     self.stacked_page_test,
-        #     Icons.Bug.icon(),
-        #     "Test Page",
-        #     position=NavigationItemPosition.BOTTOM,
-        # )
         qrouter.setDefaultRouteKey(self.stackedWidget, self.stacked_page_import.objectName())
         self.navigation_interface.setExpandWidth(250)
 

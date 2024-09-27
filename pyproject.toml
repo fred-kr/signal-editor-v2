@@ -39,10 +39,10 @@ dev-dependencies = [
     "pyinstaller>=6.10.0",
     "pyinstaller-hooks-contrib>=2024.8",
     "sourcery>=1.23.0",
-    "ruff>=0.6.7",
+    "ruff>=0.6.8",
     "python-dotenv>=1.0.1",
     "pytest>=8.3.3",
-    "mkdocs-material>=9.5.37",
+    "mkdocs-material>=9.5.38",
     "pyright>=1.1.382",
     "xmltodict>=0.13.0",
 ]

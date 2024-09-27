@@ -2,20 +2,55 @@ import functools
 import typing as t
 from pathlib import Path
 
+import attrs
 import mne.io
 import polars as pl
 from loguru import logger
 from PySide6 import QtCore
 
+from .. import type_defs as _t
 from ..config import Config
 from ..constants import NOT_SET_OPTION
-from ..core.file_io import detect_sampling_rate, read_edf
-from ..core.section import Section
 from ..enum_defs import InputFileFormat, TextFileSeparator
-from ..models.df_model import DataFrameModel
-from ..models.metadata import FileMetadata
-from ..models.result_models import CompleteResult, SelectedFileMetadata
+from ..logic.file_io import detect_sampling_rate, read_edf
+from ..logic.metadata import FileMetadata
+from ..logic.section import DetailedSectionResult, Section, SectionID
+from ..models.data_frame_model import DataFrameModel
 from ..models.section_list_model import SectionListModel
+
+
+@attrs.define(frozen=True, repr=True)
+class SelectedFileMetadata:
+    file_name: str = attrs.field()
+    file_format: str = attrs.field()
+    sampling_rate: int = attrs.field()
+    name_signal_column: str = attrs.field()
+    name_info_column: str | None = attrs.field(default=None)
+
+    def to_dict(self) -> _t.SelectedFileMetadataDict:
+        return _t.SelectedFileMetadataDict(
+            file_name=self.file_name,
+            file_format=self.file_format,
+            sampling_rate=self.sampling_rate,
+            name_signal_column=self.name_signal_column,
+            name_info_column=self.name_info_column,
+        )
+
+
+@attrs.define(frozen=True, repr=True)
+class CompleteResult:
+    metadata: SelectedFileMetadata = attrs.field()
+    global_dataframe: pl.DataFrame = attrs.field()
+    section_results: dict["SectionID", DetailedSectionResult] = attrs.field()
+
+    def to_dict(self) -> _t.CompleteResultDict:
+        section_results = {k: v.to_dict() for k, v in self.section_results.items()}
+
+        return _t.CompleteResultDict(
+            metadata=self.metadata.to_dict(),
+            global_dataframe=self.global_dataframe.to_numpy(structured=True),
+            section_results=section_results,
+        )
 
 
 class DataController(QtCore.QObject):
@@ -23,8 +58,6 @@ class DataController(QtCore.QObject):
     sig_new_metadata = QtCore.Signal(object)
     sig_new_data = QtCore.Signal()
     sig_active_section_changed = QtCore.Signal(bool)
-    # sig_section_added = QtCore.Signal(str)
-    # sig_section_removed = QtCore.Signal(str)
 
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
@@ -122,9 +155,7 @@ class DataController(QtCore.QObject):
                 f"Path: {file_path} \n\nNo file exists at the specified path. Please check the path and try again."
             )
         if file_path.suffix not in InputFileFormat:
-            logger.error(
-                f"Unsupported file format: {file_path.suffix}. Allowed formats: {', '.join(InputFileFormat)}"
-            )
+            logger.error(f"Unsupported file format: {file_path.suffix}. Allowed formats: {', '.join(InputFileFormat)}")
 
         config = Config()
         # last_sampling_rate = config.internal.LastSamplingRate

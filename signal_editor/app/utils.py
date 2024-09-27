@@ -87,11 +87,15 @@ def make_qcolor(*args: _t.PGColor) -> QtGui.QColor:
 
 
 def make_qpen(*args: _t.PGPen, **kwargs: t.Unpack[_t.PGPenKwargs]) -> QtGui.QPen:
-    return args[0] if isinstance(args[0], QtGui.QPen) else pg.mkPen(*args, **kwargs)
+    if len(args) == 1 and isinstance(args[0], QtGui.QPen):
+        return args[0]
+    return pg.mkPen(*args, **kwargs)
 
 
 def make_qbrush(*args: _t.PGBrush, **kwargs: t.Unpack[_t.PGBrushKwargs]) -> QtGui.QBrush:
-    return args[0] if isinstance(args[0], QtGui.QBrush) else pg.mkBrush(*args, **kwargs)
+    if len(args) == 1 and isinstance(args[0], QtGui.QBrush):
+        return args[0]
+    return pg.mkBrush(*args, **kwargs)
 
 
 def format_file_path(path: str, max_len: int = 50) -> str:
