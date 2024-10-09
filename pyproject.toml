@@ -1,6 +1,6 @@
 [project]
 name = "signal-editor"
-version = "0.1.0"
+version = "0.2.0"
 description = ""
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
@@ -18,7 +18,6 @@ dependencies = [
     "ts2vg>=1.2.4",
     "tables>=3.10.1",
     "pyqtgraph",
-    "stackprinter>=0.2.12",
     "pyside-config",
     "pyside-widgets",
     "pyside6>=6.7.3",
@@ -31,14 +30,11 @@ dependencies = [
 [tool.uv]
 dev-dependencies = [
     "ipython>=8.28.0",
-    "pyinstaller>=6.10.0",
-    "pyinstaller-hooks-contrib>=2024.8",
     "sourcery>=1.23.0",
     "ruff>=0.6.9",
-    "python-dotenv>=1.0.1",
     "pytest>=8.3.3",
     "mkdocs-material>=9.5.39",
-    "pyright>=1.1.383",
+    "pyright>=1.1.384",
     "rich[jupyter]>=13.9.2",
 
 ]

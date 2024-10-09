@@ -15,172 +15,10 @@ import numpy.typing as npt
 import polars as pl
 import wfdb.processing as wp
 from loguru import logger
-from scipy import ndimage, signal
+from scipy import ndimage
 
 from .. import _type_defs as _t
-from .._enums import PeakDetectionMethod, SmoothingKernels, WFDBPeakDirection
-
-
-def _fit_loess(
-    y: npt.NDArray[np.float64 | np.intp],
-    x: npt.NDArray[np.float64 | np.intp] | None = None,
-    alpha: float = 0.75,
-    order: int = 2,
-) -> npt.NDArray[np.float64]:
-    if x is None:
-        x = np.linspace(0, 100, len(y))
-    if order not in (1, 2):
-        raise ValueError("order must be 1 or 2")
-    if not 0 < alpha <= 1:
-        raise ValueError("alpha must be in the range (0, 1]")
-    if len(x) != len(y):
-        raise ValueError("x and y must have the same length")
-
-    n = len(x)
-    span = int(np.ceil(alpha * n))
-    y_predicted = np.zeros(n)
-
-    for i, val in enumerate(x):
-        distances = np.abs(x - val)
-        nearest_indices = np.argsort(distances)[:span]
-        nx, ny = x[nearest_indices], y[nearest_indices]
-        weights = (1 - (distances[nearest_indices] / distances[nearest_indices][-1]) ** 3) ** 3
-
-        A = np.vander(nx, N=order + 1)
-        W = np.diag(weights)
-        V = A.T @ W @ A
-        Y = A.T @ W @ ny
-        Q, R = np.linalg.qr(V)
-        p = np.linalg.solve(R, Q.T @ Y)
-
-        y_predicted[i] = np.polyval(p, val)
-
-    return y_predicted
-
-
-def _signal_smoothing(
-    sig: npt.NDArray[np.float64 | np.intp], kernel: SmoothingKernels, size: int = 5
-) -> npt.NDArray[np.float64]:
-    window = signal.get_window(kernel, size)
-    w = window / window.sum()
-
-    x = np.concatenate((sig[0] * np.ones(size), sig, sig[-1] * np.ones(size)))
-
-    smoothed = np.convolve(w, x, mode="same")
-    return smoothed[size:-size]
-
-
-def _signal_smooth(
-    sig: npt.NDArray[np.float64 | np.intp],
-    method: t.Literal["convolution", "loess"] = "convolution",
-    kernel: SmoothingKernels = SmoothingKernels.BOXZEN,
-    size: int = 10,
-    alpha: float = 0.1,
-) -> npt.NDArray[np.float64]:
-    length = len(sig)
-
-    if size > length or size < 1:
-        raise ValueError(f"Size must be between 1 and {length}")
-
-    if method == "loess":
-        smoothed = _fit_loess(sig, alpha=alpha)
-    elif method == "convolution":
-        if kernel == SmoothingKernels.BOXCAR:
-            smoothed = ndimage.uniform_filter1d(sig, size=size, mode="nearest")
-        elif kernel == SmoothingKernels.BOXZEN:
-            x = ndimage.uniform_filter1d(sig, size=size, mode="nearest")
-            smoothed = _signal_smoothing(x, kernel=SmoothingKernels.PARZEN, size=size)
-        elif kernel == SmoothingKernels.MEDIAN:
-            size = size if size % 2 == 0 else size + 1
-            smoothed = ndimage.median_filter(sig, size=size)
-        else:
-            smoothed = _signal_smoothing(sig, kernel=kernel, size=size)
-
-    return smoothed
-
-
-def _find_peaks_ppg_elgendi(
-    sig: npt.NDArray[np.float64],
-    sampling_rate: int,
-    peakwindow: float = 0.111,
-    beatwindow: float = 0.667,
-    beatoffset: float = 0.02,
-    mindelay: float = 0.3,
-) -> npt.NDArray[np.int32]:
-    """
-    Finds peaks in a PPG (photoplethysmography) signal using the method described by Elgendi et al. (see Notes)
-
-    Parameters
-    ----------
-    sig : NDArray[np.float64]
-        The PPG signal as a 1-dimensional NumPy array.
-    sampling_rate : int
-        The sampling rate of the PPG signal in samples per second.
-    peakwindow : float, optional
-        The width of the window used for smoothing the squared PPG signal to find peaks (in seconds).
-    beatwindow : float, optional
-        The width of the window used for smoothing the squared PPG signal to find beats (in seconds).
-    beatoffset : float, optional
-        The offset added to the smoothed beat signal to determine the threshold for detecting waves.
-    mindelay : float, optional
-        The minimum delay between consecutive peaks (in seconds).
-
-    Returns
-    -------
-    npt.NDArray[np.int32]
-        An array of peak indices as a 1-dimensional NumPy array.
-
-    Notes
-    -----
-    This function implements the peak detection algorithm proposed by Elgendi et al. for
-    PPG signals. The algorithm involves squaring the signal, applying a moving average
-    with different window sizes for peak detection, and finding the local maxima in the
-    resulting signal.
-
-    For more information, see [Elgendi et al.](https://doi.org/10.1371/journal.pone.0076585).
-
-    The implementation is based on the `neurokit2.ppg.ppg_findpeaks` function with `method="elgendi"`. Changes
-    are made to improve code readability and performance by making
-    """
-    sig_clipped_squared = np.clip(sig, 0, None) ** 2
-
-    peakwindow_samples = np.rint(peakwindow * sampling_rate).astype(np.int32)
-    ma_peak = _signal_smooth(sig_clipped_squared, kernel=SmoothingKernels.BOXCAR, size=peakwindow_samples)
-
-    beatwindow_samples = np.rint(beatwindow * sampling_rate).astype(np.int32)
-    ma_beat = _signal_smooth(sig_clipped_squared, kernel=SmoothingKernels.BOXCAR, size=beatwindow_samples)
-
-    thr1 = ma_beat + beatoffset * np.mean(sig_clipped_squared)
-
-    waves = ma_peak > thr1
-    wave_changes = np.diff(waves.astype(np.int32))
-    beg_waves = np.flatnonzero(wave_changes == 1)
-    end_waves = np.flatnonzero(wave_changes == -1)
-
-    if end_waves[0] < beg_waves[0]:
-        end_waves = end_waves[1:]
-    if end_waves[-1] < beg_waves[-1]:
-        beg_waves = beg_waves[:-1]
-
-    diff_waves = end_waves - beg_waves
-    valid_waves = diff_waves >= peakwindow_samples
-    beg_waves = beg_waves[valid_waves]
-    end_waves = end_waves[valid_waves]
-
-    min_delay_samples = np.rint(mindelay * sampling_rate).astype(np.int32)
-    peaks: list[int] = []
-
-    for beg, end in zip(beg_waves, end_waves, strict=False):
-        data = sig[beg:end]
-        locmax, props = signal.find_peaks(data, prominence=(None, None))
-
-        if locmax.size > 0:
-            peak = beg + locmax[props["prominences"].argmax()]
-
-            if not peaks or peak - peaks[-1] > min_delay_samples:
-                peaks.append(peak)
-
-    return np.array(peaks, dtype=np.int32)
+from .._enums import PeakDetectionMethod, WFDBPeakDirection
 
 
 def _find_peaks_local_max(sig: npt.NDArray[np.float64], search_radius: int) -> npt.NDArray[np.int32]:
@@ -379,14 +217,10 @@ def find_peaks(
         )
     elif method == PeakDetectionMethod.PPGElgendi:
         method_parameters = t.cast(_t.PeaksPPGElgendi, method_parameters)
-        return _find_peaks_ppg_elgendi(
-            sig,
-            sampling_rate,
-            peakwindow=method_parameters["peakwindow"],
-            beatwindow=method_parameters["beatwindow"],
-            beatoffset=method_parameters["beatoffset"],
-            mindelay=method_parameters["mindelay"],
+        peak_dict = nk.ppg_findpeaks(
+            sig, sampling_rate=sampling_rate, method="elgendi", show=False, **method_parameters
         )
+        return np.asarray(peak_dict["PPG_Peaks"], dtype=np.int32)
     elif method == PeakDetectionMethod.WFDBXQRS:
         method_parameters = t.cast(_t.PeaksWFDBXQRS, method_parameters)
         return _find_peaks_xqrs(
