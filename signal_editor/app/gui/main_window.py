@@ -9,7 +9,7 @@ from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 
 from ...ui.ui_main_window import Ui_MainWindow
 from .. import _type_defs as _t
-from .._app_config import conf
+from .._app_config import Config
 from .._constants import INDEX_COL
 from .._enums import LogLevel
 from .dialogs import (
@@ -368,14 +368,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_sections.btn_container.setVisible(show)
 
     def write_settings(self) -> None:
-        conf.internal.window_geometry = self.saveGeometry()
-        conf.internal.window_state = self.saveState()
+        Config().internal.window_geometry = self.saveGeometry()
+        Config().internal.window_state = self.saveState()
 
-        conf.save()
+        Config().save()
 
     def read_settings(self) -> None:
-        self.restoreGeometry(conf.internal.window_geometry)
-        self.restoreState(conf.internal.window_state)
+        self.restoreGeometry(Config().internal.window_geometry)
+        self.restoreState(Config().internal.window_state)
 
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:

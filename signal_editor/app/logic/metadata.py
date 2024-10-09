@@ -4,7 +4,7 @@ from pathlib import Path
 from PySide6 import QtCore
 
 from .. import _type_defs as _t
-from .._app_config import conf
+from .._app_config import Config
 from .._constants import COMBO_BOX_NO_SELECTION, RESERVED_COLUMN_NAMES
 from .._enums import InputFileFormat
 
@@ -28,13 +28,13 @@ class FileMetadata:
             self.required_fields.append("sampling_rate")
 
         self._columns = columns
-        signal_col = conf.internal.last_signal_column
+        signal_col = Config().internal.last_signal_column
         if signal_col not in self._columns or signal_col in RESERVED_COLUMN_NAMES:
             self.required_fields.append("signal_column")
             signal_col = self._columns[0]
         self._signal_column = signal_col
 
-        info_col = conf.internal.last_info_column
+        info_col = Config().internal.last_info_column
         if info_col not in self._columns:
             info_col = COMBO_BOX_NO_SELECTION
         self._info_column = info_col

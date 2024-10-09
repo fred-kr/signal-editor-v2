@@ -9,9 +9,9 @@ from loguru import logger
 from PySide6 import QtCore
 
 from .. import _type_defs as _t
+from .._app_config import Config
 from .._constants import COMBO_BOX_NO_SELECTION
 from .._enums import InputFileFormat, TextFileSeparator
-from .._app_config import conf
 from ..logic.file_io import detect_sampling_rate, read_edf
 from ..logic.metadata import FileMetadata
 from ..logic.section import DetailedSectionResult, Section, SectionID
@@ -74,7 +74,7 @@ class DataController(QtCore.QObject):
         self.result_model_rate = DataFrameModel(self)
 
         try:
-            self._txt_separator = conf.data.text_file_separator
+            self._txt_separator = Config().data.text_file_separator
         except Exception:
             self._txt_separator = TextFileSeparator.Tab
         self._reader_funcs = {
@@ -156,7 +156,7 @@ class DataController(QtCore.QObject):
         if file_path.suffix not in InputFileFormat:
             logger.error(f"Unsupported file format: {file_path.suffix}. Allowed formats: {', '.join(InputFileFormat)}")
 
-        config = conf
+        config = Config()
         # last_sampling_rate = config.internal.LastSamplingRate
         last_signal_col = config.internal.last_signal_column
         last_info_col = config.internal.last_info_column
@@ -205,7 +205,7 @@ class DataController(QtCore.QObject):
             return
         suffix = self.metadata.file_format
         file_path = self.metadata.file_path
-        separator = conf.data.text_file_separator
+        separator = Config().data.text_file_separator
 
         signal_col = self.metadata.signal_column
         info_col = self.metadata.info_column

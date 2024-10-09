@@ -5,7 +5,7 @@ from pathlib import Path
 import polars as pl
 from PySide6 import QtCore
 
-from ._app_config import conf
+from ._app_config import Config
 from .gui.icons import SignalEditorIcons as Icons
 from .logic.section import Section, SectionID
 from .utils import format_file_path, human_readable_timedelta
@@ -18,11 +18,11 @@ class DataFrameModel(QtCore.QAbstractTableModel):
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
         self.df = pl.DataFrame()
-        self._float_precision = conf.data.float_precision
+        self._float_precision = Config().data.float_precision
 
     def set_df(self, df: pl.DataFrame) -> None:
         self.beginResetModel()
-        self._float_precision = conf.data.float_precision
+        self._float_precision = Config().data.float_precision
         self.df = df
         self.endResetModel()
 
@@ -188,7 +188,7 @@ class FileListModel(QtCore.QAbstractListModel):
 
     @QtCore.Slot()
     def update_config(self) -> None:
-        conf.internal.recent_files = self._recent_files
+        Config().internal.recent_files = self._recent_files
 
 
 class SectionListModel(QtCore.QAbstractListModel):

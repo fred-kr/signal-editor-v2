@@ -1,5 +1,4 @@
 import functools
-import threading
 import typing as t
 
 import attrs
@@ -248,23 +247,17 @@ class InternalConfig(ConfigBase):
 
 
 class Config:
-    __slots__ = ("_initialized", "_plot", "_editing", "_data", "_internal")
+    __slots__ = ("_plot", "_editing", "_data", "_internal")
 
     _instance: "Config | None" = None
-    _lock = threading.Lock()
     _groups = frozenset({"plot", "editing", "data", "internal"})
 
     def __new__(cls) -> "Config":
-        with cls._lock:
-            if cls._instance is None:
-                cls._instance = super().__new__(cls)
-            return cls._instance
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
 
     def __init__(self) -> None:
-        if hasattr(self, "_initialized"):
-            return
-
-        self._initialized = True
         self._plot = PlotConfig.from_qsettings()
         self._editing = EditingConfig.from_qsettings()
         self._data = DataConfig.from_qsettings()
@@ -364,8 +357,3 @@ class Config:
         for grp, grp_dict in snapshot.items():
             for key, value in grp_dict.items():
                 self.update_value(grp, key, value)
-
-
-conf = Config()
-
-__all__ = ["conf"]

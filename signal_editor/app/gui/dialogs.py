@@ -1,7 +1,7 @@
 from PySide6 import QtCore, QtWidgets
 
 from ...ui.ui_dialog_metadata import Ui_MetadataDialog
-from .._app_config import conf
+from .._app_config import Config
 from .icons import SignalEditorIcons as Icons
 
 STYLE_SHEET_SPIN_BOX = """
@@ -103,8 +103,8 @@ class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
             "info_column": self.combo_box_info_column.currentText(),
         }
         self.sig_property_has_changed.emit(metadata_dict)
-        conf.internal.last_signal_column = self.combo_box_signal_column.currentText()
-        conf.internal.last_info_column = self.combo_box_info_column.currentText()
-        conf.internal.last_sampling_rate = self.spin_box_sampling_rate.value()
+        Config().internal.last_signal_column = self.combo_box_signal_column.currentText()
+        Config().internal.last_info_column = self.combo_box_info_column.currentText()
+        Config().internal.last_sampling_rate = self.spin_box_sampling_rate.value()
 
         super().accept()
