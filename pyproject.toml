@@ -51,7 +51,6 @@ target-version = "py312"
 show-fixes = true
 output-format = "concise"
 line-length = 120
-extend-exclude = ["**/ui_*.py"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"
