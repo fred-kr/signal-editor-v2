@@ -19,7 +19,7 @@ from .._enums import (
     WFDBPeakDirection,
 )
 from ._widget_defaults import PEAK_DETECTION, PROCESSING
-from .icons import SignalEditorIcons as Icons
+from .icons import AppIcons
 
 
 class LoggingWindow(qfw.TextEdit):
@@ -69,10 +69,10 @@ class StatusMessageDock(QtWidgets.QDockWidget):
         self.setObjectName("StatusMessageDock")
         self.setWindowTitle("Status Log")
         self.setVisible(False)
-        self.toggleViewAction().setIcon(Icons.Status.icon())
+        self.toggleViewAction().setIcon(AppIcons.Status.icon())
 
         self.log_text_box = LoggingWindow(self)
-        self.setWindowIcon(Icons.History.icon())
+        self.setWindowIcon(AppIcons.History.icon())
         self.setWidget(self.log_text_box)
 
 
@@ -117,8 +117,8 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
         self.setVisible(False)
         self.setObjectName("DockWidgetParameterInputs")
         self.setWindowTitle("Parameter Inputs")
-        self.toggleViewAction().setIcon(Icons.Options.icon())
-        self.setWindowIcon(Icons.Options.icon())
+        self.toggleViewAction().setIcon(AppIcons.Options.icon())
+        self.setWindowIcon(AppIcons.Options.icon())
         self.setAllowedAreas(QtCore.Qt.DockWidgetArea.AllDockWidgetAreas)
 
         self.ui = ParameterInputs()
@@ -161,19 +161,19 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
         self.reset_status_indicators()
 
     def set_pipeline_status(self, status: bool) -> None:
-        self.ui.icon_pipeline_status.setIcon(Icons.CheckmarkCircle.icon() if status else Icons.Circle.icon())
+        self.ui.icon_pipeline_status.setIcon(AppIcons.CheckmarkCircle.icon() if status else AppIcons.Circle.icon())
 
     def set_filter_status(self, status: bool, times_filtered: int) -> None:
-        self.ui.icon_filter_status.setIcon(Icons.CheckmarkCircle.icon() if status else Icons.Circle.icon())
+        self.ui.icon_filter_status.setIcon(AppIcons.CheckmarkCircle.icon() if status else AppIcons.Circle.icon())
         self.ui.icon_filter_status.setToolTip(f"Filtered {times_filtered} times")
 
     def set_standardization_status(self, status: bool) -> None:
-        self.ui.icon_standardize_status.setIcon(Icons.CheckmarkCircle.icon() if status else Icons.Circle.icon())
+        self.ui.icon_standardize_status.setIcon(AppIcons.CheckmarkCircle.icon() if status else AppIcons.Circle.icon())
 
     def reset_status_indicators(self, status: bool = False) -> None:
-        self.ui.icon_pipeline_status.setIcon(Icons.CheckmarkCircle.icon() if status else Icons.Circle.icon())
-        self.ui.icon_filter_status.setIcon(Icons.CheckmarkCircle.icon() if status else Icons.Circle.icon())
-        self.ui.icon_standardize_status.setIcon(Icons.CheckmarkCircle.icon() if status else Icons.Circle.icon())
+        self.ui.icon_pipeline_status.setIcon(AppIcons.CheckmarkCircle.icon() if status else AppIcons.Circle.icon())
+        self.ui.icon_filter_status.setIcon(AppIcons.CheckmarkCircle.icon() if status else AppIcons.Circle.icon())
+        self.ui.icon_standardize_status.setIcon(AppIcons.CheckmarkCircle.icon() if status else AppIcons.Circle.icon())
 
     def _assign_defaults(self) -> None:
         # Peak Detection
@@ -517,11 +517,11 @@ class SectionListWidget(QtWidgets.QWidget):
         confirm_cancel_layout = QtWidgets.QHBoxLayout(confirm_cancel_btns)
         confirm_cancel_layout.setContentsMargins(0, 0, 0, 0)
 
-        confirm_btn = qfw.PushButton(icon=Icons.CheckmarkCircle.icon(), text="Confirm")
+        confirm_btn = qfw.PushButton(icon=AppIcons.CheckmarkCircle.icon(), text="Confirm")
         confirm_cancel_layout.addWidget(confirm_btn)
         self.btn_confirm = confirm_btn
 
-        cancel_btn = qfw.PushButton(icon=Icons.DismissCircle.icon(), text="Cancel")
+        cancel_btn = qfw.PushButton(icon=AppIcons.DismissCircle.icon(), text="Cancel")
         confirm_cancel_layout.addWidget(cancel_btn)
         self.btn_cancel = cancel_btn
 
@@ -540,7 +540,7 @@ class SectionListDock(QtWidgets.QDockWidget):
         self.setVisible(False)
         self.setObjectName("SectionListDock")
         self.setWindowTitle("Section List")
-        self.setWindowIcon(Icons.SignalEditor.icon())
+        self.setWindowIcon(AppIcons.SignalEditor.icon())
 
         self._widget = SectionListWidget()
         self.list_view = self._widget.list_view

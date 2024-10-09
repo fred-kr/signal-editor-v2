@@ -2,7 +2,7 @@ from PySide6 import QtCore, QtWidgets
 
 from ...ui.ui_dialog_metadata import Ui_MetadataDialog
 from .._app_config import Config
-from .icons import SignalEditorIcons as Icons
+from .icons import AppIcons
 
 STYLE_SHEET_SPIN_BOX = """
 SpinBox[requiresInput="false"] {
@@ -91,7 +91,7 @@ class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
 
         self.combo_box_signal_column.setStyleSheet(STYLE_SHEET_COMBO_BOX)
         self.spin_box_sampling_rate.setStyleSheet(STYLE_SHEET_SPIN_BOX)
-        self.setWindowIcon(Icons.SignalEditor.icon())
+        self.setWindowIcon(AppIcons.SignalEditor.icon())
         self.btn_accept.clicked.connect(self.accept)
         self.btn_reject.clicked.connect(self.reject)
 

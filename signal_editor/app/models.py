@@ -6,7 +6,7 @@ import polars as pl
 from PySide6 import QtCore
 
 from ._app_config import Config
-from .gui.icons import SignalEditorIcons as Icons
+from .gui.icons import AppIcons
 from .logic.section import Section, SectionID
 from .utils import format_file_path, human_readable_timedelta
 
@@ -229,7 +229,7 @@ class SectionListModel(QtCore.QAbstractListModel):
         elif role == ItemDataRole.ToolTipRole:
             return repr(section)
         elif role == ItemDataRole.DecorationRole:
-            return Icons.LockClosed.icon() if section.is_locked else Icons.LockOpen.icon()
+            return AppIcons.LockClosed.icon() if section.is_locked else AppIcons.LockOpen.icon()
         return None
 
     def add_section(self, section: "Section") -> None:

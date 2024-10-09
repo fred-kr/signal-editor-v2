@@ -11,7 +11,7 @@ class IconBase:
         return QtGui.QIcon(self.path())
 
 
-class SignalEditorIcons(IconBase, enum.Enum):
+class AppIcons(IconBase, enum.Enum):
     SignalEditor = ":/icons/app_icon.svg"
     Add = ":/icons/fluent-icons/Add.svg"
     AddCircle = ":/icons/fluent-icons/AddCircle.svg"

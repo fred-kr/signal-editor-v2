@@ -15,7 +15,7 @@ from .dialogs import (
     MetadataDialog,
 )
 from .docks import ParameterInputsDock, SectionListDock, StatusMessageDock
-from .icons import SignalEditorIcons as Icons
+from .icons import AppIcons
 
 
 class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
@@ -27,14 +27,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         super().__init__(parent)
         self.setupUi(self)
         self._msg_box_icons = {
-            LogLevel.DEBUG: Icons.Wrench.icon(),
-            LogLevel.INFO: Icons.Info.icon(),
-            LogLevel.WARNING: Icons.Warning.icon(),
-            LogLevel.ERROR: Icons.ErrorCircle.icon(),
-            LogLevel.CRITICAL: Icons.Important.icon(),
-            LogLevel.SUCCESS: Icons.CheckmarkCircle.icon(),
+            LogLevel.DEBUG: AppIcons.Wrench.icon(),
+            LogLevel.INFO: AppIcons.Info.icon(),
+            LogLevel.WARNING: AppIcons.Warning.icon(),
+            LogLevel.ERROR: AppIcons.ErrorCircle.icon(),
+            LogLevel.CRITICAL: AppIcons.Important.icon(),
+            LogLevel.SUCCESS: AppIcons.CheckmarkCircle.icon(),
         }
-        self.setWindowIcon(Icons.SignalEditor.icon())
+        self.setWindowIcon(AppIcons.SignalEditor.icon())
 
         self.new_central_widget = QtWidgets.QWidget()
         self._h_layout = QtWidgets.QHBoxLayout(self.new_central_widget)
@@ -73,9 +73,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._h_layout.setStretchFactor(self.stackedWidget, 1)
 
     def _setup_navigation(self) -> None:
-        self.add_sub_interface(self.stacked_page_import, Icons.DocumentArrowLeft.icon(), "Input Data")
-        self.add_sub_interface(self.stacked_page_edit, Icons.Edit.icon(), "View & Edit")
-        self.add_sub_interface(self.stacked_page_export, Icons.DocumentArrowRight.icon(), "Results")
+        self.add_sub_interface(self.stacked_page_import, AppIcons.DocumentArrowLeft.icon(), "Input Data")
+        self.add_sub_interface(self.stacked_page_edit, AppIcons.Edit.icon(), "View & Edit")
+        self.add_sub_interface(self.stacked_page_export, AppIcons.DocumentArrowRight.icon(), "Results")
 
         qrouter.setDefaultRouteKey(self.stackedWidget, self.stacked_page_import.objectName())
         self.navigation_interface.setExpandWidth(250)
@@ -142,7 +142,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dialog_meta.container_additional_metadata.setLayout(layout)
         self.data_tree_widget_additional_metadata = data_tree_widget
 
-        self.btn_export_all_results.setIcon(Icons.ArrowExportLtr.icon())
+        self.btn_export_all_results.setIcon(AppIcons.ArrowExportLtr.icon())
         self.btn_export_all_results.clicked.connect(lambda: self.sig_export_requested.emit("hdf5"))
 
         # self.web_view.load("https://fred-kr.github.io/signal-editor-v2/")
@@ -181,14 +181,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.console_window = console_window
 
     def _setup_actions(self) -> None:
-        self.action_show_section_summary = QtGui.QAction(Icons.Info.icon(), "Show Section Summary", self)
+        self.action_show_section_summary = QtGui.QAction(AppIcons.Info.icon(), "Show Section Summary", self)
 
         self.action_toggle_whats_this_mode = QtWidgets.QWhatsThis().createAction(self)
-        self.action_toggle_whats_this_mode.setIcon(Icons.Question.icon())
+        self.action_toggle_whats_this_mode.setIcon(AppIcons.Question.icon())
 
-        self.action_export_to_csv = qfw.Action(Icons.ArrowExportLtr.icon(), "Export to CSV")
-        self.action_export_to_xlsx = qfw.Action(Icons.ArrowExportLtr.icon(), "Export to XLSX")
-        self.action_export_to_hdf5 = qfw.Action(Icons.ArrowExportLtr.icon(), "Export to HDF5")
+        self.action_export_to_csv = qfw.Action(AppIcons.ArrowExportLtr.icon(), "Export to CSV")
+        self.action_export_to_xlsx = qfw.Action(AppIcons.ArrowExportLtr.icon(), "Export to XLSX")
+        self.action_export_to_hdf5 = qfw.Action(AppIcons.ArrowExportLtr.icon(), "Export to HDF5")
 
         self.action_toggle_auto_scaling.setChecked(True)
 
@@ -310,7 +310,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
     @QtCore.Slot(QtCore.QPoint)
     def show_data_view_context_menu(self, pos: QtCore.QPoint) -> None:
         menu = qfw.RoundMenu(parent=self.table_view_import_data)
-        action = QtGui.QAction(Icons.ArrowSync.icon(), "Refresh", self.table_view_import_data)
+        action = QtGui.QAction(AppIcons.ArrowSync.icon(), "Refresh", self.table_view_import_data)
         action.triggered.connect(self.sig_table_refresh_requested.emit)
         menu.addAction(action)
         menu.exec(QtGui.QCursor.pos())
@@ -326,7 +326,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             return
         menu = qfw.RoundMenu(parent=table_view)
         action_copy_table = qfw.Action(
-            Icons.Copy.icon(),
+            AppIcons.Copy.icon(),
             "Copy to Clipboard",
             triggered=lambda: table_view.model().df.write_clipboard(),  # type: ignore
         )
