@@ -1,7 +1,6 @@
 import os
 
 import qfluentwidgets as qfw
-import stackprinter
 from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
 from pyside_widgets import DataTreeWidgetContainer, OverlayWidget
@@ -423,9 +422,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if msg_log_level >= threshold:
             traceback_text = "No details available"
             if record_dict["exception"] is not None:
-                traceback_text = stackprinter.format(record_dict["exception"])  # type: ignore
+                traceback_text = str(record_dict["exception"])
 
-            msg_box.setDetailedText(traceback_text)  # type: ignore
+            msg_box.setDetailedText(traceback_text)
 
         msg_box.exec()
 

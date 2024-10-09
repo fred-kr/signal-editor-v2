@@ -355,12 +355,6 @@ class Section:
         self._manual_peak_edits.sort_and_deduplicate()
         return self._manual_peak_edits
 
-    # def update_sampling_rate(self, sampling_rate: int, **kwargs: t.Unpack[_t.RollingRateKwargsDict]) -> None:
-    #     self.sampling_rate = sampling_rate
-    #     with contextlib.suppress(Exception):
-    #         self.update_rate_data(**kwargs)
-    #     self._processing_parameters.sampling_rate = sampling_rate
-
     def filter_signal(
         self,
         pipeline: PreprocessPipeline | None = None,
