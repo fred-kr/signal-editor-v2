@@ -8,16 +8,14 @@ from pyside_widgets import DataTreeWidgetContainer, OverlayWidget
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 
 from ...ui.ui_main_window import Ui_MainWindow
-from .. import type_defs as _t
-from ..config import Config
-from ..constants import INDEX_COL
-from ..enum_defs import LogLevel
-from .docks_dialogs import (
+from .. import _type_defs as _t
+from .._app_config import conf
+from .._constants import INDEX_COL
+from .._enums import LogLevel
+from .dialogs import (
     MetadataDialog,
-    ParameterInputsDock,
-    SectionListDock,
-    StatusMessageDock,
 )
+from .docks import ParameterInputsDock, SectionListDock, StatusMessageDock
 from .icons import SignalEditorIcons as Icons
 
 
@@ -331,7 +329,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         action_copy_table = qfw.Action(
             Icons.Copy.icon(),
             "Copy to Clipboard",
-            triggered=lambda: table_view.model().df.write_clipboard(),
+            triggered=lambda: table_view.model().df.write_clipboard(),  # type: ignore
         )
         menu.addAction(action_copy_table)
         menu.addAction(self.action_export_to_csv)
@@ -370,16 +368,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_sections.btn_container.setVisible(show)
 
     def write_settings(self) -> None:
-        config = Config()
-        config.internal.window_geometry = self.saveGeometry()
-        config.internal.window_state = self.saveState()
+        conf.internal.window_geometry = self.saveGeometry()
+        conf.internal.window_state = self.saveState()
 
-        config.save()
+        conf.save()
 
     def read_settings(self) -> None:
-        config = Config()
-        self.restoreGeometry(config.internal.window_geometry)
-        self.restoreState(config.internal.window_state)
+        self.restoreGeometry(conf.internal.window_geometry)
+        self.restoreState(conf.internal.window_state)
 
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:
@@ -427,9 +423,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         if msg_log_level >= threshold:
             traceback_text = "No details available"
             if record_dict["exception"] is not None:
-                traceback_text = stackprinter.format(record_dict["exception"])
+                traceback_text = stackprinter.format(record_dict["exception"])  # type: ignore
 
-            msg_box.setDetailedText(traceback_text)
+            msg_box.setDetailedText(traceback_text)  # type: ignore
 
         msg_box.exec()
 

@@ -2,23 +2,78 @@ import enum
 import typing as t
 
 import qfluentwidgets as qfw
-from PySide6 import QtCore, QtWidgets
+from loguru import logger
+from PySide6 import QtCore, QtGui, QtWidgets
 
-from ...constants import NOT_SET_OPTION
-
-from ....ui.ui_parameter_inputs import Ui_ParameterInputs
-from ... import type_defs as _t
-from ...enum_defs import (
+from ...ui.ui_parameter_inputs import Ui_ParameterInputs
+from .. import _type_defs as _t
+from .._constants import COMBO_BOX_NO_SELECTION
+from .._enums import (
     FilterMethod,
     IncompleteWindowMethod,
+    LogLevel,
     NK2ECGPeakDetectionMethod,
     PeakDetectionMethod,
     PreprocessPipeline,
     StandardizationMethod,
     WFDBPeakDirection,
 )
-from ..icons import SignalEditorIcons as Icons
-from ._default_method_parameters import PEAK_DETECTION, PROCESSING
+from ._widget_defaults import PEAK_DETECTION, PROCESSING
+from .icons import SignalEditorIcons as Icons
+
+
+class LoggingWindow(qfw.TextEdit):
+    sig_log_message: t.ClassVar[QtCore.Signal] = QtCore.Signal(str, enum.IntEnum, dict)
+
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setReadOnly(True)
+        self.setLineWrapMode(QtWidgets.QTextEdit.LineWrapMode.NoWrap)
+        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.setFont(QtGui.QFont("Roboto Mono", 10))
+        logger.add(
+            self.append_html,
+            format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {message}",
+            backtrace=True,
+            diagnose=True,
+        )
+
+        self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_context_menu)
+        self.sig_log_message.connect(self.append)
+        self.action_clear_log = qfw.Action("Clear Log", parent=self)
+        self.action_clear_log.triggered.connect(self.clear)
+
+    @QtCore.Slot(QtCore.QPoint)
+    def show_context_menu(self, pos: QtCore.QPoint) -> None:
+        menu = qfw.RoundMenu(parent=self)
+        menu.addAction(self.action_clear_log)
+        menu.exec(self.mapToGlobal(pos))
+
+    def append_html(self, message: str) -> None:
+        record_dict: _t.LogRecordDict = message.record  # type: ignore
+        level = LogLevel[record_dict["level"].name]
+
+        self.sig_log_message.emit(message, level, record_dict)
+
+    @QtCore.Slot(str, int, str)
+    def append(self, message: str, log_level: LogLevel, record_dict: _t.LogRecordDict) -> None:
+        self.moveCursor(QtGui.QTextCursor.MoveOperation.End)
+        self.textCursor().insertHtml(f"{message}<br>")
+        self.moveCursor(QtGui.QTextCursor.MoveOperation.End)
+
+
+class StatusMessageDock(QtWidgets.QDockWidget):
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setObjectName("StatusMessageDock")
+        self.setWindowTitle("Status Log")
+        self.setVisible(False)
+        self.toggleViewAction().setIcon(Icons.Status.icon())
+
+        self.log_text_box = LoggingWindow(self)
+        self.setWindowIcon(Icons.History.icon())
+        self.setWidget(self.log_text_box)
 
 
 def _fill_combo_box_with_enum(combo_box: qfw.ComboBox, enum_class: t.Type[enum.Enum], allow_none: bool = False) -> None:
@@ -27,7 +82,7 @@ def _fill_combo_box_with_enum(combo_box: qfw.ComboBox, enum_class: t.Type[enum.E
         combo_box.addItem(enum_value.name, userData=enum_value.value)
 
     if allow_none:
-        combo_box.insertItem(0, NOT_SET_OPTION, userData=None)
+        combo_box.insertItem(0, COMBO_BOX_NO_SELECTION, userData=None)
 
 
 def _reset_widget(widget: QtWidgets.QWidget | QtCore.QObject) -> None:
@@ -37,9 +92,9 @@ def _reset_widget(widget: QtWidgets.QWidget | QtCore.QObject) -> None:
     if not hasattr(widget, "default_value"):
         return
     if isinstance(widget, (qfw.CheckBox, QtWidgets.QCheckBox, qfw.SwitchButton)):
-        widget.setChecked(widget.default_value)
+        widget.setChecked(widget.default_value)  # type: ignore
     else:
-        widget.setValue(widget.default_value)
+        widget.setValue(widget.default_value)  # type: ignore
 
 
 class ParameterInputs(QtWidgets.QWidget, Ui_ParameterInputs):
@@ -416,3 +471,83 @@ class ParameterInputsDock(QtWidgets.QDockWidget):
                 widget.setChecked(default_value)
             else:
                 widget.setValue(default_value)
+
+
+class SectionListView(qfw.ListView):
+    sig_delete_current_item: t.ClassVar[QtCore.Signal] = QtCore.Signal(QtCore.QModelIndex)
+    sig_show_summary: t.ClassVar[QtCore.Signal] = QtCore.Signal(QtCore.QModelIndex)
+
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setSelectRightClickedRow(True)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
+        self.setSelectionRectVisible(True)
+        self.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+
+    @QtCore.Slot()
+    def emit_delete_current_request(self) -> None:
+        index = self.currentIndex()
+        self.sig_delete_current_item.emit(index)
+
+    @QtCore.Slot()
+    def emit_show_summary_request(self) -> None:
+        index = self.currentIndex()
+        self.sig_show_summary.emit(index)
+
+
+class SectionListWidget(QtWidgets.QWidget):
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+        layout = QtWidgets.QVBoxLayout()
+
+        self.list_view = SectionListView()
+
+        label_active_section = qfw.StrongBodyLabel("Active Section: ", self)
+        layout.addWidget(label_active_section)
+        self.label_active_section = label_active_section
+
+        command_bar = qfw.CommandBar()
+        command_bar.setToolButtonStyle(QtCore.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
+        command_bar.setObjectName("command_bar_section_list")
+        layout.addWidget(command_bar)
+        self.command_bar = command_bar
+
+        confirm_cancel_btns = QtWidgets.QWidget()
+        confirm_cancel_layout = QtWidgets.QHBoxLayout(confirm_cancel_btns)
+        confirm_cancel_layout.setContentsMargins(0, 0, 0, 0)
+
+        confirm_btn = qfw.PushButton(icon=Icons.CheckmarkCircle.icon(), text="Confirm")
+        confirm_cancel_layout.addWidget(confirm_btn)
+        self.btn_confirm = confirm_btn
+
+        cancel_btn = qfw.PushButton(icon=Icons.DismissCircle.icon(), text="Cancel")
+        confirm_cancel_layout.addWidget(cancel_btn)
+        self.btn_cancel = cancel_btn
+
+        self.btn_container = confirm_cancel_btns
+        confirm_cancel_btns.setLayout(confirm_cancel_layout)
+        layout.addWidget(confirm_cancel_btns)
+
+        layout.addWidget(self.list_view)
+        self.main_layout = layout
+        self.setLayout(layout)
+
+
+class SectionListDock(QtWidgets.QDockWidget):
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+        self.setVisible(False)
+        self.setObjectName("SectionListDock")
+        self.setWindowTitle("Section List")
+        self.setWindowIcon(Icons.SignalEditor.icon())
+
+        self._widget = SectionListWidget()
+        self.list_view = self._widget.list_view
+        self.command_bar = self._widget.command_bar
+        self.label_active_section = self._widget.label_active_section
+        self.btn_confirm = self._widget.btn_confirm
+        self.btn_cancel = self._widget.btn_cancel
+        self.btn_container = self._widget.btn_container
+
+        self.setWidget(self._widget)

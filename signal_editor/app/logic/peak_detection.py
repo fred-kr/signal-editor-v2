@@ -1,3 +1,12 @@
+"""
+Various functions for detecting peaks in (bio)signal data.
+
+Most of the functions are adapted from the NeuroKit2 package, with improved type annotations and where necessary
+modified to fit the needs of this application.
+"""
+# Since neurokit2 isn't typed all that well, we disable the following checks to appease the type checker.
+
+# pyright: reportUnknownVariableType=false, reportUnknownArgumentType=false
 import typing as t
 
 import neurokit2 as nk
@@ -8,8 +17,8 @@ import wfdb.processing as wp
 from loguru import logger
 from scipy import ndimage, signal
 
-from .. import type_defs as _t
-from ..enum_defs import PeakDetectionMethod, SmoothingKernels, WFDBPeakDirection
+from .. import _type_defs as _t
+from .._enums import PeakDetectionMethod, SmoothingKernels, WFDBPeakDirection
 
 
 def _fit_loess(
@@ -353,6 +362,7 @@ def find_peaks(
     method_parameters: _t.PeakDetectionMethodParameters,
 ) -> npt.NDArray[np.int32]:
     if method == PeakDetectionMethod.LocalMaxima:
+        method_parameters = t.cast(_t.PeaksLocalMaxima, method_parameters)
         return find_extrema(
             sig,
             search_radius=method_parameters["search_radius"],
@@ -360,6 +370,7 @@ def find_peaks(
             min_peak_distance=method_parameters["min_distance"],
         )
     elif method == PeakDetectionMethod.LocalMinima:
+        method_parameters = t.cast(_t.PeaksLocalMinima, method_parameters)
         return find_extrema(
             sig,
             search_radius=method_parameters["search_radius"],
@@ -367,6 +378,7 @@ def find_peaks(
             min_peak_distance=method_parameters["min_distance"],
         )
     elif method == PeakDetectionMethod.PPGElgendi:
+        method_parameters = t.cast(_t.PeaksPPGElgendi, method_parameters)
         return _find_peaks_ppg_elgendi(
             sig,
             sampling_rate,
@@ -376,6 +388,7 @@ def find_peaks(
             mindelay=method_parameters["mindelay"],
         )
     elif method == PeakDetectionMethod.WFDBXQRS:
+        method_parameters = t.cast(_t.PeaksWFDBXQRS, method_parameters)
         return _find_peaks_xqrs(
             sig,
             sampling_rate,
@@ -384,6 +397,7 @@ def find_peaks(
             peak_dir=WFDBPeakDirection(method_parameters["peak_dir"]),
         )
     elif method == PeakDetectionMethod.ECGNeuroKit2:
+        method_parameters = t.cast(_t.PeaksECGNeuroKit2, method_parameters)
         assert "method" in method_parameters, "NeuroKit2 ECG peak detection method not specified"
         return _find_peaks_nk_ecg(method_parameters, sig, sampling_rate)
 

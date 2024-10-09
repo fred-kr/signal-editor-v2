@@ -6,7 +6,7 @@ from pathlib import Path
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from . import type_defs as _t
+from . import _type_defs as _t
 
 MICRO: t.Final = "\u03bc"
 

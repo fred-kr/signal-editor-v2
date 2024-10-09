@@ -7,7 +7,7 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "pyarrow>=17.0.0",
     "wfdb>=4.1.2",
-    "polars>=1.8.2",
+    "polars>=1.9.0",
     "mne>=1.8.0",
     "pywavelets>=1.7.0",
     "scipy>=1.14.1",
@@ -18,7 +18,7 @@ dependencies = [
     "loguru>=0.7.2",
     "neurokit2>=0.2.10",
     "darkdetect>=0.8.0",
-    "pyside6-fluent-widgets>=1.6.5",
+    "pyside6-fluent-widgets>=1.6.6",
     "attrs>=24.2.0",
     "ts2vg>=1.2.4",
     "tables>=3.10.1",
@@ -26,8 +26,8 @@ dependencies = [
     "stackprinter>=0.2.12",
     "pyside-config",
     "pyside-widgets",
-    "rich[jupyter]>=13.8.1",
-    "pyside6>=6.7.2",
+    "rich[jupyter]>=13.9.2",
+    "pyside6>=6.7.3",
     "numpy>=2.0.2",
     "pyopengl",
     "pyopengl_accelerate",
@@ -35,16 +35,16 @@ dependencies = [
 
 [tool.uv]
 dev-dependencies = [
-    "ipython>=8.27.0",
+    "ipython>=8.28.0",
     "pyinstaller>=6.10.0",
     "pyinstaller-hooks-contrib>=2024.8",
     "sourcery>=1.23.0",
-    "ruff>=0.6.8",
+    "ruff>=0.6.9",
     "python-dotenv>=1.0.1",
     "pytest>=8.3.3",
-    "mkdocs-material>=9.5.38",
-    "pyright>=1.1.382",
-    "xmltodict>=0.13.0",
+    "mkdocs-material>=9.5.39",
+    "pyright>=1.1.383",
+    "xmltodict>=0.14.0",
 ]
 
 [tool.uv.sources]

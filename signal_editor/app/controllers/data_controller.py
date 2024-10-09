@@ -8,15 +8,14 @@ import polars as pl
 from loguru import logger
 from PySide6 import QtCore
 
-from .. import type_defs as _t
-from ..config import Config
-from ..constants import NOT_SET_OPTION
-from ..enum_defs import InputFileFormat, TextFileSeparator
+from .. import _type_defs as _t
+from .._constants import COMBO_BOX_NO_SELECTION
+from .._enums import InputFileFormat, TextFileSeparator
+from .._app_config import conf
 from ..logic.file_io import detect_sampling_rate, read_edf
 from ..logic.metadata import FileMetadata
 from ..logic.section import DetailedSectionResult, Section, SectionID
-from ..models.data_frame_model import DataFrameModel
-from ..models.section_list_model import SectionListModel
+from ..models import DataFrameModel, SectionListModel
 
 
 @attrs.define(frozen=True, repr=True)
@@ -75,7 +74,7 @@ class DataController(QtCore.QObject):
         self.result_model_rate = DataFrameModel(self)
 
         try:
-            self._txt_separator = Config().data.text_file_separator
+            self._txt_separator = conf.data.text_file_separator
         except Exception:
             self._txt_separator = TextFileSeparator.Tab
         self._reader_funcs = {
@@ -157,7 +156,7 @@ class DataController(QtCore.QObject):
         if file_path.suffix not in InputFileFormat:
             logger.error(f"Unsupported file format: {file_path.suffix}. Allowed formats: {', '.join(InputFileFormat)}")
 
-        config = Config()
+        config = conf
         # last_sampling_rate = config.internal.LastSamplingRate
         last_signal_col = config.internal.last_signal_column
         last_info_col = config.internal.last_info_column
@@ -206,12 +205,12 @@ class DataController(QtCore.QObject):
             return
         suffix = self.metadata.file_format
         file_path = self.metadata.file_path
-        separator = Config().data.text_file_separator
+        separator = conf.data.text_file_separator
 
         signal_col = self.metadata.signal_column
         info_col = self.metadata.info_column
         columns = [signal_col]
-        if info_col != NOT_SET_OPTION:
+        if info_col != COMBO_BOX_NO_SELECTION:
             columns.append(info_col)
         row_index_col = "index"
         if row_index_col in columns:
@@ -253,7 +252,6 @@ class DataController(QtCore.QObject):
         data = self.base_df.filter(pl.col("index").is_between(start, stop))
         section = Section(data, self.metadata.signal_column, info_column=self.metadata.info_column)
         self.sections.add_section(section)
-        # self.sig_section_added.emit(section.section_id)
 
     def delete_section(self, idx: QtCore.QModelIndex) -> None:
         self.sections.remove_section(idx)
@@ -280,7 +278,7 @@ class DataController(QtCore.QObject):
         )
 
         info_col = self.metadata.info_column
-        if info_col == NOT_SET_OPTION:
+        if info_col == COMBO_BOX_NO_SELECTION:
             info_col = None
 
         metadata = SelectedFileMetadata(

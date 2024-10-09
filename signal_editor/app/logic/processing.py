@@ -1,3 +1,6 @@
+# Since neurokit2 isn't typed all that well, we disable the following checks to appease the type checker.
+
+# pyright: reportUnknownVariableType=false, reportUnknownArgumentType=false
 import typing as t
 
 import neurokit2 as nk
@@ -6,8 +9,8 @@ import numpy.typing as npt
 import polars as pl
 from scipy import signal
 
-from .. import type_defs as _t
-from ..enum_defs import FilterMethod
+from .. import _type_defs as _t
+from .._enums import FilterMethod
 
 
 def rolling_standardize(sig: pl.Series, window_size: int) -> pl.Series:

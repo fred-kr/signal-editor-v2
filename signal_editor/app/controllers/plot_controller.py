@@ -6,9 +6,9 @@ import polars as pl
 import pyqtgraph as pg
 from PySide6 import QtCore, QtGui, QtWidgets
 
-from ..config import Config
-from ..enum_defs import PointSymbols, SVGColors
-from ..gui.plot_items import ClickableRegionItem, CustomScatterPlotItem, EditingViewBox, TimeAxisItem
+from .._app_config import conf
+from .._enums import PointSymbols, SVGColors
+from ..gui.graphic_items import ClickableRegionItem, CustomScatterPlotItem, EditingViewBox, TimeAxisItem
 from ..utils import make_qbrush, make_qpen, safe_disconnect
 
 if t.TYPE_CHECKING:
@@ -67,8 +67,8 @@ class PlotController(QtCore.QObject):
 
         self.pw_main.getPlotItem().getViewBox().setXLink("rate_plot")
 
-        self.set_background_color(Config().plot.background_color)
-        self.set_foreground_color(Config().plot.foreground_color)
+        self.set_background_color(conf.plot.background_color)
+        self.set_foreground_color(conf.plot.foreground_color)
 
     def _setup_region_selector(self) -> None:
         brush_col = SVGColors.LimeGreen.qcolor()
@@ -110,7 +110,7 @@ class PlotController(QtCore.QObject):
 
     def _init_signal_curve(self) -> None:
         pen = make_qpen(SVGColors.DodgerBlue, width=1)
-        click_width = Config().plot.line_click_width
+        click_width = conf.plot.line_click_width
         signal = pg.PlotDataItem(
             pen=pen,
             skipFiniteCheck=True,
@@ -344,7 +344,7 @@ class PlotController(QtCore.QObject):
         self.pw_rate.invalidateScene()
 
     def remove_selection_rect(self) -> None:
-        vb: EditingViewBox = self.pw_main.plotItem.vb
+        vb: EditingViewBox = self.pw_main.plotItem.vb  # type: ignore
         vb.selection_box = None
         vb.mapped_selection_rect = None
 
@@ -383,7 +383,7 @@ class PlotController(QtCore.QObject):
         if x_data is None or y_data is None:
             return
 
-        scatter_search_radius = Config().plot.click_radius
+        scatter_search_radius = conf.plot.click_radius
 
         left_index = np.searchsorted(x_data, click_x - scatter_search_radius, side="left")
         right_index = np.searchsorted(x_data, click_x + scatter_search_radius, side="right")
@@ -413,7 +413,7 @@ class PlotController(QtCore.QObject):
 
     @QtCore.Slot()
     def remove_peaks_in_selection(self) -> None:
-        vb: EditingViewBox = self.pw_main.plotItem.vb
+        vb: EditingViewBox = self.pw_main.plotItem.vb  # type: ignore
         if vb.mapped_selection_rect is None or self.peak_scatter is None or self.block_clicks:
             self.remove_selection_rect()
             return
@@ -430,7 +430,7 @@ class PlotController(QtCore.QObject):
         self.remove_selection_rect()
 
     def get_selection_area(self) -> QtCore.QRectF | None:
-        return self.pw_main.plotItem.vb.mapped_selection_rect
+        return self.pw_main.plotItem.vb.mapped_selection_rect  # type: ignore
 
     @QtCore.Slot(QtGui.QColor)
     def set_background_color(self, color: QtGui.QColor) -> None:
@@ -451,8 +451,8 @@ class PlotController(QtCore.QObject):
                 rate_axis.setTextPen(color)
 
     def apply_settings(self) -> None:
-        bg_color = Config().plot.background_color
-        fg_color = Config().plot.foreground_color
+        bg_color = conf.plot.background_color
+        fg_color = conf.plot.foreground_color
 
         self.set_background_color(bg_color)
         self.set_foreground_color(fg_color)

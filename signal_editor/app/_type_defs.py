@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import numpy.typing as npt
 
-from .enum_defs import (
+from ._enums import (
     FilterMethod,
     IncompleteWindowMethod,
     NK2ECGPeakDetectionMethod,
@@ -21,7 +21,7 @@ if t.TYPE_CHECKING:
     from loguru import RecordException, RecordFile, RecordLevel, RecordProcess, RecordThread
     from PySide6 import QtCore, QtGui
 
-    from ..app.logic.section import SectionID
+    from .logic.section import SectionID
 
 type PGColor = t.Union[str, int, float, tuple[int, int, int], tuple[int, int, int, int], "QtGui.QColor", SVGColors]
 

@@ -8,9 +8,9 @@ import polars.selectors as cs
 import tables as tb
 from loguru import logger
 
-from .. import type_defs as _t
-from ..constants import NOT_SET_OPTION
-from ..enum_defs import PeakDetectionMethod
+from .. import _type_defs as _t
+from .._constants import COMBO_BOX_NO_SELECTION
+from .._enums import PeakDetectionMethod
 
 
 def _infer_time_column(lf: pl.LazyFrame, contains: t.Sequence[str] | None = None) -> list[str]:
@@ -136,12 +136,12 @@ def read_edf(
     filter_all_zeros: bool = True,
 ) -> pl.DataFrame:
     if info_channel is None:
-        info_channel = NOT_SET_OPTION
+        info_channel = COMBO_BOX_NO_SELECTION
     raw_edf = mne.io.read_raw_edf(file_path, include=[data_channel, info_channel])
     channel_names: list[str] = raw_edf.ch_names  # type: ignore
     data = raw_edf.get_data(start=start, stop=stop).squeeze()  # type: ignore
     out = pl.from_numpy(data, channel_names)  # type: ignore
-    if info_channel != NOT_SET_OPTION:
+    if info_channel != COMBO_BOX_NO_SELECTION:
         out = out.select(pl.col(data_channel), pl.col(info_channel))
         if filter_all_zeros:
             out = out.filter((pl.col(data_channel) != 0) & (pl.col(info_channel) != 0))

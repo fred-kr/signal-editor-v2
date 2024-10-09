@@ -1,4 +1,5 @@
 import functools
+import threading
 import typing as t
 
 import attrs
@@ -8,13 +9,8 @@ from pyside_config import ConfigBase, EditorWidgetInfo, config
 from pyside_config.properties import ComboBoxProperties, SpinBoxProperties
 from pyside_config.widgets import EnumComboBox
 
-from .constants import STYLE_SHEET_ENUM_COMBO_BOX
-from .enum_defs import RateComputationMethod, TextFileSeparator
+from ._enums import RateComputationMethod, TextFileSeparator
 from .utils import app_dir_posix, search_enum
-
-type _Index = QtCore.QModelIndex | QtCore.QPersistentModelIndex
-
-ItemDataRole = QtCore.Qt.ItemDataRole
 
 app_dir = app_dir_posix()
 
@@ -85,6 +81,35 @@ class PlotConfig(ConfigBase):
             "description": "Area in pixels around a click on the line that will be considered a click on the line.",
         },
     )
+
+
+STYLE_SHEET_ENUM_COMBO_BOX = """
+QComboBox {
+    min-width: 150px;
+    min-height: 31px;
+    border-radius: 5px;
+    padding: 5px 31px 6px 11px;
+    color: rgba(0, 0, 0, 0.6063);
+    background-color: rgba(255, 255, 255, 0.7);
+    text-align: left;
+    outline: none;
+}
+QComboBox:hover {
+    background-color: rgba(249, 249, 249, 0.5);
+}
+QComboBox:pressed {
+    background-color: rgba(249, 249, 249, 0.3);
+    color: rgba(0, 0, 0, 0.63);
+}
+QComboBox:disabled {
+    color: rgba(0, 0, 0, 0.36);
+    background: rgba(249, 249, 249, 0.3);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+QComboBox QAbstractItemView::item {
+    min-height: 31px;
+}
+"""
 
 
 @config
@@ -223,17 +248,23 @@ class InternalConfig(ConfigBase):
 
 
 class Config:
-    __slots__ = ("_plot", "_editing", "_data", "_internal")
+    __slots__ = ("_initialized", "_plot", "_editing", "_data", "_internal")
 
     _instance: "Config | None" = None
+    _lock = threading.Lock()
     _groups = frozenset({"plot", "editing", "data", "internal"})
 
     def __new__(cls) -> "Config":
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+            return cls._instance
 
     def __init__(self) -> None:
+        if hasattr(self, "_initialized"):
+            return
+
+        self._initialized = True
         self._plot = PlotConfig.from_qsettings()
         self._editing = EditingConfig.from_qsettings()
         self._data = DataConfig.from_qsettings()
@@ -318,7 +349,10 @@ class Config:
 
         return dlg
 
-    def get_snapshot(self) -> dict[str, t.Any]:
+    def create_snapshot(self) -> dict[str, t.Any]:
+        """
+        Create a snapshot of the current config values.
+        """
         return {
             "plot": attrs.asdict(self.plot),
             "editing": attrs.asdict(self.editing),
@@ -330,3 +364,8 @@ class Config:
         for grp, grp_dict in snapshot.items():
             for key, value in grp_dict.items():
                 self.update_value(grp, key, value)
+
+
+conf = Config()
+
+__all__ = ["conf"]

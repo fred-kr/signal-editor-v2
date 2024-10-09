@@ -1,39 +1,8 @@
-import typing as t
+from PySide6 import QtCore, QtWidgets
 
-NOT_SET_OPTION: t.Final = "<Not Set>"
-INDEX_COL: t.Final = "index"
-SECTION_INDEX_COL: t.Final = "section_index"
-IS_PEAK_COL: t.Final = "is_peak"
-IS_MANUAL_COL: t.Final = "is_manual"
-RESERVED_COLUMN_NAMES: t.Final = frozenset([NOT_SET_OPTION, INDEX_COL, SECTION_INDEX_COL, IS_PEAK_COL, IS_MANUAL_COL])
-
-STYLE_SHEET_ENUM_COMBO_BOX = """
-QComboBox {
-    min-width: 150px;
-    min-height: 31px;
-    border-radius: 5px;
-    padding: 5px 31px 6px 11px;
-    color: rgba(0, 0, 0, 0.6063);
-    background-color: rgba(255, 255, 255, 0.7);
-    text-align: left;
-    outline: none;
-}
-QComboBox:hover {
-    background-color: rgba(249, 249, 249, 0.5);
-}
-QComboBox:pressed {
-    background-color: rgba(249, 249, 249, 0.3);
-    color: rgba(0, 0, 0, 0.63);
-}
-QComboBox:disabled {
-    color: rgba(0, 0, 0, 0.36);
-    background: rgba(249, 249, 249, 0.3);
-    border: 1px solid rgba(0, 0, 0, 0.06);
-}
-QComboBox QAbstractItemView::item {
-    min-height: 31px;
-}
-"""
+from ...ui.ui_dialog_metadata import Ui_MetadataDialog
+from .._app_config import conf
+from .icons import SignalEditorIcons as Icons
 
 STYLE_SHEET_SPIN_BOX = """
 SpinBox[requiresInput="false"] {
@@ -54,7 +23,6 @@ SpinBox[requiresInput="true"]:focus {
     border-radius: 5px;
 }
 """
-
 STYLE_SHEET_COMBO_BOX = """
 ComboBox[requiresInput="false"] {
     border: 2px solid mediumseagreen;
@@ -111,3 +79,32 @@ ComboBox {
     color: rgba(0, 0, 0, 0.6063);
 }
 """
+
+
+class MetadataDialog(QtWidgets.QDialog, Ui_MetadataDialog):
+    sig_property_has_changed = QtCore.Signal(dict)
+
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+
+        self.setupUi(self)
+
+        self.combo_box_signal_column.setStyleSheet(STYLE_SHEET_COMBO_BOX)
+        self.spin_box_sampling_rate.setStyleSheet(STYLE_SHEET_SPIN_BOX)
+        self.setWindowIcon(Icons.SignalEditor.icon())
+        self.btn_accept.clicked.connect(self.accept)
+        self.btn_reject.clicked.connect(self.reject)
+
+    @QtCore.Slot()
+    def accept(self) -> None:
+        metadata_dict: dict[str, int | str] = {
+            "sampling_rate": self.spin_box_sampling_rate.value(),
+            "signal_column": self.combo_box_signal_column.currentText(),
+            "info_column": self.combo_box_info_column.currentText(),
+        }
+        self.sig_property_has_changed.emit(metadata_dict)
+        conf.internal.last_signal_column = self.combo_box_signal_column.currentText()
+        conf.internal.last_info_column = self.combo_box_info_column.currentText()
+        conf.internal.last_sampling_rate = self.spin_box_sampling_rate.value()
+
+        super().accept()
