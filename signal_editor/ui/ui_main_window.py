@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'main_window.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.2
+## Created by: Qt User Interface Compiler version 6.7.3
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -16,7 +16,6 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QFormLayout, QFrame,
     QGridLayout, QGroupBox, QHBoxLayout, QHeaderView,
     QMainWindow, QMenuBar, QSizePolicy, QStackedWidget,
@@ -314,7 +313,7 @@ class Ui_MainWindow(object):
         self.table_view_import_data = TableView(self.container_loaded_data_table)
         self.table_view_import_data.setObjectName(u"table_view_import_data")
         self.table_view_import_data.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.table_view_import_data.setProperty("showDropIndicator", False)
+        self.table_view_import_data.setProperty(u"showDropIndicator", False)
         self.table_view_import_data.setDragDropOverwriteMode(False)
         self.table_view_import_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_view_import_data.setCornerButtonEnabled(False)
@@ -419,17 +418,6 @@ class Ui_MainWindow(object):
         self.gridLayout_3.setColumnStretch(1, 1)
         self.gridLayout_3.setColumnStretch(2, 1)
         self.stackedWidget.addWidget(self.stacked_page_export)
-        self.stacked_page_test = QWidget()
-        self.stacked_page_test.setObjectName(u"stacked_page_test")
-        self.gridLayout_6 = QGridLayout(self.stacked_page_test)
-        self.gridLayout_6.setObjectName(u"gridLayout_6")
-        self.web_view = QWebEngineView(self.stacked_page_test)
-        self.web_view.setObjectName(u"web_view")
-        self.web_view.setUrl(QUrl(u"about:blank"))
-
-        self.gridLayout_6.addWidget(self.web_view, 0, 0, 1, 1)
-
-        self.stackedWidget.addWidget(self.stacked_page_test)
 
         self.h_layout_centralwidget.addWidget(self.stackedWidget)
 

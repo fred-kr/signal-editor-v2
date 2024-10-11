@@ -20,7 +20,7 @@ dependencies = [
     "pyqtgraph",
     "pyside-config",
     "pyside-widgets",
-    "pyside6>=6.7.3",
+    "pyside6==6.7.3",
     "numpy>=2.1.2",
     "pyopengl",
     "pyopengl_accelerate",
@@ -33,7 +33,7 @@ dev-dependencies = [
     "sourcery>=1.23.0",
     "ruff>=0.6.9",
     "pytest>=8.3.3",
-    "mkdocs-material>=9.5.39",
+    "mkdocs-material>=9.5.40",
     "pyright>=1.1.384",
     "rich[jupyter]>=13.9.2",
 

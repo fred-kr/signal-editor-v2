@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'dialog_metadata.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.7.2
+## Created by: Qt User Interface Compiler version 6.8.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -103,8 +103,8 @@ class Ui_MetadataDialog(object):
         self.spin_box_sampling_rate.setStyleSheet(u"")
         self.spin_box_sampling_rate.setFrame(False)
         self.spin_box_sampling_rate.setMaximum(10000)
-        self.spin_box_sampling_rate.setProperty("mandatoryField", True)
-        self.spin_box_sampling_rate.setProperty("requiresInput", False)
+        self.spin_box_sampling_rate.setProperty(u"mandatoryField", True)
+        self.spin_box_sampling_rate.setProperty(u"requiresInput", False)
 
         self.formLayout.setWidget(2, QFormLayout.FieldRole, self.spin_box_sampling_rate)
 
@@ -117,8 +117,8 @@ class Ui_MetadataDialog(object):
         self.combo_box_signal_column = ComboBox(self.container_form_layout)
         self.combo_box_signal_column.setObjectName(u"combo_box_signal_column")
         self.combo_box_signal_column.setMinimumSize(QSize(0, 31))
-        self.combo_box_signal_column.setProperty("mandatoryField", True)
-        self.combo_box_signal_column.setProperty("requiresInput", False)
+        self.combo_box_signal_column.setProperty(u"mandatoryField", True)
+        self.combo_box_signal_column.setProperty(u"requiresInput", False)
 
         self.formLayout.setWidget(3, QFormLayout.FieldRole, self.combo_box_signal_column)
 

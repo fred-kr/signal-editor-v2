@@ -145,8 +145,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.btn_export_all_results.setIcon(AppIcons.ArrowExportLtr.icon())
         self.btn_export_all_results.clicked.connect(lambda: self.sig_export_requested.emit("hdf5"))
 
-        # self.web_view.load("https://fred-kr.github.io/signal-editor-v2/")
-
         self.stackedWidget.setCurrentIndex(0)
 
     def _setup_docks(self) -> None:  # sourcery skip: extract-duplicate-method

@@ -36,15 +36,11 @@ if __name__ == "__main__":
     if args.console:
         os.environ["DEV"] = "1"
 
-    # Check if running from executable (production) or via python script (development)
-    # os.environ["DEV"] = "1" if getattr(sys, "frozen", False) else "0"
-
     pg.setConfigOptions(
         useOpenGL=use_opengl,
         enableExperimental=use_opengl,
-        useNumba=use_opengl,
+        # useNumba=use_opengl,
         segmentedLineMode="on",
-        
     )
 
     app = SignalEditor(sys.argv)
