@@ -3,21 +3,21 @@ import typing as t
 
 import attrs
 import qfluentwidgets as qfw
-from PySide6 import QtCore, QtGui, QtWidgets
-from pyside_config import ConfigBase, EditorWidgetInfo, config
-from pyside_config.properties import ComboBoxProperties, SpinBoxProperties
-from pyside_config.widgets import EnumComboBox
+from PySide6 import QtCore, QtGui
+from pyside_config import ComboBoxProperties, ConfigBase, EditorWidgetInfo, SpinBoxProperties, config, define_config
+from pyside_widgets.enum_combo_box import EnumComboBox
 
 from ._enums import RateComputationMethod, TextFileSeparator
-from .utils import app_dir_posix, search_enum
+from .utils import app_dir_posix, make_qcolor, search_enum
 
 app_dir = app_dir_posix()
 
 
-@config
+@define_config
 class PlotConfig(ConfigBase):
     background_color: QtGui.QColor = attrs.field(
         default=QtGui.QColor("#000000"),
+        converter=make_qcolor,
         metadata={
             "editor": EditorWidgetInfo(
                 label="Background Color",
@@ -30,6 +30,7 @@ class PlotConfig(ConfigBase):
     )
     foreground_color: QtGui.QColor = attrs.field(
         default=QtGui.QColor("#969696"),
+        converter=make_qcolor,
         metadata={
             "editor": EditorWidgetInfo(
                 label="Foreground Color",
@@ -82,10 +83,13 @@ class PlotConfig(ConfigBase):
     )
 
 
+config.update_name("PlotConfig", "plot")
+plot: PlotConfig = config.get("plot")
+del PlotConfig
+
+
 STYLE_SHEET_ENUM_COMBO_BOX = """
-QComboBox {
-    min-width: 150px;
-    min-height: 31px;
+EnumComboBox {
     border-radius: 5px;
     padding: 5px 31px 6px 11px;
     color: rgba(0, 0, 0, 0.6063);
@@ -93,25 +97,25 @@ QComboBox {
     text-align: left;
     outline: none;
 }
-QComboBox:hover {
+EnumComboBox:hover {
     background-color: rgba(249, 249, 249, 0.5);
 }
-QComboBox:pressed {
+EnumComboBox:pressed {
     background-color: rgba(249, 249, 249, 0.3);
     color: rgba(0, 0, 0, 0.63);
 }
-QComboBox:disabled {
+EnumComboBox:disabled {
     color: rgba(0, 0, 0, 0.36);
     background: rgba(249, 249, 249, 0.3);
     border: 1px solid rgba(0, 0, 0, 0.06);
 }
-QComboBox QAbstractItemView::item {
+EnumComboBox QAbstractItemView::item {
     min-height: 31px;
 }
 """
 
 
-@config
+@define_config
 class EditingConfig(ConfigBase):
     filter_stacking: bool = attrs.field(
         default=False,
@@ -145,7 +149,12 @@ class EditingConfig(ConfigBase):
     )
 
 
-@config
+config.update_name("EditingConfig", "editing")
+editing: EditingConfig = config.get("editing")
+del EditingConfig
+
+
+@define_config
 class DataConfig(ConfigBase):
     float_precision: int = attrs.field(
         default=3,
@@ -185,7 +194,12 @@ class DataConfig(ConfigBase):
     )
 
 
-@config
+config.update_name("DataConfig", "data")
+data: DataConfig = config.get("data")
+del DataConfig
+
+
+@define_config
 class InternalConfig(ConfigBase):
     last_input_dir: str = attrs.field(
         default=app_dir,
@@ -246,114 +260,13 @@ class InternalConfig(ConfigBase):
     )
 
 
-class Config:
-    __slots__ = ("_plot", "_editing", "_data", "_internal")
+config.update_name("InternalConfig", "internal")
+internal: InternalConfig = config.get("internal")
+del InternalConfig
 
-    _instance: "Config | None" = None
-    _groups = frozenset({"plot", "editing", "data", "internal"})
 
-    def __new__(cls) -> "Config":
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
-
-    def __init__(self) -> None:
-        self._plot = PlotConfig.from_qsettings()
-        self._editing = EditingConfig.from_qsettings()
-        self._data = DataConfig.from_qsettings()
-        self._internal = InternalConfig.from_qsettings()
-
-    @property
-    def plot(self) -> PlotConfig:
-        return self._plot
-
-    @property
-    def editing(self) -> EditingConfig:
-        return self._editing
-
-    @property
-    def data(self) -> DataConfig:
-        return self._data
-
-    @property
-    def internal(self) -> InternalConfig:
-        return self._internal
-
-    def update_value(self, group: str | None, key: str, value: t.Any) -> None:
-        if group is None:
-            return
-        group = group.lower()
-        if group not in self._groups:
-            return
-        if group == "plot":
-            if hasattr(self._plot, key):
-                setattr(self._plot, key, value)
-        elif group == "editing":
-            if hasattr(self._editing, key):
-                setattr(self._editing, key, value)
-        elif group == "data":
-            if hasattr(self._data, key):
-                setattr(self._data, key, value)
-        elif group == "internal":
-            if hasattr(self._internal, key):
-                setattr(self._internal, key, value)
-
-        self.save()
-
-    def save(self) -> None:
-        for group in self._groups:
-            config: ConfigBase = getattr(self, group)
-            config.to_qsettings()
-
-    def reset(self, *, include_internal: bool = False) -> None:
-        for group in self._groups:
-            if not include_internal and group == "internal":
-                continue
-            config: ConfigBase = getattr(self, group)
-            config.restore_defaults()
-
-    def create_editor_widgets(
-        self, parent: QtWidgets.QWidget | None = None, show_internal: bool = False
-    ) -> QtWidgets.QDialog:
-        dlg = QtWidgets.QDialog(parent)
-        dlg.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
-        dlg.setModal(True)
-        dlg.setWindowTitle("Settings")
-
-        btn_box = QtWidgets.QDialogButtonBox(
-            QtWidgets.QDialogButtonBox.StandardButton.Save | QtWidgets.QDialogButtonBox.StandardButton.Cancel
-        )
-        btn_box.accepted.connect(dlg.accept)
-        btn_box.rejected.connect(dlg.reject)
-
-        tab_widget = QtWidgets.QTabWidget()
-        tab_widget.addTab(self.plot.create_editor(), "Plot")
-        tab_widget.addTab(self.editing.create_editor(), "Editing")
-        tab_widget.addTab(self.data.create_editor(), "Data")
-
-        if show_internal:
-            tab_widget.addTab(self.internal.create_editor(), "Internal")
-
-        layout = QtWidgets.QVBoxLayout()
-        layout.addWidget(tab_widget)
-        layout.addWidget(btn_box)
-        dlg.setLayout(layout)
-        dlg.resize(800, 600)
-
-        return dlg
-
-    def create_snapshot(self) -> dict[str, t.Any]:
-        """
-        Create a snapshot of the current config values.
-        """
-        return {
-            "plot": attrs.asdict(self.plot),
-            "editing": attrs.asdict(self.editing),
-            "data": attrs.asdict(self.data),
-            "internal": attrs.asdict(self.internal),
-        }
-
-    def restore_snapshot(self, snapshot: dict[str, t.Any]) -> None:
-        for grp, grp_dict in snapshot.items():
-            for key, value in grp_dict.items():
-                self.update_value(grp, key, value)
+class Config(t.NamedTuple):
+    plot = plot
+    editing = editing
+    data = data
+    internal = internal

@@ -28,13 +28,13 @@ class FileMetadata:
             self.required_fields.append("sampling_rate")
 
         self._columns = columns
-        signal_col = Config().internal.last_signal_column
+        signal_col = Config.internal.last_signal_column
         if signal_col not in self._columns or signal_col in RESERVED_COLUMN_NAMES:
             self.required_fields.append("signal_column")
             signal_col = self._columns[0]
         self._signal_column = signal_col
 
-        info_col = Config().internal.last_info_column
+        info_col = Config.internal.last_info_column
         if info_col not in self._columns:
             info_col = COMBO_BOX_NO_SELECTION
         self._info_column = info_col

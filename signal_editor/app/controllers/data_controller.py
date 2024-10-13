@@ -8,6 +8,7 @@ import polars as pl
 from loguru import logger
 from PySide6 import QtCore
 
+# from pyside_config import config
 from .. import _type_defs as _t
 from .._app_config import Config
 from .._constants import COMBO_BOX_NO_SELECTION
@@ -74,7 +75,7 @@ class DataController(QtCore.QObject):
         self.result_model_rate = DataFrameModel(self)
 
         try:
-            self._txt_separator = Config().data.text_file_separator
+            self._txt_separator = Config.data.text_file_separator
         except Exception:
             self._txt_separator = TextFileSeparator.Tab
         self._reader_funcs = {
@@ -156,10 +157,9 @@ class DataController(QtCore.QObject):
         if file_path.suffix not in InputFileFormat:
             logger.error(f"Unsupported file format: {file_path.suffix}. Allowed formats: {', '.join(InputFileFormat)}")
 
-        config = Config()
         # last_sampling_rate = config.internal.LastSamplingRate
-        last_signal_col = config.internal.last_signal_column
-        last_info_col = config.internal.last_info_column
+        last_signal_col = Config.internal.last_signal_column
+        last_info_col = Config.internal.last_info_column
 
         other_info: dict[str, t.Any] = {}
 
@@ -205,7 +205,7 @@ class DataController(QtCore.QObject):
             return
         suffix = self.metadata.file_format
         file_path = self.metadata.file_path
-        separator = Config().data.text_file_separator
+        separator = Config.data.text_file_separator
 
         signal_col = self.metadata.signal_column
         info_col = self.metadata.info_column

@@ -18,11 +18,11 @@ class DataFrameModel(QtCore.QAbstractTableModel):
     def __init__(self, parent: QtCore.QObject | None = None) -> None:
         super().__init__(parent)
         self.df = pl.DataFrame()
-        self._float_precision = Config().data.float_precision
+        self._float_precision = Config.data.float_precision
 
     def set_df(self, df: pl.DataFrame) -> None:
         self.beginResetModel()
-        self._float_precision = Config().data.float_precision
+        self._float_precision = Config.data.float_precision
         self.df = df
         self.endResetModel()
 
@@ -188,7 +188,7 @@ class FileListModel(QtCore.QAbstractListModel):
 
     @QtCore.Slot()
     def update_config(self) -> None:
-        Config().internal.recent_files = self._recent_files
+        Config.internal.recent_files = self._recent_files
 
 
 class SectionListModel(QtCore.QAbstractListModel):

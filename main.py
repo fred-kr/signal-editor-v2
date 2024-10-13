@@ -10,6 +10,11 @@ if __name__ == "__main__":
     import os
     import sys
 
+    from PySide6 import QtWidgets
+
+    QtWidgets.QApplication.setOrganizationName("AWI")
+    QtWidgets.QApplication.setApplicationName("Signal Editor")
+
     import pyqtgraph as pg
     from loguru import logger
 
@@ -39,7 +44,6 @@ if __name__ == "__main__":
     pg.setConfigOptions(
         useOpenGL=use_opengl,
         enableExperimental=use_opengl,
-        # useNumba=use_opengl,
         segmentedLineMode="on",
     )
 

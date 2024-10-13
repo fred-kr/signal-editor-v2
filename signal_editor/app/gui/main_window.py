@@ -3,6 +3,7 @@ import os
 import qfluentwidgets as qfw
 from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
+from pyside_config import config
 from pyside_widgets import DataTreeWidgetContainer, OverlayWidget
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 
@@ -365,14 +366,14 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.dock_sections.btn_container.setVisible(show)
 
     def write_settings(self) -> None:
-        Config().internal.window_geometry = self.saveGeometry()
-        Config().internal.window_state = self.saveState()
+        Config.internal.window_geometry = self.saveGeometry()
+        Config.internal.window_state = self.saveState()
 
-        Config().save()
+        config.save()
 
     def read_settings(self) -> None:
-        self.restoreGeometry(Config().internal.window_geometry)
-        self.restoreState(Config().internal.window_state)
+        self.restoreGeometry(Config.internal.window_geometry)
+        self.restoreState(Config.internal.window_state)
 
     @QtCore.Slot(QtGui.QCloseEvent)
     def closeEvent(self, event: QtGui.QCloseEvent) -> None:

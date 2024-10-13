@@ -44,7 +44,7 @@ class ProcessingParameters:
     standardization_parameters: _t.StandardizationParameters | None = attrs.field(default=None)
     peak_detection_method: PeakDetectionMethod | None = attrs.field(default=None)
     peak_detection_method_parameters: _t.PeakDetectionMethodParameters | None = attrs.field(default=None)
-    rate_computation_method: RateComputationMethod = attrs.field(default=Config().editing.rate_computation_method)
+    rate_computation_method: RateComputationMethod = attrs.field(default=Config.editing.rate_computation_method)
 
     def to_dict(self) -> _t.ProcessingParametersDict:
         return {
@@ -67,7 +67,7 @@ class ProcessingParameters:
         self.standardization_parameters = None
         self.peak_detection_method = None
         self.peak_detection_method_parameters = None
-        self.rate_computation_method = Config().editing.rate_computation_method
+        self.rate_computation_method = Config.editing.rate_computation_method
 
     def __repr__(self) -> str:
         return pprint.pformat(self.to_dict(), indent=2, width=120, underscore_numbers=True)
@@ -258,7 +258,7 @@ class Section:
             .collect()
         )
 
-        self.sampling_rate = Config().internal.last_sampling_rate
+        self.sampling_rate = Config.internal.last_sampling_rate
         self.global_bounds: tuple[int, int] = (
             self.data.item(0, INDEX_COL),
             self.data.item(-1, INDEX_COL),
@@ -383,7 +383,7 @@ class Section:
         powerline : int | float
             The powerline frequency to use, only used with method="powerline"
         """
-        allow_stacking = Config().editing.filter_stacking
+        allow_stacking = Config.editing.filter_stacking
         if self.is_filtered and not allow_stacking:
             logger.warning(
                 "Applying filter to raw signal. To apply to already processed signal, enable\n\n'Settings > Preferences > Editing > FilterStacking'."
@@ -614,7 +614,7 @@ class Section:
             logger.debug("Rate data is already up to date.")
             return
 
-        method = Config().editing.rate_computation_method
+        method = Config.editing.rate_computation_method
         if method == RateComputationMethod.RollingWindow:
             if rr_params is None:
                 rr_params = {}
@@ -763,7 +763,7 @@ class Section:
             sampling_rate=self.sampling_rate,
             global_bounds=self.global_bounds,
             processing_parameters=self._processing_parameters,
-            rate_computation_method=Config().editing.rate_computation_method,
+            rate_computation_method=Config.editing.rate_computation_method,
         )
 
     def get_peak_pos(self) -> pl.DataFrame:

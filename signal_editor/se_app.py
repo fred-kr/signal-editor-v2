@@ -8,6 +8,7 @@ import numpy.typing as npt
 import xlsxwriter
 from loguru import logger
 from PySide6 import QtCore, QtWidgets
+from pyside_config import config
 
 from .app import _type_defs as _t
 from .app._app_config import Config
@@ -88,16 +89,17 @@ class SignalEditor(QtWidgets.QApplication):
     sig_peaks_updated: t.ClassVar[QtCore.Signal] = QtCore.Signal()
 
     def __init__(self, args: list[str]) -> None:
+        # self.setOrganizationName("AWI")
+        # self.setApplicationName("Signal Editor")
+
         super().__init__(args)
-        self.setOrganizationName("AWI")
-        self.setApplicationName("Signal Editor")
         self.mw = MainWindow()
         self.data = DataController(self)
         self.plot = PlotController(self, self.mw)
 
         self.thread_pool = QtCore.QThreadPool.globalInstance()
 
-        self.recent_files_model = FileListModel(Config().internal.recent_files, max_files=10, parent=self)
+        self.recent_files_model = FileListModel(Config.internal.recent_files, max_files=10, parent=self)
         self.recent_files_model.validate_files()
 
         self.mw.list_view_recent_files.setModel(self.recent_files_model)
@@ -157,11 +159,11 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot()
     def _on_action_show_settings(self) -> None:
-        snapshot = Config().create_snapshot()
+        snapshot = config.create_snapshot()
 
-        settings_dlg = Config().create_editor_widgets(self.mw)
+        settings_dlg = config.create_editor(self.mw)
         settings_dlg.accepted.connect(self.apply_settings)
-        settings_dlg.rejected.connect(lambda: Config().restore_snapshot(snapshot))
+        settings_dlg.rejected.connect(lambda: config.restore_snapshot(snapshot))
         settings_dlg.open()
 
     @QtCore.Slot()
@@ -211,7 +213,7 @@ class SignalEditor(QtWidgets.QApplication):
         cas = self.data.active_section
         pos = cas.get_peak_pos()
         self.plot.set_peak_data(pos.get_column(SECTION_INDEX_COL), pos.get_column(cas.processed_signal_name))
-        if Config().editing.rate_computation_method == RateComputationMethod.RollingWindow:
+        if Config.editing.rate_computation_method == RateComputationMethod.RollingWindow:
             rolling_rate_kwargs = self.mw.dock_parameters.get_rate_calculation_params()
             cas.update_rate_data(rr_params=rolling_rate_kwargs)
         else:
@@ -486,7 +488,7 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot()
     def open_file(self) -> None:
-        default_data_dir = Config().internal.last_input_dir
+        default_data_dir = Config.internal.last_input_dir
         file_path, _ = QtWidgets.QFileDialog.getOpenFileName(
             self.mw,
             "Open File",
@@ -498,7 +500,7 @@ class SignalEditor(QtWidgets.QApplication):
 
         self.close_file()
 
-        Config().internal.last_input_dir = Path(file_path).parent.resolve().as_posix()
+        Config.internal.last_input_dir = Path(file_path).parent.resolve().as_posix()
         self._on_file_opened(file_path)
 
     def _on_file_opened(self, file_path: str) -> None:
@@ -545,9 +547,9 @@ class SignalEditor(QtWidgets.QApplication):
         self.mw.dialog_meta.combo_box_signal_column.setEnabled(False)
         self.mw.dialog_meta.combo_box_info_column.setEnabled(False)
 
-        Config().internal.last_signal_column = self.data.metadata.signal_column
-        Config().internal.last_info_column = self.data.metadata.info_column
-        Config().internal.last_sampling_rate = self.data.metadata.sampling_rate
+        Config.internal.last_signal_column = self.data.metadata.signal_column
+        Config.internal.last_info_column = self.data.metadata.info_column
+        Config.internal.last_sampling_rate = self.data.metadata.sampling_rate
 
     @QtCore.Slot()
     def close_file(self) -> None:
@@ -612,7 +614,7 @@ class SignalEditor(QtWidgets.QApplication):
     @QtCore.Slot(str)
     def export_result(self, format: str) -> None:
         dir_path = (
-            Path(Config().internal.last_output_dir)
+            Path(Config.internal.last_output_dir)
             / f"Result_{self.data.active_section.signal_name.title()}_{Path(self.data.metadata.file_path).stem}"
         )
         out_path, _ = QtWidgets.QFileDialog.getSaveFileName(
@@ -623,7 +625,7 @@ class SignalEditor(QtWidgets.QApplication):
         )
         if not out_path:
             return
-        Config().internal.last_output_dir = Path(out_path).parent.resolve().as_posix()
+        Config.internal.last_output_dir = Path(out_path).parent.resolve().as_posix()
 
         if format == "csv":
             if self.mw.tab_widget_result_views.currentIndex() == 0:

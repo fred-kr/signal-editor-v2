@@ -9,7 +9,7 @@ from PySide6 import QtCore, QtGui, QtWidgets
 from .._app_config import Config
 from .._enums import PointSymbols, SVGColors
 from ..gui.graphic_items import ClickableRegionItem, CustomScatterPlotItem, EditingViewBox, TimeAxisItem
-from ..utils import make_qbrush, make_qpen, safe_disconnect
+from ..utils import make_qbrush, make_qcolor, make_qpen, safe_disconnect
 
 if t.TYPE_CHECKING:
     from pyqtgraph.GraphicsScene import mouseEvents
@@ -67,8 +67,8 @@ class PlotController(QtCore.QObject):
 
         self.pw_main.getPlotItem().getViewBox().setXLink("rate_plot")
 
-        self.set_background_color(Config().plot.background_color)
-        self.set_foreground_color(Config().plot.foreground_color)
+        self.set_background_color(Config.plot.background_color)
+        self.set_foreground_color(Config.plot.foreground_color)
 
     def _setup_region_selector(self) -> None:
         brush_col = SVGColors.LimeGreen.qcolor()
@@ -110,7 +110,7 @@ class PlotController(QtCore.QObject):
 
     def _init_signal_curve(self) -> None:
         pen = make_qpen(SVGColors.DodgerBlue, width=1)
-        click_width = Config().plot.line_click_width
+        click_width = Config.plot.line_click_width
         signal = pg.PlotDataItem(
             pen=pen,
             skipFiniteCheck=True,
@@ -383,7 +383,7 @@ class PlotController(QtCore.QObject):
         if x_data is None or y_data is None:
             return
 
-        scatter_search_radius = Config().plot.click_radius
+        scatter_search_radius = Config.plot.click_radius
 
         left_index = np.searchsorted(x_data, click_x - scatter_search_radius, side="left")
         right_index = np.searchsorted(x_data, click_x + scatter_search_radius, side="right")
@@ -432,13 +432,12 @@ class PlotController(QtCore.QObject):
     def get_selection_area(self) -> QtCore.QRectF | None:
         return self.pw_main.plotItem.vb.mapped_selection_rect  # type: ignore
 
-    @QtCore.Slot(QtGui.QColor)
-    def set_background_color(self, color: QtGui.QColor) -> None:
-        self.pw_main.setBackground(color)
-        self.pw_rate.setBackground(color)
+    def set_background_color(self, color: str | QtGui.QColor) -> None:
+        self.pw_main.setBackground(make_qcolor(color))
+        self.pw_rate.setBackground(make_qcolor(color))
 
-    @QtCore.Slot(QtGui.QColor)
-    def set_foreground_color(self, color: QtGui.QColor) -> None:
+    def set_foreground_color(self, color: str | QtGui.QColor) -> None:
+        color = make_qcolor(color)
         for ax in {"left", "top", "right", "bottom"}:
             edit_axis = self.pw_main.plotItem.getAxis(ax)
             rate_axis = self.pw_rate.plotItem.getAxis(ax)
@@ -451,8 +450,8 @@ class PlotController(QtCore.QObject):
                 rate_axis.setTextPen(color)
 
     def apply_settings(self) -> None:
-        bg_color = Config().plot.background_color
-        fg_color = Config().plot.foreground_color
+        bg_color = make_qcolor(Config.plot.background_color)
+        fg_color = make_qcolor(Config.plot.foreground_color)
 
         self.set_background_color(bg_color)
         self.set_foreground_color(fg_color)
