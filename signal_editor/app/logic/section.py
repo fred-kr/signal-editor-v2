@@ -14,7 +14,6 @@ from .. import _type_defs as _t
 from .._app_config import Config
 from .._constants import INDEX_COL, IS_MANUAL_COL, IS_PEAK_COL, SECTION_INDEX_COL
 from .._enums import (
-    FilterMethod,
     IncompleteWindowMethod,
     PeakDetectionMethod,
     PreprocessPipeline,
@@ -22,18 +21,7 @@ from .._enums import (
 )
 from ..utils import format_long_sequence
 from .peak_detection import find_peaks
-from .processing import (
-    ecg_clean_biosppy,
-    ecg_clean_elgendi,
-    ecg_clean_engzee,
-    ecg_clean_hamilton,
-    ecg_clean_neurokit,
-    ecg_clean_pantompkins,
-    ecg_clean_vgraph,
-    filter_signal,
-    ppg_clean_elgendi,
-    standardize_signal,
-)
+from .processing import apply_cleaning_pipeline, filter_signal, standardize_signal
 
 
 @attrs.define
@@ -399,44 +387,14 @@ class Section:
             self._processing_parameters.processing_pipeline = pipeline
             if method is None:
                 filtered = sig_data
-
             else:
                 filtered, filter_params = filter_signal(sig_data, self.sampling_rate, **kwargs)
                 self._is_filtered = True
-        elif pipeline == PreprocessPipeline.PPGElgendi:
-            filtered, filter_params = ppg_clean_elgendi(sig_data, self.sampling_rate)
-            self._is_processed = True
-        elif pipeline == PreprocessPipeline.ECGNeuroKit2:
-            pow_line = kwargs.get("powerline", 50)
-            filtered = ecg_clean_neurokit(sig_data, self.sampling_rate, powerline=int(pow_line))
-            # Applies two filters to the signal: first a highpass butterworth, then a powerline filter
-            filter_params = {
-                "lowcut": 0.5,
-                "method": str(FilterMethod.Butterworth),
-                "order": 5,
-            }
-            additional_params = {
-                "method": str(FilterMethod.Powerline),
-                "powerline": pow_line,
-            }
-            self._is_processed = True
-        elif pipeline == PreprocessPipeline.ECGBioSPPy:
-            filtered, filter_params = ecg_clean_biosppy(sig_data, self.sampling_rate)
-            self._is_processed = True
-        elif pipeline == PreprocessPipeline.ECGPanTompkins1985:
-            filtered, filter_params = ecg_clean_pantompkins(sig_data, self.sampling_rate)
-            self._is_processed = True
-        elif pipeline == PreprocessPipeline.ECGHamilton2002:
-            filtered, filter_params = ecg_clean_hamilton(sig_data, self.sampling_rate)
-            self._is_processed = True
-        elif pipeline == PreprocessPipeline.ECGElgendi2010:
-            filtered, filter_params = ecg_clean_elgendi(sig_data, self.sampling_rate)
-            self._is_processed = True
-        elif pipeline == PreprocessPipeline.ECGEngzeeMod2012:
-            filtered, filter_params = ecg_clean_engzee(sig_data, self.sampling_rate)
-            self._is_processed = True
-        elif pipeline == PreprocessPipeline.ECGVisibilityGraph:
-            filtered, filter_params = ecg_clean_vgraph(sig_data, self.sampling_rate)
+        else:
+            result = apply_cleaning_pipeline(sig_data, self.sampling_rate, pipeline)
+            filtered = result.cleaned
+            filter_params = result.parameters
+            additional_params = result.additional_parameters
             self._is_processed = True
 
         self._processing_parameters.processing_pipeline = pipeline
@@ -520,7 +478,7 @@ class Section:
 
         Parameters
         ----------
-        peaks : ndarray
+        peaks : NDArray[np.int32]
             A 1D array of integers representing the indices of the peaks in the processed signal.
         update_rate : bool
             Whether to recalculate the signal rate based on the new peaks. Defaults to True.
@@ -608,7 +566,8 @@ class Section:
             If True, calculates summary statistics in addition to the rate, by default False
         force : bool, optional
             If True, recalculates the rate even if the `_rate_is_synced` flag is True, by default False
-
+        rr_params : dict, optional
+            Additional parameters to pass to the `rolling_rate` function, by default None
         """
         if not force and (self._rate_is_synced or self.is_locked):
             logger.debug("Rate data is already up to date.")
@@ -621,17 +580,19 @@ class Section:
             self._calc_rate_rolling(full_info=full_info, **rr_params)
         elif method == RateComputationMethod.Instantaneous:
             self._calc_rate_instant()
-        else:
-            raise ValueError(f"Invalid rate computation method: {method}")
 
         self._rate_is_synced = True
 
-    def _calc_rate_instant(
-        self, peaks: npt.NDArray[np.int32] | pl.Series | None = None, desired_length: int | None = None
-    ) -> None:
-        if peaks is None:
-            peaks = self.peaks_local
-        peaks = np.asarray(peaks, dtype=np.int32)
+    def _calc_rate_instant(self, desired_length: int | None = None) -> None:
+        """
+        Calculate signal rate (per minute) from the detected peaks. See `neurokit2.signal_rate` for more details.
+
+        Parameters
+        ----------
+        desired_length : int, optional
+            The desired length of the output array, by default None. See `neurokit2.signal_rate` for more details.
+        """
+        peaks = self.peaks_local.to_numpy()
         if peaks.shape[0] < 2:
             logger.warning(
                 "The currently selected peak detection method finds less than 2 peaks. "
@@ -782,7 +743,7 @@ class Section:
         self.update_rate_data(full_info=True, force=True, rr_params=rr_params)
         self.set_locked(True)
 
-    def get_detailed_result(self) -> DetailedSectionResult:
+    def get_result(self) -> DetailedSectionResult:
         metadata = self.get_metadata()
         self._add_manual_peak_edits_column()
         section_df = self.data
@@ -805,6 +766,25 @@ class Section:
         include_intervals: bool = False,
         include_info: bool = False,
     ) -> None:
+        """
+        Update the peak data for the section.
+
+        Parameters
+        ----------
+        include_global : bool, optional
+            Whether to add the global index values to the peak dataframe, by default False
+        include_times : bool, optional
+            Whether to add the time values to the peak dataframe, by default False
+        include_intervals : bool, optional
+            Whether to add a column for the intervals between peaks, by default False
+        include_info : bool, optional
+            Whether to add a column with the values in the `info_name` column, by default False
+
+        Raises
+        ------
+        RuntimeError
+            If the number of detected peaks is less than 3.
+        """
         section_peaks = self.peaks_local
 
         if section_peaks.len() < 3:
@@ -829,6 +809,12 @@ class Section:
         self.peak_data = peak_df
 
     def reset_signal(self) -> None:
+        """
+        Resets the signal data and processing parameters to their initial state.
+
+        This function clears any manual peak edits, resets various flags related to the signal processing, and updates
+        the signal data to its default values. It ensures that the signal is in a clean state for further processing.
+        """
         self.data = (
             self.data.lazy()
             .with_columns(
@@ -845,6 +831,12 @@ class Section:
         self._processing_parameters.reset()
 
     def reset_peaks(self) -> None:
+        """
+        Resets the peak indicators in the signal data to their default values.
+
+        This function clears any manual peak edits and updates the signal data to indicate that there are no peaks. It
+        also resets the processing parameters specifically related to peak detection.
+        """
         self.data = (
             self.data.lazy()
             .with_columns(

@@ -288,17 +288,18 @@ wheels = [
 
 [[package]]
 name = "fastexcel"
-version = "0.11.6"
+version = "0.12.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pyarrow" },
 ]
+sdist = { url = "https://files.pythonhosted.org/packages/0a/8a/fbc318b653dddea167185c0946381d88b09c2bdb7aeb473b651c38542efd/fastexcel-0.12.0.tar.gz", hash = "sha256:1624e2c6385fe08d5ac21392c3a5bd91156fbeebaf6986e6e7f684adc0e0ecbe", size = 37815 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/23/c7/375d8eab4129c4de94e411382d6bdb1ef5909b95a88a0b432fec2deb3475/fastexcel-0.11.6-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:0c2991ce5ca3c05adab22e00fbc4fffc697366deac8a555c9032a17b35024a43", size = 1067215 },
-    { url = "https://files.pythonhosted.org/packages/7e/cd/c15cef397286bac33eb98e945a26375e76bb3222584d111e2e22b0330954/fastexcel-0.11.6-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:c3f39d97d05f583c3b022707aa6109f7b004e94cf4bbb4a07ac4f55488700aac", size = 1047911 },
-    { url = "https://files.pythonhosted.org/packages/79/2d/e476d01e391bd8bd9c45077618a87fba1f684cbe825712282ff013243073/fastexcel-0.11.6-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:b15b6725d18413fb256b7b183ecac92248f4cce9c814f6f857182329e7f2a159", size = 1190475 },
-    { url = "https://files.pythonhosted.org/packages/45/f1/f8803e74f3783e031e3c262a9ab60f2013cea82279301038052d54cb7c3c/fastexcel-0.11.6-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:51d186c7cfb4e5dcf222c5128bfae15f87b22b2aa7834e622c445ce03dd94a2e", size = 1172553 },
-    { url = "https://files.pythonhosted.org/packages/01/09/882cb7b8557a958e09c8ace62f0513ea83dbb8222b50ec1620270b2bd552/fastexcel-0.11.6-cp38-abi3-win_amd64.whl", hash = "sha256:cc60bc6dd86c95b1b0ab4cbde9e3e4ee47fe53a0341332b75cc981aef1062078", size = 918505 },
+    { url = "https://files.pythonhosted.org/packages/46/7a/6eec06c88be04a8b3e5b3e3bf90a7d574459a5aab876f3cfe6378436894c/fastexcel-0.12.0-cp38-abi3-macosx_10_12_x86_64.whl", hash = "sha256:d40b2c8ccb122e15cf89c2b972a679a937eca3e90b3e69c6db24f3666b11cff9", size = 1151074 },
+    { url = "https://files.pythonhosted.org/packages/b5/0b/eba1c5f38f5311bf171296e13b5715ddb12b0b0a3a58deee981768bd2d80/fastexcel-0.12.0-cp38-abi3-macosx_11_0_arm64.whl", hash = "sha256:2aade78706bc3f7a5861083267a038a49e809f3ee1abe6cceda7b8420092e61e", size = 1112729 },
+    { url = "https://files.pythonhosted.org/packages/d7/b6/59a6405c653aad8ed6e9b3b65c74f76514e2426efe26341c42293e4ef009/fastexcel-0.12.0-cp38-abi3-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:993b905e61b98eb45a33409ac78b8a14b28bd3a3bcf9a4f36c1dae3e65c3dafb", size = 1275021 },
+    { url = "https://files.pythonhosted.org/packages/53/22/d3efd9b26706b1d38cd8356cbc5a5fd46c0e0a558793451b45b6a7978f4d/fastexcel-0.12.0-cp38-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:de72203c67702010931bc4730ddb35904841b0ad0d8b6654c69b62c3d7b19eca", size = 1264310 },
+    { url = "https://files.pythonhosted.org/packages/f6/68/1243dda77c7af328047335c01d1b0e3cb37423e324d4158362ee054d6cc9/fastexcel-0.12.0-cp38-abi3-win_amd64.whl", hash = "sha256:e5326fae6c28e2239dfdc19bc2cbb121b509e6f0aefa4e6e43b0cf84bd33dea6", size = 995049 },
 ]
 
 [[package]]
@@ -3676,7 +3677,7 @@ wheels = [
 [[package]]
 name = "pyside-config"
 version = "0.1.0"
-source = { git = "https://github.com/fred-kr/pyside-config.git#247bbdf1a05baf379d3a1983b802345dad1e28d3" }
+source = { git = "https://github.com/fred-kr/pyside-config.git#3d5bb1a8193835760f78ead0f292d24a2bfd2b35" }
 dependencies = [
     { name = "attrs" },
     { name = "bidict" },

@@ -4,7 +4,8 @@ import typing as t
 import attrs
 import qfluentwidgets as qfw
 from PySide6 import QtCore, QtGui
-from pyside_config import ComboBoxProperties, ConfigBase, EditorWidgetInfo, SpinBoxProperties, config, define_config
+from pyside_config import config
+from pyside_config.properties import ComboBoxProperties, SpinBoxProperties
 from pyside_widgets.enum_combo_box import EnumComboBox
 
 from ._enums import RateComputationMethod, TextFileSeparator
@@ -13,39 +14,41 @@ from .utils import app_dir_posix, make_qcolor, search_enum
 app_dir = app_dir_posix()
 
 
-@define_config
-class PlotConfig(ConfigBase):
+@config.config_define
+class PlotConfig:
     background_color: QtGui.QColor = attrs.field(
         default=QtGui.QColor("#000000"),
         converter=make_qcolor,
         metadata={
-            "editor": EditorWidgetInfo(
+            "editor": config.EditorWidgetInfo(
                 label="Background Color",
                 widget_factory=functools.partial(qfw.ColorPickerButton, color=QtGui.QColor("#000000"), title=""),
                 sig_value_changed="colorChanged",
                 set_value_method="setColor",
             ),
             "description": "Plot background color.",
+            config.QTYPE_KEY: QtGui.QColor,
         },
     )
     foreground_color: QtGui.QColor = attrs.field(
         default=QtGui.QColor("#969696"),
         converter=make_qcolor,
         metadata={
-            "editor": EditorWidgetInfo(
+            "editor": config.EditorWidgetInfo(
                 label="Foreground Color",
                 widget_factory=functools.partial(qfw.ColorPickerButton, color=QtGui.QColor("#969696"), title=""),
                 sig_value_changed="colorChanged",
                 set_value_method="setColor",
             ),
             "description": "Plot foreground color.",
+            config.QTYPE_KEY: QtGui.QColor,
         },
     )
     line_click_width: int = attrs.field(
         default=70,
         converter=int,
         metadata={
-            "editor": EditorWidgetInfo(
+            "editor": config.EditorWidgetInfo(
                 label="Line click width",
                 widget_factory=qfw.SpinBox,
                 sig_value_changed="valueChanged",
@@ -65,7 +68,7 @@ class PlotConfig(ConfigBase):
         default=20,
         converter=int,
         metadata={
-            "editor": EditorWidgetInfo(
+            "editor": config.EditorWidgetInfo(
                 label="Click radius",
                 widget_factory=qfw.SpinBox,
                 sig_value_changed="valueChanged",
@@ -115,13 +118,13 @@ EnumComboBox QAbstractItemView::item {
 """
 
 
-@define_config
-class EditingConfig(ConfigBase):
+@config.config_define
+class EditingConfig:
     filter_stacking: bool = attrs.field(
         default=False,
         converter=attrs.converters.to_bool,
         metadata={
-            "editor": EditorWidgetInfo(
+            "editor": config.EditorWidgetInfo(
                 label="Filter stacking",
                 widget_factory=qfw.SwitchButton,
                 sig_value_changed="checkedChanged",
@@ -134,7 +137,7 @@ class EditingConfig(ConfigBase):
         default=RateComputationMethod.RollingWindow,
         converter=functools.partial(search_enum, enum_class=RateComputationMethod),
         metadata={
-            "editor": EditorWidgetInfo(
+            "editor": config.EditorWidgetInfo(
                 label="Rate computation method",
                 widget_factory=functools.partial(EnumComboBox[RateComputationMethod], enum_class=RateComputationMethod),
                 sig_value_changed="sig_current_enum_changed",
@@ -154,13 +157,13 @@ editing: EditingConfig = config.get("editing")
 del EditingConfig
 
 
-@define_config
-class DataConfig(ConfigBase):
+@config.config_define
+class DataConfig:
     float_precision: int = attrs.field(
         default=3,
         converter=int,
         metadata={
-            "editor": EditorWidgetInfo(
+            "editor": config.EditorWidgetInfo(
                 label="Float precision",
                 widget_factory=qfw.SpinBox,
                 sig_value_changed="valueChanged",
@@ -179,7 +182,7 @@ class DataConfig(ConfigBase):
         default=TextFileSeparator.Tab,
         converter=functools.partial(search_enum, enum_class=TextFileSeparator),
         metadata={
-            "editor": EditorWidgetInfo(
+            "editor": config.EditorWidgetInfo(
                 label="Text file separator",
                 widget_factory=functools.partial(EnumComboBox[TextFileSeparator], enum_class=TextFileSeparator),
                 sig_value_changed="sig_current_enum_changed",
@@ -199,8 +202,8 @@ data: DataConfig = config.get("data")
 del DataConfig
 
 
-@define_config
-class InternalConfig(ConfigBase):
+@config.config_define
+class InternalConfig:
     last_input_dir: str = attrs.field(
         default=app_dir,
         metadata={

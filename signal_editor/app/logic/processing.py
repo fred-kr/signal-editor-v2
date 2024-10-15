@@ -10,7 +10,13 @@ import polars as pl
 from scipy import signal
 
 from .. import _type_defs as _t
-from .._enums import FilterMethod
+from .._enums import FilterMethod, PreprocessPipeline
+
+
+class CleaningResult(t.NamedTuple):
+    cleaned: npt.NDArray[np.float64]
+    parameters: _t.SignalFilterParameters
+    additional_parameters: _t.SignalFilterParameters | None = None
 
 
 def rolling_standardize(sig: pl.Series, window_size: int) -> pl.Series:
@@ -163,3 +169,36 @@ def filter_signal(
     out = nk.signal_filter(sig, sampling_rate=sampling_rate, **kwargs)  # type: ignore
 
     return np.asarray(out, dtype=np.float64), kwargs
+
+
+def apply_cleaning_pipeline(
+    sig: npt.NDArray[np.float64], sampling_rate: int, pipeline: PreprocessPipeline
+) -> CleaningResult:
+    additional_params: _t.SignalFilterParameters | None = None
+    if pipeline == PreprocessPipeline.PPGElgendi:
+        cleaned, params = ppg_clean_elgendi(sig, sampling_rate)
+    elif pipeline == PreprocessPipeline.ECGNeuroKit2:
+        cleaned = ecg_clean_neurokit(sig, sampling_rate)
+        params: _t.SignalFilterParameters = {
+            "lowcut": 0.5,
+            "method": str(FilterMethod.Butterworth),
+            "order": 5,
+        }
+        additional_params = {
+            "method": str(FilterMethod.Powerline),
+            "powerline": 50,
+        }
+    elif pipeline == PreprocessPipeline.ECGBioSPPy:
+        cleaned, params = ecg_clean_biosppy(sig, sampling_rate)
+    elif pipeline == PreprocessPipeline.ECGPanTompkins1985:
+        cleaned, params = ecg_clean_pantompkins(sig, sampling_rate)
+    elif pipeline == PreprocessPipeline.ECGHamilton2002:
+        cleaned, params = ecg_clean_hamilton(sig, sampling_rate)
+    elif pipeline == PreprocessPipeline.ECGElgendi2010:
+        cleaned, params = ecg_clean_elgendi(sig, sampling_rate)
+    elif pipeline == PreprocessPipeline.ECGEngzeeMod2012:
+        cleaned, params = ecg_clean_engzee(sig, sampling_rate)
+    elif pipeline == PreprocessPipeline.ECGVisibilityGraph:
+        cleaned, params = ecg_clean_vgraph(sig, sampling_rate)
+
+    return CleaningResult(cleaned, params, additional_params)

@@ -260,7 +260,7 @@ class DataController(QtCore.QObject):
     def get_complete_result(self) -> CompleteResult:
         base_df = self.get_base_section().data
 
-        section_results = {s.section_id: s.get_detailed_result() for s in self.sections.editable_sections}
+        section_results = {s.section_id: s.get_result() for s in self.sections.editable_sections}
 
         section_dfs: list[pl.DataFrame] = []
         for s in self.sections.editable_sections:
