@@ -227,9 +227,8 @@ class ClickableRegionItem(pg.LinearRegionItem):
 
 class CustomScatterPlotItem(pg.ScatterPlotItem):
     """
-    Custom `pyqtgraph.ScatterPlotItem` subclass that fixes an issue where `num_pts` would error when
-    `y` is a single point not enclosed in an object with a `__len__` attribute. Also refactors the
-    code to make use of more modern Python features (3.12+).
+    Custom `pyqtgraph.ScatterPlotItem` subclass that fixes an issue where `num_pts` would error when `y` is a single
+    point not enclosed in an object with a `__len__` attribute.
     """
 
     def addPoints(self, *args: t.Any, **kargs: t.Any) -> None:

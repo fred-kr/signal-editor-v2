@@ -1,10 +1,10 @@
 import os
 
+import pyside_config as qconfig
 import qfluentwidgets as qfw
 from loguru import logger
 from PySide6 import QtCore, QtGui, QtWidgets
-from pyside_config import config
-from pyside_widgets import DataTreeWidgetContainer, OverlayWidget
+from pyside_widgets import OverlayWidget, SearchableDataTreeWidget
 from qfluentwidgets import NavigationInterface, NavigationItemPosition, qrouter
 
 from ...ui.ui_main_window import Ui_MainWindow
@@ -137,7 +137,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.table_view_result_rate.customContextMenuRequested.connect(self.show_result_view_context_menu)
 
         layout = QtWidgets.QVBoxLayout()
-        data_tree_widget = DataTreeWidgetContainer()
+        data_tree_widget = SearchableDataTreeWidget()
         data_tree_widget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding)
         layout.addWidget(data_tree_widget)
         self.dialog_meta.container_additional_metadata.setLayout(layout)
@@ -339,7 +339,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         dlg.setAttribute(QtCore.Qt.WidgetAttribute.WA_DeleteOnClose)
         dlg.setModal(True)
 
-        summary_tree = DataTreeWidgetContainer(allow_edit=False)
+        summary_tree = SearchableDataTreeWidget(allow_edit=False)
         summary_tree.set_data(dict(summary), hide_root=True)
 
         layout = QtWidgets.QVBoxLayout()
@@ -369,7 +369,7 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         Config.internal.window_geometry = self.saveGeometry()
         Config.internal.window_state = self.saveState()
 
-        config.save()
+        qconfig.save()
 
     def read_settings(self) -> None:
         self.restoreGeometry(Config.internal.window_geometry)

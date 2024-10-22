@@ -8,8 +8,7 @@ import numpy.typing as npt
 import xlsxwriter
 from loguru import logger
 from PySide6 import QtCore, QtWidgets
-from pyside_config import config
-
+import pyside_config as qconfig
 from .app import _type_defs as _t
 from .app._app_config import Config
 from .app._constants import SECTION_INDEX_COL
@@ -159,11 +158,11 @@ class SignalEditor(QtWidgets.QApplication):
 
     @QtCore.Slot()
     def _on_action_show_settings(self) -> None:
-        snapshot = config.create_snapshot()
+        snapshot = qconfig.create_snapshot()
 
-        settings_dlg = config.create_editor(self.mw)
+        settings_dlg = qconfig.create_editor(self.mw)
         settings_dlg.accepted.connect(self.apply_settings)
-        settings_dlg.rejected.connect(lambda: config.restore_snapshot(snapshot))
+        settings_dlg.rejected.connect(lambda: qconfig.restore_snapshot(snapshot))
         settings_dlg.open()
 
     @QtCore.Slot()
