@@ -5,10 +5,11 @@ from pathlib import Path
 
 import numpy as np
 import numpy.typing as npt
+import pyside_config as qconfig
 import xlsxwriter
 from loguru import logger
 from PySide6 import QtCore, QtWidgets
-import pyside_config as qconfig
+
 from .app import _type_defs as _t
 from .app._app_config import Config
 from .app._constants import SECTION_INDEX_COL
@@ -88,9 +89,6 @@ class SignalEditor(QtWidgets.QApplication):
     sig_peaks_updated: t.ClassVar[QtCore.Signal] = QtCore.Signal()
 
     def __init__(self, args: list[str]) -> None:
-        # self.setOrganizationName("AWI")
-        # self.setApplicationName("Signal Editor")
-
         super().__init__(args)
         self.mw = MainWindow()
         self.data = DataController(self)
@@ -492,7 +490,7 @@ class SignalEditor(QtWidgets.QApplication):
             self.mw,
             "Open File",
             default_data_dir,
-            filter="Supported Files (*.csv *.txt *.tsv *.xlsx *.feather *.edf)",
+            filter="Supported Files (*.csv *.txt *.tsv *.xls *.xlsx *.feather *.edf)",
         )
         if not file_path:
             return

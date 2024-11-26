@@ -175,7 +175,7 @@ class DataController(QtCore.QObject):
                 sampling_rate = detect_sampling_rate(lf)
             except Exception:
                 sampling_rate = 0
-        elif file_path.suffix == ".xlsx":
+        elif file_path.suffix in {".xls", ".xlsx"}:
             lf = pl.read_excel(file_path).lazy()
             column_names = lf.collect_schema().names()
             try:
@@ -234,7 +234,7 @@ class DataController(QtCore.QObject):
             df = read_edf(Path(file_path), signal_col, info_col)
         elif suffix == ".hdf5":
             raise NotImplementedError("Reading HDF5 files is not yet supported.")
-        elif suffix == ".xlsx":
+        elif suffix in {".xls", ".xlsx"}:
             df = pl.read_excel(file_path, columns=columns)
         else:
             raise NotImplementedError(f"Unsupported file format: {suffix}.")

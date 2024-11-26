@@ -32,6 +32,7 @@ class InputFileFormat(enum.StrEnum):
     CSV = ".csv"
     TXT = ".txt"
     TSV = ".tsv"
+    XLS = ".xls"
     XLSX = ".xlsx"
     FEATHER = ".feather"
     EDF = ".edf"

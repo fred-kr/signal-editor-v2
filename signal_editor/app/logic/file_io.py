@@ -75,12 +75,11 @@ def detect_sampling_rate(
         The polars LazyFrame containing the data.
     time_column : str | int, optional
         The name or index of the column containing the time information. If set to `"auto"`
-        (default), an attempt is made to find a suitable time column automatically. If this fails,
-        a `NoValidTimeColumnDetectedError` is raised. See ``Notes`` for more information.
-    time_unit : t.Literal["auto", "s", "ms", "us", "ns", "datetime"], optional
+        (default), an attempt is made to find a suitable time column automatically. See ``Notes`` for more information.
+    time_unit : {"auto", "s", "ms", "us", "ns", "datetime"}, optional
         The unit of the time column. If set to `"auto"` (default), the function will try to infer
         the correct unit automatically. Float columns are interpreted as seconds with decimal places.
-    interpret_integers_as : t.Literal["ms", "us", "ns"], optional
+    interpret_integers_as : {"ms", "us", "ns"}, optional
         The unit to interpret integer values as. Default is microseconds (`"us"`).
 
     Returns

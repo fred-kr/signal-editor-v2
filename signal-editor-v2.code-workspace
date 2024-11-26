@@ -31,12 +31,12 @@
 		"python.analysis.ignore": [
 			"**/ui_*.py",
 		],
-		"ruff.format.args": [
-			"--config=${workspaceFolder}/pyproject.toml"
-		],
-		"ruff.lint.args": [
-			"--config=${workspaceFolder}/pyproject.toml"
-		],
+		// "ruff.format.args": [
+		// 	"--config=${workspaceFolder}/pyproject.toml"
+		// ],
+		// "ruff.lint.args": [
+		// 	"--config=${workspaceFolder}/pyproject.toml"
+		// ],
 		"workbench.colorCustomizations": {
 			"activityBar.activeBackground": "#0d3e63",
 			"activityBar.background": "#0d3e63",
