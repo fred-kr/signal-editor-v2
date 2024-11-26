@@ -5,12 +5,12 @@ description = ""
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "pyarrow>=18.0.0",
+    "pyarrow>=18.1.0",
     "wfdb>=4.1.2",
     "mne>=1.8.0",
     "pywavelets>=1.7.0",
     "scipy>=1.14.1",
-    "numexpr>=2.10.1",
+    "numexpr>=2.10.2",
     "loguru>=0.7.2",
     "neurokit2>=0.2.10",
     "pyside6-fluent-widgets>=1.7.1",
@@ -21,20 +21,20 @@ dependencies = [
     "pyside-config",
     "pyside-widgets",
     "pyside6>=6.8.0.1",
-    "numpy>=2.1.2",
+    "numpy>=2.1.3",
     "pyopengl",
     "pyopengl_accelerate",
-    "polars[excel]>=1.12.0",
+    "polars[excel]>=1.15.0",
 ]
 
 [tool.uv]
 dev-dependencies = [
     "ipython>=8.29.0",
-    "sourcery>=1.23.0",
-    "ruff>=0.7.2",
+    "sourcery>=1.25.0",
+    "ruff>=0.8.0",
     "pytest>=8.3.3",
-    "mkdocs-material>=9.5.43",
-    "pyright>=1.1.387",
+    "mkdocs-material>=9.5.46",
+    "pyright>=1.1.389",
     "rich[jupyter]>=13.9.4",
 
 ]
