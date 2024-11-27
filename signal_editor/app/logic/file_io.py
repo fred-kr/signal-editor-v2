@@ -231,3 +231,11 @@ def write_hdf5(file_path: Path, data: _t.CompleteResultDict) -> None:
             rate_group = h5f.create_group(processing_group, "rate_computation", "Rate Computation Method")
             rate_method = section_data["metadata"]["processing_parameters"]["rate_computation_method"]
             h5f.set_node_attr(rate_group, "method", rate_method)
+
+
+def sanitize_input[T: (pl.LazyFrame, pl.DataFrame)](data: T, **kwargs: t.Any) -> tuple[T, dict[str, str]]:
+    """
+    Cleans column names of input data.
+    """
+    # TODO: implement data cleaning with janitor
+    ...

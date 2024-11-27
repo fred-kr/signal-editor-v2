@@ -25,6 +25,7 @@ dependencies = [
     "pyopengl",
     "pyopengl_accelerate",
     "polars[excel]>=1.15.0",
+    # TODO: add pyjanitor for data cleaning
 ]
 
 [tool.uv]

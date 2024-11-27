@@ -3890,7 +3890,7 @@ dependencies = [
     { name = "wfdb" },
 ]
 
-[package.dependency-groups]
+[package.dev-dependencies]
 dev = [
     { name = "ipython" },
     { name = "mkdocs-material" },
@@ -3925,7 +3925,7 @@ requires-dist = [
     { name = "wfdb", specifier = ">=4.1.2" },
 ]
 
-[package.metadata.dependency-groups]
+[package.metadata.requires-dev]
 dev = [
     { name = "ipython", specifier = ">=8.29.0" },
     { name = "mkdocs-material", specifier = ">=9.5.46" },
