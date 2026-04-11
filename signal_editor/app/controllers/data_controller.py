@@ -13,7 +13,7 @@ from .. import _type_defs as _t
 from .._app_config import Config
 from .._constants import COMBO_BOX_NO_SELECTION
 from .._enums import InputFileFormat, TextFileSeparator
-from ..logic.file_io import detect_sampling_rate, read_edf
+from ..logic.file_io import detect_sampling_rate, read_edf, sanitize_input
 from ..logic.metadata import FileMetadata
 from ..logic.section import DetailedSectionResult, Section, SectionID
 from ..models import DataFrameModel, SectionListModel
@@ -170,6 +170,7 @@ class DataController(QtCore.QObject):
             other_info = dict(edf_info.info)
         elif file_path.suffix in {".feather", ".csv", ".txt", ".tsv"}:
             lf = self._reader_funcs[file_path.suffix](file_path)
+            lf = sanitize_input(lf)[0]
             column_names = lf.collect_schema().names()
             try:
                 sampling_rate = detect_sampling_rate(lf)
@@ -177,6 +178,7 @@ class DataController(QtCore.QObject):
                 sampling_rate = 0
         elif file_path.suffix in {".xls", ".xlsx"}:
             lf = pl.read_excel(file_path).lazy()
+            lf = sanitize_input(lf)[0]
             column_names = lf.collect_schema().names()
             try:
                 sampling_rate = detect_sampling_rate(lf)

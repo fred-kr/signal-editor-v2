@@ -2,6 +2,7 @@ import datetime
 import typing as t
 from pathlib import Path
 
+import janitor.polars  # noqa: F401  # type: ignore
 import mne.io
 import polars as pl
 import polars.selectors as cs
@@ -237,5 +238,5 @@ def sanitize_input[T: (pl.LazyFrame, pl.DataFrame)](data: T, **kwargs: t.Any) ->
     """
     Cleans column names of input data.
     """
-    # TODO: implement data cleaning with janitor
-    ...
+    orig_names = data.collect_schema().names()
+    return data.clean_names(**kwargs), dict(zip(orig_names, data.collect_schema().names(), strict=False))
